@@ -1,4 +1,4 @@
-// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+// Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved.
 // In installing/viewing this source code, you agree to the terms of the
 // Microsoft Research Source License (MSRSL) included in the root of this source tree
 // and available from http://www.vworlds.org/license.asp.
@@ -87,8 +87,8 @@ BEGIN_INTERFACE_PART(VWUIView, IVWUIView)
 		STDMETHOD(GetTypeInfoCount)(unsigned int *);				
 		STDMETHOD(GetTypeInfo)(unsigned int,unsigned long,			
 								struct ITypeInfo ** );				
-		STDMETHOD(GetIDsOfNames)(const struct _GUID &,				
-			unsigned short ** ,unsigned int,unsigned long,long *);  
+		STDMETHOD(GetIDsOfNames)(REFIID,
+			LPOLESTR* ,UINT,LCID,DISPID*);
 		STDMETHOD(Invoke)(long,const struct _GUID &,unsigned long,	
 				unsigned short,struct tagDISPPARAMS *,				
 				struct tagVARIANT *,struct tagEXCEPINFO *,			
@@ -136,8 +136,8 @@ BEGIN_INTERFACE_PART(VWUIView, IVWUIView)
 		STDMETHOD(GetTypeInfoCount)(unsigned int *);				
 		STDMETHOD(GetTypeInfo)(unsigned int,unsigned long,			
 								struct ITypeInfo ** );				
-		STDMETHOD(GetIDsOfNames)(const struct _GUID &,				
-			unsigned short ** ,unsigned int,unsigned long,long *);  
+		STDMETHOD(GetIDsOfNames)(REFIID,
+			LPOLESTR* ,UINT,LCID,DISPID*);
 		STDMETHOD(Invoke)(long,const struct _GUID &,unsigned long,	
 				unsigned short,struct tagDISPPARAMS *,				
 				struct tagVARIANT *,struct tagEXCEPINFO *,			

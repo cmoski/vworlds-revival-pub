@@ -1,4 +1,4 @@
-// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+// Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved.
 // In installing/viewing this source code, you agree to the terms of the
 // Microsoft Research Source License (MSRSL) included in the root of this source tree
 // and available from http://www.vworlds.org/license.asp.
@@ -226,11 +226,11 @@ STDMETHODIMP CVWUIView::XVWUIView::Invoke(DISPID	dispidMember,
 							wFlags,pdispparams, pvarResult, pexcepinfo,puArgErr); 
 }	
 
-STDMETHODIMP CVWUIView::XVWUIView::GetIDsOfNames(REFIID riid, 						
-								OLECHAR FAR* FAR* rgszNames,						
-								unsigned int	cNames,								
-								LCID	lcid,										
-								DISPID FAR* rgdispid	)							
+STDMETHODIMP CVWUIView::XVWUIView::GetIDsOfNames(REFIID riid,
+								LPOLESTR* rgszNames,
+								UINT	cNames,
+								LCID	lcid,
+								DISPID* rgdispid	)							
 { 	
 	METHOD_PROLOGUE_EX_(CVWUIView, VWUIView);										
 	return pThis->m_CDelegate.GetIDispatch(FALSE)->GetIDsOfNames(riid, 				

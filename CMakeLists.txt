@@ -771,6 +771,87 @@ target_link_libraries(vwprops PRIVATE
 )
 
 # =============================================================================
+# objexplr.ocx - Object Explorer ActiveX Control (MFC OCX, no D3DRM)
+# =============================================================================
+
+# Generate objexplr.tlb from objexplr.odl (legacy OCX type library)
+add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/vwocx/objexplr/objexplr.tlb"
+    COMMAND midl /nologo /win32 /char signed /env win32
+        /tlb "${CMAKE_CURRENT_SOURCE_DIR}/vwocx/objexplr/objexplr.tlb"
+        /h "${CMAKE_CURRENT_SOURCE_DIR}/vwocx/objexplr/objexplr_h.h"
+        /iid "${CMAKE_CURRENT_SOURCE_DIR}/vwocx/objexplr/objexplr_i.c"
+        /I "${VWORLDS_COMMON_DIR}"
+        /I "${CMAKE_CURRENT_SOURCE_DIR}/vwsystem"
+        "${CMAKE_CURRENT_SOURCE_DIR}/vwocx/objexplr/objexplr.odl"
+    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/vwocx/objexplr/objexplr.odl"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vwocx/objexplr"
+    COMMENT "MIDL: objexplr.odl -> objexplr.tlb"
+    VERBATIM
+)
+
+add_library(objexplr SHARED
+    vwocx/objexplr/StdAfx.cpp
+    vwocx/objexplr/objexplr.cpp
+    vwocx/objexplr/3clmlist.cpp
+    vwocx/objexplr/4ClmList.cpp
+    vwocx/objexplr/booldrop.cpp
+    vwocx/objexplr/EdLstCtl.cpp
+    vwocx/objexplr/LEButton.cpp
+    vwocx/objexplr/ListList.cpp
+    vwocx/objexplr/lpedit.cpp
+    vwocx/objexplr/MenuList.cpp
+    vwocx/objexplr/methdrop.cpp
+    vwocx/objexplr/methlist.cpp
+    vwocx/objexplr/MExistDl.cpp
+    vwocx/objexplr/MListCtl.cpp
+    vwocx/objexplr/moddrop.cpp
+    vwocx/objexplr/PExistDl.cpp
+    vwocx/objexplr/PListCtl.cpp
+    vwocx/objexplr/PMapCtl.cpp
+    vwocx/objexplr/PrpEdCtl.cpp
+    vwocx/objexplr/ThingCtl.cpp
+    vwocx/objexplr/tplstctl.cpp
+    vwocx/objexplr/Tree.cpp
+    vwocx/objexplr/tvlstctl.cpp
+    # From other directories
+    vwcommon/syshelp.cpp
+    vwcommon/vwuiview.cpp
+    vwcommon/cmddel.cpp
+    vwocx/vwview/viewctl.cpp
+    # Resources and exports
+    vwocx/objexplr/objexplr.rc
+    vwocx/objexplr/objexplr.def
+    # Type library must be generated before RC can embed it
+    "${CMAKE_CURRENT_SOURCE_DIR}/vwocx/objexplr/objexplr.tlb"
+)
+
+add_dependencies(objexplr vworlds_midl)
+
+target_include_directories(objexplr PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwocx/objexplr
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwocx/vwview
+    ${VWORLDS_COMMON_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwsystem
+)
+
+target_compile_definitions(objexplr PRIVATE
+    _WINDLL
+    _USRDLL
+    _AFXDLL
+)
+
+target_precompile_headers(objexplr PRIVATE
+    "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/vwocx/objexplr/stdafx.h>"
+)
+
+target_link_libraries(objexplr PRIVATE
+    uuid
+    ole32
+    oleaut32
+)
+
+# =============================================================================
 # Graphics-dependent components (Phase 5+)
 # =============================================================================
 if(VWORLDS_BUILD_GRAPHICS)
