@@ -223,7 +223,7 @@ int CSEngineApp::Run()
 	ParseCommandLine(cmdInfo);
 	int retval = TRUE;
 
-	if ( cmdInfo.m_bDoCommand )
+	if ( cmdInfo.m_bDoCommand || cmdInfo.m_bNoWindow )
 	{
 		// Find the document... Window ID's won't help
 		POSITION pos = GetFirstDocTemplatePosition( );
@@ -237,9 +237,44 @@ int CSEngineApp::Run()
 				{
 					CSEngineDoc * pDoc= (CSEngineDoc *) pTemplate->GetNextDoc( pos );
 					ASSERT( pDoc );
-					
+
 					CString ErrorMsg;
-					pDoc->AddScriptlet(cmdInfo.m_strCommand, TRUE, &ErrorMsg);
+
+					if ( cmdInfo.m_bDoCommand )
+					{
+						// Run explicit /c command
+						pDoc->AddScriptlet(cmdInfo.m_strCommand, TRUE, &ErrorMsg);
+					}
+					else if ( cmdInfo.m_bNoWindow )
+					{
+						// Auto-run the loaded document script in headless mode
+						// Read the file directly since the edit view may not be populated
+						CString strPath = pDoc->GetPathName();
+						if (!strPath.IsEmpty())
+						{
+							CStdioFile file;
+							if (file.Open(strPath, CFile::modeRead | CFile::typeText))
+							{
+								CString strScript, strLine;
+								while (file.ReadString(strLine))
+								{
+									strScript += strLine;
+									strScript += "\n";
+								}
+								file.Close();
+								if (strScript.GetLength() > 0)
+								{
+									TRACE("sengine /nowindow: executing %d chars from %s\n", strScript.GetLength(), (LPCSTR)strPath);
+									pDoc->AddScriptlet(strScript, TRUE, &ErrorMsg);
+								}
+							}
+							else
+							{
+								TRACE("sengine /nowindow: failed to open %s\n", (LPCSTR)strPath);
+							}
+						}
+					}
+
 					if ( ErrorMsg.GetLength() && cmdInfo.m_bNoWindow )
 					{
 						if ( cmdInfo.m_bErrorFile )
@@ -248,9 +283,8 @@ int CSEngineApp::Run()
 							fout << ErrorMsg + "\n";
 						}
 						retval = FALSE;
-
 					}
-				
+
 				}
 			}
 		}

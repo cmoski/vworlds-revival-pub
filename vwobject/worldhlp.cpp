@@ -2771,17 +2771,7 @@ STDMETHODIMP CWorldObject::UpdateGlobalPaths()
 			{
 				bstrRootURLPath += bstrRoot;
 
-				// If RootURL is empty, fall back to registry ContentPath as file:// URL
-				if (bstrRoot.Length() == 0)
-				{
-					CComBSTR bstrFallback;
-					if (SUCCEEDED(FindContentPath(&bstrFallback.m_str)) && bstrFallback.Length() > 0)
-					{
-						bstrRootURLPath = "file://";
-						bstrRootURLPath += bstrFallback;
-						TRACE("UpdateGlobalPaths: RootURL empty, using fallback: %s\n", CString(bstrRootURLPath));
-					}
-				}
+				TRACE("UpdateGlobalPaths: composed RootURL = %s\n", CString(bstrRootURLPath));
 
 				if (SUCCEEDED(get_ToolExt(CComBSTR("Inetfile"), (IUnknown**)&pinf)) && pinf)
 				{
@@ -2899,7 +2889,7 @@ HRESULT CWorldObject::OnReceiveWorld()
 {
 	HRESULT hr = S_OK;
 
-	VWTRACE(m_pWorld, "VWOBJECT", TRACE_GLOBALPATHS, "CWorldObject::OnReceiveWorld\n");
+	TRACE("=== OnReceiveWorld: server-side=%s ===\n", m_bServerSide ? "YES" : "NO");
 
 	// Create tools on client side (Inetfile, Animator) with default content path
 	hr = CreateTools();
@@ -3119,30 +3109,54 @@ HRESULT CWorldObject::CreateTools()
 
 	hr = CreateToolExt(CComBSTR("Inetfile"), CLSID_InternetFileManager, (IUnknown**)&pInetfile);
 	if (FAILED(hr))
-		goto ERROR_ENCOUNTERED;
+	{
+		// Tool may already exist from a previous initialization - get existing one
+		hr = get_ToolExt(CComBSTR("Inetfile"), (IUnknown**)&pInetfile);
+		if (FAILED(hr))
+			goto ERROR_ENCOUNTERED;
+	}
 
 	// Set default content path from registry so sprites/textures can be found
 	{
 		CComBSTR bstrContentPath;
-		if (SUCCEEDED(FindContentPath(&bstrContentPath.m_str)) && bstrContentPath.Length() > 0)
+		HRESULT hrPath = FindContentPath(&bstrContentPath.m_str);
+		TRACE("CreateTools: FindContentPath hr=0x%08X, path='%s'\n", hrPath,
+			bstrContentPath.m_str ? CString(bstrContentPath) : CString("(null)"));
+		if (SUCCEEDED(hrPath) && bstrContentPath.Length() > 0)
 		{
 			CComBSTR bstrFileURL("file://");
 			bstrFileURL += bstrContentPath;
 			pInetfile->put_RootURL(bstrFileURL);
-			TRACE("CreateTools: Set Inetfile RootURL to %s\n", CString(bstrFileURL));
+			TRACE("CreateTools: Set Inetfile RootURL to '%s'\n", CString(bstrFileURL));
+		}
+		else
+		{
+			TRACE("CreateTools: FindContentPath failed, content will not load!\n");
 		}
 	}
 
 	// REVIEW: Maybe we should move this code into some world-specific script.
 
 	// create animation tool
-	hr = CreateToolExt(CComBSTR("Animator"), CLSID_VWAnimator, (IUnknown**)&pAnim);
-	if (FAILED(hr))
-		goto ERROR_ENCOUNTERED;
+	{
+		BOOL bNewTool = FALSE;
+		hr = CreateToolExt(CComBSTR("Animator"), CLSID_VWAnimator, (IUnknown**)&pAnim);
+		if (FAILED(hr))
+		{
+			hr = get_ToolExt(CComBSTR("Animator"), (IUnknown**)&pAnim);
+			if (FAILED(hr))
+				goto ERROR_ENCOUNTERED;
+		}
+		else
+			bNewTool = TRUE;
 
-	hr = pAnim->Initialize(m_pWorld);
-	if (FAILED(hr))
-		goto ERROR_ENCOUNTERED;
+		if (bNewTool)
+		{
+			hr = pAnim->Initialize(m_pWorld);
+			if (FAILED(hr))
+				goto ERROR_ENCOUNTERED;
+		}
+	}
 
 	// create client side tools
 	if (m_bServerSide == VARIANT_FALSE)

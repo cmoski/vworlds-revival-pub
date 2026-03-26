@@ -1,4 +1,4 @@
-// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+// Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved.
 // In installing/viewing this source code, you agree to the terms of the
 // Microsoft Research Source License (MSRSL) included in the root of this source tree
 // and available from http://www.vworlds.org/license.asp.
@@ -16,6 +16,8 @@
 #include "urlhelp.h"
 #include "reghelp.h"
 #include "syshelp.h"
+#include <inetfile.h>
+#include "vwsystem.h"  // for CLSID_InternetFileManager
 #include "vwevents.h"
 #include "propsecu.h"
 #include "vwserver.h"
@@ -2220,8 +2222,39 @@ STDMETHODIMP CVWClientObject::get_Tools(IPropertyMap** pppropertymap)
 HRESULT CVWClientObject::CreateTools()
 {
 	HRESULT hr = S_OK;
+	IUnknown* pInetUnk = NULL;
+	IInternetFileManager* pInetFile = NULL;
 
-	return hr;
+	// Create Inetfile tool on client side with content path from registry
+	hr = CreateTool(CComBSTR("Inetfile"), CLSID_InternetFileManager, &pInetUnk);
+	if (SUCCEEDED(hr) && pInetUnk)
+	{
+		if (SUCCEEDED(pInetUnk->QueryInterface(IID_IInternetFileManager, (void**)&pInetFile)))
+		{
+			CComBSTR bstrContentPath;
+			if (SUCCEEDED(FindContentPath(&bstrContentPath.m_str)) && bstrContentPath.Length() > 0)
+			{
+				// Build semicolon-separated search path list
+				// Content files live in Client\Shared\ under the content root
+				CComBSTR bstrFileURL("file://");
+				bstrFileURL += bstrContentPath;
+				bstrFileURL += "Client\\Shared\\;file://";
+				bstrFileURL += bstrContentPath;
+				bstrFileURL += "Avatar Graphics\\;file://";
+				bstrFileURL += bstrContentPath;
+				pInetFile->put_RootURL(bstrFileURL);
+				TRACE("CVWClientObject::CreateTools: Inetfile RootURL set to %s\n", CString(bstrFileURL));
+			}
+			else
+			{
+				TRACE("CVWClientObject::CreateTools: FindContentPath failed\n");
+			}
+			SAFERELEASE(pInetFile);
+		}
+		SAFERELEASE(pInetUnk);
+	}
+
+	return S_OK; // Don't fail if tool creation fails
 }
 
 void CVWClientObject::UpdateWorldReferences(IWorld * pWorld)

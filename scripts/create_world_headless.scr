@@ -1,17 +1,12 @@
 On Error Resume Next
 
-' Create a fresh world with content paths, room, and artifact
+' Headless world creation - no MsgBox, for use with sengine /nowindow
 set Client = XObject
 set World = Client.ConnectLocal("RoomWorld2")
-If Err.Number <> 0 Then
-    MsgBox "ConnectLocal failed: " & Err.Description
-    Err.Clear
-End If
+Err.Clear
 
-' Set trace level for diagnostics
 World.TraceLevel("*") = 4
 
-' Load modules
 World.CreateCOMModule "Multimedia", "VWSYSTEM.MultimediaEx.1", 3
 Err.Clear
 World.CreateCOMModule "Studio", "VWSTUDIO.StudioEx.1", 3
@@ -19,27 +14,17 @@ Err.Clear
 World.CreateCOMModule "Foundation", "VWEXEMP.FoundationExemplars.1", 3
 Err.Clear
 
-' Create a room
 Dim Room
 set Room = World.CreateInstance("MainRoom", World.Exemplar("Room"))
-If Err.Number <> 0 Then
-    MsgBox "Room: " & Err.Description
-    Err.Clear
-Else
+If Err.Number = 0 Then
     World.Global.DefaultRoom = Room
     Err.Clear
 End If
 
-' Create a test artifact with sprite texture in the room
 Dim obj
 set obj = World.CreateInstance("TestCube", World.Exemplar("Artifact"))
-If Err.Number <> 0 Then
-    MsgBox "Artifact: " & Err.Description
-    Err.Clear
-Else
+If Err.Number = 0 Then
     obj.MoveInto Room
     obj.GeometryName = "client\shared\default.spr"
     Err.Clear
 End If
-
-MsgBox "Done! World RoomWorld2 created with room and textured artifact."

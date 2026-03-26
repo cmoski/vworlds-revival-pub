@@ -1,4 +1,4 @@
-// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+// Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved.
 // In installing/viewing this source code, you agree to the terms of the
 // Microsoft Research Source License (MSRSL) included in the root of this source tree
 // and available from http://www.vworlds.org/license.asp.
@@ -348,29 +348,19 @@ HRESULT CInternetFileManagerObject::GetFileSimplified(BSTR bstrURL, BSTR *pbstrF
 		{
 			strFullURL = m_RootURLs[index] + "/" + CString(bstrURL);
 
+			TRACE("InetFile::GetFileSimplified: trying [%d/%d] %s\n", index+1, m_RootURLs.GetSize(), (LPCSTR)strFullURL);
+
 #ifdef _DEBUG
 			dwTick = GetTickCount();
 #endif
-			
+
 			hr = URLDownloadToCacheFile(NULL, strFullURL, szPath, INTERNET_MAX_PATH_LENGTH, 0 /*BINDF_GETNEWESTVERSION*/, NULL);
 
-			if (SUCCEEDED(hr)) 
+			if (SUCCEEDED(hr))
 			{
 				strFilename = CString(szPath);
-			
-#ifdef _DEBUG
-#ifdef DLTHREAD_DEBUG
-				TRACE("CInternetFileManagerObject::GetFileSimplified: successfully downloaded %s as %s, duration %3.2f sec\n", strFullURL, strFilename, (float)(GetTickCount() - dwTick) / 1000.0);
-#endif
 
-#ifdef DLTHREAD_DEBUG
-				DWORD dwNow = GetTickCount();
-				CString strTemp;
-			
-				strTemp.Format("Download URL (succeeded),%d,%s,%d\n", dwNow, strFullURL, dwNow - dwTick);
-				OutputDebugString((LPCTSTR)strTemp);
-#endif
-#endif
+				TRACE("InetFile::GetFileSimplified: OK downloaded %s -> %s\n", (LPCSTR)strFullURL, (LPCSTR)strFilename);
 
 				*pbstrFinalURL = strFullURL.AllocSysString();
 				*pbstrFinalPath = strFilename.AllocSysString();
@@ -379,19 +369,7 @@ HRESULT CInternetFileManagerObject::GetFileSimplified(BSTR bstrURL, BSTR *pbstrF
 			}
 			else
 			{
-#ifdef _DEBUG
-#ifdef INETFILE_DOWNLOAD_DEBUG
-				TRACE("CInternetFileManagerObject::GetFileSimplified: failed to download %s, duration %3.2f sec\n", strFullURL, (float)(GetTickCount() - dwTick) / 1000.0);
-#endif
-
-#ifdef DLTHREAD_DEBUG
-				DWORD dwNow = GetTickCount();
-				CString strTemp;
-			
-				strTemp.Format("Download URL (failed),%d,%s,%d\n", dwNow, strFullURL, dwNow - dwTick);
-				OutputDebugString((LPCTSTR)strTemp);
-#endif
-#endif
+				TRACE("InetFile::GetFileSimplified: FAIL %s hr=0x%08X\n", (LPCSTR)strFullURL, hr);
 
 				hr = INETFILE_E_FILENOTFOUND;
 			}
@@ -613,12 +591,11 @@ STDMETHODIMP CInternetFileManagerObject::put_RootURL(BSTR bstrRootURL)
 		bretval = ExtractFirstURL(strURLLeft, strExtractedURL);
 		if (strExtractedURL.GetLength() != 0)
 		{
-#ifdef INETFILE_DOWNLOAD_DEBUG
-			TRACE("CInternetFileManagerObject::put_RootURL: adding path %s\n", strExtractedURL);
-#endif
+			TRACE("InetFile::put_RootURL: [%d] %s\n", m_RootURLs.GetSize(), (LPCSTR)strExtractedURL);
 			m_RootURLs.Add(strExtractedURL);
 		}
 	}
+	TRACE("InetFile::put_RootURL: %d root URLs configured\n", m_RootURLs.GetSize());
 
 	return S_OK;
 }

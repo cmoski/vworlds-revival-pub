@@ -503,6 +503,9 @@ HRESULT ComposeRootURLPath(IWorld* pWorld, CComBSTR* bstrRootURLPath)
 			bstrWorldContentPath += "\\";
 		}
 
+		// Add Client\Shared\ - this is where shared content (sprites, geometry) lives
+		*bstrRootURLPath += CComBSTR(CString("file://") + CString(bstrContentPath) + CString("Client\\Shared\\"));
+		*bstrRootURLPath += ";";
 		*bstrRootURLPath += CComBSTR(CString("file://") + CString(bstrContentPath));
 		*bstrRootURLPath += ";";
 		*bstrRootURLPath += bstrWorldContentPath;

@@ -243,7 +243,7 @@ public:
                             OLECHAR* rootURLName = L"RootURL";
                             hr = vTool.pdispVal->GetIDsOfNames(IID_NULL, &rootURLName, 1, LOCALE_USER_DEFAULT, &dispid);
                             if (SUCCEEDED(hr)) {
-                                CComVariant vURL("file://F:\\VWorlds\\Microsoft Virtual Worlds\\Local Content\\");
+                                CComVariant vURL("file://F:\\VWorlds\\Microsoft Virtual Worlds\\Local Content\\Client\\Shared\\;file://F:\\VWorlds\\Microsoft Virtual Worlds\\Local Content\\Avatar Graphics\\;file://F:\\VWorlds\\Microsoft Virtual Worlds\\Local Content\\");
                                 DISPID putid2 = DISPID_PROPERTYPUT;
                                 DISPPARAMS dpURL = { &vURL, &putid2, 1, 1 };
                                 hr = vTool.pdispVal->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT,
