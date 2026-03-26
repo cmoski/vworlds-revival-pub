@@ -670,6 +670,9 @@ add_library(vwfound SHARED
     vwcommon/syshelp.cpp
     vwcommon/profhelp.cpp
     property/tranitem/tranito.cpp
+    # Resources and exports
+    module/foundatn/vwfound.rc
+    module/foundatn/vwfound.def
 )
 
 target_include_directories(vwfound PRIVATE

@@ -1,0 +1,5 @@
+On Error Resume Next
+MsgBox "XObject type: " & TypeName(XObject)
+If Err.Number <> 0 Then
+    MsgBox "XObject not available: " & Err.Description
+End If

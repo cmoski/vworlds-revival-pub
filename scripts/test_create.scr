@@ -1,0 +1,17 @@
+On Error Resume Next
+
+MsgBox "Step 1: Getting XObject..."
+set Client = XObject
+If Err.Number <> 0 Then
+    MsgBox "Failed to get XObject: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+End If
+
+MsgBox "Step 2: ConnectLocal..."
+set World = Client.ConnectLocal("TestWorld")
+If Err.Number <> 0 Then
+    MsgBox "ConnectLocal failed: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+Else
+    MsgBox "World created: " & World.Name
+End If
