@@ -2846,28 +2846,30 @@ STDMETHODIMP CWorldObject::OnCreateWorld()
 	IModule* pModule = NULL;
 	long currentID = WORLD_OBJECT;
 
-	VWTRACE(m_pWorld, "VWOBJECT", TRACE_GLOBALPATHS, "CWorldObject::OnCreateWorld\n");
+	TRACE("=== OnCreateWorld BEGIN ===\n");
 
 	hr = CreateWorldObject();
+	TRACE("OnCreateWorld: CreateWorldObject hr=0x%08X\n", hr);
 	if (FAILED(hr))
 		goto ERROR_ENCOUNTERED;
 
-	// commit the database to write out the WORLD_OBJECT record
 	hr = m_pDb->Commit();
+	TRACE("OnCreateWorld: Commit1 hr=0x%08X\n", hr);
 	if (FAILED(hr))
 		goto ERROR_ENCOUNTERED;
 
 	hr = CreateTools();
+	TRACE("OnCreateWorld: CreateTools hr=0x%08X\n", hr);
 	if (FAILED(hr))
 		goto ERROR_ENCOUNTERED;
 
-	// create system exemplars
 	hr = m_pWorld->CreateCOMModule(CComBSTR("System"), CComBSTR("VWSYSTEM.SystemEx.1"), MODULE_CLIENT | MODULE_SERVER, &pModule);
+	TRACE("OnCreateWorld: CreateCOMModule(System) hr=0x%08X\n", hr);
 	if (FAILED(hr))
 		goto ERROR_ENCOUNTERED;
 
-	// commit the database to write out the WORLD_OBJECT record	(again)
 	hr = m_pDb->Commit();
+	TRACE("OnCreateWorld: Commit2 hr=0x%08X\n", hr);
 	if (FAILED(hr))
 		goto ERROR_ENCOUNTERED;
 
@@ -2900,22 +2902,27 @@ HRESULT CWorldObject::CreateWorldObject()
 	long currentID = WORLD_OBJECT;
 	static CComBSTR bstrGlobal("Global");
 
-	// create embedded IThing for world global stuff
+	TRACE("CreateWorldObject: BEGIN\n");
+
 	hr = CreateObjectInt(currentID, &m_pGlobal);
+	TRACE("CreateWorldObject: CreateObjectInt hr=0x%08X, pGlobal=%p\n", hr, m_pGlobal);
 	if (FAILED(hr))
 		goto ERROR_ENCOUNTERED;
 
 	hr = LogCreateObject(currentID);
+	TRACE("CreateWorldObject: LogCreateObject hr=0x%08X\n", hr);
 	if (FAILED(hr))
 		goto ERROR_ENCOUNTERED;
 
 	currentID++;
 
 	hr = m_pGlobal->put_IsStubInt(VARIANT_FALSE);
+	TRACE("CreateWorldObject: put_IsStubInt hr=0x%08X\n", hr);
 	if (FAILED(hr))
 		goto ERROR_ENCOUNTERED;
 
 	hr = m_pGlobal->put_TypeInt(bstrGlobal);
+	TRACE("CreateWorldObject: put_TypeInt hr=0x%08X\n", hr);
 	if (FAILED(hr))
 		goto ERROR_ENCOUNTERED;
 
@@ -2928,25 +2935,31 @@ HRESULT CWorldObject::CreateWorldObject()
 #endif
 
 	// assign NULL container
+	TRACE("CreateWorldObject: AddPropertyExt(Container='%s')\n", CString(CThingObject::m_bstrContainer));
 	hr = m_pGlobal->AddPropertyExt(CThingObject::m_bstrContainer, CComVariant((IDispatch *) NULL),
 									PSBIT_HIDDEN | PSBIT_SYSTEMPROPERTY | PSBIT_INTERNALLYSET, PS_GLOBALSYSTEMCONSTANT, VT_DISPATCH, IID_IThing, NULL);
+	TRACE("CreateWorldObject: AddPropertyExt(Container) hr=0x%08X\n", hr);
 	if (FAILED(hr))
 		goto ERROR_ENCOUNTERED;
 
 	// set name property (Global)
+	TRACE("CreateWorldObject: AddPropertyExt(Name='%s')\n", CString(CThingObject::m_bstrName));
 	hr = m_pGlobal->AddPropertyExt(CThingObject::m_bstrName, CComVariant("Global"),
 									PSBIT_HIDDEN | PSBIT_WORLDOWNERPROPERTY | PSBIT_INTERNALLYADDED | PSBIT_INTERNALLYSET, PS_GLOBALSYSTEMCONSTANT, VT_BSTR, IID_NULL, NULL);
+	TRACE("CreateWorldObject: AddPropertyExt(Name) hr=0x%08X\n", hr);
 	if (FAILED(hr))
 		goto ERROR_ENCOUNTERED;
 
 	// set description property
 	hr = m_pGlobal->AddPropertyExt(CThingObject::m_bstrDescription, CComVariant("Global object"),
 									PSBIT_HIDDEN | PSBIT_WORLDOWNERPROPERTY | PSBIT_INTERNALLYADDED | PSBIT_INTERNALLYSET, PS_WORLDOWNERPROPERTY, VT_BSTR, IID_NULL, NULL);
+	TRACE("CreateWorldObject: AddPropertyExt(Description) hr=0x%08X\n", hr);
 	if (FAILED(hr))
 		goto ERROR_ENCOUNTERED;
 
 	hr = m_pGlobal->AddPropertyExt(m_bstrCurrentID, CComVariant(currentID, VT_I4),
 									PSBIT_HIDDEN | PSBIT_GLOBALSYSTEMCONSTANT | PSBIT_NOTREMOTED | PSBIT_INTERNALLYSET, PS_GLOBALSYSTEMCONSTANT, VT_I4, IID_NULL, NULL);
+	TRACE("CreateWorldObject: AddPropertyExt(CurrentID) hr=0x%08X\n", hr);
 	if (FAILED(hr))
 		goto ERROR_ENCOUNTERED;
 
@@ -2956,11 +2969,14 @@ HRESULT CWorldObject::CreateWorldObject()
 
 	// Add Avatars
 	hr = CreatePropertyMap(m_pWorld, &m_pAvatars);
+	TRACE("CreateWorldObject: CreatePropertyMap(Avatars) hr=0x%08X\n", hr);
 	if (FAILED(hr))
 		goto ERROR_ENCOUNTERED;
 
+	TRACE("CreateWorldObject: AddPropertyExt(Avatars='%s')\n", CString(m_bstrAvatars));
 	hr = m_pGlobal->AddPropertyExt(m_bstrAvatars, CComVariant(m_pAvatars),
 									PSBIT_GLOBALSYSTEMCONSTANT | PSBIT_HIDDEN | /* PSBIT_NOTREMOTED | */ PSBIT_INTERNALLYSET, PS_GLOBALSYSTEMCONSTANT, VT_DISPATCH, IID_IPropertyMap, NULL);
+	TRACE("CreateWorldObject: AddPropertyExt(Avatars) hr=0x%08X\n", hr);
 
 	SAFERELEASE(m_pAvatars);
 
@@ -2968,71 +2984,77 @@ HRESULT CWorldObject::CreateWorldObject()
 		goto ERROR_ENCOUNTERED;
 
 	hr = m_pGlobal->get_ObjectProperty(m_bstrAvatars, (IObjectProperty**)&m_pAvatars);
+	TRACE("CreateWorldObject: get_ObjectProperty(Avatars) hr=0x%08X\n", hr);
 	if (FAILED(hr))
 		goto ERROR_ENCOUNTERED;
 
 	// Add GUIDs
 	hr = CreatePropertyMap(m_pWorld, &m_pGUIDs);
+	TRACE("CreateWorldObject: CreatePropertyMap(GUIDs) hr=0x%08X\n", hr);
 	if (FAILED(hr))
 		goto ERROR_ENCOUNTERED;
-	
+
+	TRACE("CreateWorldObject: AddPropertyExt(GUIDs='%s')\n", CString(m_bstrGUIDs));
 	hr = m_pGlobal->AddPropertyExt(m_bstrGUIDs, CComVariant(m_pGUIDs),
 								   PSBIT_GLOBALSYSTEMCONSTANT | PSBIT_HIDDEN | PSBIT_NOTREMOTED | PSBIT_INTERNALLYSET, PS_GLOBALSYSTEMCONSTANT, VT_DISPATCH, IID_IPropertyMap, NULL);
+	TRACE("CreateWorldObject: AddPropertyExt(GUIDs) hr=0x%08X\n", hr);
 	if (FAILED(hr))
 		goto ERROR_ENCOUNTERED;
 
 	SAFERELEASE(m_pGUIDs);
 
-	if (FAILED(hr))
-		goto ERROR_ENCOUNTERED;
-
 	hr = m_pGlobal->get_ObjectProperty(m_bstrGUIDs, (IObjectProperty**)&m_pGUIDs);
+	TRACE("CreateWorldObject: get_ObjectProperty(GUIDs) hr=0x%08X\n", hr);
 	if (FAILED(hr))
 		goto ERROR_ENCOUNTERED;
 
 	// Add Exemplars
 	hr = CreatePropertyMap(m_pWorld, &m_pExemplars);
+	TRACE("CreateWorldObject: CreatePropertyMap(Exemplars) hr=0x%08X\n", hr);
 	if (FAILED(hr))
 		goto ERROR_ENCOUNTERED;
 
+	TRACE("CreateWorldObject: AddPropertyExt(Exemplars='%s')\n", CString(m_bstrExemplars));
 	hr = m_pGlobal->AddPropertyExt(m_bstrExemplars, CComVariant(m_pExemplars),
 									PSBIT_GLOBALSYSTEMCONSTANT | PSBIT_HIDDEN | PSBIT_INTERNALLYSET, PS_GLOBALSYSTEMCONSTANT, VT_DISPATCH, IID_IPropertyMap, NULL);
+	TRACE("CreateWorldObject: AddPropertyExt(Exemplars) hr=0x%08X\n", hr);
 	if (FAILED(hr))
 		goto ERROR_ENCOUNTERED;
 
 	SAFERELEASE(m_pExemplars);
 
-	if (FAILED(hr))
-		goto ERROR_ENCOUNTERED;
-
 	hr = m_pGlobal->get_ObjectProperty(m_bstrExemplars, (IObjectProperty**)&m_pExemplars);
+	TRACE("CreateWorldObject: get_ObjectProperty(Exemplars) hr=0x%08X\n", hr);
 	if (FAILED(hr))
 		goto ERROR_ENCOUNTERED;
 
 	// Add Modules
+	TRACE("CreateWorldObject: AddPropertyExt(Modules='%s')\n", CString(m_bstrModules));
 	hr = CreatePropertyMap(m_pWorld, &m_pModules);
+	TRACE("CreateWorldObject: CreatePropertyMap(Modules) hr=0x%08X\n", hr);
 	if (FAILED(hr))
 		goto ERROR_ENCOUNTERED;
 
-	hr = m_pGlobal->AddPropertyExt(m_bstrModules, CComVariant(m_pModules), 
+	hr = m_pGlobal->AddPropertyExt(m_bstrModules, CComVariant(m_pModules),
 									PSBIT_GLOBALSYSTEMCONSTANT | PSBIT_HIDDEN | PSBIT_BYVAL | PSBIT_INTERNALLYSET, PS_GLOBALSYSTEMCONSTANT, VT_DISPATCH, IID_IPropertyMap, NULL);
+	TRACE("CreateWorldObject: AddPropertyExt(Modules) hr=0x%08X\n", hr);
 	if (FAILED(hr))
 		goto ERROR_ENCOUNTERED;
 
 	SAFERELEASE(m_pModules);
 
-	if (FAILED(hr))
-		goto ERROR_ENCOUNTERED;
-
 	hr = m_pGlobal->get_ObjectProperty(m_bstrModules, (IObjectProperty**)&m_pModules);
+	TRACE("CreateWorldObject: get_ObjectProperty(Modules) hr=0x%08X\n", hr);
 	if (FAILED(hr))
 		goto ERROR_ENCOUNTERED;
 
 	// Add ModuleNameList
 	hr = CreatePropertyList(m_pWorld, &m_pModuleNameList);
+	TRACE("CreateWorldObject: CreatePropertyList(ModuleNameList) hr=0x%08X\n", hr);
 
-	hr = m_pGlobal->AddPropertyExt(CComBSTR("ModuleNameList"), CComVariant(m_pModuleNameList), 
+	hr = m_pGlobal->AddPropertyExt(CComBSTR("ModuleNameList"), CComVariant(m_pModuleNameList),
 									PSBIT_GLOBALSYSTEMCONSTANT | PSBIT_HIDDEN | PSBIT_NOTREMOTED | PSBIT_INTERNALLYSET, PS_GLOBALSYSTEMCONSTANT, VT_DISPATCH, IID_IPropertyList, NULL);
+	TRACE("CreateWorldObject: AddPropertyExt(ModuleNameList) hr=0x%08X\n", hr);
 
 	SAFERELEASE(m_pModuleNameList);
 
@@ -3040,6 +3062,7 @@ HRESULT CWorldObject::CreateWorldObject()
 		goto ERROR_ENCOUNTERED;
 
 	hr = m_pGlobal->get_ObjectProperty(CComBSTR("ModuleNameList"), (IObjectProperty**)&m_pModuleNameList);
+	TRACE("CreateWorldObject: get_ObjectProperty(ModuleNameList) hr=0x%08X\n", hr);
 	if (FAILED(hr))
 		goto ERROR_ENCOUNTERED;
 

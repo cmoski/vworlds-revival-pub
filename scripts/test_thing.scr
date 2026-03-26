@@ -1,0 +1,22 @@
+On Error Resume Next
+
+MsgBox "Testing basic Thing property access..."
+
+Dim thing
+Set thing = CreateObject("VWSYSTEM.Thing.1")
+If Err.Number <> 0 Then
+    MsgBox "CreateObject(Thing) failed: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+Else
+    MsgBox "Thing created: " & TypeName(thing)
+
+    ' Try to get the Name property
+    Dim n
+    n = thing.Name
+    If Err.Number <> 0 Then
+        MsgBox "thing.Name failed: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+        Err.Clear
+    Else
+        MsgBox "thing.Name = '" & n & "'"
+    End If
+End If

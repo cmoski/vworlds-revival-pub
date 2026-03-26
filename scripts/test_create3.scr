@@ -1,0 +1,43 @@
+On Error Resume Next
+
+' Step 1: Create World object directly
+MsgBox "Step 1: Creating World object..."
+Dim World
+Set World = CreateObject("VWSYSTEM.World.1")
+If Err.Number <> 0 Then
+    MsgBox "CreateObject(World) failed: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+Else
+    MsgBox "World created: " & TypeName(World)
+End If
+
+' Step 2: Try to set server-side mode
+MsgBox "Step 2: Setting server-side FALSE..."
+World.ServerSide = False
+If Err.Number <> 0 Then
+    MsgBox "ServerSide failed: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+End If
+
+' Step 3: Set World reference
+MsgBox "Step 3: Setting World.World..."
+World.World = World
+If Err.Number <> 0 Then
+    MsgBox "World.World failed: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+End If
+
+' Step 4: Open database with create
+MsgBox "Step 4: Opening database (create)..."
+World.OpenDatabase "TestWorld3", True, False
+If Err.Number <> 0 Then
+    MsgBox "OpenDatabase failed: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+Else
+    MsgBox "Database opened/created successfully!"
+
+    ' Step 5: Check version
+    MsgBox "Step 5: World.Version = " & World.Version
+End If
+
+MsgBox "Done!"

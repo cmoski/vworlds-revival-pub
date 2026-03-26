@@ -1,0 +1,29 @@
+On Error Resume Next
+
+MsgBox "Starting world creation test..."
+
+set Client = XObject
+If Err.Number <> 0 Then
+    MsgBox "XObject failed: " & Err.Description
+    Err.Clear
+End If
+
+MsgBox "Client type: " & TypeName(Client) & " - calling ConnectLocal..."
+
+set World = Client.ConnectLocal("TestWorld2")
+
+If Err.Number <> 0 Then
+    MsgBox "ConnectLocal error: " & Err.Description & vbCrLf & "Error: 0x" & Hex(Err.Number)
+    Err.Clear
+
+    MsgBox "Trying without persistence (empty name)..."
+    set World = Client.ConnectLocal("")
+    If Err.Number <> 0 Then
+        MsgBox "ConnectLocal('') error: " & Err.Description & vbCrLf & "Error: 0x" & Hex(Err.Number)
+    Else
+        MsgBox "Empty ConnectLocal succeeded! World: " & TypeName(World)
+    End If
+Else
+    MsgBox "SUCCESS! World created: " & TypeName(World)
+    MsgBox "World version: " & World.Version
+End If
