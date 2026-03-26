@@ -978,7 +978,8 @@ void CVWUIView::SetTargetObjectProperty(LPDISPATCH newValue)
 				SAFEADDREF( m_pTargetObjectProperty );
 
 				m_pTargetObjectProperty->get_World(&pWorld);
-				m_pControlManager->put_World(pWorld);																	 
+				if (pWorld && m_pControlManager)
+					m_pControlManager->put_World(pWorld);
 		}
 	
 	}
