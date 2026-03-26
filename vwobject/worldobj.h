@@ -588,10 +588,24 @@ ERROR_ENCOUNTERED:
 		else
 			*pboolVal = bEnableSecurity;
 #else
+		*pboolVal = VARIANT_FALSE;
 		if (SUCCEEDED(get_Global(&pGlobal)))
 		{
-			hr = pGlobal->get_BOOL(bstrEnableSecurity, pboolVal);
-
+			// Use get_PropertyExt directly instead of get_BOOL/get_Property
+			// to avoid ReportThingError noise when property doesn't exist
+			// (happens during Global deserialization — old empty map is visible)
+			VARIANT var;
+			::VariantInit(&var);
+			UINT nHash = HashKey<BSTR>(bstrEnableSecurity.m_str);
+			hr = pGlobal->get_PropertyExt(bstrEnableSecurity, nHash, NULL, &var);
+			if (SUCCEEDED(hr) && var.vt == VT_BOOL)
+				*pboolVal = var.boolVal;
+			else
+			{
+				*pboolVal = VARIANT_FALSE;
+				hr = S_OK;
+			}
+			::VariantClear(&var);
 			SAFERELEASE(pGlobal);
 		}
 #endif

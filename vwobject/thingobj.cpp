@@ -2860,9 +2860,8 @@ STDMETHODIMP CThingObject::get_PropertySecurityExt(BSTR bstrPropertyName, UINT n
 		}
 		else
 		{
-#ifdef _DEBUG
-			VWTRACE(m_pWorld, "VWOBJECT", VWT_IMPORTANT, "CThingObject::get_PropertySecurityExt: unknown property (%s)\n", CString(bstrPropertyName));
-#endif
+			TRACE("PROP_NOTEXIST: '%s' on id=%d (no exemplar chain)\n",
+				(LPCSTR)CStringA(bstrPropertyName), m_lObjectID);
 			hr = VWOBJECT_E_PROPERTYNOTEXIST;
 			goto ERROR_ENCOUNTERED;
 		}
