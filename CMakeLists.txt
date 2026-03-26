@@ -718,6 +718,59 @@ target_include_directories(d2dutils PRIVATE
 )
 
 # =============================================================================
+# vwprops.dll - Clean property COM server (extracted from vwmm.dll)
+# =============================================================================
+
+add_library(vwprops SHARED
+    vwprops/stdafx.cpp
+    vwprops/vwprops.cpp
+    property/vector/vectorob.cpp
+    # cellprop/edgecyc.cpp deferred - deep coupling to vwmm resource IDs and IVWIntersectData
+    property/sound/sound.cpp
+    property/pickdata/pickdata.cpp
+    property/vwadata/vwadatao.cpp
+    # property/vwadata/vwadata.cpp excluded - has own DLL entry points
+    property/vwidata/vwidatao.cpp
+    # property/vwidata/vwidata.cpp excluded - has own DLL entry points
+    # Category helpers from vwcommon
+    vwcommon/Cathelp.cpp
+    vwprops/vwprops.def
+)
+
+add_dependencies(vwprops vworlds_midl)
+
+target_include_directories(vwprops PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwprops
+    ${VWORLDS_COMMON_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/compat
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwsystem
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwmm
+    ${CMAKE_CURRENT_SOURCE_DIR}/property/vector
+    ${CMAKE_CURRENT_SOURCE_DIR}/property/cellprop
+    ${CMAKE_CURRENT_SOURCE_DIR}/property/sound
+    ${CMAKE_CURRENT_SOURCE_DIR}/property/pickdata
+    ${CMAKE_CURRENT_SOURCE_DIR}/property/vwadata
+    ${CMAKE_CURRENT_SOURCE_DIR}/property/vwidata
+)
+
+target_compile_definitions(vwprops PRIVATE
+    _WINDLL
+    _USRDLL
+    _AFXDLL
+)
+
+target_precompile_headers(vwprops PRIVATE
+    "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/vwprops/stdafx.h>"
+)
+
+target_link_libraries(vwprops PRIVATE
+    vwsystem
+    uuid
+    ole32
+    oleaut32
+)
+
+# =============================================================================
 # Graphics-dependent components (Phase 5+)
 # =============================================================================
 if(VWORLDS_BUILD_GRAPHICS)
