@@ -1,4 +1,4 @@
-/* Copyright © 2000 Microsoft Corporation.  All rights reserved. */
+/* Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved. */
 /* In installing/viewing this source code, you agree to the terms of the */
 /* Microsoft Research Source License (MSRSL) included in the root of this source tree */
 /* and available from http://www.vworlds.org/license.asp. */
@@ -12,8 +12,7 @@
 #define _WIN32_WINNT 0x0400	//for WinNT 4.0 or Win95 with DCOM
 #define USE_STUBLESS_PROXY	//defined only with MIDL switch /Oicf
 
-#pragma comment(lib, "rpcndr.lib")
-#pragma comment(lib, "rpcns4.lib")
+// rpcndr.lib and rpcns4.lib merged into rpcrt4.lib in modern SDK
 #pragma comment(lib, "rpcrt4.lib")
 
 #define DllMain				PrxDllMain

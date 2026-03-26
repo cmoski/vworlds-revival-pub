@@ -1,4 +1,4 @@
-// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+// Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved.
 // In installing/viewing this source code, you agree to the terms of the
 // Microsoft Research Source License (MSRSL) included in the root of this source tree
 // and available from http://www.vworlds.org/license.asp.
@@ -172,7 +172,7 @@ protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnDestroy();
-	afx_msg void OnControlGetFocus(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnControlGetFocus(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnUpdateToolsEditBoundaries(CCmdUI* pCmdUI);
 	afx_msg void OnToolsEditBoundaries();
 	afx_msg void OnUpdateToolsNavigate(CCmdUI* pCmdUI);

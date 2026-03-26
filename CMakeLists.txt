@@ -330,6 +330,17 @@ list(APPEND VWORLDS_MIDL_OUTPUTS
     "${CMAKE_CURRENT_SOURCE_DIR}/vwmm/vwmm_i.c"
 )
 
+# vwstudio.idl is in vwstudio/ directory
+vworlds_midl_compile(
+    "${CMAKE_CURRENT_SOURCE_DIR}/vwstudio/vwstudio.idl"
+    OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vwstudio"
+    TLB "${CMAKE_CURRENT_SOURCE_DIR}/vwstudio/vwstudio.tlb"
+)
+list(APPEND VWORLDS_MIDL_OUTPUTS
+    "${CMAKE_CURRENT_SOURCE_DIR}/vwstudio/vwstudio.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/vwstudio/vwstudio_i.c"
+)
+
 # Custom target for all MIDL outputs
 add_custom_target(vworlds_midl DEPENDS ${VWORLDS_MIDL_OUTPUTS})
 
@@ -1091,6 +1102,164 @@ add_custom_command(TARGET vwmm POST_BUILD
         "${D3DRM_BIN_DIR}/d3drm.dll"
         "$<TARGET_FILE_DIR:vwmm>/d3drm.dll"
     COMMENT "Deploying d3drm.dll app-locally"
+)
+
+# =============================================================================
+# vwstudio.dll - Studio authoring module
+# =============================================================================
+
+add_library(vwstudio SHARED
+    vwstudio/stdafx.cpp
+    vwstudio/vwstudio.cpp
+    vwstudio/dlldatax.c
+    # stdtools
+    tools/stdtools/ctrlmgr.cpp
+    tools/stdtools/select.cpp
+    tools/stdtools/undoitem.cpp
+    tools/stdtools/undostak.cpp
+    tools/stdtools/vwerrtl.cpp
+    tools/stdtools/polytool.cpp
+    tools/stdtools/rotat2d.cpp
+    tools/stdtools/scale2d.cpp
+    tools/stdtools/trans2d.cpp
+    tools/stdtools/ZoomTool.cpp
+    # geomtool
+    tools/geomtool/geomsel.cpp
+    tools/geomtool/geomundo.cpp
+    tools/geomtool/rottool.cpp
+    tools/geomtool/scaletl.cpp
+    tools/geomtool/trans3d.cpp
+    tools/geomtool/undoutil.cpp
+    # webtools
+    tools/webtools/FileAcTl.cpp
+    tools/webtools/rwhelper.cpp
+    tools/webtools/wwhelper.cpp
+    # shared
+    vwcommon/Cathelp.cpp
+    vwcommon/syshelp.cpp
+    vwcommon/vwsgfxut.cpp
+    vwcommon/vwsutils.cpp
+    vwcommon/reghelp.cpp
+    # module
+    module/studio/vwstuexo.cpp
+    # resources
+    vwstudio/vwstudio.rc
+    vwstudio/vwstudio.def
+)
+
+add_dependencies(vwstudio vworlds_midl)
+
+target_include_directories(vwstudio PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwstudio
+    ${D3DRM_INCLUDE_DIR}
+    ${VWORLDS_COMMON_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/compat
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwsystem
+    ${CMAKE_CURRENT_SOURCE_DIR}/tools/stdtools
+    ${CMAKE_CURRENT_SOURCE_DIR}/tools/geomtool
+    ${CMAKE_CURRENT_SOURCE_DIR}/tools/webtools
+    ${CMAKE_CURRENT_SOURCE_DIR}/module/studio
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwmm
+)
+
+target_compile_definitions(vwstudio PRIVATE
+    _WINDLL _USRDLL _AFXDLL
+)
+
+target_precompile_headers(vwstudio PRIVATE
+    "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/vwstudio/stdafx.h>"
+)
+
+target_link_directories(vwstudio PRIVATE ${D3DRM_LIB_DIR})
+target_link_options(vwstudio PRIVATE /SAFESEH:NO)
+
+target_link_libraries(vwstudio PRIVATE
+    vwsystem
+    d3drm
+    dxguid
+    uuid
+    ole32
+    oleaut32
+    wininet
+)
+
+# =============================================================================
+# vwrendvw.dll - Render View OCX
+# =============================================================================
+
+# Generate vwrendvw.tlb from VWRendVw.odl
+add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/vwocx/vwrendvw/VWRendVw.tlb"
+    COMMAND midl /nologo /win32 /char signed /env win32
+        /tlb "${CMAKE_CURRENT_SOURCE_DIR}/vwocx/vwrendvw/VWRendVw.tlb"
+        /h "${CMAKE_CURRENT_SOURCE_DIR}/vwocx/vwrendvw/VWRendVw_h.h"
+        /iid "${CMAKE_CURRENT_SOURCE_DIR}/vwocx/vwrendvw/VWRendVw_i.c"
+        /I "${VWORLDS_COMMON_DIR}"
+        /I "${CMAKE_CURRENT_SOURCE_DIR}/vwsystem"
+        "${CMAKE_CURRENT_SOURCE_DIR}/vwocx/vwrendvw/VWRendVw.odl"
+    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/vwocx/vwrendvw/VWRendVw.odl"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vwocx/vwrendvw"
+    COMMENT "MIDL: VWRendVw.odl -> VWRendVw.tlb"
+    VERBATIM
+)
+
+add_library(vwrendvw SHARED
+    vwocx/vwrendvw/StdAfx.cpp
+    vwocx/vwrendvw/VWRendVw.cpp
+    vwocx/vwrendvw/VWRnVwCt.cpp
+    vwocx/vwrendvw/VWRnVwPp.cpp
+    vwocx/vwrendvw/Boundary.cpp
+    vwocx/vwrendvw/CmdHandl.cpp
+    vwocx/vwrendvw/edit.cpp
+    vwocx/vwrendvw/geomsel.cpp
+    vwocx/vwrendvw/OptionDg.cpp
+    vwocx/vwrendvw/rlutil.cpp
+    vwocx/vwrendvw/SelctDlg.cpp
+    vwocx/vwrendvw/ToolDlg.cpp
+    # shared
+    vwocx/vwview/viewctl.cpp
+    vwocx/vwview/viewppg.cpp
+    vwcommon/syshelp.cpp
+    vwcommon/vwmenu.cpp
+    vwcommon/vwsgfxut.cpp
+    vwcommon/vwuiview.cpp
+    vwcommon/cmddel.cpp
+    # resources
+    vwocx/vwrendvw/VWRendVw.rc
+    vwocx/vwrendvw/VWRendVw.def
+    "${CMAKE_CURRENT_SOURCE_DIR}/vwocx/vwrendvw/VWRendVw.tlb"
+)
+
+add_dependencies(vwrendvw vworlds_midl)
+
+target_include_directories(vwrendvw PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwocx/vwrendvw
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwocx/vwview
+    ${D3DRM_INCLUDE_DIR}
+    ${VWORLDS_COMMON_DIR}
+    # NOTE: compat/ NOT included - use real D3DRM/DirectDraw headers
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwsystem
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwstudio
+)
+
+target_compile_definitions(vwrendvw PRIVATE
+    _WINDLL _USRDLL _AFXDLL
+)
+
+target_precompile_headers(vwrendvw PRIVATE
+    "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/vwocx/vwrendvw/stdafx.h>"
+)
+
+target_link_directories(vwrendvw PRIVATE ${D3DRM_LIB_DIR})
+target_link_options(vwrendvw PRIVATE /SAFESEH:NO)
+
+target_link_libraries(vwrendvw PRIVATE
+    d3drm
+    ddraw
+    dxguid
+    uuid
+    ole32
+    oleaut32
 )
 
 endif() # VWORLDS_HAS_D3DRM
