@@ -1274,6 +1274,28 @@ target_link_libraries(vwrendvw PRIVATE
 endif() # VWORLDS_HAS_D3DRM
 
 # =============================================================================
+# renderhost.exe - Minimal VWorlds render host (Phase 7)
+# =============================================================================
+
+add_executable(renderhost WIN32
+    renderhost/renderhost.cpp
+)
+
+target_compile_definitions(renderhost PRIVATE
+    _ATL_APARTMENT_THREADED
+)
+
+target_link_libraries(renderhost PRIVATE
+    ole32
+    oleaut32
+    uuid
+    user32
+    gdi32
+    shell32
+    advapi32
+)
+
+# =============================================================================
 # Summary
 # =============================================================================
 message(STATUS "")
