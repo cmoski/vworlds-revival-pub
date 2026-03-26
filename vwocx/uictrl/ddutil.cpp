@@ -1,4 +1,4 @@
-// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+// Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved.
 // In installing/viewing this source code, you agree to the terms of the
 // Microsoft Research Source License (MSRSL) included in the root of this source tree
 // and available from http://www.vworlds.org/license.asp.
@@ -14,7 +14,7 @@
 #include "ddutil.h"
 #include "cutils.h"
 #include <inetfile.h>
-#include <graphtls.h>
+// graphtls.h removed - not needed by ddutil, and contains DirectDraw inline functions
 #include <vwgeomsp.h>
 #include <math.h>
 #include <spritemn.h>

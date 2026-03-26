@@ -7,8 +7,15 @@
 
 #include <windows.h>
 
-// DirectDraw pointer types (opaque)
-typedef int* LPDIRECTDRAW;
+// Forward declare IDirectDraw as an opaque struct for code that uses IDirectDraw* directly.
+// The real IDirectDraw is a COM interface, but for stub purposes a struct suffices.
+typedef struct IDirectDraw IDirectDraw;
+typedef struct IDirectDrawSurface IDirectDrawSurface;
+typedef struct IDirectDrawPalette IDirectDrawPalette;
+typedef struct IDirectDrawClipper IDirectDrawClipper;
+
+// DirectDraw pointer types
+typedef IDirectDraw* LPDIRECTDRAW;
 typedef int* LPDIRECTDRAW2;
 typedef int* LPDIRECTDRAW4;
 typedef int* LPDIRECTDRAW7;

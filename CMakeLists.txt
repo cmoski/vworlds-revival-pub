@@ -852,6 +852,89 @@ target_link_libraries(objexplr PRIVATE
 )
 
 # =============================================================================
+# uictrl.ocx - UI Controls (reduced build, excludes vwsfvwct DirectDraw control)
+# =============================================================================
+
+# Generate uictrl.tlb from uictrl.odl
+add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/vwocx/uictrl/uictrl.tlb"
+    COMMAND midl /nologo /win32 /char signed /env win32
+        /tlb "${CMAKE_CURRENT_SOURCE_DIR}/vwocx/uictrl/uictrl.tlb"
+        /h "${CMAKE_CURRENT_SOURCE_DIR}/vwocx/uictrl/uictrl_h.h"
+        /iid "${CMAKE_CURRENT_SOURCE_DIR}/vwocx/uictrl/uictrl_i.c"
+        /I "${VWORLDS_COMMON_DIR}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/vwocx/uictrl/uictrl.odl"
+    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/vwocx/uictrl/uictrl.odl"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vwocx/uictrl"
+    COMMENT "MIDL: uictrl.odl -> uictrl.tlb"
+    VERBATIM
+)
+
+add_library(uictrl SHARED
+    vwocx/uictrl/StdAfx.cpp
+    vwocx/uictrl/uictrl.cpp
+    vwocx/uictrl/ahistctl.cpp
+    vwocx/uictrl/avlistct.cpp
+    vwocx/uictrl/cliocctl.cpp
+    vwocx/uictrl/ctdata.cpp
+    vwocx/uictrl/cutil.cpp
+    # ddutil.cpp EXCLUDED - uses DirectDraw surfaces internally (Phase 5)
+    vwocx/uictrl/ddutil_stub.cpp
+    vwocx/uictrl/roomctl.cpp
+    vwocx/uictrl/selfctl.cpp
+    vwocx/uictrl/socxctl.cpp
+    vwocx/uictrl/soundctl.cpp
+    vwocx/uictrl/userctl.cpp
+    vwocx/uictrl/whelpct.cpp
+    # vwsfvwct.cpp EXCLUDED - DirectDraw self-view rendering (Phase 5)
+    # Base control class from vwview (NOT vwview.cpp - has its own DLL entry)
+    vwocx/vwview/viewctl.cpp
+    # Shared utilities
+    vwcommon/syshelp.cpp
+    vwcommon/reghelp.cpp
+    vwcommon/vwmenu.cpp
+    vwcommon/vwuiview.cpp
+    vwcommon/cmddel.cpp
+    vwcommon/scripts.cpp
+    vwcommon/profhelp.cpp
+    # Resources and exports
+    vwocx/uictrl/uictrl.rc
+    vwocx/uictrl/uictrl.def
+    # TLB dependency
+    "${CMAKE_CURRENT_SOURCE_DIR}/vwocx/uictrl/uictrl.tlb"
+)
+
+add_dependencies(uictrl vworlds_midl)
+
+target_include_directories(uictrl PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwocx/uictrl
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwocx/vwview
+    ${VWORLDS_COMMON_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/compat
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwsystem
+    ${CMAKE_CURRENT_SOURCE_DIR}/d2d/d2dutils/include
+)
+
+target_compile_definitions(uictrl PRIVATE
+    _WINDLL
+    _USRDLL
+    _AFXDLL
+)
+
+target_precompile_headers(uictrl PRIVATE
+    "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/vwocx/uictrl/stdafx.h>"
+)
+
+target_link_libraries(uictrl PRIVATE
+    d2dutils
+    uuid
+    ole32
+    oleaut32
+    dsound
+    wininet
+)
+
+# =============================================================================
 # Graphics-dependent components (Phase 5+)
 # =============================================================================
 if(VWORLDS_BUILD_GRAPHICS)
