@@ -1283,7 +1283,11 @@ add_executable(renderhost WIN32
 
 target_compile_definitions(renderhost PRIVATE
     _ATL_APARTMENT_THREADED
+    _AFXDLL
 )
+
+# No precompiled headers for this target
+set_target_properties(renderhost PROPERTIES DISABLE_PRECOMPILE_HEADERS ON)
 
 target_link_libraries(renderhost PRIVATE
     ole32
@@ -1293,6 +1297,7 @@ target_link_libraries(renderhost PRIVATE
     gdi32
     shell32
     advapi32
+    comdlg32
 )
 
 # =============================================================================

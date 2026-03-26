@@ -28,11 +28,8 @@ library VWRENDERVIEWLib
 {
 	importlib(STDOLE_TLB);
 	importlib(STDTYPE_TLB);
-#ifdef VWSYSTEM_BUILD
+	// Always use vwsystem.tlb (VWRender.tlb doesn't exist as standalone)
 	importlib("..\..\vwsystem\vwsystem.tlb");
-#else
-	importlib("..\..\vwcommon\VWRender.tlb");
-#endif
 	
 	//  Primary dispatch interface for CVWRenderViewCtrl
 
