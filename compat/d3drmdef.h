@@ -25,7 +25,18 @@ typedef struct _D3DVECTOR {
 } D3DVECTOR, *LPD3DVECTOR;
 #endif
 
-typedef D3DVECTOR D3DRMVECTOR4D;  // Simplified - real one has w component
+typedef struct _D3DRMQUATERNION {
+    D3DVALUE s;
+    D3DVECTOR v;
+} D3DRMQUATERNION, *LPD3DRMQUATERNION;
+
+typedef struct _D3DRMBOX {
+    D3DVECTOR min, max;
+} D3DRMBOX, *LPD3DRMBOX;
+
+typedef struct _D3DRMVECTOR4D {
+    float x, y, z, w;
+} D3DRMVECTOR4D, *LPD3DRMVECTOR4D;
 
 // Enumerations - guard each one
 #ifndef D3DRMCOMBINE_REPLACE

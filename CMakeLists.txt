@@ -686,6 +686,38 @@ add_dependencies(vwfound vworlds_midl)
 endif() # VWORLDS_BUILD_FOUNDATN
 
 # =============================================================================
+# jpeglib - JPEG codec (static library, pure C in .cpp files)
+# =============================================================================
+
+file(GLOB JPEGLIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/d2d/jpeglib/*.cpp")
+
+add_library(jpeglib STATIC ${JPEGLIB_SOURCES})
+
+target_include_directories(jpeglib PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/d2d/jpeglib
+)
+
+# No PCH - pure codec library
+# Legacy C code renamed to .cpp; may generate warnings
+target_compile_options(jpeglib PRIVATE /W2)  # Reduce warning level for legacy C code
+set_target_properties(jpeglib PROPERTIES LINKER_LANGUAGE CXX)
+
+# =============================================================================
+# d2dutils - Utility library (static library)
+# =============================================================================
+
+add_library(d2dutils STATIC
+    d2d/d2dutils/src/darray.cpp
+    d2d/d2dutils/src/errmgr.cpp
+    d2d/d2dutils/src/mmutils.cpp
+)
+
+target_include_directories(d2dutils PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/d2d/d2dutils/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/compat
+)
+
+# =============================================================================
 # Graphics-dependent components (Phase 5+)
 # =============================================================================
 if(VWORLDS_BUILD_GRAPHICS)

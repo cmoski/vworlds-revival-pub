@@ -5,6 +5,7 @@
 
 #include <windows.h>
 #include "d3drmdef.h"
+#include "ddraw.h"
 
 // Match the MIDL cpp_quote typedef convention (int*)
 typedef int* LPDIRECT3DRM;
@@ -20,5 +21,8 @@ typedef int* LPDIRECT3DRMLIGHT;
 typedef int* LPDIRECT3DRMMESH;
 typedef int* LPDIRECT3DRMANIMATION;
 typedef int* LPDIRECT3DRMUSERVISUAL;
+
+// Vector math function replacements
+#include "d3drmmath.h"
 
 #endif // __D3DRM_H__
