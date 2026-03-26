@@ -236,16 +236,12 @@ STDMETHODIMP CVWGeometrySprite::InitializeSprite(VARIANT_BOOL bForceDownload)
 	_splitpath(CString(m_bstrGeometryName), NULL, NULL, NULL, szExt );
 	strImageURLToLoad = m_bstrGeometryName;
 
-	TRACE("VWGeometrySprite::InitializeSprite: geom='%s' ext='%s' isAvatar=%d autoDownload=%d\n",
-		CString(m_bstrGeometryName), szExt, bIsAvatar, bAutoDownload);
-
 	// If its an SPR file read it. If not and this is an avatar, or if we fail to read it
 	// and this is an avtar then read the default sprite file.
 	if ((stricmp(szExt, ".SPR") == 0 &&
 		 FAILED(hr = ReadSpriteFile(m_bstrGeometryName, VARIANT_TRUE))) ||
 		(stricmp(szExt, ".SPR") != 0 && bIsAvatar))
 	{
-		TRACE("VWGeometrySprite: reading default sprite file '%s'\n", CString(m_bstrDefaultSpriteFile));
 		if (!bIsAvatar || FAILED(hr = ReadSpriteFile(m_bstrDefaultSpriteFile, FAILED(hr))))
 			return hr;
 	}
@@ -254,11 +250,8 @@ STDMETHODIMP CVWGeometrySprite::InitializeSprite(VARIANT_BOOL bForceDownload)
 
 	// Now try to download the image file.
 	strImageURLToLoad.MakeLower();
-	TRACE("VWGeometrySprite: downloading image '%s'\n", (LPCSTR)strImageURLToLoad);
-
 	if (FAILED(m_pINetFileManager->FindCachedFile(CComBSTR(strImageURLToLoad), &bstrImageFileURL.m_str, &m_bstrImageFilePath.m_str, &bFound)) || !bFound)
 	{
-		TRACE("VWGeometrySprite: image not cached, forceDownload=%d autoDownload=%d\n", bForceDownload, bAutoDownload);
 		if (bForceDownload || bAutoDownload)
 		{
 			// Get remote image file asyncronously.
@@ -266,7 +259,6 @@ STDMETHODIMP CVWGeometrySprite::InitializeSprite(VARIANT_BOOL bForceDownload)
 			char buff[20];
 			ltoa((DWORD)this,buff,10);
 			m_pINetFileManager->FileDLDone(CComBSTR(CString(buff)));
-			TRACE("VWGeometrySprite: calling GetFileAsync for '%s'\n", (LPCSTR)strImageURLToLoad);
 			if (FAILED(hr = m_pINetFileManager->GetFileAsync(CComBSTR(strImageURLToLoad),
 															 (long)this,
 															 (IIFMCallback*)this,
@@ -279,17 +271,12 @@ STDMETHODIMP CVWGeometrySprite::InitializeSprite(VARIANT_BOOL bForceDownload)
 		else
 		{
 			// Do not have image file locally, go to thumbnail mode.
-			TRACE("VWGeometrySprite: going to thumbnail mode\n");
 			m_bThumbnailMode = VARIANT_TRUE;
 			if (FAILED(hr = m_pINetFileManager->FindCachedFile(CComBSTR(szThumbnailBackground), &bstrImageFileURL.m_str, &m_bstrImageFilePath.m_str, &bFound)) || !bFound)
 				return hr;
 		}
 	}
-	else
-	{
-		TRACE("VWGeometrySprite: image found in cache: '%s'\n", CString(m_bstrImageFilePath));
-	}
-	
+
 	// Store the URL for reloading purposes.
 	m_bstrImageFileURL = bstrImageFileURL;
 
@@ -440,10 +427,6 @@ STDMETHODIMP CVWGeometrySprite::OnDone_T2(HRESULT hresult, BSTR bstrFinalPath, l
 	CComBSTR					bstrGeometryName;
 	char						szExt[_MAX_EXT];
 	HRESULT hr = S_OK;
-
-	TRACE("VWGeometrySprite::OnDone_T2: hr=0x%08X path='%s' url='%s'\n",
-		hresult, bstrFinalPath ? CString(bstrFinalPath) : CString("(null)"),
-		bstrFullURL ? CString(bstrFullURL) : CString("(null)"));
 
 	// Is this thing an avatar?
 	if (m_pSecurity)

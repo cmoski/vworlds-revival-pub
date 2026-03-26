@@ -1572,7 +1572,7 @@ STDMETHODIMP CThingObject::CopyPropertiesTo(IPropertyMap* ppropertymap)
 
 	if (m_pProperties == NULL)
 	{
-		TRACE("PROPMAP_NULL: CopyPropertiesTo id=%d stub=%d\n", m_lObjectID, m_bStub);
+		VWTRACE(m_pWorld, "VWOBJECT", VWT_IMPORTANT, "CThingObject::CopyPropertiesTo: property map is NULL (id=%d, stub=%d)\n", m_lObjectID, m_bStub);
 		hr = VWOBJECT_E_INVALIDPROPERTYMAP;
 		goto ERROR_ENCOUNTERED;
 	}
@@ -1700,7 +1700,7 @@ STDMETHODIMP CThingObject::AddPropertyInt(BSTR bstrPropertyName, VARIANT var, IT
 
 	if (m_pProperties == NULL)
 	{
-		TRACE("PROPMAP_NULL: AddPropertyExtHelper id=%d stub=%d\n", m_lObjectID, m_bStub);
+		VWTRACE(m_pWorld, "VWOBJECT", VWT_IMPORTANT, "CThingObject::AddPropertyExtHelper: property map is NULL (id=%d, stub=%d)\n", m_lObjectID, m_bStub);
 		hr = VWOBJECT_E_INVALIDPROPERTYMAP;
 		goto ERROR_ENCOUNTERED;
 	}
@@ -2099,7 +2099,7 @@ HRESULT CThingObject::put_PropertyExt(BSTR bstrPropertyName, UINT nHashOrig, VAR
 
 	if (m_pProperties == NULL)
 	{
-		TRACE("PROPMAP_NULL: put_PropertyExt id=%d stub=%d\n", m_lObjectID, m_bStub);
+		VWTRACE(m_pWorld, "VWOBJECT", VWT_IMPORTANT, "CThingObject::put_PropertyExt: property map is NULL (id=%d, stub=%d)\n", m_lObjectID, m_bStub);
 		hr = VWOBJECT_E_INVALIDPROPERTYMAP;
 		goto ERROR_ENCOUNTERED;
 	}
@@ -2405,12 +2405,6 @@ STDMETHODIMP CThingObject::get_Property(BSTR bstrPropertyName, VARIANT* pvar)
 
 	hr = get_PropertyExt(bstrPropertyName, nHashOrig, NULL, pvar);
 
-	if (hr == VWOBJECT_E_PROPERTYNOTEXIST)
-	{
-		TRACE("GET_PROP_FAIL: '%s' on id=%d\n",
-			(LPCSTR)CStringA(bstrPropertyName), m_lObjectID);
-	}
-
 	return ReportThingError(hr);
 }
 
@@ -2436,7 +2430,7 @@ STDMETHODIMP CThingObject::get_PropertyExt(BSTR bstrPropertyName, UINT nHashOrig
 
 	if (m_pProperties == NULL)
 	{
-		TRACE("PROPMAP_NULL: get_PropertyExt id=%d stub=%d\n", m_lObjectID, m_bStub);
+		VWTRACE(m_pWorld, "VWOBJECT", VWT_IMPORTANT, "CThingObject::get_PropertyExt: property map is NULL (id=%d, stub=%d)\n", m_lObjectID, m_bStub);
 		return VWOBJECT_E_INVALIDPROPERTYMAP;
 	}
 
@@ -2866,8 +2860,9 @@ STDMETHODIMP CThingObject::get_PropertySecurityExt(BSTR bstrPropertyName, UINT n
 		}
 		else
 		{
-			TRACE("PROP_NOTEXIST: '%s' on id=%d (no exemplar chain)\n",
-				(LPCSTR)CStringA(bstrPropertyName), m_lObjectID);
+#ifdef _DEBUG
+			VWTRACE(m_pWorld, "VWOBJECT", VWT_IMPORTANT, "CThingObject::get_PropertySecurityExt: unknown property (%s) on id=%d\n", CString(bstrPropertyName), m_lObjectID);
+#endif
 			hr = VWOBJECT_E_PROPERTYNOTEXIST;
 			goto ERROR_ENCOUNTERED;
 		}
@@ -3197,7 +3192,7 @@ STDMETHODIMP CThingObject::IsValidProperty(BSTR bstrPropertyName, VARIANT_BOOL* 
 
 	if (m_pProperties == NULL)
 	{
-		TRACE("PROPMAP_NULL: IsValidProperty id=%d stub=%d\n", m_lObjectID, m_bStub);
+		VWTRACE(m_pWorld, "VWOBJECT", VWT_ERROR, "CThingObject::IsValidProperty: property map is NULL (id=%d, stub=%d)\n", m_lObjectID, m_bStub);
 		hr = VWOBJECT_E_INVALIDPROPERTYMAP;
 		goto ERROR_ENCOUNTERED;
 	}
@@ -5436,8 +5431,6 @@ STDMETHODIMP CThingObject::UnMarshall(IUnMarshallBuffer* pbuffer)
 	IDispatch* pdisp = NULL;
 	IMethod* pmethod = NULL;
 
-	TRACE("UNMARSHALL_ENTER: id=%d\n", m_lObjectID);
-
 	// Keep old property/method maps alive during unmarshalling so re-entrant
 	// callers (e.g., recursive deserialization reading Global properties) see
 	// the old map instead of NULL. We hold our own refs; security Cleanup()
@@ -5597,8 +5590,6 @@ ERROR_ENCOUNTERED:
 	SAFERELEASE(pOldMethods);
 
 	SAFEFREESTRING(bstrName);
-
-	TRACE("UNMARSHALL_EXIT: id=%d hr=0x%08X\n", m_lObjectID, hr);
 
 	return ReportThingError(hr);
 }

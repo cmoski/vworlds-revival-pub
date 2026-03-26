@@ -2243,11 +2243,6 @@ HRESULT CVWClientObject::CreateTools()
 				bstrFileURL += "Avatar Graphics\\;file://";
 				bstrFileURL += bstrContentPath;
 				pInetFile->put_RootURL(bstrFileURL);
-				TRACE("CVWClientObject::CreateTools: Inetfile RootURL set to %s\n", CString(bstrFileURL));
-			}
-			else
-			{
-				TRACE("CVWClientObject::CreateTools: FindContentPath failed\n");
 			}
 			SAFERELEASE(pInetFile);
 		}

@@ -348,8 +348,6 @@ HRESULT CInternetFileManagerObject::GetFileSimplified(BSTR bstrURL, BSTR *pbstrF
 		{
 			strFullURL = m_RootURLs[index] + "/" + CString(bstrURL);
 
-			TRACE("InetFile::GetFileSimplified: trying [%d/%d] %s\n", index+1, m_RootURLs.GetSize(), (LPCSTR)strFullURL);
-
 #ifdef _DEBUG
 			dwTick = GetTickCount();
 #endif
@@ -360,8 +358,6 @@ HRESULT CInternetFileManagerObject::GetFileSimplified(BSTR bstrURL, BSTR *pbstrF
 			{
 				strFilename = CString(szPath);
 
-				TRACE("InetFile::GetFileSimplified: OK downloaded %s -> %s\n", (LPCSTR)strFullURL, (LPCSTR)strFilename);
-
 				*pbstrFinalURL = strFullURL.AllocSysString();
 				*pbstrFinalPath = strFilename.AllocSysString();
 
@@ -369,8 +365,6 @@ HRESULT CInternetFileManagerObject::GetFileSimplified(BSTR bstrURL, BSTR *pbstrF
 			}
 			else
 			{
-				TRACE("InetFile::GetFileSimplified: FAIL %s hr=0x%08X\n", (LPCSTR)strFullURL, hr);
-
 				hr = INETFILE_E_FILENOTFOUND;
 			}
 		}
@@ -591,11 +585,9 @@ STDMETHODIMP CInternetFileManagerObject::put_RootURL(BSTR bstrRootURL)
 		bretval = ExtractFirstURL(strURLLeft, strExtractedURL);
 		if (strExtractedURL.GetLength() != 0)
 		{
-			TRACE("InetFile::put_RootURL: [%d] %s\n", m_RootURLs.GetSize(), (LPCSTR)strExtractedURL);
 			m_RootURLs.Add(strExtractedURL);
 		}
 	}
-	TRACE("InetFile::put_RootURL: %d root URLs configured\n", m_RootURLs.GetSize());
 
 	return S_OK;
 }

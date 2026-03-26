@@ -2771,7 +2771,7 @@ STDMETHODIMP CWorldObject::UpdateGlobalPaths()
 			{
 				bstrRootURLPath += bstrRoot;
 
-				TRACE("UpdateGlobalPaths: composed RootURL = %s\n", CString(bstrRootURLPath));
+				VWTRACE(m_pWorld, "VWOBJECT", TRACE_GLOBALPATHS, "CWorldObject::UpdateGlobalPaths: RootURL %s\n", CString(bstrRootURLPath));
 
 				if (SUCCEEDED(get_ToolExt(CComBSTR("Inetfile"), (IUnknown**)&pinf)) && pinf)
 				{
@@ -3120,18 +3120,11 @@ HRESULT CWorldObject::CreateTools()
 	{
 		CComBSTR bstrContentPath;
 		HRESULT hrPath = FindContentPath(&bstrContentPath.m_str);
-		TRACE("CreateTools: FindContentPath hr=0x%08X, path='%s'\n", hrPath,
-			bstrContentPath.m_str ? CString(bstrContentPath) : CString("(null)"));
 		if (SUCCEEDED(hrPath) && bstrContentPath.Length() > 0)
 		{
 			CComBSTR bstrFileURL("file://");
 			bstrFileURL += bstrContentPath;
 			pInetfile->put_RootURL(bstrFileURL);
-			TRACE("CreateTools: Set Inetfile RootURL to '%s'\n", CString(bstrFileURL));
-		}
-		else
-		{
-			TRACE("CreateTools: FindContentPath failed, content will not load!\n");
 		}
 	}
 
