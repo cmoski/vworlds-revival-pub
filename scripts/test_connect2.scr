@@ -1,0 +1,48 @@
+On Error Resume Next
+
+' === Connect ===
+set Client = XObject
+Client.ConnectToServer "localhost", True
+If Err.Number <> 0 Then
+    MsgBox "ConnectToServer: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+End If
+
+set World = Client.Connect("localhost/TestWorld")
+If Err.Number <> 0 Then
+    MsgBox "Connect: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+End If
+
+' === Property readback ===
+MsgBox "Connected! Version: " & World.Version
+
+Dim g
+set g = World.Global
+If Err.Number <> 0 Then
+    MsgBox "World.Global: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+Else
+    MsgBox "Global.Name = " & g.Name & vbCrLf & "Global.Description = " & g.Description
+End If
+
+' === Object creation ===
+Dim obj
+set obj = World.CreateInstance("MyTestArtifact", World.Exemplar("Artifact"))
+If Err.Number <> 0 Then
+    MsgBox "CreateInstance: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+Else
+    MsgBox "Created: " & obj.Name & " (Type: " & obj.Type & ")"
+
+    ' Set a property
+    obj.Description = "Created by modernized VWorlds client"
+    If Err.Number <> 0 Then
+        MsgBox "Set Description: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+        Err.Clear
+    Else
+        MsgBox "Description set. Readback: " & obj.Description
+    End If
+End If
+
+MsgBox "Test complete!"

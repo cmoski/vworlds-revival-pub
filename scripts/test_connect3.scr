@@ -1,0 +1,45 @@
+On Error Resume Next
+
+' === Connect to server ===
+set Client = XObject
+set World = Client.Connect("localhost/TestWorld")
+If Err.Number <> 0 Then
+    MsgBox "Connect: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+End If
+
+MsgBox "World connected. Version: " & World.Version
+
+' === Login as user ===
+Dim User
+set User = World.Connect("TestUser", "")
+If Err.Number <> 0 Then
+    MsgBox "World.Connect (login): " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+Else
+    MsgBox "Logged in as: " & User.Name & " in room: " & User.Container.Name
+End If
+
+' === Read Global ===
+Dim g
+set g = World.Global
+If Err.Number <> 0 Then
+    MsgBox "World.Global: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+Else
+    MsgBox "Global.Name = " & g.Name
+End If
+
+' === Create object ===
+Dim obj
+set obj = World.CreateInstance("MyArtifact", World.Exemplar("Artifact"))
+If Err.Number <> 0 Then
+    MsgBox "CreateInstance: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+Else
+    MsgBox "Created: " & obj.Name & " Type: " & obj.Type
+    obj.Description = "Created by modernized VWorlds"
+    MsgBox "Description: " & obj.Description
+End If
+
+MsgBox "Test complete!"
