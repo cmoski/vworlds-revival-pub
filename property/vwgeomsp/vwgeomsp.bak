@@ -1,0 +1,1095 @@
+# Microsoft Developer Studio Generated NMAKE File, Format Version 4.20
+# ** DO NOT EDIT **
+
+# TARGTYPE "Win32 (x86) Dynamic-Link Library" 0x0102
+
+!IF "$(CFG)" == ""
+CFG=VWGeomSp - Win32 IceCAP Debug
+!MESSAGE No configuration specified.  Defaulting to VWGeomSp - Win32 IceCAP\
+ Debug.
+!ENDIF 
+
+!IF "$(CFG)" != "VWGeomSp - Win32 Release" && "$(CFG)" !=\
+ "VWGeomSp - Win32 Debug" && "$(CFG)" != "VWGeomSp - Win32 IceCAP Debug" &&\
+ "$(CFG)" != "VWGeomSp - Win32 IceCAP Release"
+!MESSAGE Invalid configuration "$(CFG)" specified.
+!MESSAGE You can specify a configuration when running NMAKE on this makefile
+!MESSAGE by defining the macro CFG on the command line.  For example:
+!MESSAGE 
+!MESSAGE NMAKE /f "vwgeomsp.mak" CFG="VWGeomSp - Win32 IceCAP Debug"
+!MESSAGE 
+!MESSAGE Possible choices for configuration are:
+!MESSAGE 
+!MESSAGE "VWGeomSp - Win32 Release" (based on\
+ "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "VWGeomSp - Win32 Debug" (based on "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "VWGeomSp - Win32 IceCAP Debug" (based on\
+ "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "VWGeomSp - Win32 IceCAP Release" (based on\
+ "Win32 (x86) Dynamic-Link Library")
+!MESSAGE 
+!ERROR An invalid configuration is specified.
+!ENDIF 
+
+!IF "$(OS)" == "Windows_NT"
+NULL=
+!ELSE 
+NULL=nul
+!ENDIF 
+################################################################################
+# Begin Project
+# PROP Target_Last_Scanned "VWGeomSp - Win32 Debug"
+CPP=cl.exe
+RSC=rc.exe
+MTL=mktyplib.exe
+
+!IF  "$(CFG)" == "VWGeomSp - Win32 Release"
+
+# PROP BASE Use_MFC 1
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "Release"
+# PROP BASE Intermediate_Dir "Release"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 2
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "Release"
+# PROP Intermediate_Dir "Release"
+# PROP Target_Dir ""
+OUTDIR=.\Release
+INTDIR=.\Release
+# Begin Custom Macros
+OutDir=.\Release
+# End Custom Macros
+
+ALL : "$(OUTDIR)\vwgeomsp.dll" "$(OUTDIR)\regsvr32.trg"
+
+CLEAN : 
+	-@erase "$(INTDIR)\d3dmath.obj"
+	-@erase "$(INTDIR)\StdAfx.obj"
+	-@erase "$(INTDIR)\vc40.pdb"
+	-@erase "$(INTDIR)\VWGeomS.obj"
+	-@erase "$(INTDIR)\VWGeomSp.obj"
+	-@erase "$(INTDIR)\vwgeomsp.pch"
+	-@erase "$(INTDIR)\VWGeomSp.res"
+	-@erase "$(OUTDIR)\regsvr32.trg"
+	-@erase "$(OUTDIR)\vwgeomsp.dll"
+	-@erase "$(OUTDIR)\vwgeomsp.exp"
+	-@erase "$(OUTDIR)\vwgeomsp.lib"
+	-@erase "$(OUTDIR)\vwgeomsp.pdb"
+	-@erase "..\..\vwcommon\VWGeomSp.h"
+	-@erase "..\..\vwcommon\VWGeomSp.tlb"
+	-@erase "..\..\vwcommon\VWGeomSp_i.c"
+
+"$(OUTDIR)" :
+    if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
+
+# ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_MBCS" /Yu"stdafx.h" /c
+# ADD CPP /nologo /MD /W3 /GX /Zi /O2 /I "." /I "..\..\vwcommon" /I "\dxsdk\sdk\inc" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_USRDLL" /D "_WINDLL" /D "_AFXDLL" /D "_MBCS" /Yu"stdafx.h" /c
+CPP_PROJ=/nologo /MD /W3 /GX /Zi /O2 /I "." /I "..\..\vwcommon" /I\
+ "\dxsdk\sdk\inc" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_USRDLL" /D "_WINDLL"\
+ /D "_AFXDLL" /D "_MBCS" /Fp"$(INTDIR)/vwgeomsp.pch" /Yu"stdafx.h"\
+ /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /c 
+CPP_OBJS=.\Release/
+CPP_SBRS=.\.
+# ADD BASE MTL /nologo /D "NDEBUG" /win32
+# ADD MTL /nologo /D "NDEBUG" /win32
+MTL_PROJ=/nologo /D "NDEBUG" /win32 
+# ADD BASE RSC /l 0x409 /d "NDEBUG"
+# ADD RSC /l 0x409 /d "NDEBUG" /d "_AFXDLL"
+RSC_PROJ=/l 0x409 /fo"$(INTDIR)/VWGeomSp.res" /d "NDEBUG" /d "_AFXDLL" 
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+BSC32_FLAGS=/nologo /o"$(OUTDIR)/vwgeomsp.bsc" 
+BSC32_SBRS= \
+	
+LINK32=link.exe
+# ADD BASE LINK32 /nologo /subsystem:windows /dll /machine:I386
+# ADD LINK32 \dxsdk\sdk\lib\d3drm.lib /nologo /subsystem:windows /dll /debug /machine:I386
+LINK32_FLAGS=\dxsdk\sdk\lib\d3drm.lib /nologo /subsystem:windows /dll\
+ /incremental:no /pdb:"$(OUTDIR)/vwgeomsp.pdb" /debug /machine:I386\
+ /def:".\VWGeomSp.def" /out:"$(OUTDIR)/vwgeomsp.dll"\
+ /implib:"$(OUTDIR)/vwgeomsp.lib" 
+DEF_FILE= \
+	".\VWGeomSp.def"
+LINK32_OBJS= \
+	"$(INTDIR)\d3dmath.obj" \
+	"$(INTDIR)\StdAfx.obj" \
+	"$(INTDIR)\VWGeomS.obj" \
+	"$(INTDIR)\VWGeomSp.obj" \
+	"$(INTDIR)\VWGeomSp.res"
+
+"$(OUTDIR)\vwgeomsp.dll" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
+    $(LINK32) @<<
+  $(LINK32_FLAGS) $(LINK32_OBJS)
+<<
+
+# Begin Custom Build
+OutDir=.\Release
+TargetPath=.\Release\vwgeomsp.dll
+InputPath=.\Release\vwgeomsp.dll
+SOURCE=$(InputPath)
+
+"$(OutDir)\regsvr32.trg" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   regsvr32 /s /c "$(TargetPath)"
+   echo regsvr32 exec. time > "$(OutDir)\regsvr32.trg"
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "VWGeomSp - Win32 Debug"
+
+# PROP BASE Use_MFC 1
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "Debug"
+# PROP BASE Intermediate_Dir "Debug"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 2
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "Debug"
+# PROP Intermediate_Dir "Debug"
+# PROP Target_Dir ""
+OUTDIR=.\Debug
+INTDIR=.\Debug
+# Begin Custom Macros
+OutDir=.\Debug
+# End Custom Macros
+
+ALL : "$(OUTDIR)\vwgeomsp.dll" "$(OUTDIR)\regsvr32.trg"
+
+CLEAN : 
+	-@erase "$(INTDIR)\d3dmath.obj"
+	-@erase "$(INTDIR)\StdAfx.obj"
+	-@erase "$(INTDIR)\vc40.idb"
+	-@erase "$(INTDIR)\vc40.pdb"
+	-@erase "$(INTDIR)\VWGeomS.obj"
+	-@erase "$(INTDIR)\VWGeomSp.obj"
+	-@erase "$(INTDIR)\vwgeomsp.pch"
+	-@erase "$(INTDIR)\VWGeomSp.res"
+	-@erase "$(OUTDIR)\regsvr32.trg"
+	-@erase "$(OUTDIR)\vwgeomsp.dll"
+	-@erase "$(OUTDIR)\vwgeomsp.exp"
+	-@erase "$(OUTDIR)\vwgeomsp.ilk"
+	-@erase "$(OUTDIR)\vwgeomsp.lib"
+	-@erase "$(OUTDIR)\vwgeomsp.pdb"
+	-@erase "..\..\vwcommon\VWGeomSp.h"
+	-@erase "..\..\vwcommon\VWGeomSp.tlb"
+	-@erase "..\..\vwcommon\VWGeomSp_i.c"
+
+"$(OUTDIR)" :
+    if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
+
+# ADD BASE CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_MBCS" /Yu"stdafx.h" /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /I "." /I "..\..\vwcommon" /I "\dxsdk\sdk\inc" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_USRDLL" /D "_WINDLL" /D "_AFXDLL" /D "_MBCS" /Yu"stdafx.h" /c
+CPP_PROJ=/nologo /MDd /W3 /Gm /GX /Zi /Od /I "." /I "..\..\vwcommon" /I\
+ "\dxsdk\sdk\inc" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_USRDLL" /D "_WINDLL"\
+ /D "_AFXDLL" /D "_MBCS" /Fp"$(INTDIR)/vwgeomsp.pch" /Yu"stdafx.h"\
+ /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /c 
+CPP_OBJS=.\Debug/
+CPP_SBRS=.\.
+# ADD BASE MTL /nologo /D "_DEBUG" /win32
+# ADD MTL /nologo /D "_DEBUG" /win32
+MTL_PROJ=/nologo /D "_DEBUG" /win32 
+# ADD BASE RSC /l 0x409 /d "_DEBUG"
+# ADD RSC /l 0x409 /d "_DEBUG" /d "_AFXDLL"
+RSC_PROJ=/l 0x409 /fo"$(INTDIR)/VWGeomSp.res" /d "_DEBUG" /d "_AFXDLL" 
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+BSC32_FLAGS=/nologo /o"$(OUTDIR)/vwgeomsp.bsc" 
+BSC32_SBRS= \
+	
+LINK32=link.exe
+# ADD BASE LINK32 /nologo /subsystem:windows /dll /debug /machine:I386
+# ADD LINK32 \dxsdk\sdk\lib\d3drm.lib /nologo /subsystem:windows /dll /debug /machine:I386
+LINK32_FLAGS=\dxsdk\sdk\lib\d3drm.lib /nologo /subsystem:windows /dll\
+ /incremental:yes /pdb:"$(OUTDIR)/vwgeomsp.pdb" /debug /machine:I386\
+ /def:".\VWGeomSp.def" /out:"$(OUTDIR)/vwgeomsp.dll"\
+ /implib:"$(OUTDIR)/vwgeomsp.lib" 
+DEF_FILE= \
+	".\VWGeomSp.def"
+LINK32_OBJS= \
+	"$(INTDIR)\d3dmath.obj" \
+	"$(INTDIR)\StdAfx.obj" \
+	"$(INTDIR)\VWGeomS.obj" \
+	"$(INTDIR)\VWGeomSp.obj" \
+	"$(INTDIR)\VWGeomSp.res"
+
+"$(OUTDIR)\vwgeomsp.dll" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
+    $(LINK32) @<<
+  $(LINK32_FLAGS) $(LINK32_OBJS)
+<<
+
+# Begin Custom Build
+OutDir=.\Debug
+TargetPath=.\Debug\vwgeomsp.dll
+InputPath=.\Debug\vwgeomsp.dll
+SOURCE=$(InputPath)
+
+"$(OutDir)\regsvr32.trg" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   regsvr32 /s /c "$(TargetPath)"
+   echo regsvr32 exec. time > "$(OutDir)\regsvr32.trg"
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "VWGeomSp - Win32 IceCAP Debug"
+
+# PROP BASE Use_MFC 2
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "VWGeomSp"
+# PROP BASE Intermediate_Dir "VWGeomSp"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 2
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "IceDbg"
+# PROP Intermediate_Dir "IceDbg"
+# PROP Target_Dir ""
+OUTDIR=.\IceDbg
+INTDIR=.\IceDbg
+# Begin Custom Macros
+OutDir=.\IceDbg
+# End Custom Macros
+
+ALL : "$(OUTDIR)\vwgeomsp.dll" "$(OUTDIR)\regsvr32.trg"
+
+CLEAN : 
+	-@erase "$(INTDIR)\d3dmath.obj"
+	-@erase "$(INTDIR)\StdAfx.obj"
+	-@erase "$(INTDIR)\vc40.idb"
+	-@erase "$(INTDIR)\vc40.pdb"
+	-@erase "$(INTDIR)\VWGeomS.obj"
+	-@erase "$(INTDIR)\VWGeomSp.obj"
+	-@erase "$(INTDIR)\VWGeomSp.res"
+	-@erase "$(OUTDIR)\regsvr32.trg"
+	-@erase "$(OUTDIR)\vwgeomsp.dll"
+	-@erase "$(OUTDIR)\vwgeomsp.exp"
+	-@erase "$(OUTDIR)\vwgeomsp.ilk"
+	-@erase "$(OUTDIR)\vwgeomsp.lib"
+	-@erase "$(OUTDIR)\vwgeomsp.pdb"
+	-@erase "..\..\vwcommon\VWGeomSp.h"
+	-@erase "..\..\vwcommon\VWGeomSp.tlb"
+	-@erase "..\..\vwcommon\VWGeomSp_i.c"
+	-@erase ".\VWGeomSp\vwgeomsp.pch"
+
+"$(OUTDIR)" :
+    if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
+
+# ADD BASE CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /I "." /I "..\..\vwcommon" /I "\dxsdk\sdk\inc" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_USRDLL" /D "_WINDLL" /D "_AFXDLL" /D "_MBCS" /Yu"stdafx.h" /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /I "." /I "..\..\vwcommon" /I "\dxsdk\sdk\inc" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_USRDLL" /D "_WINDLL" /D "_AFXDLL" /D "_MBCS" /Fp"VWGeomSp/vwgeomsp.pch" /Yu"stdafx.h" /Gh /c
+CPP_PROJ=/nologo /MDd /W3 /Gm /GX /Zi /Od /I "." /I "..\..\vwcommon" /I\
+ "\dxsdk\sdk\inc" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_USRDLL" /D "_WINDLL"\
+ /D "_AFXDLL" /D "_MBCS" /Fp"VWGeomSp/vwgeomsp.pch" /Yu"stdafx.h"\
+ /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /Gh /c 
+CPP_OBJS=.\IceDbg/
+CPP_SBRS=.\.
+# ADD BASE MTL /nologo /D "_DEBUG" /win32
+# ADD MTL /nologo /D "_DEBUG" /win32
+MTL_PROJ=/nologo /D "_DEBUG" /win32 
+# ADD BASE RSC /l 0x409 /d "_DEBUG" /d "_AFXDLL"
+# ADD RSC /l 0x409 /d "_DEBUG" /d "_AFXDLL"
+RSC_PROJ=/l 0x409 /fo"$(INTDIR)/VWGeomSp.res" /d "_DEBUG" /d "_AFXDLL" 
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+BSC32_FLAGS=/nologo /o"$(OUTDIR)/vwgeomsp.bsc" 
+BSC32_SBRS= \
+	
+LINK32=link.exe
+# ADD BASE LINK32 \dxsdk\sdk\lib\d3drm.lib /nologo /subsystem:windows /dll /debug /machine:I386
+# ADD LINK32 \dxsdk\sdk\lib\d3drm.lib icap.lib /nologo /subsystem:windows /dll /debug /machine:I386
+LINK32_FLAGS=\dxsdk\sdk\lib\d3drm.lib icap.lib /nologo /subsystem:windows /dll\
+ /incremental:yes /pdb:"$(OUTDIR)/vwgeomsp.pdb" /debug /machine:I386\
+ /def:".\VWGeomSp.def" /out:"$(OUTDIR)/vwgeomsp.dll"\
+ /implib:"$(OUTDIR)/vwgeomsp.lib" 
+DEF_FILE= \
+	".\VWGeomSp.def"
+LINK32_OBJS= \
+	"$(INTDIR)\d3dmath.obj" \
+	"$(INTDIR)\StdAfx.obj" \
+	"$(INTDIR)\VWGeomS.obj" \
+	"$(INTDIR)\VWGeomSp.obj" \
+	"$(INTDIR)\VWGeomSp.res"
+
+"$(OUTDIR)\vwgeomsp.dll" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
+    $(LINK32) @<<
+  $(LINK32_FLAGS) $(LINK32_OBJS)
+<<
+
+# Begin Custom Build
+OutDir=.\IceDbg
+TargetPath=.\IceDbg\vwgeomsp.dll
+InputPath=.\IceDbg\vwgeomsp.dll
+SOURCE=$(InputPath)
+
+"$(OutDir)\regsvr32.trg" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   regsvr32 /s /c "$(TargetPath)"
+   echo regsvr32 exec. time > "$(OutDir)\regsvr32.trg"
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "VWGeomSp - Win32 IceCAP Release"
+
+# PROP BASE Use_MFC 2
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "VWGeomS0"
+# PROP BASE Intermediate_Dir "VWGeomS0"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 2
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "IceRel"
+# PROP Intermediate_Dir "IceRel"
+# PROP Target_Dir ""
+OUTDIR=.\IceRel
+INTDIR=.\IceRel
+# Begin Custom Macros
+OutDir=.\IceRel
+# End Custom Macros
+
+ALL : "$(OUTDIR)\vwgeomsp.dll" "$(OUTDIR)\regsvr32.trg"
+
+CLEAN : 
+	-@erase "$(INTDIR)\d3dmath.obj"
+	-@erase "$(INTDIR)\StdAfx.obj"
+	-@erase "$(INTDIR)\vc40.pdb"
+	-@erase "$(INTDIR)\VWGeomS.obj"
+	-@erase "$(INTDIR)\VWGeomSp.obj"
+	-@erase "$(INTDIR)\VWGeomSp.res"
+	-@erase "$(OUTDIR)\regsvr32.trg"
+	-@erase "$(OUTDIR)\vwgeomsp.dll"
+	-@erase "$(OUTDIR)\vwgeomsp.exp"
+	-@erase "$(OUTDIR)\vwgeomsp.lib"
+	-@erase "$(OUTDIR)\vwgeomsp.pdb"
+	-@erase "..\..\vwcommon\VWGeomSp.h"
+	-@erase "..\..\vwcommon\VWGeomSp.tlb"
+	-@erase "..\..\vwcommon\VWGeomSp_i.c"
+	-@erase ".\VWGeomS0\vwgeomsp.pch"
+
+"$(OUTDIR)" :
+    if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
+
+# ADD BASE CPP /nologo /MD /W3 /GX /O2 /I "." /I "..\..\vwcommon" /I "\dxsdk\sdk\inc" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_USRDLL" /D "_WINDLL" /D "_AFXDLL" /D "_MBCS" /Yu"stdafx.h" /c
+# ADD CPP /nologo /MD /W3 /GX /Zi /O2 /I "." /I "..\..\vwcommon" /I "\dxsdk\sdk\inc" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_USRDLL" /D "_WINDLL" /D "_AFXDLL" /D "_MBCS" /Fp"VWGeomS0/vwgeomsp.pch" /Yu"stdafx.h" /Gh /c
+CPP_PROJ=/nologo /MD /W3 /GX /Zi /O2 /I "." /I "..\..\vwcommon" /I\
+ "\dxsdk\sdk\inc" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_USRDLL" /D "_WINDLL"\
+ /D "_AFXDLL" /D "_MBCS" /Fp"VWGeomS0/vwgeomsp.pch" /Yu"stdafx.h"\
+ /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /Gh /c 
+CPP_OBJS=.\IceRel/
+CPP_SBRS=.\.
+# ADD BASE MTL /nologo /D "NDEBUG" /win32
+# ADD MTL /nologo /D "NDEBUG" /win32
+MTL_PROJ=/nologo /D "NDEBUG" /win32 
+# ADD BASE RSC /l 0x409 /d "NDEBUG" /d "_AFXDLL"
+# ADD RSC /l 0x409 /d "NDEBUG" /d "_AFXDLL"
+RSC_PROJ=/l 0x409 /fo"$(INTDIR)/VWGeomSp.res" /d "NDEBUG" /d "_AFXDLL" 
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+BSC32_FLAGS=/nologo /o"$(OUTDIR)/vwgeomsp.bsc" 
+BSC32_SBRS= \
+	
+LINK32=link.exe
+# ADD BASE LINK32 \dxsdk\sdk\lib\d3drm.lib /nologo /subsystem:windows /dll /machine:I386
+# ADD LINK32 \dxsdk\sdk\lib\d3drm.lib icap.lib /nologo /subsystem:windows /dll /debug /machine:I386
+LINK32_FLAGS=\dxsdk\sdk\lib\d3drm.lib icap.lib /nologo /subsystem:windows /dll\
+ /incremental:no /pdb:"$(OUTDIR)/vwgeomsp.pdb" /debug /machine:I386\
+ /def:".\VWGeomSp.def" /out:"$(OUTDIR)/vwgeomsp.dll"\
+ /implib:"$(OUTDIR)/vwgeomsp.lib" 
+DEF_FILE= \
+	".\VWGeomSp.def"
+LINK32_OBJS= \
+	"$(INTDIR)\d3dmath.obj" \
+	"$(INTDIR)\StdAfx.obj" \
+	"$(INTDIR)\VWGeomS.obj" \
+	"$(INTDIR)\VWGeomSp.obj" \
+	"$(INTDIR)\VWGeomSp.res"
+
+"$(OUTDIR)\vwgeomsp.dll" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
+    $(LINK32) @<<
+  $(LINK32_FLAGS) $(LINK32_OBJS)
+<<
+
+# Begin Custom Build
+OutDir=.\IceRel
+TargetPath=.\IceRel\vwgeomsp.dll
+InputPath=.\IceRel\vwgeomsp.dll
+SOURCE=$(InputPath)
+
+"$(OutDir)\regsvr32.trg" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   regsvr32 /s /c "$(TargetPath)"
+   echo regsvr32 exec. time > "$(OutDir)\regsvr32.trg"
+
+# End Custom Build
+
+!ENDIF 
+
+.c{$(CPP_OBJS)}.obj:
+   $(CPP) $(CPP_PROJ) $<  
+
+.cpp{$(CPP_OBJS)}.obj:
+   $(CPP) $(CPP_PROJ) $<  
+
+.cxx{$(CPP_OBJS)}.obj:
+   $(CPP) $(CPP_PROJ) $<  
+
+.c{$(CPP_SBRS)}.sbr:
+   $(CPP) $(CPP_PROJ) $<  
+
+.cpp{$(CPP_SBRS)}.sbr:
+   $(CPP) $(CPP_PROJ) $<  
+
+.cxx{$(CPP_SBRS)}.sbr:
+   $(CPP) $(CPP_PROJ) $<  
+
+################################################################################
+# Begin Target
+
+# Name "VWGeomSp - Win32 Release"
+# Name "VWGeomSp - Win32 Debug"
+# Name "VWGeomSp - Win32 IceCAP Debug"
+# Name "VWGeomSp - Win32 IceCAP Release"
+
+!IF  "$(CFG)" == "VWGeomSp - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "VWGeomSp - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "VWGeomSp - Win32 IceCAP Debug"
+
+!ELSEIF  "$(CFG)" == "VWGeomSp - Win32 IceCAP Release"
+
+!ENDIF 
+
+################################################################################
+# Begin Source File
+
+SOURCE=.\StdAfx.cpp
+DEP_CPP_STDAF=\
+	"..\..\vwcommon\propbase.h"\
+	"..\..\vwcommon\vwbuffer.h"\
+	"..\..\vwcommon\vwcomm.h"\
+	"..\..\vwcommon\vwimpl.cpp"\
+	"..\..\vwcommon\vwobject.h"\
+	".\StdAfx.h"\
+	{$(INCLUDE)}"\Atlbase.h"\
+	{$(INCLUDE)}"\Atlcom.h"\
+	{$(INCLUDE)}"\Atlimpl.cpp"\
+	
+
+!IF  "$(CFG)" == "VWGeomSp - Win32 Release"
+
+# ADD CPP /Yc"stdafx.h"
+
+BuildCmds= \
+	$(CPP) /nologo /MD /W3 /GX /Zi /O2 /I "." /I "..\..\vwcommon" /I\
+ "\dxsdk\sdk\inc" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_USRDLL" /D "_WINDLL"\
+ /D "_AFXDLL" /D "_MBCS" /Fp"$(INTDIR)/vwgeomsp.pch" /Yc"stdafx.h"\
+ /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /c $(SOURCE) \
+	
+
+"$(INTDIR)\StdAfx.obj" : $(SOURCE) $(DEP_CPP_STDAF) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\vwgeomsp.pch" : $(SOURCE) $(DEP_CPP_STDAF) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "VWGeomSp - Win32 Debug"
+
+# ADD CPP /Yc"stdafx.h"
+
+BuildCmds= \
+	$(CPP) /nologo /MDd /W3 /Gm /GX /Zi /Od /I "." /I "..\..\vwcommon" /I\
+ "\dxsdk\sdk\inc" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_USRDLL" /D "_WINDLL"\
+ /D "_AFXDLL" /D "_MBCS" /Fp"$(INTDIR)/vwgeomsp.pch" /Yc"stdafx.h"\
+ /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /c $(SOURCE) \
+	
+
+"$(INTDIR)\StdAfx.obj" : $(SOURCE) $(DEP_CPP_STDAF) "$(INTDIR)"
+   $(BuildCmds)
+
+"$(INTDIR)\vwgeomsp.pch" : $(SOURCE) $(DEP_CPP_STDAF) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "VWGeomSp - Win32 IceCAP Debug"
+
+# ADD BASE CPP /Yc"stdafx.h"
+# ADD CPP /Yc"stdafx.h"
+
+BuildCmds= \
+	$(CPP) /nologo /MDd /W3 /Gm /GX /Zi /Od /I "." /I "..\..\vwcommon" /I\
+ "\dxsdk\sdk\inc" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_USRDLL" /D "_WINDLL"\
+ /D "_AFXDLL" /D "_MBCS" /Fp"VWGeomSp/vwgeomsp.pch" /Yc"stdafx.h"\
+ /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /Gh /c $(SOURCE) \
+	
+
+"$(INTDIR)\StdAfx.obj" : $(SOURCE) $(DEP_CPP_STDAF) "$(INTDIR)"
+   $(BuildCmds)
+
+".\VWGeomSp\vwgeomsp.pch" : $(SOURCE) $(DEP_CPP_STDAF) "$(INTDIR)"
+   $(BuildCmds)
+
+!ELSEIF  "$(CFG)" == "VWGeomSp - Win32 IceCAP Release"
+
+# ADD BASE CPP /Yc"stdafx.h"
+# ADD CPP /Yc"stdafx.h"
+
+BuildCmds= \
+	$(CPP) /nologo /MD /W3 /GX /Zi /O2 /I "." /I "..\..\vwcommon" /I\
+ "\dxsdk\sdk\inc" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_USRDLL" /D "_WINDLL"\
+ /D "_AFXDLL" /D "_MBCS" /Fp"VWGeomS0/vwgeomsp.pch" /Yc"stdafx.h"\
+ /Fo"$(INTDIR)/" /Fd"$(INTDIR)/" /Gh /c $(SOURCE) \
+	
+
+"$(INTDIR)\StdAfx.obj" : $(SOURCE) $(DEP_CPP_STDAF) "$(INTDIR)"
+   $(BuildCmds)
+
+".\VWGeomS0\vwgeomsp.pch" : $(SOURCE) $(DEP_CPP_STDAF) "$(INTDIR)"
+   $(BuildCmds)
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\VWGeomSp.cpp
+
+!IF  "$(CFG)" == "VWGeomSp - Win32 Release"
+
+DEP_CPP_VWGEO=\
+	"..\..\..\..\dxsdk\sdk\inc\d3dcaps.h"\
+	"..\..\..\..\Dxsdk\sdk\inc\d3drmdef.h"\
+	"..\..\..\..\dxsdk\sdk\inc\d3drmobj.h"\
+	"..\..\..\..\dxsdk\sdk\inc\d3dtypes.h"\
+	"..\..\vwcommon\cellprop.h"\
+	"..\..\vwcommon\d2d.h"\
+	"..\..\vwcommon\propbase.h"\
+	"..\..\vwcommon\propsec.inl"\
+	"..\..\vwcommon\Vector.h"\
+	"..\..\vwcommon\vwbuffer.h"\
+	"..\..\vwcommon\vwcomm.h"\
+	"..\..\vwcommon\VWFrame.h"\
+	"..\..\vwcommon\vwframe_i.c"\
+	"..\..\vwcommon\VWGCache.h"\
+	"..\..\vwcommon\VWGeom.h"\
+	"..\..\vwcommon\VWGeom_i.c"\
+	"..\..\vwcommon\VWGeomSp.h"\
+	"..\..\vwcommon\VWGeomSp_i.c"\
+	"..\..\vwcommon\vwidata.h"\
+	"..\..\vwcommon\vwobject.h"\
+	"..\..\vwcommon\vwobject_i.c"\
+	"..\..\vwcommon\VWRender.h"\
+	".\StdAfx.h"\
+	".\vwgeoms.h"\
+	"\dxsdk\sdk\inc\d3d.h"\
+	"\dxsdk\sdk\inc\d3drm.h"\
+	"\dxsdk\sdk\inc\d3drmwin.h"\
+	{$(INCLUDE)}"\Atlbase.h"\
+	{$(INCLUDE)}"\Atlcom.h"\
+	
+NODEP_CPP_VWGEO=\
+	"..\..\..\..\dxsdk\sdk\inc\d3dcom.h"\
+	"..\..\..\..\dxsdk\sdk\inc\subwtype.h"\
+	
+
+"$(INTDIR)\VWGeomSp.obj" : $(SOURCE) $(DEP_CPP_VWGEO) "$(INTDIR)"\
+ "$(INTDIR)\vwgeomsp.pch" "..\..\vwcommon\VWGeomSp.h"\
+ "..\..\vwcommon\VWGeomSp_i.c"
+
+
+!ELSEIF  "$(CFG)" == "VWGeomSp - Win32 Debug"
+
+DEP_CPP_VWGEO=\
+	"..\..\..\..\Dxsdk\sdk\inc\d3drmdef.h"\
+	"..\..\..\..\dxsdk\sdk\inc\d3drmobj.h"\
+	"..\..\..\..\dxsdk\sdk\inc\d3dtypes.h"\
+	"..\..\vwcommon\cellprop.h"\
+	"..\..\vwcommon\d2d.h"\
+	"..\..\vwcommon\propbase.h"\
+	"..\..\vwcommon\propsec.inl"\
+	"..\..\vwcommon\Vector.h"\
+	"..\..\vwcommon\vwbuffer.h"\
+	"..\..\vwcommon\vwcomm.h"\
+	"..\..\vwcommon\VWFrame.h"\
+	"..\..\vwcommon\vwframe_i.c"\
+	"..\..\vwcommon\VWGCache.h"\
+	"..\..\vwcommon\VWGeom.h"\
+	"..\..\vwcommon\VWGeom_i.c"\
+	"..\..\vwcommon\VWGeomSp.h"\
+	"..\..\vwcommon\VWGeomSp_i.c"\
+	"..\..\vwcommon\vwidata.h"\
+	"..\..\vwcommon\vwobject.h"\
+	"..\..\vwcommon\vwobject_i.c"\
+	"..\..\vwcommon\VWRender.h"\
+	".\StdAfx.h"\
+	".\vwgeoms.h"\
+	"\dxsdk\sdk\inc\d3d.h"\
+	"\dxsdk\sdk\inc\d3drm.h"\
+	"\dxsdk\sdk\inc\d3drmwin.h"\
+	{$(INCLUDE)}"\Atlbase.h"\
+	{$(INCLUDE)}"\Atlcom.h"\
+	
+NODEP_CPP_VWGEO=\
+	"..\..\..\..\dxsdk\sdk\inc\subwtype.h"\
+	
+
+"$(INTDIR)\VWGeomSp.obj" : $(SOURCE) $(DEP_CPP_VWGEO) "$(INTDIR)"\
+ "$(INTDIR)\vwgeomsp.pch" "..\..\vwcommon\VWGeomSp.h"\
+ "..\..\vwcommon\VWGeomSp_i.c"
+
+
+!ELSEIF  "$(CFG)" == "VWGeomSp - Win32 IceCAP Debug"
+
+DEP_CPP_VWGEO=\
+	"..\..\..\..\dxsdk\sdk\inc\d3dcaps.h"\
+	"..\..\..\..\Dxsdk\sdk\inc\d3drmdef.h"\
+	"..\..\..\..\dxsdk\sdk\inc\d3drmobj.h"\
+	"..\..\..\..\dxsdk\sdk\inc\d3dtypes.h"\
+	"..\..\vwcommon\cellprop.h"\
+	"..\..\vwcommon\d2d.h"\
+	"..\..\vwcommon\propbase.h"\
+	"..\..\vwcommon\propsec.inl"\
+	"..\..\vwcommon\Vector.h"\
+	"..\..\vwcommon\vwbuffer.h"\
+	"..\..\vwcommon\vwcomm.h"\
+	"..\..\vwcommon\VWFrame.h"\
+	"..\..\vwcommon\vwframe_i.c"\
+	"..\..\vwcommon\VWGCache.h"\
+	"..\..\vwcommon\VWGeom.h"\
+	"..\..\vwcommon\VWGeom_i.c"\
+	"..\..\vwcommon\VWGeomSp.h"\
+	"..\..\vwcommon\VWGeomSp_i.c"\
+	"..\..\vwcommon\vwidata.h"\
+	"..\..\vwcommon\vwobject.h"\
+	"..\..\vwcommon\vwobject_i.c"\
+	"..\..\vwcommon\VWRender.h"\
+	".\StdAfx.h"\
+	".\vwgeoms.h"\
+	"\dxsdk\sdk\inc\d3d.h"\
+	"\dxsdk\sdk\inc\d3drm.h"\
+	"\dxsdk\sdk\inc\d3drmwin.h"\
+	{$(INCLUDE)}"\Atlbase.h"\
+	{$(INCLUDE)}"\Atlcom.h"\
+	
+NODEP_CPP_VWGEO=\
+	"..\..\..\..\dxsdk\sdk\inc\d3dcom.h"\
+	"..\..\..\..\dxsdk\sdk\inc\subwtype.h"\
+	
+
+"$(INTDIR)\VWGeomSp.obj" : $(SOURCE) $(DEP_CPP_VWGEO) "$(INTDIR)"\
+ ".\VWGeomSp\vwgeomsp.pch" "..\..\vwcommon\VWGeomSp.h"\
+ "..\..\vwcommon\VWGeomSp_i.c"
+
+
+!ELSEIF  "$(CFG)" == "VWGeomSp - Win32 IceCAP Release"
+
+DEP_CPP_VWGEO=\
+	"..\..\..\..\dxsdk\sdk\inc\d3dcaps.h"\
+	"..\..\..\..\Dxsdk\sdk\inc\d3drmdef.h"\
+	"..\..\..\..\dxsdk\sdk\inc\d3drmobj.h"\
+	"..\..\..\..\dxsdk\sdk\inc\d3dtypes.h"\
+	"..\..\vwcommon\cellprop.h"\
+	"..\..\vwcommon\d2d.h"\
+	"..\..\vwcommon\propbase.h"\
+	"..\..\vwcommon\propsec.inl"\
+	"..\..\vwcommon\Vector.h"\
+	"..\..\vwcommon\vwbuffer.h"\
+	"..\..\vwcommon\vwcomm.h"\
+	"..\..\vwcommon\VWFrame.h"\
+	"..\..\vwcommon\vwframe_i.c"\
+	"..\..\vwcommon\VWGCache.h"\
+	"..\..\vwcommon\VWGeom.h"\
+	"..\..\vwcommon\VWGeom_i.c"\
+	"..\..\vwcommon\VWGeomSp.h"\
+	"..\..\vwcommon\VWGeomSp_i.c"\
+	"..\..\vwcommon\vwidata.h"\
+	"..\..\vwcommon\vwobject.h"\
+	"..\..\vwcommon\vwobject_i.c"\
+	"..\..\vwcommon\VWRender.h"\
+	".\StdAfx.h"\
+	".\vwgeoms.h"\
+	"\dxsdk\sdk\inc\d3d.h"\
+	"\dxsdk\sdk\inc\d3drm.h"\
+	"\dxsdk\sdk\inc\d3drmwin.h"\
+	{$(INCLUDE)}"\Atlbase.h"\
+	{$(INCLUDE)}"\Atlcom.h"\
+	
+NODEP_CPP_VWGEO=\
+	"..\..\..\..\dxsdk\sdk\inc\d3dcom.h"\
+	"..\..\..\..\dxsdk\sdk\inc\subwtype.h"\
+	
+
+"$(INTDIR)\VWGeomSp.obj" : $(SOURCE) $(DEP_CPP_VWGEO) "$(INTDIR)"\
+ ".\VWGeomS0\vwgeomsp.pch" "..\..\vwcommon\VWGeomSp.h"\
+ "..\..\vwcommon\VWGeomSp_i.c"
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\VWGeomSp.def
+
+!IF  "$(CFG)" == "VWGeomSp - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "VWGeomSp - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "VWGeomSp - Win32 IceCAP Debug"
+
+!ELSEIF  "$(CFG)" == "VWGeomSp - Win32 IceCAP Release"
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\VWGeomSp.rc
+DEP_RSC_VWGEOM=\
+	"..\..\vwcommon\VWGeomSp.tlb"\
+	".\version.h"\
+	".\vwgeomsp.rc2"\
+	
+
+!IF  "$(CFG)" == "VWGeomSp - Win32 Release"
+
+
+"$(INTDIR)\VWGeomSp.res" : $(SOURCE) $(DEP_RSC_VWGEOM) "$(INTDIR)"\
+ "..\..\vwcommon\VWGeomSp.tlb"
+   $(RSC) $(RSC_PROJ) $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "VWGeomSp - Win32 Debug"
+
+
+"$(INTDIR)\VWGeomSp.res" : $(SOURCE) $(DEP_RSC_VWGEOM) "$(INTDIR)"\
+ "..\..\vwcommon\VWGeomSp.tlb"
+   $(RSC) $(RSC_PROJ) $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "VWGeomSp - Win32 IceCAP Debug"
+
+
+"$(INTDIR)\VWGeomSp.res" : $(SOURCE) $(DEP_RSC_VWGEOM) "$(INTDIR)"\
+ "..\..\vwcommon\VWGeomSp.tlb"
+   $(RSC) $(RSC_PROJ) $(SOURCE)
+
+
+!ELSEIF  "$(CFG)" == "VWGeomSp - Win32 IceCAP Release"
+
+
+"$(INTDIR)\VWGeomSp.res" : $(SOURCE) $(DEP_RSC_VWGEOM) "$(INTDIR)"\
+ "..\..\vwcommon\VWGeomSp.tlb"
+   $(RSC) $(RSC_PROJ) $(SOURCE)
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\VWGeomS.cpp
+
+!IF  "$(CFG)" == "VWGeomSp - Win32 Release"
+
+DEP_CPP_VWGEOMS=\
+	"..\..\..\..\dxsdk\sdk\inc\d3dcaps.h"\
+	"..\..\..\..\Dxsdk\sdk\inc\d3drmdef.h"\
+	"..\..\..\..\dxsdk\sdk\inc\d3drmobj.h"\
+	"..\..\..\..\dxsdk\sdk\inc\d3dtypes.h"\
+	"..\..\vwcommon\cellprop.h"\
+	"..\..\vwcommon\d2d.h"\
+	"..\..\vwcommon\propbase.h"\
+	"..\..\vwcommon\propsec.inl"\
+	"..\..\vwcommon\Vector.h"\
+	"..\..\vwcommon\vwbuffer.h"\
+	"..\..\vwcommon\vwcomm.h"\
+	"..\..\vwcommon\VWFrame.h"\
+	"..\..\vwcommon\VWGCache.h"\
+	"..\..\vwcommon\VWGeom.h"\
+	"..\..\vwcommon\VWGeomSp.h"\
+	"..\..\vwcommon\vwidata.h"\
+	"..\..\vwcommon\vwobject.h"\
+	"..\..\vwcommon\VWRender.h"\
+	".\d3dmacs.h"\
+	".\d3dmath.h"\
+	".\StdAfx.h"\
+	".\vwgeoms.h"\
+	"\dxsdk\sdk\inc\d3d.h"\
+	"\dxsdk\sdk\inc\d3drm.h"\
+	"\dxsdk\sdk\inc\d3drmwin.h"\
+	{$(INCLUDE)}"\Atlbase.h"\
+	{$(INCLUDE)}"\Atlcom.h"\
+	
+NODEP_CPP_VWGEOMS=\
+	"..\..\..\..\dxsdk\sdk\inc\d3dcom.h"\
+	"..\..\..\..\dxsdk\sdk\inc\subwtype.h"\
+	
+
+"$(INTDIR)\VWGeomS.obj" : $(SOURCE) $(DEP_CPP_VWGEOMS) "$(INTDIR)"\
+ "$(INTDIR)\vwgeomsp.pch" "..\..\vwcommon\VWGeomSp.h"
+
+
+!ELSEIF  "$(CFG)" == "VWGeomSp - Win32 Debug"
+
+DEP_CPP_VWGEOMS=\
+	"..\..\..\..\Dxsdk\sdk\inc\d3drmdef.h"\
+	"..\..\..\..\dxsdk\sdk\inc\d3drmobj.h"\
+	"..\..\..\..\dxsdk\sdk\inc\d3dtypes.h"\
+	"..\..\vwcommon\cellprop.h"\
+	"..\..\vwcommon\d2d.h"\
+	"..\..\vwcommon\propbase.h"\
+	"..\..\vwcommon\propsec.inl"\
+	"..\..\vwcommon\Vector.h"\
+	"..\..\vwcommon\vwbuffer.h"\
+	"..\..\vwcommon\vwcomm.h"\
+	"..\..\vwcommon\VWFrame.h"\
+	"..\..\vwcommon\VWGCache.h"\
+	"..\..\vwcommon\VWGeom.h"\
+	"..\..\vwcommon\VWGeomSp.h"\
+	"..\..\vwcommon\vwidata.h"\
+	"..\..\vwcommon\vwobject.h"\
+	"..\..\vwcommon\VWRender.h"\
+	".\d3dmacs.h"\
+	".\d3dmath.h"\
+	".\StdAfx.h"\
+	".\vwgeoms.h"\
+	"\dxsdk\sdk\inc\d3d.h"\
+	"\dxsdk\sdk\inc\d3drm.h"\
+	"\dxsdk\sdk\inc\d3drmwin.h"\
+	{$(INCLUDE)}"\Atlbase.h"\
+	{$(INCLUDE)}"\Atlcom.h"\
+	
+NODEP_CPP_VWGEOMS=\
+	"..\..\..\..\dxsdk\sdk\inc\subwtype.h"\
+	
+
+"$(INTDIR)\VWGeomS.obj" : $(SOURCE) $(DEP_CPP_VWGEOMS) "$(INTDIR)"\
+ "$(INTDIR)\vwgeomsp.pch" "..\..\vwcommon\VWGeomSp.h"
+
+
+!ELSEIF  "$(CFG)" == "VWGeomSp - Win32 IceCAP Debug"
+
+DEP_CPP_VWGEOMS=\
+	"..\..\..\..\dxsdk\sdk\inc\d3dcaps.h"\
+	"..\..\..\..\Dxsdk\sdk\inc\d3drmdef.h"\
+	"..\..\..\..\dxsdk\sdk\inc\d3drmobj.h"\
+	"..\..\..\..\dxsdk\sdk\inc\d3dtypes.h"\
+	"..\..\vwcommon\cellprop.h"\
+	"..\..\vwcommon\d2d.h"\
+	"..\..\vwcommon\propbase.h"\
+	"..\..\vwcommon\propsec.inl"\
+	"..\..\vwcommon\Vector.h"\
+	"..\..\vwcommon\vwbuffer.h"\
+	"..\..\vwcommon\vwcomm.h"\
+	"..\..\vwcommon\VWFrame.h"\
+	"..\..\vwcommon\VWGCache.h"\
+	"..\..\vwcommon\VWGeom.h"\
+	"..\..\vwcommon\VWGeomSp.h"\
+	"..\..\vwcommon\vwidata.h"\
+	"..\..\vwcommon\vwobject.h"\
+	"..\..\vwcommon\VWRender.h"\
+	".\d3dmacs.h"\
+	".\d3dmath.h"\
+	".\StdAfx.h"\
+	".\vwgeoms.h"\
+	"\dxsdk\sdk\inc\d3d.h"\
+	"\dxsdk\sdk\inc\d3drm.h"\
+	"\dxsdk\sdk\inc\d3drmwin.h"\
+	{$(INCLUDE)}"\Atlbase.h"\
+	{$(INCLUDE)}"\Atlcom.h"\
+	
+NODEP_CPP_VWGEOMS=\
+	"..\..\..\..\dxsdk\sdk\inc\d3dcom.h"\
+	"..\..\..\..\dxsdk\sdk\inc\subwtype.h"\
+	
+
+"$(INTDIR)\VWGeomS.obj" : $(SOURCE) $(DEP_CPP_VWGEOMS) "$(INTDIR)"\
+ ".\VWGeomSp\vwgeomsp.pch" "..\..\vwcommon\VWGeomSp.h"
+
+
+!ELSEIF  "$(CFG)" == "VWGeomSp - Win32 IceCAP Release"
+
+DEP_CPP_VWGEOMS=\
+	"..\..\..\..\dxsdk\sdk\inc\d3dcaps.h"\
+	"..\..\..\..\Dxsdk\sdk\inc\d3drmdef.h"\
+	"..\..\..\..\dxsdk\sdk\inc\d3drmobj.h"\
+	"..\..\..\..\dxsdk\sdk\inc\d3dtypes.h"\
+	"..\..\vwcommon\cellprop.h"\
+	"..\..\vwcommon\d2d.h"\
+	"..\..\vwcommon\propbase.h"\
+	"..\..\vwcommon\propsec.inl"\
+	"..\..\vwcommon\Vector.h"\
+	"..\..\vwcommon\vwbuffer.h"\
+	"..\..\vwcommon\vwcomm.h"\
+	"..\..\vwcommon\VWFrame.h"\
+	"..\..\vwcommon\VWGCache.h"\
+	"..\..\vwcommon\VWGeom.h"\
+	"..\..\vwcommon\VWGeomSp.h"\
+	"..\..\vwcommon\vwidata.h"\
+	"..\..\vwcommon\vwobject.h"\
+	"..\..\vwcommon\VWRender.h"\
+	".\d3dmacs.h"\
+	".\d3dmath.h"\
+	".\StdAfx.h"\
+	".\vwgeoms.h"\
+	"\dxsdk\sdk\inc\d3d.h"\
+	"\dxsdk\sdk\inc\d3drm.h"\
+	"\dxsdk\sdk\inc\d3drmwin.h"\
+	{$(INCLUDE)}"\Atlbase.h"\
+	{$(INCLUDE)}"\Atlcom.h"\
+	
+NODEP_CPP_VWGEOMS=\
+	"..\..\..\..\dxsdk\sdk\inc\d3dcom.h"\
+	"..\..\..\..\dxsdk\sdk\inc\subwtype.h"\
+	
+
+"$(INTDIR)\VWGeomS.obj" : $(SOURCE) $(DEP_CPP_VWGEOMS) "$(INTDIR)"\
+ ".\VWGeomS0\vwgeomsp.pch" "..\..\vwcommon\VWGeomSp.h"
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=\projects\worlds96\vwcommon\VWGeomSp.idl
+
+!IF  "$(CFG)" == "VWGeomSp - Win32 Release"
+
+# Begin Custom Build
+InputPath=\projects\worlds96\vwcommon\VWGeomSp.idl
+
+BuildCmds= \
+	midl.exe  /out ..\..\vwcommon /DVWGEOMSPLIB /I        ..\..\vwcommon\
+               ..\..\vwcommon\VWGeomSp.idl \
+	
+
+"..\..\vwcommon\VWGeomSp.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"..\..\vwcommon\VWGeomSp.tlb" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"..\..\vwcommon\VWGeomSp_i.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "VWGeomSp - Win32 Debug"
+
+# Begin Custom Build
+InputPath=\projects\worlds96\vwcommon\VWGeomSp.idl
+
+BuildCmds= \
+	midl.exe  /out ..\..\vwcommon /DVWGEOMSPLIB /I        ..\..\vwcommon\
+               ..\..\vwcommon\VWGeomSp.idl \
+	
+
+"..\..\vwcommon\VWGeomSp.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"..\..\vwcommon\VWGeomSp.tlb" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"..\..\vwcommon\VWGeomSp_i.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "VWGeomSp - Win32 IceCAP Debug"
+
+# Begin Custom Build
+InputPath=\projects\worlds96\vwcommon\VWGeomSp.idl
+
+BuildCmds= \
+	midl.exe  /out ..\..\vwcommon /DVWGEOMSPLIB /I        ..\..\vwcommon\
+               ..\..\vwcommon\VWGeomSp.idl \
+	
+
+"..\..\vwcommon\VWGeomSp.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"..\..\vwcommon\VWGeomSp.tlb" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"..\..\vwcommon\VWGeomSp_i.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "VWGeomSp - Win32 IceCAP Release"
+
+# Begin Custom Build
+InputPath=\projects\worlds96\vwcommon\VWGeomSp.idl
+
+BuildCmds= \
+	midl.exe  /out ..\..\vwcommon /DVWGEOMSPLIB /I        ..\..\vwcommon\
+               ..\..\vwcommon\VWGeomSp.idl \
+	
+
+"..\..\vwcommon\VWGeomSp.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"..\..\vwcommon\VWGeomSp.tlb" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"..\..\vwcommon\VWGeomSp_i.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\d3dmath.cpp
+DEP_CPP_D3DMA=\
+	"..\..\..\..\dxsdk\sdk\inc\d3dcaps.h"\
+	"..\..\..\..\Dxsdk\sdk\inc\d3drmdef.h"\
+	"..\..\..\..\dxsdk\sdk\inc\d3drmobj.h"\
+	"..\..\..\..\dxsdk\sdk\inc\d3dtypes.h"\
+	".\StdAfx.h"\
+	"\dxsdk\sdk\inc\d3d.h"\
+	"\dxsdk\sdk\inc\d3drm.h"\
+	{$(INCLUDE)}"\Atlbase.h"\
+	{$(INCLUDE)}"\Atlcom.h"\
+	
+NODEP_CPP_D3DMA=\
+	"..\..\..\..\dxsdk\sdk\inc\d3dcom.h"\
+	"..\..\..\..\dxsdk\sdk\inc\subwtype.h"\
+	
+
+!IF  "$(CFG)" == "VWGeomSp - Win32 Release"
+
+
+"$(INTDIR)\d3dmath.obj" : $(SOURCE) $(DEP_CPP_D3DMA) "$(INTDIR)"\
+ "$(INTDIR)\vwgeomsp.pch"
+
+
+!ELSEIF  "$(CFG)" == "VWGeomSp - Win32 Debug"
+
+
+"$(INTDIR)\d3dmath.obj" : $(SOURCE) $(DEP_CPP_D3DMA) "$(INTDIR)"\
+ "$(INTDIR)\vwgeomsp.pch"
+
+
+!ELSEIF  "$(CFG)" == "VWGeomSp - Win32 IceCAP Debug"
+
+
+"$(INTDIR)\d3dmath.obj" : $(SOURCE) $(DEP_CPP_D3DMA) "$(INTDIR)"\
+ ".\VWGeomSp\vwgeomsp.pch"
+
+
+!ELSEIF  "$(CFG)" == "VWGeomSp - Win32 IceCAP Release"
+
+
+"$(INTDIR)\d3dmath.obj" : $(SOURCE) $(DEP_CPP_D3DMA) "$(INTDIR)"\
+ ".\VWGeomS0\vwgeomsp.pch"
+
+
+!ENDIF 
+
+# End Source File
+# End Target
+# End Project
+################################################################################
