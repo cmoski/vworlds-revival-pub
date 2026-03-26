@@ -221,7 +221,10 @@ BOOL CServerV2App::InitInstance()
 	// create main MDI Frame window
 	CMainFrame* pMainFrame = new CMainFrame;
 	if (!pMainFrame->LoadFrame(IDR_MAINFRAME))
+	{
+		m_bShutdown = TRUE;
 		return FALSE;
+	}
 	m_pMainWnd = pMainFrame;
 	m_pMainFrame = pMainFrame;
 	pMainFrame->m_pApp = this;
@@ -243,6 +246,7 @@ BOOL CServerV2App::InitInstance()
 	if(FAILED(hr))
 	{
 		AfxMessageBox("Server creation failed.  Please make sure all VWorlds components are registered properly.  Shutting down.");
+		m_bShutdown = TRUE;
 		return FALSE;
 	}
 

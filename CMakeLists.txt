@@ -556,10 +556,13 @@ add_executable(sengine WIN32
     sengine/oleid.cpp
     # Compiled directly into sengine (not from vwsystem.dll)
     vwcommon/scripts.cpp
+    # Resources
+    sengine/sengine.rc
 )
 
 target_include_directories(sengine PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/sengine
+    ${CMAKE_CURRENT_SOURCE_DIR}/sengine/res
     ${VWORLDS_COMMON_DIR}
 )
 
@@ -607,10 +610,13 @@ add_executable(serverV2 WIN32
     serverv2/savedlg.cpp
     # Compiled directly (not from vwsystem.dll)
     vwcommon/reghelp.cpp
+    # Resources (menu, toolbar, icons, accelerators)
+    serverv2/serverv2.rc
 )
 
 target_include_directories(serverV2 PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/serverv2
+    ${CMAKE_CURRENT_SOURCE_DIR}/serverv2/res
     ${VWORLDS_COMMON_DIR}
 )
 

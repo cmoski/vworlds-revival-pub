@@ -1,4 +1,4 @@
-// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+// Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved.
 // In installing/viewing this source code, you agree to the terms of the
 // Microsoft Research Source License (MSRSL) included in the root of this source tree
 // and available from http://www.vworlds.org/license.asp.
@@ -154,8 +154,7 @@ HRESULT	FindDefaultPathInReg(CString strWhichPath, BSTR *pbstrPath)
 
 	*pbstrPath = NULL;
 
-	if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, gStrPathKey, 0, NULL, 
-		REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE, NULL, &keyPaths, &dwStatus)
+	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, gStrPathKey, 0, KEY_READ, &keyPaths)
 		== ERROR_SUCCESS)
 	{
 		LONG lResult = ERROR_SUCCESS;
