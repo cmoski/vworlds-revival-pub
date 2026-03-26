@@ -583,6 +583,18 @@ LRESULT CVWRenderViewCtrl::WindowProc(UINT message, WPARAM wParam, LPARAM lParam
 		HandleOnMessage(WM_SETFOCUS, NULL, NULL );
 
 		break;
+	case WM_ACTIVATEAPP:
+		if (wParam == FALSE)
+		{
+			// App losing focus - stop rendering to avoid surface-lost crashes
+			m_hwndFocus = NULL;
+		}
+		else
+		{
+			// App regaining focus - re-enable rendering
+			m_hwndFocus = m_hWnd;
+		}
+		break;
 	}
 
 	bHandled = (VARIANT_BOOL) CVWUIView::WindowProc( message, wParam, lParam );
@@ -953,6 +965,12 @@ CVWRenderViewCtrl::RenderDoProcessing()
 					DrawBoundaries();
 
 				m_pVWRenderRoot->Update();
+			}
+			else
+			{
+				// Render failed - likely surface lost on focus change.
+				// Skip this frame; surfaces will be restored when app regains focus.
+				Sleep(50);
 			}
 		}
 		// Textures HAVE to be released in this thread after rendering update due to a
