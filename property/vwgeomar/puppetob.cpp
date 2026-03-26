@@ -22,7 +22,7 @@ using namespace std;
 #include "puppetob.h"
 #include <sys/types.h>
 #include <sys/timeb.h>
-#include <fstream.h>
+#include <fstream>\nusing namespace std;
 
 #define D2R(X) (3.14159*(X)/180.)
 

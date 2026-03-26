@@ -1,4 +1,4 @@
-// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+// Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved.
 // In installing/viewing this source code, you agree to the terms of the
 // Microsoft Research Source License (MSRSL) included in the root of this source tree
 // and available from http://www.vworlds.org/license.asp.
@@ -1351,14 +1351,14 @@ CBoundary::IsConvex(const Point2 *rgpntVerts, int cEdges)
 	if (cEdges > 2) 
 	{
 		BOOL bConvex = ::IsCCW(rgpntVerts[cEdges-1], rgpntVerts[0], rgpntVerts[1]);
-
-		for (EIndex i = 1; bConvex && (i < cEdges - 1); i++) {
+		EIndex i;
+		for (i = 1; bConvex && (i < cEdges - 1); i++) {
 			bConvex = ::IsCCW(rgpntVerts[i-1], rgpntVerts[i], rgpntVerts[i+1]);
 		}
 		return bConvex && ::IsCCW(rgpntVerts[i-1], rgpntVerts[i], rgpntVerts[0]);
 	}
-	// just so i'm not dependent on 2 vertex cycle polarity (CW or CCW)...
-	return IsCCW(rgpntVerts, cEdges);
+	// 2-vertex degenerate case
+	return TRUE;
 }
 
 // Function: IsConvexPoly
@@ -1369,8 +1369,8 @@ CBoundary::IsConvexPoly(const Point2 *rgpntVerts, int cEdges, BOOL bCCW) {
 	if (cEdges > 2)
 	{
 		BOOL bConvex = !(::IsCCW(rgpntVerts[cEdges-1], rgpntVerts[0], rgpntVerts[1]) ^ bCCW);
-
-		for (EIndex i = 1; bConvex && (i < cEdges - 1); i++) {
+		EIndex i;
+		for (i = 1; bConvex && (i < cEdges - 1); i++) {
 			bConvex = !(::IsCCW(rgpntVerts[i-1], rgpntVerts[i], rgpntVerts[i+1]) ^ bCCW);
 		}
 

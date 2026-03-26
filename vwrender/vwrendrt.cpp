@@ -1,4 +1,4 @@
-// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+// Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved.
 // In installing/viewing this source code, you agree to the terms of the
 // Microsoft Research Source License (MSRSL) included in the root of this source tree
 // and available from http://www.vworlds.org/license.asp.
@@ -329,7 +329,7 @@ STDMETHODIMP CVWRenderRoot::Update()
 	EnterCriticalSection(&m_CS);
 
 	CRect rectBack, rectWnd;
-	static iBlt = 0;
+	static int iBlt = 0;
 
 	if (m_bFPSEnabled)
 		dwBltTime = GetTickCount();
@@ -605,7 +605,7 @@ HRESULT CVWRenderRoot::HandleSizeInternal(int cx, int cy, VARIANT_BOOL bUseHWAcc
 {
 	EnterCriticalSection(&m_CS);
 
-	static			iLevel = 0;
+	static int		iLevel = 0;
 	HRESULT			hRes = S_OK;
 	IWorld*			pWorld = NULL;
 	DWORD			dwDeviceType = 0;

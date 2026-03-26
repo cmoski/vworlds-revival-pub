@@ -1,4 +1,4 @@
-// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+// Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved.
 // In installing/viewing this source code, you agree to the terms of the
 // Microsoft Research Source License (MSRSL) included in the root of this source tree
 // and available from http://www.vworlds.org/license.asp.
@@ -24,7 +24,8 @@ HRESULT CreateDDPalette(IDirectDraw *pDD, LPDIRECTDRAWPALETTE *ppPalette)
 	ReleaseDC(hWnd, hDC);
 
 	// fill palette entry flags
-    for (int i = 0; i < 10; i++) rgPE[i].peFlags = D3DPAL_READONLY;
+    int i;
+    for (i = 0; i < 10; i++) rgPE[i].peFlags = D3DPAL_READONLY;
     for (i = 10; i < 256 - 10; i++) rgPE[i].peFlags = D3DPAL_FREE | PC_RESERVED;
     for (i = 256 - 10; i < 256; i++) rgPE[i].peFlags = D3DPAL_READONLY;
 	

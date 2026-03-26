@@ -1063,7 +1063,6 @@ target_compile_definitions(vwmm PRIVATE
     _USRDLL
     _AFXDLL
     VWMM_BUILD
-    _MERGE_PROXYSTUB
     NO_3DS_CONVERTER
     NO_VRML_CONVERTER
 )
