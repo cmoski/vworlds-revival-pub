@@ -66,4 +66,41 @@ Else
     Err.Clear
 End If
 
-MsgBox "Done! World RoomWorld2 created with room, sprite, and textured 3D object."
+' Create room boundary (following util.scr AddCubeCell pattern)
+Dim boundary
+set boundary = World.Global.CreateBoundary()
+If Err.Number <> 0 Then
+    MsgBox "CreateBoundary: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+Else
+    ' Build a rectangular room boundary (10x10 units)
+    boundary.InsertVertexSafe -1, -5.0, -5.0
+    boundary.InsertVertexSafe -1, 5.0, -5.0
+    boundary.InsertVertexSafe -1, 5.0, 5.0
+    boundary.InsertVertexSafe -1, -5.0, 5.0
+    boundary.HeightUpper = 3.0
+    boundary.HeightLower = 0.0
+    boundary.IsPassable = False
+    If Err.Number <> 0 Then
+        MsgBox "Boundary props: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+        Err.Clear
+    Else
+        Dim blist
+        set blist = World.Global.CreateBoundaryList()
+        If Err.Number <> 0 Then
+            MsgBox "CreateBoundaryList: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+            Err.Clear
+        Else
+            blist.Add boundary
+            Room.BoundaryList = blist
+            If Err.Number <> 0 Then
+                MsgBox "Room.BoundaryList: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+                Err.Clear
+            Else
+                MsgBox "Boundary created and assigned to room!"
+            End If
+        End If
+    End If
+End If
+
+MsgBox "Done! World RoomWorld2 created with room, boundary, sprite, and textured 3D object."
