@@ -5,7 +5,8 @@
 
 #include "stdafx.h"
 #include <vwobject.h>
-#include <iostream.h>
+#include <iostream>
+using namespace std;
 #include <stdlib.h>
 #include <math.h>
 #include <d3drm.h>

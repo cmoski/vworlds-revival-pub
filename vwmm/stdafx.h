@@ -1,4 +1,4 @@
-// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+// Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved.
 // In installing/viewing this source code, you agree to the terms of the
 // Microsoft Research Source License (MSRSL) included in the root of this source tree
 // and available from http://www.vworlds.org/license.asp.
@@ -14,6 +14,11 @@
 #pragma once
 #endif // _MSC_VER >= 1000
 
+// Force DirectX version to 7 (D3DRM era) before any headers define it to 9+
+#ifndef DIRECT3D_VERSION
+#define DIRECT3D_VERSION 0x0700
+#endif
+
 #define STRICT
 
 #include <afxwin.h>
@@ -23,6 +28,7 @@
 #define _ATL_APARTMENT_THREADED
 #define VC_EXTRALEAN
 
+#define _ATL_ALLOW_DEPRECATED_FUNCTIONS
 #include <atlbase.h>
 //You may derive a class from CComModule and use it if you want to override
 //something, but do not change the name of _Module

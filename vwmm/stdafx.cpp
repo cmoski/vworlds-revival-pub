@@ -1,4 +1,4 @@
-// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+// Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved.
 // In installing/viewing this source code, you agree to the terms of the
 // Microsoft Research Source License (MSRSL) included in the root of this source tree
 // and available from http://www.vworlds.org/license.asp.
@@ -10,13 +10,10 @@
 #include "stdafx.h"
 #include "atlctl.h"
 
+// Modern ATL no longer has separate atlimpl.cpp/atlctl.cpp/atlwin.cpp
 #ifdef _ATL_STATIC_REGISTRY
 #include <statreg.h>
-#include <statreg.cpp>
 #endif
 
-#include <atlimpl.cpp>
-#include <atlctl.cpp>
-#include <atlwin.cpp>
 #include <vwimpl.cpp>
 

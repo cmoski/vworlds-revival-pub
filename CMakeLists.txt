@@ -935,12 +935,166 @@ target_link_libraries(uictrl PRIVATE
 )
 
 # =============================================================================
-# Graphics-dependent components (Phase 5+)
+# Legacy D3DRM runtime (Phase 5)
 # =============================================================================
-if(VWORLDS_BUILD_GRAPHICS)
-    message(STATUS "Graphics components enabled - requires D3DRM stub headers")
-    # TODO Phase 5: d2d, vwmm, vwstudio, vwrender, vwocx/vwrendvw, etc.
+set(D3DRM_LEGACY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/d3drm_legacy/x86")
+# D3DRM-only headers: d3drm.h, d3drmobj.h, d3drmdef.h, d3drmwin.h
+# plus d3d.h/d3dcaps.h from the system SDK (symlinked/copied) for d3drmobj.h resolution.
+# d3dtypes.h and ddraw.h come from the SYSTEM SDK (compatible with MFC/DXGI).
+set(D3DRM_INCLUDE_DIR "${D3DRM_LEGACY_DIR}/include_d3drm_only")
+set(D3DRM_LIB_DIR "${D3DRM_LEGACY_DIR}/lib")
+set(D3DRM_BIN_DIR "${D3DRM_LEGACY_DIR}/bin")
+
+if(EXISTS "${D3DRM_INCLUDE_DIR}/d3drm.h")
+    message(STATUS "Found legacy D3DRM at: ${D3DRM_LEGACY_DIR}")
+    set(VWORLDS_HAS_D3DRM TRUE)
+else()
+    message(WARNING "Legacy D3DRM not found at ${D3DRM_LEGACY_DIR} - graphics targets disabled")
+    set(VWORLDS_HAS_D3DRM FALSE)
 endif()
+
+# =============================================================================
+# vwmm.dll - Multimedia module (graphics, properties, rendering)
+# =============================================================================
+if(VWORLDS_HAS_D3DRM)
+
+add_library(vwmm SHARED
+    # -- vwmm local --
+    vwmm/stdafx.cpp
+    vwmm/vwmm.cpp
+    vwmm/dlldatax.c
+
+    # -- vwrender (3D/2D rendering) --
+    vwrender/vwrend3d.cpp
+    vwrender/vwrend2d.cpp
+    vwrender/vwrendrt.cpp
+
+    # -- properties --
+    property/vector/vectorob.cpp
+    property/cellprop/edgecyc.cpp
+    property/vwframe/vwframeo.cpp
+    property/vwframe/bbox.cpp
+    property/vwgeom/vwgeomob.cpp
+    property/vwgeomsp/vwgeoms.cpp
+    property/vwgeomsp/d3dmath.cpp
+    property/vwidata/vwidatao.cpp
+    property/vwadata/vwadatao.cpp
+    property/pickdata/pickdata.cpp
+    property/sound/sound.cpp
+    property/vwgeomar/vwgeoma.cpp
+    property/vwgeomar/charobj.cpp
+    property/vwgeomar/jointobj.cpp
+    property/vwgeomar/puppetob.cpp
+
+    # -- geometry cache --
+    vwgcache/vwgcacho.cpp
+    vwgcache/readwdb.cpp
+
+    # -- sprite manager --
+    spritemn/spritemo.cpp
+
+    # -- module/mm (multimedia exemplar implementations) --
+    module/mm/mmthing.cpp
+    module/mm/mmavatar.cpp
+    module/mm/mmroom.cpp
+    module/mm/mmportal.cpp
+    module/mm/mmlight.cpp
+    module/mm/mmhost.cpp
+    module/mm/mmartfct.cpp
+    module/mm/vwmmexo.cpp
+
+    # -- uitools --
+    uitools/vwpktool/vwpktl.cpp
+    uitools/vwnvtool/vwnavt3d.cpp
+
+    # -- shared utilities --
+    vwcommon/Cathelp.cpp
+    vwcommon/mmhelp.cpp
+    vwcommon/syshelp.cpp
+    vwcommon/vwmenu.cpp
+    vwcommon/vecmath.cpp
+    vwcommon/profhelp.cpp
+
+    # -- resources and exports --
+    vwmm/vwmm.rc
+    vwmm/vwmm.def
+)
+
+add_dependencies(vwmm vworlds_midl)
+
+# Note: d3dtypes suppression is handled in vwmm/stdafx.h by pre-defining
+# _D3DTYPES_H_, _D3D9TYPES_H_, __dxgitype_h__ guards before MFC includes.
+# /SAFESEH:NO needed for legacy D3DRM import libraries
+target_link_options(vwmm PRIVATE /SAFESEH:NO)
+# D3DRM-only headers (d3drm.h, d3drmobj.h, d3drmdef.h, d3drmwin.h) come from
+# the legacy bundle. System SDK provides d3d.h, d3dtypes.h, ddraw.h which are
+# MFC-compatible. Put D3DRM path AFTER system paths so d3d.h/ddraw.h resolve
+# to system versions, but d3drm*.h resolve to legacy versions.
+target_include_directories(vwmm PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwmm
+    ${VWORLDS_COMMON_DIR}
+    # NOTE: compat/ deliberately NOT included for vwmm - use real D3DRM headers
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwsystem
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwobject
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwrender
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwgcache
+    ${CMAKE_CURRENT_SOURCE_DIR}/spritemn
+    ${CMAKE_CURRENT_SOURCE_DIR}/module/mm
+    ${CMAKE_CURRENT_SOURCE_DIR}/property/vector
+    ${CMAKE_CURRENT_SOURCE_DIR}/property/cellprop
+    ${CMAKE_CURRENT_SOURCE_DIR}/property/vwframe
+    ${CMAKE_CURRENT_SOURCE_DIR}/property/vwgeom
+    ${CMAKE_CURRENT_SOURCE_DIR}/property/vwgeomsp
+    ${CMAKE_CURRENT_SOURCE_DIR}/property/vwgeomar
+    ${CMAKE_CURRENT_SOURCE_DIR}/property/vwidata
+    ${CMAKE_CURRENT_SOURCE_DIR}/property/vwadata
+    ${CMAKE_CURRENT_SOURCE_DIR}/property/pickdata
+    ${CMAKE_CURRENT_SOURCE_DIR}/property/sound
+    ${CMAKE_CURRENT_SOURCE_DIR}/uitools/vwpktool
+    ${CMAKE_CURRENT_SOURCE_DIR}/uitools/vwnvtool
+    ${CMAKE_CURRENT_SOURCE_DIR}/d2d
+    ${CMAKE_CURRENT_SOURCE_DIR}/d2d/d2dutils/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/d2d/mmimage/include
+    ${D3DRM_INCLUDE_DIR}
+)
+
+target_compile_definitions(vwmm PRIVATE
+    _WINDLL
+    _USRDLL
+    _AFXDLL
+    VWMM_BUILD
+    _MERGE_PROXYSTUB
+    NO_3DS_CONVERTER
+    NO_VRML_CONVERTER
+)
+
+target_precompile_headers(vwmm PRIVATE
+    "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/vwmm/stdafx.h>"
+)
+
+target_link_directories(vwmm PRIVATE ${D3DRM_LIB_DIR})
+
+target_link_libraries(vwmm PRIVATE
+    vwsystem
+    d3drm
+    ddraw
+    dxguid
+    winmm
+    uuid
+    ole32
+    oleaut32
+    rpcrt4
+)
+
+# Copy d3drm.dll to output directory for app-local loading
+add_custom_command(TARGET vwmm POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${D3DRM_BIN_DIR}/d3drm.dll"
+        "$<TARGET_FILE_DIR:vwmm>/d3drm.dll"
+    COMMENT "Deploying d3drm.dll app-locally"
+)
+
+endif() # VWORLDS_HAS_D3DRM
 
 # =============================================================================
 # Summary
