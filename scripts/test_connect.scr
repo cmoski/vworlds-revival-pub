@@ -1,0 +1,32 @@
+On Error Resume Next
+
+' Step 1: Get client
+set Client = XObject
+If Err.Number <> 0 Then
+    MsgBox "XObject failed: " & Err.Description
+    Err.Clear
+End If
+
+' Step 2: Connect to server
+Client.ConnectToServer "localhost", True
+If Err.Number <> 0 Then
+    MsgBox "ConnectToServer failed: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+End If
+
+' Step 3: Connect to world
+set World = Client.Connect("localhost/TestWorld")
+If Err.Number <> 0 Then
+    MsgBox "Connect failed: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+Else
+    MsgBox "Connected! World type: " & TypeName(World)
+
+    ' Step 4: Read properties
+    Dim v
+    v = World.Name
+    MsgBox "World.Name = " & v
+
+    v = World.Version
+    MsgBox "World.Version = " & v
+End If
