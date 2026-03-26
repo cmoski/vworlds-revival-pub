@@ -19,44 +19,104 @@
 extern "C"   {
 #endif
 
+EXTERN_PROXY_FILE( _3dstod3d )
 EXTERN_PROXY_FILE( authntic )
 EXTERN_PROXY_FILE( avprof )
+EXTERN_PROXY_FILE( bndytool )
+EXTERN_PROXY_FILE( cellprop )
+EXTERN_PROXY_FILE( convgeom )
+EXTERN_PROXY_FILE( d2d )
 EXTERN_PROXY_FILE( dirserv )
+EXTERN_PROXY_FILE( geomtool )
 EXTERN_PROXY_FILE( inetfile )
+EXTERN_PROXY_FILE( isound )
 EXTERN_PROXY_FILE( menuitem )
 EXTERN_PROXY_FILE( ocxproxy )
+EXTERN_PROXY_FILE( pickdata )
+EXTERN_PROXY_FILE( spritemn )
+EXTERN_PROXY_FILE( stdtools )
+EXTERN_PROXY_FILE( tranitem )
+EXTERN_PROXY_FILE( vector )
+EXTERN_PROXY_FILE( vwadata )
 EXTERN_PROXY_FILE( vwadmin )
 EXTERN_PROXY_FILE( vwanim )
 EXTERN_PROXY_FILE( vwbuffer )
 EXTERN_PROXY_FILE( vwclient )
 EXTERN_PROXY_FILE( vwcomm )
+EXTERN_PROXY_FILE( vwfound )
+EXTERN_PROXY_FILE( vwframe )
+EXTERN_PROXY_FILE( vwgcache )
+EXTERN_PROXY_FILE( vwgeom )
+EXTERN_PROXY_FILE( vwgeomar )
+EXTERN_PROXY_FILE( vwgeomsp )
 EXTERN_PROXY_FILE( vwhtml )
+EXTERN_PROXY_FILE( vwidata )
+EXTERN_PROXY_FILE( vwmmex )
+EXTERN_PROXY_FILE( vwnvtool )
 EXTERN_PROXY_FILE( vwobject )
 EXTERN_PROXY_FILE( vwodb )
+EXTERN_PROXY_FILE( vwpktool )
 EXTERN_PROXY_FILE( vwprop )
+EXTERN_PROXY_FILE( vwrender )
 EXTERN_PROXY_FILE( vwserver )
+EXTERN_PROXY_FILE( vwsound )
+EXTERN_PROXY_FILE( vwstats )
+EXTERN_PROXY_FILE( vwstuex )
 EXTERN_PROXY_FILE( vwsysex )
+EXTERN_PROXY_FILE( vwtrans )
+EXTERN_PROXY_FILE( vwuiobjs )
+EXTERN_PROXY_FILE( webtools )
 
 
 PROXYFILE_LIST_START
 /* Start of list */
+  REFERENCE_PROXY_FILE( _3dstod3d ),
   REFERENCE_PROXY_FILE( authntic ),
   REFERENCE_PROXY_FILE( avprof ),
+  REFERENCE_PROXY_FILE( bndytool ),
+  REFERENCE_PROXY_FILE( cellprop ),
+  REFERENCE_PROXY_FILE( convgeom ),
+  REFERENCE_PROXY_FILE( d2d ),
   REFERENCE_PROXY_FILE( dirserv ),
+  REFERENCE_PROXY_FILE( geomtool ),
   REFERENCE_PROXY_FILE( inetfile ),
+  REFERENCE_PROXY_FILE( isound ),
   REFERENCE_PROXY_FILE( menuitem ),
   REFERENCE_PROXY_FILE( ocxproxy ),
+  REFERENCE_PROXY_FILE( pickdata ),
+  REFERENCE_PROXY_FILE( spritemn ),
+  REFERENCE_PROXY_FILE( stdtools ),
+  REFERENCE_PROXY_FILE( tranitem ),
+  REFERENCE_PROXY_FILE( vector ),
+  REFERENCE_PROXY_FILE( vwadata ),
   REFERENCE_PROXY_FILE( vwadmin ),
   REFERENCE_PROXY_FILE( vwanim ),
   REFERENCE_PROXY_FILE( vwbuffer ),
   REFERENCE_PROXY_FILE( vwclient ),
   REFERENCE_PROXY_FILE( vwcomm ),
+  REFERENCE_PROXY_FILE( vwfound ),
+  REFERENCE_PROXY_FILE( vwframe ),
+  REFERENCE_PROXY_FILE( vwgcache ),
+  REFERENCE_PROXY_FILE( vwgeom ),
+  REFERENCE_PROXY_FILE( vwgeomar ),
+  REFERENCE_PROXY_FILE( vwgeomsp ),
   REFERENCE_PROXY_FILE( vwhtml ),
+  REFERENCE_PROXY_FILE( vwidata ),
+  REFERENCE_PROXY_FILE( vwmmex ),
+  REFERENCE_PROXY_FILE( vwnvtool ),
   REFERENCE_PROXY_FILE( vwobject ),
   REFERENCE_PROXY_FILE( vwodb ),
+  REFERENCE_PROXY_FILE( vwpktool ),
   REFERENCE_PROXY_FILE( vwprop ),
+  REFERENCE_PROXY_FILE( vwrender ),
   REFERENCE_PROXY_FILE( vwserver ),
+  REFERENCE_PROXY_FILE( vwsound ),
+  REFERENCE_PROXY_FILE( vwstats ),
+  REFERENCE_PROXY_FILE( vwstuex ),
   REFERENCE_PROXY_FILE( vwsysex ),
+  REFERENCE_PROXY_FILE( vwtrans ),
+  REFERENCE_PROXY_FILE( vwuiobjs ),
+  REFERENCE_PROXY_FILE( webtools ),
 /* End of list */
 PROXYFILE_LIST_END
 

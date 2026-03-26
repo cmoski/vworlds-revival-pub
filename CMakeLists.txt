@@ -194,6 +194,50 @@ set(VWORLDS_CORE_IDLS
     ocxproxy
 )
 
+# IDLs needed for foundatn module (import graphics IDLs but have cpp_quote guards)
+set(VWORLDS_FOUNDATN_IDLS
+    d2d
+    vector
+    vwtrans
+    cellprop
+    isound
+    pickdata
+    vwadata
+    vwidata
+    vwrender
+    vwframe
+    vwgcache
+    vwgeom
+    vwgeomsp
+    vwgeomar
+    convgeom
+    vwmmex
+    3dstod3d
+    vwuiobjs
+    vwsound
+    vwstats
+    stdtools
+    bndytool
+    spritemn
+    geomtool
+    vwnvtool
+    vwpktool
+    webtools
+    vwstuex
+    vwfound
+    tranitem
+)
+foreach(IDL_NAME ${VWORLDS_FOUNDATN_IDLS})
+    vworlds_midl_compile(
+        "${VWORLDS_COMMON_DIR}/${IDL_NAME}.idl"
+        OUTPUT_DIR "${VWORLDS_COMMON_DIR}"
+    )
+    list(APPEND VWORLDS_MIDL_OUTPUTS
+        "${VWORLDS_COMMON_DIR}/${IDL_NAME}.h"
+        "${VWORLDS_COMMON_DIR}/${IDL_NAME}_i.c"
+    )
+endforeach()
+
 # IDLs that need proxy/stub generation
 set(VWORLDS_PROXY_IDLS vwobject vwprop vwclient inetfile)
 
@@ -274,6 +318,17 @@ if(VWORLDS_BUILD_GRAPHICS)
         )
     endforeach()
 endif()
+
+# vwmm.idl is in vwmm/ directory (not vwcommon/)
+vworlds_midl_compile(
+    "${CMAKE_CURRENT_SOURCE_DIR}/vwmm/vwmm.idl"
+    OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vwmm"
+    TLB "${CMAKE_CURRENT_SOURCE_DIR}/vwmm/vwmm.tlb"
+)
+list(APPEND VWORLDS_MIDL_OUTPUTS
+    "${CMAKE_CURRENT_SOURCE_DIR}/vwmm/vwmm.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/vwmm/vwmm_i.c"
+)
 
 # Custom target for all MIDL outputs
 add_custom_target(vworlds_midl DEPENDS ${VWORLDS_MIDL_OUTPUTS})
@@ -488,6 +543,8 @@ add_executable(sengine WIN32
     sengine/guids.cpp
     sengine/ocxview.cpp
     sengine/oleid.cpp
+    # Compiled directly into sengine (not from vwsystem.dll)
+    vwcommon/scripts.cpp
 )
 
 target_include_directories(sengine PRIVATE
@@ -504,7 +561,6 @@ target_precompile_headers(sengine PRIVATE
 )
 
 target_link_libraries(sengine PRIVATE
-    vwsystem
     ole32
     oleaut32
     uuid
@@ -538,6 +594,8 @@ add_executable(serverV2 WIN32
     serverv2/infourl.cpp
     serverv2/prgdlg.cpp
     serverv2/savedlg.cpp
+    # Compiled directly (not from vwsystem.dll)
+    vwcommon/reghelp.cpp
 )
 
 target_include_directories(serverV2 PRIVATE
@@ -554,7 +612,6 @@ target_precompile_headers(serverV2 PRIVATE
 )
 
 target_link_libraries(serverV2 PRIVATE
-    vwsystem
     ole32
     oleaut32
     uuid
@@ -564,6 +621,11 @@ target_link_libraries(serverV2 PRIVATE
     shell32
     comdlg32
     winmm
+    wsock32
+    wininet
+    urlmon
+    netapi32
+    htmlhelp
 )
 
 add_dependencies(serverV2 vworlds_midl)
@@ -586,11 +648,20 @@ add_library(vwfound SHARED
     module/foundatn/sign.cpp
     module/foundatn/transmch.cpp
     module/foundatn/vwfound.cpp
+    # Shared utilities compiled directly into vwfound (from vwfoun60.mak)
+    vwcommon/mmhelp.cpp
+    vwcommon/syshelp.cpp
+    vwcommon/profhelp.cpp
+    property/tranitem/tranito.cpp
 )
 
 target_include_directories(vwfound PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/module/foundatn
     ${VWORLDS_COMMON_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/compat          # Stub D3DRM/DirectDraw headers
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwsystem
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwmm            # vwmm.h (MIDL-generated)
+    ${CMAKE_CURRENT_SOURCE_DIR}/property/tranitem
 )
 
 target_compile_definitions(vwfound PRIVATE

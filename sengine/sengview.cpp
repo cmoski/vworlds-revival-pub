@@ -1,4 +1,4 @@
-// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+// Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved.
 // In installing/viewing this source code, you agree to the terms of the
 // Microsoft Research Source License (MSRSL) included in the root of this source tree
 // and available from http://www.vworlds.org/license.asp.
@@ -169,8 +169,8 @@ void CSEngineView::OnUpdateEditGoto(CCmdUI* pCmdUI)
 }
 
 void CSEngineView::UpdateRowColInfo(){
-static lastline = -1;
-static lastcol  = -1;
+static int lastline = -1;
+static int lastcol  = -1;
 
 	if ( !m_hWnd ) return;
 

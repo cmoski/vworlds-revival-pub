@@ -1,4 +1,4 @@
-// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+// Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved.
 // In installing/viewing this source code, you agree to the terms of the
 // Microsoft Research Source License (MSRSL) included in the root of this source tree
 // and available from http://www.vworlds.org/license.asp.
@@ -17,6 +17,7 @@
 //#include <afxcmn.h>			// MFC support for Windows 95 Common Controls
 #endif // _AFX_NO_AFXCMN_SUPPORT
 
+#define _ATL_ALLOW_DEPRECATED_FUNCTIONS
 #include <atlbase.h>
 //You may derive a class from CComModule and use it if you want to override
 //something, but do not change the name of _Module
