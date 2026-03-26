@@ -1,4 +1,4 @@
-// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+// Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved.
 // In installing/viewing this source code, you agree to the terms of the
 // Microsoft Research Source License (MSRSL) included in the root of this source tree
 // and available from http://www.vworlds.org/license.asp.
@@ -223,7 +223,9 @@ HRESULT CloneDISPPARAMS(DISPPARAMS* pfrom, DISPPARAMS* pto);
 // BSTR support for template collections
 #ifdef INLINE_VW_HELPERS
 
-inline UINT AFXAPI HashKey(BSTR key)
+// Must be a template specialization so HashKey<BSTR>(...) calls this version
+// instead of the MFC default which hashes the pointer value (not string contents).
+template<> inline UINT AFXAPI HashKey<BSTR>(BSTR key)
 {
 	UINT nHash = 0;
 	wchar_t c;
