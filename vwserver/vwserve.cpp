@@ -1,4 +1,4 @@
-// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+// Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved.
 // In installing/viewing this source code, you agree to the terms of the
 // Microsoft Research Source License (MSRSL) included in the root of this source tree
 // and available from http://www.vworlds.org/license.asp.
@@ -357,30 +357,30 @@ STDMETHODIMP CVWServer::GetStatusInfo(DWORD *pqueueSize, DWORD *ptotalReq, BSTR 
 		output += "\t\tTimer msgs processed:\t\t\t\t" + ToStr(m_queue.getTotalTimersProcessed()) + "\r\n";
 */
         // Processing time statistics
-        output += "\r\n\r\nProcessing Time (ms): Average ± Std. Dev. \r\n";        
+        output += "\r\n\r\nProcessing Time (ms): Average ï¿½ Std. Dev. \r\n";        
         output += "\tWorld:\t\t\t\t";
         if (m_World.Cnt >0 )
-            output += fToStr(m_World.Total / m_World.Cnt / m_dFreq ) + " ± " + fToStr(sqrt(m_World.SD / m_World.Total) / m_dFreq) + "  Last: " + fToStr(m_World.Last / m_dFreq ) + "     (" + fToStr(1000/ (m_World.Total / m_World.Cnt / m_dFreq)) + " trans/sec)" ;
+            output += fToStr(m_World.Total / m_World.Cnt / m_dFreq ) + " ï¿½ " + fToStr(sqrt(m_World.SD / m_World.Total) / m_dFreq) + "  Last: " + fToStr(m_World.Last / m_dFreq ) + "     (" + fToStr(1000/ (m_World.Total / m_World.Cnt / m_dFreq)) + " trans/sec)" ;
 
         output +="\r\n\tEnter:\t\t\t\t";
         if (m_Enter.Cnt >0 ) 
-            output += fToStr(m_Enter.Total / m_Enter.Cnt / m_dFreq ) + " ± " + fToStr(sqrt(m_Enter.SD / m_Enter.Total) / m_dFreq) + "  Last: " + fToStr(m_Enter.Last / m_dFreq );
+            output += fToStr(m_Enter.Total / m_Enter.Cnt / m_dFreq ) + " ï¿½ " + fToStr(sqrt(m_Enter.SD / m_Enter.Total) / m_dFreq) + "  Last: " + fToStr(m_Enter.Last / m_dFreq );
 
         output +="\r\n\tLogon:\t\t\t\t";
         if (m_Logon.Cnt >0 ) 
-            output += fToStr(m_Logon.Total / m_Logon.Cnt / m_dFreq ) + " ± " + fToStr(sqrt(m_Logon.SD / m_Logon.Total) / m_dFreq) + "  Last: " + fToStr(m_Logon.Last / m_dFreq );
+            output += fToStr(m_Logon.Total / m_Logon.Cnt / m_dFreq ) + " ï¿½ " + fToStr(sqrt(m_Logon.SD / m_Logon.Total) / m_dFreq) + "  Last: " + fToStr(m_Logon.Last / m_dFreq );
 
         output +="\r\n\tCreate:\t\t\t\t";
         if (m_Create.Cnt >0 ) 
-            output += fToStr(m_Create.Total / m_Create.Cnt / m_dFreq ) + " ± " + fToStr(sqrt(m_Create.SD / m_Create.Total) / m_dFreq) + "  Last: " + fToStr(m_Create.Last / m_dFreq );
+            output += fToStr(m_Create.Total / m_Create.Cnt / m_dFreq ) + " ï¿½ " + fToStr(sqrt(m_Create.SD / m_Create.Total) / m_dFreq) + "  Last: " + fToStr(m_Create.Last / m_dFreq );
 
         output +="\r\n\tDisconnect:\t\t\t";
         if (m_Disconnect.Cnt >0 ) 
-            output += fToStr(m_Disconnect.Total / m_Disconnect.Cnt / m_dFreq ) + " ± " + fToStr(sqrt(m_Disconnect.SD / m_Disconnect.Total) / m_dFreq) + "  Last: " + fToStr(m_Disconnect.Last / m_dFreq );
+            output += fToStr(m_Disconnect.Total / m_Disconnect.Cnt / m_dFreq ) + " ï¿½ " + fToStr(sqrt(m_Disconnect.SD / m_Disconnect.Total) / m_dFreq) + "  Last: " + fToStr(m_Disconnect.Last / m_dFreq );
 
         output +="\r\n\tReconnect:\t\t\t";
         if (m_Reconnect.Cnt >0 ) 
-            output += fToStr(m_Reconnect.Total / m_Reconnect.Cnt / m_dFreq ) + " ± " + fToStr(sqrt(m_Reconnect.SD / m_Reconnect.Total) / m_dFreq) + "  Last: " + fToStr(m_Reconnect.Last / m_dFreq );
+            output += fToStr(m_Reconnect.Total / m_Reconnect.Cnt / m_dFreq ) + " ï¿½ " + fToStr(sqrt(m_Reconnect.SD / m_Reconnect.Total) / m_dFreq) + "  Last: " + fToStr(m_Reconnect.Last / m_dFreq );
         
 		output +="\r\n";
 
@@ -1376,13 +1376,19 @@ HRESULT CVWServer::OpenWorldHelper(CString strWorldName, CString &strReturnError
 	pwi = m_wlist.FindWorld(strWorldName);
 	if (pwi == NULL)
 	{
-		// world not loaded, attempt to load
+		// world not loaded, attempt to load existing
 		hr = OpenWorld(bstrWorldName, bstrWorldName, VARIANT_FALSE, VARIANT_FALSE, &pworld, &dwCookie);
 		if (FAILED(hr))
 		{
-			TRACE("CVWServer::OpenWorldHelper: Could not load world\n");
-			goto ERROR_ENCOUNTERED;
-		}		
+			// File doesn't exist - auto-create a new world
+			TRACE("CVWServer::OpenWorldHelper: Open failed, trying create\n");
+			hr = OpenWorld(bstrWorldName, bstrWorldName, VARIANT_TRUE, VARIANT_FALSE, &pworld, &dwCookie);
+			if (FAILED(hr))
+			{
+				TRACE("CVWServer::OpenWorldHelper: Could not load or create world\n");
+				goto ERROR_ENCOUNTERED;
+			}
+		}
 	}
 	else 
 	{
