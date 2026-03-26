@@ -2405,6 +2405,12 @@ STDMETHODIMP CThingObject::get_Property(BSTR bstrPropertyName, VARIANT* pvar)
 
 	hr = get_PropertyExt(bstrPropertyName, nHashOrig, NULL, pvar);
 
+	if (hr == VWOBJECT_E_PROPERTYNOTEXIST)
+	{
+		TRACE("GET_PROP_FAIL: '%s' on id=%d\n",
+			(LPCSTR)CStringA(bstrPropertyName), m_lObjectID);
+	}
+
 	return ReportThingError(hr);
 }
 
