@@ -212,16 +212,18 @@ public:
             if (vWorldObj.vt == VT_DISPATCH && vWorldObj.pdispVal) {
                 CComPtr<IDispatch> pWorld(vWorldObj.pdispVal);
 
-                // Login
+                // Login (World.Connect takes username, password)
                 if (!m_connectOnly) {
                     CComVariant vUser((LPCSTR)m_user);
+                    CComVariant vPass("");
                     name = L"Connect";
                     hr = pWorld->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_USER_DEFAULT, &dispid);
                     if (SUCCEEDED(hr)) {
-                        DISPPARAMS dp2 = { &vUser, NULL, 1, 0 };
+                        CComVariant args2[] = { vPass, vUser }; // reversed for DISPPARAMS
+                        DISPPARAMS dp2 = { args2, NULL, 2, 0 };
                         CComVariant vUserObj;
                         hr = pWorld->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &dp2, &vUserObj, NULL, NULL);
-                        Log("World.Connect('%s'): hr=0x%08X", (LPCSTR)m_user, hr);
+                        Log("World.Connect('%s',''): hr=0x%08X", (LPCSTR)m_user, hr);
                     }
 
                     // Set VWClient on renderer

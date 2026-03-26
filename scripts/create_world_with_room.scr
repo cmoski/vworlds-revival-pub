@@ -1,0 +1,53 @@
+On Error Resume Next
+
+' Create a fresh world with a room
+set Client = XObject
+set World = Client.ConnectLocal("RoomWorld")
+If Err.Number <> 0 Then
+    MsgBox "ConnectLocal failed: " & Err.Description
+    Err.Clear
+End If
+
+MsgBox "World created. Version: " & World.Version
+
+' Load modules (same as vwstd.scr)
+World.CreateCOMModule "Multimedia", "VWSYSTEM.MultimediaEx.1", 3
+If Err.Number <> 0 Then
+    MsgBox "Multimedia module: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+End If
+
+World.CreateCOMModule "Studio", "VWSTUDIO.StudioEx.1", 3
+If Err.Number <> 0 Then
+    MsgBox "Studio module: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+End If
+
+World.CreateCOMModule "Foundation", "VWEXEMP.FoundationExemplars.1", 3
+If Err.Number <> 0 Then
+    MsgBox "Foundation module: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+End If
+
+MsgBox "Modules loaded. Creating room..."
+
+' Create a room
+Dim Room
+set Room = World.CreateInstance("MainRoom", World.Exemplar("Room"))
+If Err.Number <> 0 Then
+    MsgBox "CreateInstance(Room): " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+Else
+    MsgBox "Room: " & Room.Name
+
+    ' Set as default room (ConnectLocal has full permissions)
+    World.Global.DefaultRoom = Room
+    If Err.Number <> 0 Then
+        MsgBox "DefaultRoom: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+        Err.Clear
+    Else
+        MsgBox "DefaultRoom set!"
+    End If
+End If
+
+MsgBox "Done! Open RoomWorld in serverV2, then connect with renderhost --world RoomWorld"

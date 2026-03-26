@@ -1,0 +1,49 @@
+On Error Resume Next
+
+' Connect to running server to set up the world with a room
+set Client = XObject
+set World = Client.Connect("localhost/TestWorld")
+If Err.Number <> 0 Then
+    MsgBox "Connect failed: " & Err.Description
+    Err.Clear
+End If
+
+' Login
+Dim User
+set User = World.Connect("SetupUser", "")
+If Err.Number <> 0 Then
+    MsgBox "Login failed: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+End If
+
+MsgBox "Logged in. Creating room..."
+
+' Create a room
+Dim Room
+set Room = World.CreateInstance("MainRoom", World.Exemplar("Room"))
+If Err.Number <> 0 Then
+    MsgBox "CreateInstance(Room) failed: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+Else
+    MsgBox "Room created: " & Room.Name & " Type: " & Room.Type
+
+    ' Move user into room
+    User.MoveInto Room
+    If Err.Number <> 0 Then
+        MsgBox "MoveInto failed: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+        Err.Clear
+    Else
+        MsgBox "User moved into room"
+    End If
+
+    ' Set as default room so new users go there
+    World.Global.DefaultRoom = Room
+    If Err.Number <> 0 Then
+        MsgBox "Set DefaultRoom: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+        Err.Clear
+    Else
+        MsgBox "DefaultRoom set"
+    End If
+End If
+
+MsgBox "Setup complete! Restart renderhost to see the room."
