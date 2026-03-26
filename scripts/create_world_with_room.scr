@@ -1,8 +1,8 @@
 On Error Resume Next
 
-' Create a fresh world with a room
+' Create a fresh world with content paths, room, and artifact
 set Client = XObject
-set World = Client.ConnectLocal("RoomWorld")
+set World = Client.ConnectLocal("RoomWorld2")
 If Err.Number <> 0 Then
     MsgBox "ConnectLocal failed: " & Err.Description
     Err.Clear
@@ -10,44 +10,76 @@ End If
 
 MsgBox "World created. Version: " & World.Version
 
-' Load modules (same as vwstd.scr)
+' Set trace level for diagnostics
+World.TraceLevel("*") = 4
+
+' Load modules
 World.CreateCOMModule "Multimedia", "VWSYSTEM.MultimediaEx.1", 3
 If Err.Number <> 0 Then
-    MsgBox "Multimedia module: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    MsgBox "Multimedia: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
     Err.Clear
 End If
 
 World.CreateCOMModule "Studio", "VWSTUDIO.StudioEx.1", 3
 If Err.Number <> 0 Then
-    MsgBox "Studio module: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    MsgBox "Studio: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
     Err.Clear
 End If
 
 World.CreateCOMModule "Foundation", "VWEXEMP.FoundationExemplars.1", 3
 If Err.Number <> 0 Then
-    MsgBox "Foundation module: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    MsgBox "Foundation: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
     Err.Clear
 End If
 
-MsgBox "Modules loaded. Creating room..."
+MsgBox "Modules loaded."
 
 ' Create a room
 Dim Room
 set Room = World.CreateInstance("MainRoom", World.Exemplar("Room"))
 If Err.Number <> 0 Then
-    MsgBox "CreateInstance(Room): " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    MsgBox "Room: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
     Err.Clear
 Else
-    MsgBox "Room: " & Room.Name
-
-    ' Set as default room (ConnectLocal has full permissions)
+    ' Set as default room
     World.Global.DefaultRoom = Room
     If Err.Number <> 0 Then
         MsgBox "DefaultRoom: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
         Err.Clear
+    End If
+    MsgBox "Room created: " & Room.Name
+End If
+
+' Create a test artifact in the room
+Dim obj
+set obj = World.CreateInstance("TestCube", World.Exemplar("Artifact"))
+If Err.Number <> 0 Then
+    MsgBox "Artifact: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+Else
+    obj.MoveInto Room
+    MsgBox "TestCube in room"
+End If
+
+' Now set the content paths using the world's built-in method
+' The world should have set up paths from registry during OnCreateWorld
+' But let's also try the Inetfile tool directly
+Dim inetTool
+set inetTool = World.Tool("Inetfile")
+If Err.Number <> 0 Then
+    MsgBox "Get Inetfile tool: " & Err.Description
+    Err.Clear
+Else
+    ' Set the root URL to local content
+    Dim contentURL
+    contentURL = "file://F:\VWorlds\Microsoft Virtual Worlds\Local Content\"
+    inetTool.RootURL = contentURL
+    If Err.Number <> 0 Then
+        MsgBox "Set RootURL on tool: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+        Err.Clear
     Else
-        MsgBox "DefaultRoom set!"
+        MsgBox "Inetfile RootURL set to: " & contentURL
     End If
 End If
 
-MsgBox "Done! Open RoomWorld in serverV2, then connect with renderhost --world RoomWorld"
+MsgBox "Done! Use: renderhost --world RoomWorld2 --autoconnect"

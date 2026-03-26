@@ -1,0 +1,41 @@
+On Error Resume Next
+
+' Connect to running server
+set Client = XObject
+set World = Client.Connect("localhost/RoomWorld")
+If Err.Number <> 0 Then
+    MsgBox "Connect failed: " & Err.Description
+    Err.Clear
+End If
+
+' Login
+set User = World.Connect("Admin", "")
+If Err.Number <> 0 Then
+    MsgBox "Login failed: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+End If
+
+' Check current RootURL
+Dim curURL
+curURL = World.Global.RootURL
+MsgBox "Current RootURL: '" & curURL & "'"
+
+' Set RootURL to local content path
+Dim newURL
+newURL = "file://F:\VWorlds\Microsoft Virtual Worlds\Local Content\"
+World.Global.RootURL = newURL
+If Err.Number <> 0 Then
+    MsgBox "Set RootURL failed: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+Else
+    MsgBox "RootURL set to: " & newURL
+End If
+
+' Also set ContentPath
+World.Global.ContentPath = "F:\VWorlds\Microsoft Virtual Worlds\Local Content\"
+If Err.Number <> 0 Then
+    MsgBox "Set ContentPath: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+End If
+
+MsgBox "Done! Restart renderhost to load content."
