@@ -2771,6 +2771,18 @@ STDMETHODIMP CWorldObject::UpdateGlobalPaths()
 			{
 				bstrRootURLPath += bstrRoot;
 
+				// If RootURL is empty, fall back to registry ContentPath as file:// URL
+				if (bstrRoot.Length() == 0)
+				{
+					CComBSTR bstrFallback;
+					if (SUCCEEDED(FindContentPath(&bstrFallback.m_str)) && bstrFallback.Length() > 0)
+					{
+						bstrRootURLPath = "file://";
+						bstrRootURLPath += bstrFallback;
+						TRACE("UpdateGlobalPaths: RootURL empty, using fallback: %s\n", CString(bstrRootURLPath));
+					}
+				}
+
 				if (SUCCEEDED(get_ToolExt(CComBSTR("Inetfile"), (IUnknown**)&pinf)) && pinf)
 				{
 #ifdef _DEBUG
@@ -2888,6 +2900,10 @@ HRESULT CWorldObject::OnReceiveWorld()
 	HRESULT hr = S_OK;
 
 	VWTRACE(m_pWorld, "VWOBJECT", TRACE_GLOBALPATHS, "CWorldObject::OnReceiveWorld\n");
+
+	// Create tools on client side (Inetfile, Animator) with default content path
+	hr = CreateTools();
+	TRACE("OnReceiveWorld: CreateTools hr=0x%08X\n", hr);
 
 	/* hr = */ AddGlobalPaths();
 
@@ -3104,6 +3120,18 @@ HRESULT CWorldObject::CreateTools()
 	hr = CreateToolExt(CComBSTR("Inetfile"), CLSID_InternetFileManager, (IUnknown**)&pInetfile);
 	if (FAILED(hr))
 		goto ERROR_ENCOUNTERED;
+
+	// Set default content path from registry so sprites/textures can be found
+	{
+		CComBSTR bstrContentPath;
+		if (SUCCEEDED(FindContentPath(&bstrContentPath.m_str)) && bstrContentPath.Length() > 0)
+		{
+			CComBSTR bstrFileURL("file://");
+			bstrFileURL += bstrContentPath;
+			pInetfile->put_RootURL(bstrFileURL);
+			TRACE("CreateTools: Set Inetfile RootURL to %s\n", CString(bstrFileURL));
+		}
+	}
 
 	// REVIEW: Maybe we should move this code into some world-specific script.
 

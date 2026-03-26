@@ -226,6 +226,35 @@ public:
                         Log("World.Connect('%s',''): hr=0x%08X", (LPCSTR)m_user, hr);
                     }
 
+                    // Set content path on the world's Inetfile tool
+                    // so sprites/textures can be loaded from local files
+                    {
+                        CComVariant vTool;
+                        OLECHAR* toolName = L"Tool";
+                        hr = pWorld->GetIDsOfNames(IID_NULL, &toolName, 1, LOCALE_USER_DEFAULT, &dispid);
+                        if (SUCCEEDED(hr)) {
+                            CComVariant vToolName("Inetfile");
+                            DISPPARAMS dpTool = { &vToolName, NULL, 1, 0 };
+                            hr = pWorld->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT,
+                                DISPATCH_METHOD, &dpTool, &vTool, NULL, NULL);
+                        }
+                        if (SUCCEEDED(hr) && vTool.vt == VT_DISPATCH && vTool.pdispVal) {
+                            // Set RootURL on the Inetfile tool
+                            OLECHAR* rootURLName = L"RootURL";
+                            hr = vTool.pdispVal->GetIDsOfNames(IID_NULL, &rootURLName, 1, LOCALE_USER_DEFAULT, &dispid);
+                            if (SUCCEEDED(hr)) {
+                                CComVariant vURL("file://F:\\VWorlds\\Microsoft Virtual Worlds\\Local Content\\");
+                                DISPID putid2 = DISPID_PROPERTYPUT;
+                                DISPPARAMS dpURL = { &vURL, &putid2, 1, 1 };
+                                hr = vTool.pdispVal->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT,
+                                    DISPATCH_PROPERTYPUT, &dpURL, NULL, NULL, NULL);
+                                Log("Set Inetfile.RootURL: hr=0x%08X", hr);
+                            }
+                        } else {
+                            Log("Get Tool(Inetfile): hr=0x%08X, vt=%d", hr, vTool.vt);
+                        }
+                    }
+
                     // Set VWClient on renderer
                     Log("Binding VWClient to render control...");
                     name = L"VWClient";

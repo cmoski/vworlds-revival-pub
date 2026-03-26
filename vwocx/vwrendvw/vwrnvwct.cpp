@@ -943,15 +943,17 @@ CVWRenderViewCtrl::RenderDoProcessing()
 		m_fInterpTime = fTime;
 		ReleaseMutex(m_hInterpMutex);
 		//End tick interpolations and animations
-		//only really render if we have focus
-		if (m_hwndFocus)
+		//only really render if we have focus and window is valid
+		if (m_hwndFocus && ::IsWindow(m_hWnd))
 		{
-			m_pVWRenderRoot->Render();
+			hr = m_pVWRenderRoot->Render();
+			if (SUCCEEDED(hr))
+			{
+				if (m_nEditingMode == EDIT_BOUNDARIES)
+					DrawBoundaries();
 
-			if (m_nEditingMode == EDIT_BOUNDARIES)
-				DrawBoundaries();
-
-			m_pVWRenderRoot->Update();
+				m_pVWRenderRoot->Update();
+			}
 		}
 		// Textures HAVE to be released in this thread after rendering update due to a
 		// D3D bug where textures used by the render operation can be deleted before the
@@ -1792,6 +1794,9 @@ UINT PaintThread(void *pvParam)
 			break;
 
 		pctrl->RenderDoProcessing();
+
+		// Frame rate limiting - prevent 100% CPU and reduce surface-lost crashes
+		Sleep(16); // ~60fps max
 	}
 
 	CoUninitialize();
