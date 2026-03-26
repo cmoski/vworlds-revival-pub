@@ -1,12 +1,13 @@
 On Error Resume Next
 
-' Headless world creation - no MsgBox, for use with sengine /nowindow
+' Headless world creation - canonical VWorlds pattern, no MsgBox
 set Client = XObject
 set World = Client.ConnectLocal("RoomWorld2")
 Err.Clear
 
 World.TraceLevel("*") = 4
 
+' Load modules (canonical order)
 World.CreateCOMModule "Multimedia", "VWSYSTEM.MultimediaEx.1", 3
 Err.Clear
 World.CreateCOMModule "Studio", "VWSTUDIO.StudioEx.1", 3
@@ -14,6 +15,13 @@ Err.Clear
 World.CreateCOMModule "Foundation", "VWEXEMP.FoundationExemplars.1", 3
 Err.Clear
 
+' Global properties
+World.Global.DefaultSpriteFile = "default.spr"
+Err.Clear
+World.Global.DefaultAvatarExemplar.InitializeSpriteGraphics "default.spr", 0.0, 1.0, 0.0, 1.0, 0.0, 0.0
+Err.Clear
+
+' Room
 Dim Room
 set Room = World.CreateInstance("MainRoom", World.Exemplar("Room"))
 If Err.Number = 0 Then
@@ -21,10 +29,22 @@ If Err.Number = 0 Then
     Err.Clear
 End If
 
+' Sprite-textured artifact
 Dim obj
 set obj = World.CreateInstance("TestCube", World.Exemplar("Artifact"))
 If Err.Number = 0 Then
     obj.MoveInto Room
     obj.GeometryName = "client\shared\default.spr"
+    Err.Clear
+End If
+
+' 3D textured object (vending machine)
+Dim vend
+set vend = World.CreateInstance("VendingMachine", World.Exemplar("Artifact"))
+If Err.Number = 0 Then
+    vend.MoveInto Room
+    vend.GeometryName = "client\exemplar\vending\hvend.x"
+    Err.Clear
+    vend.Position.X = 3.0
     Err.Clear
 End If

@@ -1,6 +1,6 @@
 On Error Resume Next
 
-' Create a fresh world with content paths, room, and artifact
+' Create a fresh world following the canonical VWorlds pattern (from vwstd.scr)
 set Client = XObject
 set World = Client.ConnectLocal("RoomWorld2")
 If Err.Number <> 0 Then
@@ -11,12 +11,20 @@ End If
 ' Set trace level for diagnostics
 World.TraceLevel("*") = 4
 
-' Load modules
+' Load modules (canonical order from vwstd.scr)
 World.CreateCOMModule "Multimedia", "VWSYSTEM.MultimediaEx.1", 3
 Err.Clear
 World.CreateCOMModule "Studio", "VWSTUDIO.StudioEx.1", 3
 Err.Clear
 World.CreateCOMModule "Foundation", "VWEXEMP.FoundationExemplars.1", 3
+Err.Clear
+
+' Set up global object properties (from vwstd.scr)
+World.Global.DefaultSpriteFile = "default.spr"
+Err.Clear
+
+' Initialize default avatar sprite graphics
+World.Global.DefaultAvatarExemplar.InitializeSpriteGraphics "default.spr", 0.0, 1.0, 0.0, 1.0, 0.0, 0.0
 Err.Clear
 
 ' Create a room
@@ -30,7 +38,7 @@ Else
     Err.Clear
 End If
 
-' Create a test artifact with sprite texture in the room
+' Create a test artifact with sprite texture
 Dim obj
 set obj = World.CreateInstance("TestCube", World.Exemplar("Artifact"))
 If Err.Number <> 0 Then
@@ -42,4 +50,20 @@ Else
     Err.Clear
 End If
 
-MsgBox "Done! World RoomWorld2 created with room and textured artifact."
+' Create a textured 3D object (vending machine from exemplar content)
+Dim vend
+set vend = World.CreateInstance("VendingMachine", World.Exemplar("Artifact"))
+If Err.Number <> 0 Then
+    MsgBox "Vending: " & Err.Description
+    Err.Clear
+Else
+    vend.MoveInto Room
+    ' Use the vending machine .x file which references HVending.gif texture
+    vend.GeometryName = "client\exemplar\vending\hvend.x"
+    Err.Clear
+    ' Position it offset from center so it doesn't overlap TestCube
+    vend.Position.X = 3.0
+    Err.Clear
+End If
+
+MsgBox "Done! World RoomWorld2 created with room, sprite, and textured 3D object."
