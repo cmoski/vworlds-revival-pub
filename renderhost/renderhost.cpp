@@ -13,9 +13,10 @@ CComModule _Module;
 #include <stdio.h>
 #include <activscp.h>   // IActiveScript, IActiveScriptParse
 
-// VWorlds COM interfaces for ControlManager selection polling
+// VWorlds COM interfaces
 #include <vwobject.h>    // IWorld, IThing, IPropertyList
 #include <vwuiobjs.h>    // IVWControlManager
+#include <vwclient.h>    // IVWClientSite, IID_IVWClientSite
 
 // VBScript engine CLSID
 // {B54F3741-5B07-11cf-A4B0-00AA004A55E8}
@@ -58,6 +59,69 @@ void Log(const char* fmt, ...)
 }
 
 // Main frame window hosting the OCX
+// =====================================================================
+// Client Event Sink — receives OnTell, OnReport, OnUserConnect etc.
+// Registered via connection point on VWClient IDispatch
+// =====================================================================
+class CRenderFrame; // forward decl
+static CRenderFrame* g_pRenderFrame = NULL; // for event sink callback
+
+class CClientEventSink : public IVWClientSite, public IDispatch
+{
+    ULONG m_cRef;
+public:
+    CClientEventSink() : m_cRef(1) {}
+
+    // IUnknown
+    STDMETHOD(QueryInterface)(REFIID riid, void** ppv) {
+        if (riid == IID_IUnknown) {
+            *ppv = static_cast<IVWClientSite*>(this);
+            AddRef(); return S_OK;
+        }
+        if (riid == IID_IVWClientSite) {
+            *ppv = static_cast<IVWClientSite*>(this);
+            AddRef(); return S_OK;
+        }
+        if (riid == IID_IDispatch) {
+            *ppv = static_cast<IDispatch*>(this);
+            AddRef(); return S_OK;
+        }
+        *ppv = NULL; return E_NOINTERFACE;
+    }
+    STDMETHOD_(ULONG, AddRef)() { return ++m_cRef; }
+    STDMETHOD_(ULONG, Release)() { ULONG c = --m_cRef; if (!c) delete this; return c; }
+
+    // IVWClientSite vtable methods (called directly by VWClient)
+    STDMETHOD(OnConnect)(IWorld*) { return S_OK; }
+    STDMETHOD(OnDisconnect)(IWorld*) { return S_OK; }
+    STDMETHOD(OnUserConnect)(IThing* pThing);
+    STDMETHOD(OnUserDisconnect)(IThing* pThing);
+    STDMETHOD(OnUserReconnect)(IVWClient*, IWorld*, IThing*) { return S_OK; }
+    STDMETHOD(OnTrace)(BSTR) { return S_OK; }
+    STDMETHOD(OnReport)(BSTR bstr, long lType);
+    STDMETHOD(OnUIEvent)(IThing* pThing, BSTR bstrEventName, VARIANT varArg);
+
+    // IDispatch — some events also arrive by name
+    STDMETHOD(GetTypeInfoCount)(UINT* p) { *p = 0; return S_OK; }
+    STDMETHOD(GetTypeInfo)(UINT, LCID, ITypeInfo**) { return E_NOTIMPL; }
+    STDMETHOD(GetIDsOfNames)(REFIID, LPOLESTR* names, UINT count, LCID, DISPID* ids) {
+        for (UINT i = 0; i < count; i++) {
+            if (_wcsicmp(names[i], L"OnTell") == 0) ids[i] = 1;
+            else if (_wcsicmp(names[i], L"OnReport") == 0) ids[i] = 2;
+            else if (_wcsicmp(names[i], L"OnUserConnect") == 0) ids[i] = 3;
+            else if (_wcsicmp(names[i], L"OnUserDisconnect") == 0) ids[i] = 4;
+            else if (_wcsicmp(names[i], L"OnTrace") == 0) ids[i] = 5;
+            else if (_wcsicmp(names[i], L"OnConnect") == 0) ids[i] = 6;
+            else if (_wcsicmp(names[i], L"OnDisconnect") == 0) ids[i] = 7;
+            else if (_wcsicmp(names[i], L"OnUIEvent") == 0) ids[i] = 8;
+            else if (_wcsicmp(names[i], L"OnUserReconnect") == 0) ids[i] = 9;
+            else ids[i] = DISPID_UNKNOWN;
+        }
+        return S_OK;
+    }
+    STDMETHOD(Invoke)(DISPID id, REFIID, LCID, WORD, DISPPARAMS* dp, VARIANT*, EXCEPINFO*, UINT*);
+};
+
 // =====================================================================
 // Command Window — VBScript console
 // =====================================================================
@@ -838,6 +902,26 @@ public:
                         }
                     }
 
+                    // Register event sink for chat/system messages
+                    g_pRenderFrame = m_pFrame;
+                    {
+                        CComPtr<IConnectionPointContainer> pCPC;
+                        hr = pClient->QueryInterface(IID_IConnectionPointContainer, (void**)&pCPC);
+                        if (SUCCEEDED(hr)) {
+                            CComPtr<IConnectionPoint> pCP;
+                            hr = pCPC->FindConnectionPoint(IID_IVWClientSite, &pCP);
+                            if (SUCCEEDED(hr)) {
+                                CClientEventSink* pSink = new CClientEventSink();
+                                DWORD dwCookie = 0;
+                                hr = pCP->Advise(static_cast<IVWClientSite*>(pSink), &dwCookie);
+                                Log("Event sink Advise: hr=0x%08X cookie=%d", hr, dwCookie);
+                                // pSink intentionally leaked (lives for app lifetime)
+                            } else {
+                                Log("FindConnectionPoint(IVWClientSite) failed: hr=0x%08X", hr);
+                            }
+                        }
+                    }
+
                     // Set VWClient on renderer
                     Log("Binding VWClient to render control...");
                     name = L"VWClient";
@@ -954,6 +1038,144 @@ public:
 
 CRenderApp theApp;
 
+// Client event sink Invoke — dispatches events to chat panel
+STDMETHODIMP CClientEventSink::Invoke(DISPID id, REFIID, LCID, WORD, DISPPARAMS* dp, VARIANT*, EXCEPINFO*, UINT*)
+{
+    if (!g_pRenderFrame) return S_OK;
+
+    Log("EventSink::Invoke dispid=%d cArgs=%d", id, dp ? dp->cArgs : 0);
+
+    switch (id) {
+    case 1: // OnTell(BSTR)
+        if (dp->cArgs >= 1 && dp->rgvarg[0].vt == VT_BSTR) {
+            CString msg(dp->rgvarg[0].bstrVal);
+            Log("OnTell: '%s'", (LPCSTR)msg);
+            g_pRenderFrame->AppendChat(msg);
+        }
+        break;
+    case 2: // OnReport(BSTR, long)
+        if (dp->cArgs >= 2 && dp->rgvarg[1].vt == VT_BSTR) {
+            long lType = (dp->rgvarg[0].vt == VT_I4) ? dp->rgvarg[0].lVal : 0;
+            if (lType != 4) // skip perflog
+                g_pRenderFrame->AppendChat("*** " + CString(dp->rgvarg[1].bstrVal));
+        }
+        break;
+    case 3: // OnUserConnect(IThing)
+        if (dp->cArgs >= 1 && dp->rgvarg[0].vt == VT_DISPATCH && dp->rgvarg[0].pdispVal) {
+            CComPtr<IThing> pThing;
+            dp->rgvarg[0].pdispVal->QueryInterface(IID_IThing, (void**)&pThing);
+            if (pThing) {
+                CComBSTR name;
+                pThing->get_Name(&name);
+                g_pRenderFrame->AppendChat(CString(name) + " has connected.");
+            }
+        }
+        break;
+    case 4: // OnUserDisconnect(IThing)
+        if (dp->cArgs >= 1 && dp->rgvarg[0].vt == VT_DISPATCH && dp->rgvarg[0].pdispVal) {
+            CComPtr<IThing> pThing;
+            dp->rgvarg[0].pdispVal->QueryInterface(IID_IThing, (void**)&pThing);
+            if (pThing) {
+                CComBSTR name;
+                pThing->get_Name(&name);
+                g_pRenderFrame->AppendChat(CString(name) + " has disconnected.");
+            }
+        }
+        break;
+    case 5: // OnTrace(BSTR)
+        // Don't show traces in chat — too noisy
+        break;
+    default:
+        break;
+    }
+    return S_OK;
+}
+
+// IVWClientSite vtable implementations
+STDMETHODIMP CClientEventSink::OnUserConnect(IThing* pThing)
+{
+    if (!g_pRenderFrame || !pThing) return S_OK;
+    CComBSTR name;
+    pThing->get_Name(&name);
+    g_pRenderFrame->AppendChat(CString(name) + " has connected.");
+    return S_OK;
+}
+
+STDMETHODIMP CClientEventSink::OnUserDisconnect(IThing* pThing)
+{
+    if (!g_pRenderFrame || !pThing) return S_OK;
+    CComBSTR name;
+    pThing->get_Name(&name);
+    g_pRenderFrame->AppendChat(CString(name) + " has disconnected.");
+    return S_OK;
+}
+
+STDMETHODIMP CClientEventSink::OnReport(BSTR bstr, long lType)
+{
+    if (!g_pRenderFrame) return S_OK;
+    if (lType != 4) // skip perflog
+        g_pRenderFrame->AppendChat("*** " + CString(bstr));
+    return S_OK;
+}
+
+STDMETHODIMP CClientEventSink::OnUIEvent(IThing* pThing, BSTR bstrEventName, VARIANT varArg)
+{
+    if (!g_pRenderFrame) return S_OK;
+    CString evName(bstrEventName);
+    Log("OnUIEvent: source=%p event='%s'", pThing, (LPCSTR)evName);
+
+    if (evName == "OnTell") {
+        // varArg is a PropertyList with: [0]=Speaker, [1]=Targets, [2]=Text, [3]=Type
+        if (varArg.vt == VT_DISPATCH && varArg.pdispVal) {
+            CComPtr<IPropertyList> pList;
+            varArg.pdispVal->QueryInterface(IID_IPropertyList, (void**)&pList);
+            if (pList) {
+                long count = 0;
+                pList->get_Count(&count);
+                if (count >= 4) {
+                    // Get speaker (index 0)
+                    CComPtr<IObjectProperty> pSpeakerObj;
+                    pList->get_ObjectProperty(0, &pSpeakerObj);
+                    CString speakerName = "Someone";
+                    if (pSpeakerObj) {
+                        CComPtr<IThing> pSpeaker;
+                        pSpeakerObj->QueryInterface(IID_IThing, (void**)&pSpeaker);
+                        if (pSpeaker) {
+                            CComBSTR bstrName;
+                            pSpeaker->get_Name(&bstrName);
+                            speakerName = CString(bstrName);
+                        }
+                    }
+                    // Get text (index 2)
+                    CComVariant varText;
+                    pList->get_Property(2, &varText);
+                    CString text;
+                    if (varText.vt == VT_BSTR)
+                        text = CString(varText.bstrVal);
+
+                    // Get type (index 3)
+                    CComVariant varType;
+                    pList->get_Property(3, &varType);
+                    long talkType = (varType.vt == VT_I4) ? varType.lVal : 0;
+
+                    if (!text.IsEmpty()) {
+                        CString msg;
+                        switch (talkType) {
+                        case 0: msg.Format("%s says, \"%s\"", (LPCSTR)speakerName, (LPCSTR)text); break;
+                        case 1: msg.Format("%s %s", (LPCSTR)speakerName, (LPCSTR)text); break; // emote
+                        case 3: msg.Format("%s whispers, \"%s\"", (LPCSTR)speakerName, (LPCSTR)text); break;
+                        case 6: msg.Format("%s shouts, \"%s\"", (LPCSTR)speakerName, (LPCSTR)text); break;
+                        default: msg.Format("%s: %s", (LPCSTR)speakerName, (LPCSTR)text); break;
+                        }
+                        g_pRenderFrame->AppendChat(msg);
+                    }
+                }
+            }
+        }
+    }
+    return S_OK;
+}
+
 BOOL CRenderFrame::PreTranslateMessage(MSG* pMsg)
 {
     // Ctrl+S = SaveDatabase
@@ -996,8 +1218,7 @@ BOOL CRenderFrame::PreTranslateMessage(MSG* pMsg)
                     }
                 }
             }
-            // Show locally (server echo may or may not arrive)
-            AppendChat(theApp.m_user + " says, \"" + text + "\"");
+            // Don't echo locally — OnTell event will show it
             m_chatInput.SetWindowText("");
         }
         return TRUE;

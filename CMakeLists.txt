@@ -1294,6 +1294,7 @@ add_executable(renderhost WIN32
     vwcommon/vwobject_i.c
     vwcommon/vwuiobjs_i.c
     vwcommon/vwprop_i.c
+    vwcommon/vwclient_i.c
 )
 
 target_include_directories(renderhost PRIVATE
