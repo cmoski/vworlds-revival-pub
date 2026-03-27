@@ -54,6 +54,7 @@ Select Case LCase(worldName)
 Case "gallery"
     Const GL = "SDK\Library\Models\_Gallery\"
     WScript.Echo "Building Gallery..."
+
     G "Ceiling",   GL & "ceilingl.x",   0.0, 3.95, 0.0,  0.0, 0.0, 1.0
     G "Entry",     GL & "entrypoint.x", -6.0, 1.0,  1.5, -0.85,0.0,-0.15
     G "Desk",      GL & "deskgl.x",     -8.7, 0.5, -1.3,  0.0, 0.0, 1.0
