@@ -1,0 +1,2920 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML>
+<HEAD>
+<meta name="GENERATOR" content="Microsoft&reg; HTML Help Workshop 4.1">
+<!-- Sitemap 1.0 -->
+</HEAD><BODY>
+<OBJECT type="text/site properties">
+	<param name="Window Styles" value="0x800225">
+	<param name="ImageType" value="Folder">
+</OBJECT>
+<UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Welcome">
+		<param name="Local" value="sdkintro.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Virtual Worlds User's Guide">
+		<param name="Local" value="users/ugstart.htm">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Connecting with a World">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Logging Into a Virtual World">
+				<param name="Local" value="users/connect/logon.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Adjusting the Performance of Virtual Worlds">
+				<param name="Local" value="users/connect/options.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Adjusting the Sound in Virtual Worlds">
+				<param name="Local" value="users/connect/sound.htm">
+				</OBJECT>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Changing Avatars">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="What are Avatars?">
+				</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Avatar Overview">
+					<param name="Local" value="users/change/avatview.htm">
+					</OBJECT>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Selecting an Avatar">
+					<param name="Local" value="users/change/pickavat.htm">
+					</OBJECT>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Deleting Avatars">
+					<param name="Local" value="users/change/killavat.htm">
+					</OBJECT>
+			</UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="What are Profiles?">
+				</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="What are Profiles?">
+					<param name="Local" value="users/change/profile.htm">
+					</OBJECT>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Changing Your Avatar's Profile">
+					<param name="Local" value="users/change/twekavat.htm">
+					</OBJECT>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Viewing Avatar Profiles">
+					<param name="Local" value="users/change/lookavat.htm">
+					</OBJECT>
+			</UL>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Communicating">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Communicating">
+				<param name="Local" value="users/talk/commune.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Talking to People">
+				<param name="Local" value="users/talk/talking.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Changing the Information Displayed in the Chat Window">
+				<param name="Local" value="users/talk/chatopt.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Gesturing">
+				<param name="Local" value="users/talk/gesture.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Showing Emotions">
+				<param name="Local" value="users/talk/showemo.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Whispering">
+				<param name="Local" value="users/talk/whisper.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Adding People to the Friends List">
+				<param name="Local" value="users/talk/friends.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Ignoring and Silencing People">
+				<param name="Local" value="users/talk/ignore.htm">
+				</OBJECT>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Moving Around the World">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Moving Around the World">
+				<param name="Local" value="users/move/movecon.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Moving Your Avatar">
+				<param name="Local" value="users/move/moving.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Moving Between Worlds">
+				<param name="Local" value="users/move/jumpwld.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Approaching Objects and Avatars">
+				<param name="Local" value="users/move/apprch.htm">
+				</OBJECT>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Manipulating Objects in a World">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="How Do Objects Work in Virtual Worlds?">
+				<param name="Local" value="users/objects/objects.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Examining, Taking, and Dropping Objects">
+				<param name="Local" value="users/objects/examine.htm">
+				</OBJECT>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Changing Your Camera View">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Introduction to Camera Angles">
+				<param name="Local" value="users/camera/cameras.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Changing the Camera View">
+				<param name="Local" value="users/camera/views.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Tilting the Camera">
+				<param name="Local" value="users/camera/fulltilt.htm">
+				</OBJECT>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="What are Owners, Wizards, Authors, and Hosts?">
+			<param name="Local" value="users/others.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Getting Additional Help">
+			<param name="Local" value="GetHelp/hpstart.htm">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Virtual Worlds Programmer's Guide">
+		<param name="Local" value="Programmer's%20Guide/Virtual%20Worlds%20Programmers%20Guide%20Start%20Page.htm">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Technical Overviews">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Object Model Overview">
+				<param name="Local" value="Programmer's%20Guide/Objects/object_model_overview.html">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Client/Server Overview">
+				<param name="Local" value="Programmer's%20Guide/Client%20Server/client_server_overview.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Security Overview">
+				<param name="Local" value="Programmer's%20Guide/Security/security%20overview.htm">
+				</OBJECT>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Programming Objects">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Introduction to Objects">
+				<param name="Local" value="Programmer's%20Guide/Objects/introduction%20to%20objects.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Creating an Object">
+				<param name="Local" value="Programmer's%20Guide/Objects/Creating%20an%20Object%20Based%20on%20a%20Thing.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Changing Common Properties on an Object">
+				<param name="Local" value="Programmer's%20Guide/Property/Changing%20Common%20Properties%20on%20an%20Object.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Filtering and Sorting Properties">
+				<param name="Local" value="Programmer's%20Guide/Property/Filtering%20and%20Sorting%20Properties.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Setting and Retrieving a Property">
+				<param name="Local" value="Programmer's%20Guide/Property/Setting%20and%20Retrieving%20a%20Property.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Adding a Property">
+				<param name="Local" value="Programmer's%20Guide/Property/Adding%20a%20Property.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Changing Property Names">
+				<param name="Local" value="Programmer's%20Guide/Property/Changing%20Property%20Names.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Virtual Worlds Methods">
+				<param name="Local" value="Programmer's%20Guide/Methods/Virtual%20Worlds%20Methods.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Filtering and Sorting Methods">
+				<param name="Local" value="Programmer's%20Guide/Methods/Filtering%20and%20Sorting%20Methods.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Adding a Method from a Script Module">
+				<param name="Local" value="Programmer's%20Guide/Methods/Creating%20a%20Method%20from%20a%20Module.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Adding an Inline Method">
+				<param name="Local" value="Programmer's%20Guide/Methods/Writing%20an%20Inline%20Method.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Editing Inline Methods">
+				<param name="Local" value="Programmer's%20Guide/Methods/Editing%20Inline%20Methods.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Overriding Exemplar Properties and Methods">
+				<param name="Local" value="Programmer's%20Guide/Objects/Overriding%20Exemplar%20Properties%20and%20Methods.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Creating Custom Exemplars">
+				<param name="Local" value="Programmer's%20Guide/Objects/Creating%20Custom%20Exemplars.htm">
+				</OBJECT>
+		</UL>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Virtual Worlds API Reference">
+		<param name="Local" value="API%20Reference/API%20Overview.htm">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Exemplars">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Artifact">
+				<param name="Local" value="API%20Reference/Exemplars/Artifact/Artifact.htm">
+				</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Properties">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="AccessoryGraphic">
+						<param name="Local" value="API%20Reference/Exemplars/Artifact/AccessoryGraphic.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsAccessory">
+						<param name="Local" value="API%20Reference/Exemplars/Artifact/IsAccessory.htm">
+						</OBJECT>
+				</UL>
+			</UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Avatar">
+				<param name="Local" value="API%20Reference/Exemplars/Avatar/Avatar.htm">
+				</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Methods">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="AddToUserProfileList">
+						<param name="Local" value="API%20Reference/Exemplars/Avatar/AddToUserProfileList.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Alert">
+						<param name="Local" value="API%20Reference/Exemplars/Avatar/Alert.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Confirm">
+						<param name="Local" value="API%20Reference/Exemplars/Avatar/Confirm.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IgnoreAvatar">
+						<param name="Local" value="API%20Reference/Exemplars/Avatar/IgnoreAvatar.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsInUserProfileList">
+						<param name="Local" value="API%20Reference/Exemplars/Avatar/IsInUserProfileList.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Prompt">
+						<param name="Local" value="API%20Reference/Exemplars/Avatar/Prompt.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="RemoveFromUserProfileList">
+						<param name="Local" value="API%20Reference/Exemplars/Avatar/RemoveFromUserProfileList.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="UnWear">
+						<param name="Local" value="API%20Reference/Exemplars/Avatar/UnWear.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="UpdateUserProfileList">
+						<param name="Local" value="API%20Reference/Exemplars/Avatar/UpdateUserProfileList.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Wear">
+						<param name="Local" value="API%20Reference/Exemplars/Avatar/Wear.htm">
+						</OBJECT>
+				</UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Properties">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsAuthor">
+						<param name="Local" value="API%20Reference/Exemplars/Avatar/IsAuthor.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsConnected">
+						<param name="Local" value="API%20Reference/Exemplars/Avatar/IsConnected.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsWizard">
+						<param name="Local" value="API%20Reference/Exemplars/Avatar/IsWizard.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ObjectQuota">
+						<param name="Local" value="API%20Reference/Exemplars/Avatar/ObjectQuota.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="QueryOK">
+						<param name="Local" value="API%20Reference/Exemplars/Avatar/QueryOK.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="QueryParam">
+						<param name="Local" value="API%20Reference/Exemplars/Avatar/QueryParam.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="QueryResult">
+						<param name="Local" value="API%20Reference/Exemplars/Avatar/QueryResult.htm">
+						</OBJECT>
+				</UL>
+			</UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Host">
+				<param name="Local" value="API%20Reference/Exemplars/Host/Host.htm">
+				</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Methods">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="LogOff">
+						<param name="Local" value="API%20Reference/Exemplars/Host/LogOff.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ShowLogOffDialog">
+						<param name="Local" value="API%20Reference/Exemplars/Host/ShowLogOffDialog.htm">
+						</OBJECT>
+				</UL>
+			</UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Light">
+				<param name="Local" value="API%20Reference/Exemplars/Light/Light.htm">
+				</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Properties">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="LightAttenuation">
+						<param name="Local" value="API%20Reference/Exemplars/Light/LightAttenuation.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="LightColor">
+						<param name="Local" value="API%20Reference/Exemplars/Light/LightColor.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="LightEnabled">
+						<param name="Local" value="API%20Reference/Exemplars/Light/LightEnabled.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="LightPenumbra">
+						<param name="Local" value="API%20Reference/Exemplars/Light/LightPenumbra.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="LightType">
+						<param name="Local" value="API%20Reference/Exemplars/Light/LightType.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="LightUmbra">
+						<param name="Local" value="API%20Reference/Exemplars/Light/LightUmbra.htm">
+						</OBJECT>
+				</UL>
+			</UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Portal">
+				<param name="Local" value="API%20Reference/Exemplars/Portal/Portal.htm">
+				</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Methods">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Transport">
+						<param name="Local" value="API%20Reference/Exemplars/Portal/Transport.htm">
+						</OBJECT>
+				</UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Properties">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Descriptions">
+						<param name="Local" value="API%20Reference/Exemplars/Portal/Descriptions.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Destinations">
+						<param name="Local" value="API%20Reference/Exemplars/Portal/Destinations.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="EntryOrientation">
+						<param name="Local" value="API%20Reference/Exemplars/Portal/EntryOrientation.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="EntryPoint">
+						<param name="Local" value="API%20Reference/Exemplars/Portal/EntryPoint.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="EntryRadius">
+						<param name="Local" value="API%20Reference/Exemplars/Portal/EntryRadius.htm">
+						</OBJECT>
+				</UL>
+			</UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Room">
+				<param name="Local" value="API%20Reference/Exemplars/Room/Room.htm">
+				</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Properties">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="AllowWhispers">
+						<param name="Local" value="API%20Reference/Exemplars/Room/AllowWhispers.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Avatars">
+						<param name="Local" value="API%20Reference/Exemplars/Room/Avatars.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="BackgroundColor">
+						<param name="Local" value="API%20Reference/Exemplars/Room/BackgroundColor.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Fog">
+						<param name="Local" value="API%20Reference/Exemplars/Room/Fog.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="DefaultAvatarPosition">
+						<param name="Local" value="API%20Reference/Exemplars/Room/DefaultAvatarPosition.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="FogColor">
+						<param name="Local" value="API%20Reference/Exemplars/Room/FogColor.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="FogEnd">
+						<param name="Local" value="API%20Reference/Exemplars/Room/FogEnd.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="FogStart">
+						<param name="Local" value="API%20Reference/Exemplars/Room/FogStart.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Portals">
+						<param name="Local" value="API%20Reference/Exemplars/Room/Portals.htm">
+						</OBJECT>
+				</UL>
+			</UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="StateMachine">
+				<param name="Local" value="API%20Reference/Exemplars/StateMachine/StateMachine.htm">
+				</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Methods">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="AddStateMachine">
+						<param name="Local" value="API%20Reference/Exemplars/StateMachine/AddStateMachine.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="AddStateMethod">
+						<param name="Local" value="API%20Reference/Exemplars/StateMachine/AddStateMethod.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GeInlineStateMethod">
+						<param name="Local" value="API%20Reference/Exemplars/StateMachine/GetInlineStateMethod.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetStateMethodFlags">
+						<param name="Local" value="API%20Reference/Exemplars/StateMachine/GetStateMethodFlags.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetStateProperty">
+						<param name="Local" value="API%20Reference/Exemplars/StateMachine/GetStateProperty.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsInState">
+						<param name="Local" value="API%20Reference/Exemplars/StateMachine/IsInState.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsStateMachineInState">
+						<param name="Local" value="API%20Reference/Exemplars/StateMachine/IsStateMachineInState.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="PutInlineStateMethod">
+						<param name="Local" value="API%20Reference/Exemplars/StateMachine/PutInlineStateMethod.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="PutStateMachineInlineStateMethod">
+						<param name="Local" value="API%20Reference/Exemplars/StateMachine/PutStateMachineInlineStateMethod.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="PutStateMachineStateProperty">
+						<param name="Local" value="API%20Reference/Exemplars/StateMachine/PutStateMachineStateProperty.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="PutStateProperty">
+						<param name="Local" value="API%20Reference/Exemplars/StateMachine/PutStateProperty.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetIfState">
+						<param name="Local" value="API%20Reference/Exemplars/StateMachine/SetIfState.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetState">
+						<param name="Local" value="API%20Reference/Exemplars/StateMachine/SetState.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetStateMachineIfState">
+						<param name="Local" value="API%20Reference/Exemplars/StateMachine/SetStateMachineIfState.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetStateMachineState">
+						<param name="Local" value="API%20Reference/Exemplars/StateMachine/SetStateMachineState.htm">
+						</OBJECT>
+				</UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Properties">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="StateMachines">
+						<param name="Local" value="API%20Reference/Exemplars/StateMachine/StateMachines.htm">
+						</OBJECT>
+				</UL>
+			</UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Thing">
+				<param name="Local" value="API%20Reference/Exemplars/Thing/Thing.htm">
+				</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Methods">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Approach">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/Approach.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="DoGesture">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/DoGesture.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="DoNamedGesture">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/DoNamedGesture.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Drop">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/Drop.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Emote">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/Emote.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetAnimationFileKeys">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/GetAnimationFileKeys.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetFrame">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/GetFrame.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetGeometryFrame">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/GetGeometryFrame.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetNamedGestures">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/GetNamedGestures.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetNamedMeshColor">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/GetNamedMeshColor.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetNamedMeshes">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/GetNamedMeshes.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetNamedMeshTexture">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/GetNamedMeshTexture.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="MoveInto">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/MoveInto.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Report">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/Report.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Say">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/Say.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetAnimationIndex">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/SetAnimationIndex.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetNamedMeshColor">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/SetNamedMeshColor.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetNamedMeshTexture">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/SetNamedMeshTexture.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="StartAnimation">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/StartAnimation.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="StopAnimation">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/StopAnimation.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Take">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/Take.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Whisper">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/Whisper.htm">
+						</OBJECT>
+				</UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Properties">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ApproachDistance">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/ApproachDistance.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ApproachRadius">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/ApproachRadius.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ApproachToFront">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/ApproachToFront.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="BoundaryList">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/BoundaryList.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="CanChangeContainer">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/CanChangeContainer.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Direction">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/Direction.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="DirectionDuration">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/DirectionDuration.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GeometryName">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/GeometryName.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsCameraAnchor">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/IsCameraAnchor.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsContentsVisible">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/IsContentsVisible.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsMoveable">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/IsMoveable.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsNoticeable">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/IsNoticeable.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsOpen">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/IsOpen.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsSolid">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/IsSolid.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsTakeable">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/IsTakeable.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsUIVisible">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/IsUIVisible.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsVisible">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/IsVisible.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Label">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/Label.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="LabelFontName">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/LabelFontName.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="LabelFontSize">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/LabelFontSize.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="LabelFontColor">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/LabelFontColor.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="LabelPlacement">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/LabelPlacement.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="LabelStyle">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/LabelStyle.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="LabelShadowColor">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/LabelShadowColor.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Menu">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/Menu.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Position">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/Position.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="PositionDuration">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/PositionDuration.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="RenderQuality">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/RenderQuality.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="RotationAxis">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/RotationAxis.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="RotationRate">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/RotationRate.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Scale">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/Scale.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ScaleDuration">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/ScaleDuration.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Sound">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/Sound.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Up">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/Up.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="UpDuration">
+						<param name="Local" value="API%20Reference/Exemplars/Thing/UpDuration.htm">
+						</OBJECT>
+				</UL>
+			</UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="WebPage">
+				<param name="Local" value="API%20Reference/Exemplars/WebPage/WebPage.htm">
+				</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Methods">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Show">
+						<param name="Local" value="API%20Reference/Exemplars/WebPage/Show.htm">
+						</OBJECT>
+				</UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Properties">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="HTMLURL">
+						<param name="Local" value="API%20Reference/Exemplars/WebPage/HTMLURL.htm">
+						</OBJECT>
+				</UL>
+			</UL>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Objects">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="AvatarProfile">
+				<param name="Local" value="API%20Reference/AvatarProfile/AvatarProfile.htm">
+				</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Methods">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="AddKey">
+						<param name="Local" value="API%20Reference/AvatarProfile/AddKey.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="BanObject">
+						<param name="Local" value="API%20Reference/AvatarProfile/BanObject.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsOfType">
+						<param name="Local" value="API%20Reference/Base%20Class/IsOfType.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsValid">
+						<param name="Local" value="API%20Reference/AvatarProfile/IsValid.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="RemoveKey">
+						<param name="Local" value="API%20Reference/AvatarProfile/RemoveKey.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ToASCII">
+						<param name="Local" value="API%20Reference/Base%20Class/ToAscii.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="UnBanObject">
+						<param name="Local" value="API%20Reference/AvatarProfile/UnBanObject.htm">
+						</OBJECT>
+				</UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Properties">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Avatar">
+						<param name="Local" value="API%20Reference/AvatarProfile/Avatar.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="KeyAccess">
+						<param name="Local" value="API%20Reference/AvatarProfile/KeyAccess.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="KeyGraphic">
+						<param name="Local" value="API%20Reference/AvatarProfile/KeyGraphic.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="KeyOwner">
+						<param name="Local" value="API%20Reference/AvatarProfile/KeyOwner.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Keys">
+						<param name="Local" value="API%20Reference/AvatarProfile/Keys.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="KeyValue">
+						<param name="Local" value="API%20Reference/AvatarProfile/KeyValue.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Type">
+						<param name="Local" value="API%20Reference/Base%20Class/Type.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="World">
+						<param name="Local" value="API%20Reference/Base%20Class/World.htm">
+						</OBJECT>
+				</UL>
+			</UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Boundary">
+				<param name="Local" value="API%20Reference/Boundary/Boundary.htm">
+				</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Methods">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="AutoGenerate">
+						<param name="Local" value="API%20Reference/Boundary/AutoGenerate.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="AutoGenerateFromBox">
+						<param name="Local" value="API%20Reference/Boundary/AutoGenerateFromBox.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="DeleteVertexSafe">
+						<param name="Local" value="API%20Reference/Boundary/DeleteVertexSafe.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetCenter">
+						<param name="Local" value="API%20Reference/Boundary/GetCenter.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetVertexXY">
+						<param name="Local" value="API%20Reference/Boundary/GetVertexXY.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="InsertVertexSafe">
+						<param name="Local" value="API%20Reference/Boundary/InsertVertexSafe.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsOfType">
+						<param name="Local" value="API%20Reference/Base%20Class/IsOfType.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Rotate">
+						<param name="Local" value="API%20Reference/Boundary/Rotate.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Scale">
+						<param name="Local" value="API%20Reference/Boundary/Scale.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetVertexXY">
+						<param name="Local" value="API%20Reference/Boundary/SetVertexXY.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ToASCII">
+						<param name="Local" value="API%20Reference/Base%20Class/ToAscii.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Translate">
+						<param name="Local" value="API%20Reference/Boundary/Translate.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="TranslateVertexSafe">
+						<param name="Local" value="API%20Reference/Boundary/TranslateVertexSafe.htm">
+						</OBJECT>
+				</UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Properties">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="HeightLower">
+						<param name="Local" value="API%20Reference/Boundary/HeightLower.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="HeightUpper">
+						<param name="Local" value="API%20Reference/Boundary/HeightUpper.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsInverse">
+						<param name="Local" value="API%20Reference/Boundary/IsInverse.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsPassable">
+						<param name="Local" value="API%20Reference/Boundary/IsPassable.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsWithin">
+						<param name="Local" value="API%20Reference/Boundary/IsWithin.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Type">
+						<param name="Local" value="API%20Reference/Base%20Class/Type.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Vertex">
+						<param name="Local" value="API%20Reference/Boundary/Vertex.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="VertexCount">
+						<param name="Local" value="API%20Reference/Boundary/VertexCount.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="World">
+						<param name="Local" value="API%20Reference/Base%20Class/World.htm">
+						</OBJECT>
+				</UL>
+			</UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Frame">
+				<param name="Local" value="API%20Reference/Frame/Frame.htm">
+				</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Methods">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="AddChild">
+						<param name="Local" value="API%20Reference/Frame/AddChild.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="AddMeshFaceVertex">
+						<param name="Local" value="API%20Reference/Frame/AddMeshFaceVertex.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Copy">
+						<param name="Local" value="API%20Reference/Frame/Copy.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="CreateDecalFromText">
+						<param name="Local" value="API%20Reference/Frame/CreateDecalFromText.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="CreateDecalFromURL">
+						<param name="Local" value="API%20Reference/Frame/CreateDecalFromURL.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="CreateLight">
+						<param name="Local" value="API%20Reference/Frame/CreateLight.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="CreateMesh">
+						<param name="Local" value="API%20Reference/Frame/CreateMesh.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="CreateMeshFace">
+						<param name="Local" value="API%20Reference/Frame/CreateMeshFace.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="CreateUnitMesh">
+						<param name="Local" value="API%20Reference/Frame/CreateUnitMesh.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="DeleteChild">
+						<param name="Local" value="API%20Reference/Frame/DeleteChild.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="DeleteDecal">
+						<param name="Local" value="API%20Reference/Frame/DeleteDecal.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="DeleteLight">
+						<param name="Local" value="API%20Reference/Frame/DeleteLight.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetBoundingBox">
+						<param name="Local" value="API%20Reference/Frame/GetBoundingBox.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetChildren">
+						<param name="Local" value="API%20Reference/Frame/GetChildren.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetDecalCount">
+						<param name="Local" value="API%20Reference/Frame/GetDecalCount.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetDecalOrigin">
+						<param name="Local" value="API%20Reference/Frame/GetDecalOrigin.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetDecalSize">
+						<param name="Local" value="API%20Reference/Frame/GetDecalSize.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetFrameByName">
+						<param name="Local" value="API%20Reference/Frame/GetFrameByName.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetLightAttenuation">
+						<param name="Local" value="API%20Reference/Frame/GetLightAttenuation.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetLightColor">
+						<param name="Local" value="API%20Reference/Frame/GetLightColor.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetLightCount">
+						<param name="Local" value="API%20Reference/Frame/GetLightCount.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetLightIndexByName">
+						<param name="Local" value="API%20Reference/Frame/GetLightIndexByName.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetLightName">
+						<param name="Local" value="API%20Reference/Frame/GetLightName.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetLightRange">
+						<param name="Local" value="API%20Reference/Frame/GetLightRange.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetLightType">
+						<param name="Local" value="API%20Reference/Frame/GetLightType.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetMeshColor">
+						<param name="Local" value="API%20Reference/Frame/GetMeshColor.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetMeshCount">
+						<param name="Local" value="API%20Reference/Frame/GetMeshCount.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetMeshFaceColor">
+						<param name="Local" value="API%20Reference/Frame/GetMeshFaceColor.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetMeshFaceCount">
+						<param name="Local" value="API%20Reference/Frame/GetMeshFaceCount.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetMeshFaceUV">
+						<param name="Local" value="API%20Reference/Frame/GetMeshFaceUV.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetMeshFaceVertex">
+						<param name="Local" value="API%20Reference/Frame/GetMeshFaceVertex.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetMeshFaceVertexColor">
+						<param name="Local" value="API%20Reference/Frame/GetMeshFaceVertexColor.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetMeshFaceVertexCount">
+						<param name="Local" value="API%20Reference/Frame/GetMeshFaceVertexCount.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetMeshIndexByName">
+						<param name="Local" value="API%20Reference/Frame/GetMeshIndexByName.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetMeshName">
+						<param name="Local" value="API%20Reference/Frame/GetMeshName.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetMeshPerspective">
+						<param name="Local" value="API%20Reference/Frame/GetMeshPerspective.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetMeshQuality">
+						<param name="Local" value="API%20Reference/Frame/GetMeshQuality.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetMeshTextureName">
+						<param name="Local" value="API%20Reference/Frame/GetMeshTextureName.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetName">
+						<param name="Local" value="API%20Reference/Frame/GetName.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetOrientation">
+						<param name="Local" value="API%20Reference/Frame/GetOrientation.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetParent">
+						<param name="Local" value="API%20Reference/Frame/GetParent.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetPosition">
+						<param name="Local" value="API%20Reference/Frame/GetPosition.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetProgressiveMeshCount">
+						<param name="Local" value="API%20Reference/Frame/GetProgressiveMeshCount.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetProgressiveMeshDetail">
+						<param name="Local" value="API%20Reference/Frame/GetProgressiveMeshDetail.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetProgressiveMeshFaceDetail">
+						<param name="Local" value="API%20Reference/Frame/GetProgressiveMeshFaceDetail.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetProgressiveMeshFaceDetailRange">
+						<param name="Local" value="API%20Reference/Frame/GetProgressiveMeshFaceDetailRange.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetProgressiveMeshQuality">
+						<param name="Local" value="API%20Reference/Frame/GetProgressiveMeshQuality.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetProgressiveMeshVertexDetail">
+						<param name="Local" value="API%20Reference/Frame/GetProgressiveMeshVertexDetail.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetProgressiveMeshVertexDetailRange">
+						<param name="Local" value="API%20Reference/Frame/GetProgressiveMeshVertexDetailRange.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetRotationRate">
+						<param name="Local" value="API%20Reference/Frame/GetRotationRate.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetScale">
+						<param name="Local" value="API%20Reference/Frame/GetScale.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetScene">
+						<param name="Local" value="API%20Reference/Frame/GetScene.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetSpotLightRadii">
+						<param name="Local" value="API%20Reference/Frame/GetSpotLightRadii.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetVelocity">
+						<param name="Local" value="API%20Reference/Frame/GetVelocity.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetVisualCount">
+						<param name="Local" value="API%20Reference/Frame/GetVisualCount.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetVisualIndexByName">
+						<param name="Local" value="API%20Reference/Frame/GetVisualIndexByName.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsChildOf">
+						<param name="Local" value="API%20Reference/Frame/IsChildOf.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsOfType">
+						<param name="Local" value="API%20Reference/Base%20Class/IsOfType.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="LookAt">
+						<param name="Local" value="API%20Reference/Frame/LookAt.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetDecalOrigin">
+						<param name="Local" value="API%20Reference/Frame/SetDecalOrigin.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetDecalSize">
+						<param name="Local" value="API%20Reference/Frame/SetDecalSize.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetLightAttenuation">
+						<param name="Local" value="API%20Reference/Frame/SetLightAttenuation.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetLightColor">
+						<param name="Local" value="API%20Reference/Frame/SetLightColor.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetLightName">
+						<param name="Local" value="API%20Reference/Frame/SetLightName.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetLightRange">
+						<param name="Local" value="API%20Reference/Frame/SetLightRange.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetLightType">
+						<param name="Local" value="API%20Reference/Frame/SetLightType.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetMeshColor">
+						<param name="Local" value="API%20Reference/Frame/SetMeshColor.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetMeshFaceColor">
+						<param name="Local" value="API%20Reference/Frame/SetMeshFaceColor.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetMeshFaceUV">
+						<param name="Local" value="API%20Reference/Frame/SetMeshFaceUV.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetMeshFaceVertex">
+						<param name="Local" value="API%20Reference/Frame/SetMeshFaceVertex.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetMeshFaceVertexColor">
+						<param name="Local" value="API%20Reference/Frame/SetMeshFaceVertexColor.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetMeshName">
+						<param name="Local" value="API%20Reference/Frame/SetMeshName.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetMeshPerspective">
+						<param name="Local" value="API%20Reference/Frame/SetMeshPerspective.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetMeshQuality">
+						<param name="Local" value="API%20Reference/Frame/SetMeshQuality.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetMeshTextureFromText">
+						<param name="Local" value="API%20Reference/Frame/SetMeshTextureFromText.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetMeshTextureFromURL">
+						<param name="Local" value="API%20Reference/Frame/SetMeshTextureFromURL.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetName">
+						<param name="Local" value="API%20Reference/Frame/SetName.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetOrientation">
+						<param name="Local" value="API%20Reference/Frame/SetOrientation.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetPosition">
+						<param name="Local" value="API%20Reference/Frame/SetPosition.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetProgressiveMeshDetail">
+						<param name="Local" value="API%20Reference/Frame/SetProgressiveMeshDetail.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetProgressiveMeshFaceDetail">
+						<param name="Local" value="API%20Reference/Frame/SetProgressiveMeshFaceDetail.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetProgressiveMeshQuality">
+						<param name="Local" value="API%20Reference/Frame/SetProgressiveMeshQuality.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetProgressiveMeshVertexDetail">
+						<param name="Local" value="API%20Reference/Frame/SetProgressiveMeshVertexDetail.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetRotationRate">
+						<param name="Local" value="API%20Reference/Frame/SetRotationRate.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetScale">
+						<param name="Local" value="API%20Reference/Frame/SetScale.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetSpotLightRadii">
+						<param name="Local" value="API%20Reference/Frame/SetSpotLightRadii.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SetVelocity">
+						<param name="Local" value="API%20Reference/Frame/SetVelocity.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ToASCII">
+						<param name="Local" value="API%20Reference/Base%20Class/ToAscii.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="WrapMesh">
+						<param name="Local" value="API%20Reference/Frame/WrapMesh.htm">
+						</OBJECT>
+				</UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Properties">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Thing">
+						<param name="Local" value="API%20Reference/Frame/Thing.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Type">
+						<param name="Local" value="API%20Reference/Base%20Class/Type.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="World">
+						<param name="Local" value="API%20Reference/Base%20Class/World.htm">
+						</OBJECT>
+				</UL>
+			</UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="MenuItem">
+				<param name="Local" value="API%20Reference/MenuItem/MenuItem.htm">
+				</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Methods">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="AddTargetParameter">
+						<param name="Local" value="API%20Reference/MenuItem/AddTargetParameter.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Duplicate">
+						<param name="Local" value="API%20Reference/MenuItem/Duplicate.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Execute">
+						<param name="Local" value="API%20Reference/MenuItem/Execute.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsOfType">
+						<param name="Local" value="API%20Reference/Base%20Class/IsOfType.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ToASCII">
+						<param name="Local" value="API%20Reference/Base%20Class/ToAscii.htm">
+						</OBJECT>
+				</UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Properties">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Arguments">
+						<param name="Local" value="API%20Reference/MenuItem/Arguments.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Flags">
+						<param name="Local" value="API%20Reference/MenuItem/Flags(MenuItem).htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="MenuText">
+						<param name="Local" value="API%20Reference/MenuItem/MenuText.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Method">
+						<param name="Local" value="API%20Reference/MenuItem/Method.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="OnUpdateMethod">
+						<param name="Local" value="API%20Reference/MenuItem/OnUpdateMethod.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Type">
+						<param name="Local" value="API%20Reference/Base%20Class/Type.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="World">
+						<param name="Local" value="API%20Reference/Base%20Class/World.htm">
+						</OBJECT>
+				</UL>
+			</UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Method">
+				<param name="Local" value="API%20Reference/Method/Method.htm">
+				</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Methods">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsOfType">
+						<param name="Local" value="API%20Reference/Base%20Class/IsOfType.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ToASCII">
+						<param name="Local" value="API%20Reference/Base%20Class/ToAscii.htm">
+						</OBJECT>
+				</UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Properties">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Code">
+						<param name="Local" value="API%20Reference/Method/Code.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Flags">
+						<param name="Local" value="API%20Reference/Method/Flags(Method%20Object).htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="MethodName">
+						<param name="Local" value="API%20Reference/Method/MethodName.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Module">
+						<param name="Local" value="API%20Reference/Method/Module.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Type">
+						<param name="Local" value="API%20Reference/Base%20Class/Type.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="World">
+						<param name="Local" value="API%20Reference/Base%20Class/World.htm">
+						</OBJECT>
+				</UL>
+			</UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Module ">
+				<param name="Local" value="API%20Reference/Module/Module.htm">
+				</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Methods">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsOfType">
+						<param name="Local" value="API%20Reference/Base%20Class/IsOfType.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ToASCII">
+						<param name="Local" value="API%20Reference/Base%20Class/ToAscii.htm">
+						</OBJECT>
+				</UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Properties">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Flags">
+						<param name="Local" value="API%20Reference/Module/Flags(Module).htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ModuleName">
+						<param name="Local" value="API%20Reference/Module/ModuleName.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ScriptPath">
+						<param name="Local" value="API%20Reference/Module/ScriptPath.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Type">
+						<param name="Local" value="API%20Reference/Base%20Class/Type.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="World">
+						<param name="Local" value="API%20Reference/Base%20Class/World.htm">
+						</OBJECT>
+				</UL>
+			</UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="PropertyList">
+				<param name="Local" value="API%20Reference/PropertyList/PropertyList.htm">
+				</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Methods">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Add">
+						<param name="Local" value="API%20Reference/PropertyList/Add.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="CopyTo">
+						<param name="Local" value="API%20Reference/PropertyList/CopyTo.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Find">
+						<param name="Local" value="API%20Reference/PropertyList/Find.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="InsertAt">
+						<param name="Local" value="API%20Reference/PropertyList/InsertAt.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsOfType">
+						<param name="Local" value="API%20Reference/Base%20Class/IsOfType.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Remove">
+						<param name="Local" value="API%20Reference/PropertyList/Remove.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="RemoveAll">
+						<param name="Local" value="API%20Reference/PropertyList/RemoveAll.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="RemoveAt">
+						<param name="Local" value="API%20Reference/PropertyList/RemoveAt.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ToASCII">
+						<param name="Local" value="API%20Reference/Base%20Class/ToAscii.htm">
+						</OBJECT>
+				</UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Properties">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Count">
+						<param name="Local" value="API%20Reference/PropertyList/Count.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsEmpty">
+						<param name="Local" value="API%20Reference/PropertyList/IsEmpty.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Property">
+						<param name="Local" value="API%20Reference/PropertyList/Property.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Type">
+						<param name="Local" value="API%20Reference/Base%20Class/Type.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="World">
+						<param name="Local" value="API%20Reference/Base%20Class/World.htm">
+						</OBJECT>
+				</UL>
+			</UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="PropertyMap">
+				<param name="Local" value="API%20Reference/PropertyMap/PropertyMap.htm">
+				</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Methods">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="CopyTo">
+						<param name="Local" value="API%20Reference/PropertyList/CopyTo.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsOfType">
+						<param name="Local" value="API%20Reference/Base%20Class/IsOfType.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsValid">
+						<param name="Local" value="API%20Reference/PropertyMap/IsValid.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Remove">
+						<param name="Local" value="API%20Reference/PropertyMap/Remove.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="RemoveAll">
+						<param name="Local" value="API%20Reference/PropertyList/RemoveAll.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ToASCII">
+						<param name="Local" value="API%20Reference/Base%20Class/ToAscii.htm">
+						</OBJECT>
+				</UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Properties">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Count">
+						<param name="Local" value="API%20Reference/PropertyList/Count.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsEmpty">
+						<param name="Local" value="API%20Reference/PropertyList/IsEmpty.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Property">
+						<param name="Local" value="API%20Reference/PropertyMap/Property.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Type">
+						<param name="Local" value="API%20Reference/Base%20Class/Type.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="World">
+						<param name="Local" value="API%20Reference/Base%20Class/World.htm">
+						</OBJECT>
+				</UL>
+			</UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Sound">
+				<param name="Local" value="API%20Reference/Sound/Sound.htm">
+				</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Methods">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Get2DData">
+						<param name="Local" value="API%20Reference/Sound/Get2DData.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Get3DData">
+						<param name="Local" value="API%20Reference/Sound/Get3DData.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsOfType">
+						<param name="Local" value="API%20Reference/Base%20Class/IsOfType.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Set2DData">
+						<param name="Local" value="API%20Reference/Sound/Set2DData.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Set3DData">
+						<param name="Local" value="API%20Reference/Sound/Set3DData.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ToASCII">
+						<param name="Local" value="API%20Reference/Base%20Class/ToAscii.htm">
+						</OBJECT>
+				</UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Properties">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Is3D">
+						<param name="Local" value="API%20Reference/Sound/Is3D.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsLooping">
+						<param name="Local" value="API%20Reference/Sound/IsLooping.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SoundURL">
+						<param name="Local" value="API%20Reference/Sound/SoundURL.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Type">
+						<param name="Local" value="API%20Reference/Base%20Class/Type.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="World">
+						<param name="Local" value="API%20Reference/Base%20Class/World.htm">
+						</OBJECT>
+				</UL>
+			</UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Thing">
+				<param name="Local" value="API%20Reference/Thing/Thing.htm">
+				</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Methods">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="AddMethod">
+						<param name="Local" value="API%20Reference/Thing/AddMethod.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="AddProperty">
+						<param name="Local" value="API%20Reference/Thing/AddProperty.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="FindWithin">
+						<param name="Local" value="API%20Reference/Thing/FindWithin.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="FireEvent">
+						<param name="Local" value="API%20Reference/Thing/FireEvent.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="InvokeSuperMethod">
+						<param name="Local" value="API%20Reference/Thing/InvokeSuperMethod.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsOfType">
+						<param name="Local" value="API%20Reference/Base%20Class/IsOfType.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsValidInstanceMethod">
+						<param name="Local" value="API%20Reference/Thing/IsValidInstanceMethod.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsValidInstanceProperty">
+						<param name="Local" value="API%20Reference/Thing/IsValidInstanceProperty.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsValidMethod">
+						<param name="Local" value="API%20Reference/Thing/IsValidMethod.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsValidProperty">
+						<param name="Local" value="API%20Reference/Thing/IsValidProperty.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="RemoveMethod">
+						<param name="Local" value="API%20Reference/Thing/RemoveMethod.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="RemoveProperty">
+						<param name="Local" value="API%20Reference/Thing/RemoveProperty.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ToASCII">
+						<param name="Local" value="API%20Reference/Base%20Class/ToAscii.htm">
+						</OBJECT>
+				</UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Properties">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Container">
+						<param name="Local" value="API%20Reference/Thing/Container.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Contents">
+						<param name="Local" value="API%20Reference/Thing/Contents.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Description">
+						<param name="Local" value="API%20Reference/Thing/Description.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Exemplar">
+						<param name="Local" value="API%20Reference/Thing/Exemplar.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsExemplar">
+						<param name="Local" value="API%20Reference/Thing/IsExemplar.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsStub">
+						<param name="Local" value="API%20Reference/Thing/IsStub.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Method">
+						<param name="Local" value="API%20Reference/Thing/Method.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Name">
+						<param name="Local" value="API%20Reference/Thing/Name.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Owner">
+						<param name="Local" value="API%20Reference/Thing/Owner.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Type">
+						<param name="Local" value="API%20Reference/Base%20Class/Type.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="World">
+						<param name="Local" value="API%20Reference/Base%20Class/World.htm">
+						</OBJECT>
+				</UL>
+			</UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Vector">
+				<param name="Local" value="API%20Reference/Vector/Vector.htm">
+				</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Methods">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Add">
+						<param name="Local" value="API%20Reference/Vector/Add.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsOfType">
+						<param name="Local" value="API%20Reference/Base%20Class/IsOfType.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Normalize">
+						<param name="Local" value="API%20Reference/Vector/Normalize.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Rotation">
+						<param name="Local" value="API%20Reference/Vector/rotation.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Rotate">
+						<param name="Local" value="API%20Reference/Vector/Rotate.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="RotateAboutAxis">
+						<param name="Local" value="API%20Reference/Vector/RotateAboutAxis.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Scale">
+						<param name="Local" value="API%20Reference/Vector/scale.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Set">
+						<param name="Local" value="API%20Reference/Vector/Set.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Subtract">
+						<param name="Local" value="API%20Reference/Vector/Subtract.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ToASCII">
+						<param name="Local" value="API%20Reference/Base%20Class/ToAscii.htm">
+						</OBJECT>
+				</UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Properties">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Length">
+						<param name="Local" value="API%20Reference/Vector/Length.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Type">
+						<param name="Local" value="API%20Reference/Base%20Class/Type.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="World">
+						<param name="Local" value="API%20Reference/Base%20Class/World.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="X (Vector)">
+						<param name="Local" value="API%20Reference/Vector/X.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Y (Vector)">
+						<param name="Local" value="API%20Reference/Vector/Y.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Z (Vector)">
+						<param name="Local" value="API%20Reference/Vector/Z.htm">
+						</OBJECT>
+				</UL>
+			</UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="World">
+				<param name="Local" value="API%20Reference/World/World.htm">
+				</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Methods">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="AbortEvent">
+						<param name="Local" value="API%20Reference/World/AbortEvent.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="CheckPolicy">
+						<param name="Local" value="API%20Reference/World/CheckPolicy.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Connect">
+						<param name="Local" value="API%20Reference/World/Connect.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="CreateBoundary">
+						<param name="Local" value="API%20Reference/World/CreateBoundary.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="CreateExemplar">
+						<param name="Local" value="API%20Reference/World/CreateExemplar.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="CreateFrame">
+						<param name="Local" value="API%20Reference/World/CreateFrame.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="CreateInlineMethod">
+						<param name="Local" value="API%20Reference/World/CreateInlineMethod.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="CreateInstance">
+						<param name="Local" value="API%20Reference/World/CreateInstance.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="CreateMenu">
+						<param name="Local" value="API%20Reference/World/CreateMenu.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="CreateMenuItem">
+						<param name="Local" value="API%20Reference/World/CreateMenuItem.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="CreateMethod">
+						<param name="Local" value="API%20Reference/World/CreateMethod.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="CreatePropertyList">
+						<param name="Local" value="API%20Reference/World/CreatePropertyList.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="CreatePropertyMap">
+						<param name="Local" value="API%20Reference/World/CreatePropertyMap.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="CreateScriptModule">
+						<param name="Local" value="API%20Reference/World/CreateScriptModule.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="CreateSound">
+						<param name="Local" value="API%20Reference/World/CreateSound.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="CreateTimer">
+						<param name="Local" value="API%20Reference/World/CreateTimer.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="CreateVector">
+						<param name="Local" value="API%20Reference/World/CreateVector.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="DestroyObject">
+						<param name="Local" value="API%20Reference/World/DestroyObject.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="DestroyTimer">
+						<param name="Local" value="API%20Reference/World/DestroyTimer.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Disconnect">
+						<param name="Local" value="API%20Reference/World/Disconnect.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="FireUIEvent">
+						<param name="Local" value="API%20Reference/World/FireUIEvent.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Format">
+						<param name="Local" value="API%20Reference/World/Format.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="GetAnimationSystemTime">
+						<param name="Local" value="API%20Reference/World/GetAnimationSystemTime.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsAvatar">
+						<param name="Local" value="API%20Reference/World/IsAvatar.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsExemplar">
+						<param name="Local" value="API%20Reference/World/IsExemplar.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsOfType">
+						<param name="Local" value="API%20Reference/Base%20Class/IsOfType.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsValidExemplar">
+						<param name="Local" value="API%20Reference/World/IsValidExemplar.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="IsValidModule">
+						<param name="Local" value="API%20Reference/World/IsValidModule.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="MakeHost">
+						<param name="Local" value="API%20Reference/World/MakeHost.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Print">
+						<param name="Local" value="API%20Reference/World/Print.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="RemoveModule">
+						<param name="Local" value="API%20Reference/World/RemoveModule.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SaveDatabase">
+						<param name="Local" value="API%20Reference/World/SaveDatabase.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SaveDatabaseAs">
+						<param name="Local" value="API%20Reference/World/SaveDatabaseAs.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="SaveToScript">
+						<param name="Local" value="API%20Reference/World/SaveToScript.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ShowHTML">
+						<param name="Local" value="API%20Reference/World/ShowHTML.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ShowHTMLEx">
+						<param name="Local" value="API%20Reference/World/ShowHTMLEx.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ShowURL">
+						<param name="Local" value="API%20Reference/World/ShowURL.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ShowURLEx">
+						<param name="Local" value="API%20Reference/World/ShowURLEx.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ShowWelcomeMessage">
+						<param name="Local" value="API%20Reference/World/ShowWelcomeMessage.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Synchronize">
+						<param name="Local" value="API%20Reference/World/Synchronize.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ToASCII">
+						<param name="Local" value="API%20Reference/Base%20Class/ToAscii.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Trace">
+						<param name="Local" value="API%20Reference/World/Trace.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="UnMakeHost">
+						<param name="Local" value="API%20Reference/World/UnMakeHost.htm">
+						</OBJECT>
+				</UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Properties">
+					</OBJECT>
+				<UL>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="AvatarGraphicsPath">
+						<param name="Local" value="API%20Reference/World/AvatarGraphicsPath.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Avatars">
+						<param name="Local" value="API%20Reference/World/Avatars.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Caller">
+						<param name="Local" value="API%20Reference/World/Caller.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ContentPath">
+						<param name="Local" value="API%20Reference/World/ContentPath.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="DefaultAvatarExemplar">
+						<param name="Local" value="API%20Reference/World/DefaultAvatarExemplar.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="DefaultObjectQuota">
+						<param name="Local" value="API%20Reference/World/DefaultObjectQuota.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="DefaultPortal">
+						<param name="Local" value="API%20Reference/World/DefaultPortal.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="DefaultRoom">
+						<param name="Local" value="API%20Reference/World/DefaultRoom.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="DefaultSpriteFile">
+						<param name="Local" value="API%20Reference/World/DefaultSpriteFile.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="EnableAutoDownload">
+						<param name="Local" value="API%20Reference/World/EnableAutoDownload.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Exemplar">
+						<param name="Local" value="API%20Reference/World/Exemplar.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Global">
+						<param name="Local" value="API%20Reference/World/Global.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="HelpPath">
+						<param name="Local" value="API%20Reference/World/HelpPath.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Type">
+						<param name="Local" value="API%20Reference/Base%20Class/Type.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Module">
+						<param name="Local" value="API%20Reference/World/Module.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Owner">
+						<param name="Local" value="API%20Reference/World/Owner.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="Rooms">
+						<param name="Local" value="API%20Reference/World/Rooms.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="RootURL">
+						<param name="Local" value="API%20Reference/World/RootURL.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ServerName">
+						<param name="Local" value="API%20Reference/World/ServerName.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="ServerSide">
+						<param name="Local" value="API%20Reference/World/ServerSide.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="This">
+						<param name="Local" value="API%20Reference/World/This.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="User">
+						<param name="Local" value="API%20Reference/World/User.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="WelcomeURL">
+						<param name="Local" value="API%20Reference/World/WelcomeURL.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="WorldAvatarGraphicsPath">
+						<param name="Local" value="API%20Reference/World/WorldAvatarGraphicsPath.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="WorldContentPath">
+						<param name="Local" value="API%20Reference/World/WorldContentPath.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="WorldDescription">
+						<param name="Local" value="API%20Reference/World/WorldDescription.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="WorldName">
+						<param name="Local" value="API%20Reference/World/WorldName.htm">
+						</OBJECT>
+					<LI> <OBJECT type="text/sitemap">
+						<param name="Name" value="WorldPath">
+						<param name="Local" value="API%20Reference/World/WorldPath.htm">
+						</OBJECT>
+				</UL>
+			</UL>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Event Handlers">
+			<param name="Local" value="API%20Reference/Events/Event%20Handlers.htm">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="AcceptEnter">
+				<param name="Local" value="API%20Reference/Events/AcceptEnter.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="AcceptLeave">
+				<param name="Local" value="API%20Reference/Events/AcceptLeave.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="AcceptTransport">
+				<param name="Local" value="API%20Reference/Events/AcceptTransport.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="AllowEnter">
+				<param name="Local" value="API%20Reference/Events/AllowEnter.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="AllowLeave">
+				<param name="Local" value="API%20Reference/Events/AllowLeave.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="AllowTransport">
+				<param name="Local" value="API%20Reference/Events/AllowTransport.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="OnApproachDone">
+				<param name="Local" value="API%20Reference/Events/OnApproachDone.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="OnConnect">
+				<param name="Local" value="API%20Reference/Events/OnConnect.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="OnCreate">
+				<param name="Local" value="API%20Reference/Events/OnCreate.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="OnDestroy">
+				<param name="Local" value="API%20Reference/Events/OnDestroy.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="OnDirectionDone">
+				<param name="Local" value="API%20Reference/Events/OnDirectionDone.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="OnDisconnect">
+				<param name="Local" value="API%20Reference/Events/OnDisconnect.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="OnEnter">
+				<param name="Local" value="API%20Reference/Events/OnEnter.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="OnIntersectee">
+				<param name="Local" value="API%20Reference/Events/OnIntersectee.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="OnIntersecter">
+				<param name="Local" value="API%20Reference/Events/OnIntersecter.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="OnInvokeMethodFailed">
+				<param name="Local" value="API%20Reference/Events/OnInvokeMethodFailed.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="OnIsSolidChanged">
+				<param name="Local" value="API%20Reference/Events/OnIsSolidChanged.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="OnLButtonDown">
+				<param name="Local" value="API%20Reference/Events/OnLButtonDown.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="OnLButtonUp">
+				<param name="Local" value="API%20Reference/Events/OnLButtonUp.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="OnRButtonDown">
+				<param name="Local" value="API%20Reference/Events/OnRButtonDown.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="OnRButtonUp">
+				<param name="Local" value="API%20Reference/Events/OnRButtonUp.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="OnLeave">
+				<param name="Local" value="API%20Reference/Events/OnLeave.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="OnLoadGeometry">
+				<param name="Local" value="API%20Reference/Events/OnLoadGeometry.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="OnPortalArrive">
+				<param name="Local" value="API%20Reference/Events/OnPortalArrive.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="OnPortalLeave">
+				<param name="Local" value="API%20Reference/Events/OnPortalLeave.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="OnPositionDone">
+				<param name="Local" value="API%20Reference/Events/OnPositionDone.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="OnPropertyChanged">
+				<param name="Local" value="API%20Reference/Events/OnPropertyChanged%20Class%20Description.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="OnPropertyAccess">
+				<param name="Local" value="API%20Reference/Events/OnPropertyAccess%20Class%20Description.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="OnScaleDone">
+				<param name="Local" value="API%20Reference/Events/OnScaleDone.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="OnTell">
+				<param name="Local" value="API%20Reference/Events/OnTell.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="OnWorn">
+				<param name="Local" value="API%20Reference/Events/OnWorn.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="OnUnWorn">
+				<param name="Local" value="API%20Reference/Events/OnUnWorn.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="OnUpDone">
+				<param name="Local" value="API%20Reference/Events/OnUpDone.htm">
+				</OBJECT>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Handling UI Events">
+			<param name="Local" value="API%20Reference/Events/HandlingUIEvents.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Error Reference">
+			<param name="Local" value="API%20Reference/Err/HRESULT%20Errors%20Generated%20by%20VWorlds.htm">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="How-To Documentation">
+		<param name="Local" value="White%20Papers/htm/HowToStart.htm">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Design Principles of Successful Online Communities">
+			<param name="Local" value="White%20Papers/htm/Design%20Principles%20of%20Successful%20Online%20Communities.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="How To - 3D Graphics in Virtual Worlds">
+			<param name="Local" value="White%20Papers/htm/Howto-%203D%20Graphics%20in%20Virtual%20Worlds.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="How To - Determine Where Avatars Enter a World">
+			<param name="Local" value="White%20Papers/htm/Howto-%20Determine%20Where%20Avatars%20Enter%20a%20World.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="How To - Virtual Worlds Registry Keys">
+			<param name="Local" value="White%20Papers/htm/Howto-%20Virtual%20Worlds%20Registry%20Keys.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Top Ten Programming Tips for Virtual Worlds">
+			<param name="Local" value="White%20Papers/htm/top%20ten%20programming%20tips.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Using Script in Virtual Worlds">
+			<param name="Local" value="White%20Papers/htm/Script%20Engines%20White%20paper.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Virtual Worlds Designer's Guide">
+			<param name="Local" value="White%20Papers/htm/Designer's%20Guide.htm">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Virtual Worlds User Interface Reference">
+		<param name="Local" value="UIRef/UIRefst.htm">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Overview of the Virtual Worlds Interface">
+			<param name="Local" value="UIRef/UIRefst.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Views and Windows (Client Interface)">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="The Client Interface">
+				<param name="Local" value="UIRef/views/cliinter.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Avatar Tab">
+				<param name="Local" value="UIRef/views/avatab.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Room Inventory Tab">
+				<param name="Local" value="UIRef/views/rctab.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="My Things Tab">
+				<param name="Local" value="UIRef/views/mythings.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Authoring Tools Tab">
+				<param name="Local" value="UIRef/views/toolstab.htm">
+				</OBJECT>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Elements of the Client Interface">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Camera View Dialog Box">
+				<param name="Local" value="UIRef/cliels/camera.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Avatar Profile Dialog Box">
+				</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Avatar Profile Dialog Box">
+					<param name="Local" value="UIRef/cliels/avprof.htm">
+					</OBJECT>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Appearance (Avatar Profile) Dialog Box">
+					<param name="Local" value="UIRef/cliels/appear.htm">
+					</OBJECT>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Description (Avatar Profile) Dialog Box">
+					<param name="Local" value="UIRef/cliels/descrip.htm">
+					</OBJECT>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Details (Avatar Profile) Dialog Box">
+					<param name="Local" value="UIRef/cliels/details.htm">
+					</OBJECT>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Friends List (Avatar Profile) Dialog Box">
+					<param name="Local" value="UIRef/cliels/friends.htm">
+					</OBJECT>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Ignore List (Avatar Profile) Dialog Box">
+					<param name="Local" value="UIRef/cliels/ignoring.htm">
+					</OBJECT>
+			</UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Directory Dialog Box">
+				<param name="Local" value="UIRef/cliels/dirserv.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Options Dialog Box">
+				<param name="Local" value="UIRef/cliels/options.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Host Log Off Dialog Box">
+				<param name="Local" value="UIRef/cliels/logoff.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Virtual Worlds Start Screen">
+				<param name="Local" value="UIRef/cliels/loginscr.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Whisper Dialog Box">
+				<param name="Local" value="UIRef/cliels/whisper.htm">
+				</OBJECT>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Virtual Worlds Shortcut Menus">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Shortcut Menus in the Client Interface">
+				<param name="Local" value="UIRef/cliels/shortmen.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Avatar Shortcut Menus">
+				<param name="Local" value="UIRef/cliels/avashort.htm">
+				</OBJECT>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Avatar Construction Kit">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Avatar Construction Kit Interface">
+				<param name="Local" value="UIRef/ack/ackintf.htm">
+				</OBJECT>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Boundary Editor">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Boundary Editor Interface">
+				<param name="Local" value="UIRef/boundary/intrface.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Boundary Browser">
+				<param name="Local" value="uiref/boundary/bbrowser.htm">
+				</OBJECT>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Create a World Wizard">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Create a World Wizard Step 1 of 4">
+				<param name="Local" value="UIRef/worldwiz/wwiz1.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Create a World Wizard Step 2 of 4">
+				<param name="Local" value="UIRef/worldwiz/wwiz2.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Create a World Wizard Step 3 of 4">
+				<param name="Local" value="UIRef/worldwiz/wwiz3.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Create a World Wizard, Step 4 of 4">
+				<param name="Local" value="UIRef/worldwiz/wwiz4.htm">
+				</OBJECT>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Command Window">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Command Window Interface">
+				<param name="Local" value="UIRef/cmdwin/cwinintf.htm">
+				</OBJECT>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Geometry Editor">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Geometry Editor Interface">
+				<param name="Local" value="UIRef/geomed/intrface.htm">
+				</OBJECT>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Import Script File Wizard">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Import Script File Wizard">
+				<param name="Local" value="UIRef/AdminUI/import.htm">
+				</OBJECT>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Keyboard Shortcuts for Virtual Worlds">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Keyboard Shortcuts">
+				<param name="Local" value="UIRef/movekeys.htm">
+				</OBJECT>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Object Property Pages">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="General Property Page">
+				<param name="Local" value="UIRef/proppage/descrip.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Texture Property Page">
+				<param name="Local" value="UIRef/proppage/texture.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Geometry Property Page">
+				<param name="Local" value="UIRef/proppage/geometry.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Motion Property Page">
+				<param name="Local" value="UIRef/proppage/motion.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Approach Property Page">
+				<param name="Local" value="UIRef/proppage/approach.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Portal Property Page">
+				<param name="Local" value="UIRef/proppage/portal.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Interworld Portal Property Page">
+				<param name="Local" value="UIRef/proppage/IWportal.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Web Page Property Page">
+				<param name="Local" value="UIRef/proppage/webpage.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Wizard Property Page">
+				<param name="Local" value="UIRef/proppage/wizard.htm">
+				</OBJECT>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Object Wizard">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Object Wizard Interface">
+				<param name="Local" value="UIRef/objwiz/objwiz.htm">
+				</OBJECT>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Object Explorer">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Object Explorer Interface">
+				<param name="Local" value="UIRef/objexpl/intrface.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Advanced Text Editor">
+				<param name="Local" value="UIRef/objexpl/texted.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Inline Method Editor">
+				<param name="Local" value="UIRef/objexpl/inlinmth.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Menu Editor">
+				<param name="Local" value="UIRef/objexpl/menued.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="New Method Dialog Box (Object Explorer)">
+				<param name="Local" value="UIRef/objexpl/newmet.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="New Property Dialog Box (Object Explorer)">
+				<param name="Local" value="UIRef/objexpl/newprop.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="New Module Dialog Box (Object Explorer)">
+				<param name="Local" value="UIRef/objexpl/newmodu.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="New Menu Item Dialog Box (Inline Method Editor)">
+				<param name="Local" value="UIRef/objexpl/newmenu.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="New Property List Item Dialog Box">
+				<param name="Local" value="UIRef/objexpl/listitem.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="New Property Map Item Dialog Box">
+				<param name="Local" value="UIRef/objexpl/mapitem.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Object Explorer Icons">
+				<param name="Local" value="UIRef/objexpl/icons.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Property List Editor Dialog Box">
+				<param name="Local" value="UIRef/objexpl/proplist.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Property Map Editor Dialog Box">
+				<param name="Local" value="UIRef/objexpl/propmap.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Thing Selector">
+				<param name="Local" value="UIRef/objexpl/thinpick.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Vector Editor">
+				<param name="Local" value="UIRef/objexpl/vected.htm">
+				</OBJECT>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Room Wizard">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Room Wizard Step 1 of 2">
+				<param name="Local" value="UIRef/roomwiz/roomwiz1.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Room Wizard Step 2 of 2">
+				<param name="Local" value="UIRef/roomwiz/roomwiz2.htm">
+				</OBJECT>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Virtual Worlds Server Interface">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Virtual Worlds Server Application">
+				<param name="Local" value="UIRef/AdminUI/vwsui.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Server Menus">
+				</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="File Menu (Virtual Worlds Server)">
+					<param name="Local" value="UIRef/AdminUI/vwsfile.htm">
+					</OBJECT>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="View Menu (Virtual Worlds Server)">
+					<param name="Local" value="UIRef/AdminUI/vwsview.htm">
+					</OBJECT>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Tools Menu (Virtual Worlds Server)">
+					<param name="Local" value="UIRef/AdminUI/vwstool.htm">
+					</OBJECT>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Windows Menu (Virtual Worlds Server)">
+					<param name="Local" value="UIRef/AdminUI/vwswind.htm">
+					</OBJECT>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Help Menu (Virtual Worlds Server)">
+					<param name="Local" value="UIRef/AdminUI/vwshelp.htm">
+					</OBJECT>
+			</UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Server Dialog Boxes">
+				</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Directory Service Address Dialog Box (Virtual Worlds Server)">
+					<param name="Local" value="UIRef/AdminUI/vwssetds.htm">
+					</OBJECT>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Save As Dialog Box (Virtual Worlds Server)">
+					<param name="Local" value="UIRef/AdminUI/vwssavas.htm">
+					</OBJECT>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Export As Dialog Box (Virtual Worlds Server)">
+					<param name="Local" value="UIRef/AdminUI/vwsexp.htm">
+					</OBJECT>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Web Address Dialog Box (Virtual Worlds Server)">
+					<param name="Local" value="UIRef/AdminUI/vwswurl.htm">
+					</OBJECT>
+			</UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Import Script File Wizard">
+				</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+					<param name="Name" value="Import Script File Wizard">
+					<param name="Local" value="UIRef/AdminUI/import.htm">
+					</OBJECT>
+			</UL>
+		</UL>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Virtual Worlds Server Reference">
+		<param name="Local" value="admin/StAdmin.htm">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Setting Up and Starting the Server">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Starting and Running the Server">
+				<param name="Local" value="admin/vwsstart.htm">
+				</OBJECT>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Opening a World">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Opening a World Checkpoint File">
+				<param name="Local" value="admin/openchk.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Importing a World Script File">
+				<param name="Local" value="admin/openscpt.htm">
+				</OBJECT>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Saving a World">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="How Worlds Are Saved">
+				<param name="Local" value="admin/savewrld.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Saving a World as a Checkpoint File">
+				<param name="Local" value="admin/savechk.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Exporting a World as a Script File">
+				<param name="Local" value="admin/savescpt.htm">
+				</OBJECT>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Moving a World">
+			</OBJECT>
+		<UL>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Moving a World">
+				<param name="Local" value="admin/webpost.htm">
+				</OBJECT>
+			<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Adding Custom Content to a Posted World">
+				<param name="Local" value="admin/postpost.htm">
+				</OBJECT>
+		</UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Deleting a World">
+			<param name="Local" value="admin/vwsdelw.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Adding Directory Services">
+			<param name="Local" value="admin/NoDS.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Adding User Authentication">
+			<param name="Local" value="Admin/vwsntlm.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Taking a World Offline">
+			<param name="Local" value="admin/wrldoff.htm">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Additional Help">
+		<param name="Local" value="Gethelp/hpstart.htm">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Printing the Online Help">
+			<param name="Local" value="GetHelp/print.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Virtual Worlds on the Web">
+			<param name="Local" value="GetHelp/vwonweb.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Frequently Asked Questions">
+			<param name="Local" value="GetHelp/vwfaq.htm">
+			</OBJECT>
+	</UL>
+</UL>
+</BODY></HTML>
