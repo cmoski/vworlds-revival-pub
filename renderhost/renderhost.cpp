@@ -96,7 +96,9 @@ public:
             LPUNKNOWN pUnk = m_propWnd.GetControlUnknown();
             if (pUnk)
                 pUnk->QueryInterface(IID_IDispatch, (void**)&m_pPropDisp);
-            Log("PASS: TPList (property editor) created");
+            Log("PASS: TPList created, pPropDisp=%p", (IDispatch*)m_pPropDisp);
+        } else {
+            Log("FAIL: TPList creation failed");
         }
 
         // Start polling timer for selection sync
