@@ -909,7 +909,11 @@ add_library(uictrl SHARED
     vwocx/uictrl/soundctl.cpp
     vwocx/uictrl/userctl.cpp
     vwocx/uictrl/whelpct.cpp
-    # vwsfvwct.cpp EXCLUDED - DirectDraw self-view rendering (Phase 5)
+    # vwsfvwct.cpp - VWSelfView avatar preview OCX. Needs DirectDraw headers
+    # resolved in PCH context. ddraw.h in stdafx.h + d3drm_legacy includes not
+    # enough — MFImage.h/PalMgr.h still can't find IDirectDraw. Investigate
+    # VC_EXTRALEAN or header include order. Works in vwmm build (different stdafx).
+    # vwocx/uictrl/vwsfvwct.cpp
     # Base control class from vwview (NOT vwview.cpp - has its own DLL entry)
     vwocx/vwview/viewctl.cpp
     # Shared utilities
@@ -935,7 +939,12 @@ target_include_directories(uictrl PRIVATE
     ${VWORLDS_COMMON_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/compat
     ${CMAKE_CURRENT_SOURCE_DIR}/vwsystem
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwstudio
     ${CMAKE_CURRENT_SOURCE_DIR}/d2d/d2dutils/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/d2d/mmimage/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwrender
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwmm
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/d3drm_legacy/x86/include
 )
 
 target_compile_definitions(uictrl PRIVATE
@@ -947,6 +956,7 @@ target_compile_definitions(uictrl PRIVATE
 target_precompile_headers(uictrl PRIVATE
     "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/vwocx/uictrl/stdafx.h>"
 )
+set_source_files_properties(vwocx/uictrl/vwsfvwct.cpp PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 
 target_link_libraries(uictrl PRIVATE
     d2dutils
@@ -955,6 +965,8 @@ target_link_libraries(uictrl PRIVATE
     oleaut32
     dsound
     wininet
+    ddraw
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/d3drm_legacy/x86/lib/d3drm.lib
 )
 
 # =============================================================================
