@@ -1362,15 +1362,6 @@ HRESULT CVWServer::OpenWorldHelper(CString strWorldName, CString &strReturnError
 	CComBSTR bstrWorldName(strWorldName);
 	static CComBSTR bstrGUIDStatic("GUID");
 
-	//see if world's name is already in the registry.
-	hr = FindWorldByPath(bstrWorldName, &bstrGUIDOut.m_str);
-	if (bstrGUIDOut.m_str)
-	{
-		hr = VWSERVER_E_WORLDPREVIOUSLYREGISTERED;
-		strReturnError += ("\nThere exists a previously registered world of the same name: \""+strWorldName+"\". The two cannot be loaded simultaneously.");
-		goto ERROR_ENCOUNTERED;
-	}
-
 	// see if the world has already been loaded
 	// NOTE: pwi is not a comm object - don't release later
 	pwi = m_wlist.FindWorld(strWorldName);

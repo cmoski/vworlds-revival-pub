@@ -842,20 +842,35 @@ STDMETHODIMP CVWOdb::CommitAs(BSTR bstrFileName)
 	IThing *pThing = NULL;
 	DWORD dw;
 
-	VWTRACE(m_pWorld, "VWODB", VWT_METHOD, "CVWOdb::Commit\n");
+	{
+		char _dbg[512];
+		sprintf(_dbg, "CVWOdb::CommitAs: bOpen=%d bPersist=%d bTemporary=%d db='%s' mapSize=%d\n",
+			m_bOpen, m_bPersist, m_bTemporary, (LPCSTR)m_strDb, m_mapIdToThing.GetCount());
+		OutputDebugStringA(_dbg);
+		printf("%s", _dbg); fflush(stdout);
+	}
 
 	// must be open for business
 	if (m_bOpen!=VARIANT_TRUE)
+	{
+		TRACE("CVWOdb::CommitAs: FAIL - not open\n");
 		return ReportODBError(VWODB_E_NOTOPEN);
+	}
 
 	// if not in persist mode, we fail...
 	if (m_bPersist!=VARIANT_TRUE)
 	{
 		// unless it's a temporary world, in which case we ignore
 		if (m_bTemporary==VARIANT_TRUE)
+		{
+			TRACE("CVWOdb::CommitAs: skip - temporary world\n");
 			return S_OK;
+		}
 		else
+		{
+			TRACE("CVWOdb::CommitAs: FAIL - not persist mode\n");
 			return ReportODBError(VWODB_E_NOTPERSISTMODE);
+		}
 	}
 
 	CloseWorld();
@@ -892,13 +907,13 @@ STDMETHODIMP CVWOdb::CommitAs(BSTR bstrFileName)
 	m_bOpen = VARIANT_TRUE;
 
 	// create log file
-	if (!m_fileDb.Open(	m_strDb, 
-						CFile::modeCreate		|	
+	if (!m_fileDb.Open(	m_strDb,
+						CFile::modeCreate		|
 						CFile::modeReadWrite	|
 						CFile::shareExclusive	|
 						CFile::typeBinary ))
 	{
-		VWTRACE(m_pWorld, "VWODB", VWT_ERROR, "CVWOdb::Commit - unable to create log file\n");
+		TRACE("CVWOdb::CommitAs: unable to create log file '%s'\n", (LPCSTR)m_strDb);
 		m_bOpen = VARIANT_FALSE;
 		return ReportODBError(VWODB_E_DBCREATEERROR);
 	}
@@ -907,9 +922,12 @@ STDMETHODIMP CVWOdb::CommitAs(BSTR bstrFileName)
 	dw = DATABASE_VERSION;
 	m_fileDb.Write(&dw, sizeof(dw));
 
-#ifdef FLUSHEVERYTIME
-	m_fileDb.Flush();
-#endif
+	{
+		char _dbg2[256];
+		sprintf(_dbg2, "CVWOdb::CommitAs: wrote stamp, looking up WORLD_OBJECT (id=%d) in map of %d objects\n", WORLD_OBJECT, m_mapIdToThing.GetCount());
+		OutputDebugStringA(_dbg2);
+		printf("%s", _dbg2); fflush(stdout);
+	}
 
 	// NOTE: need to differentiate world object so we can
 	// callback world for notification of being loaded
@@ -978,6 +996,16 @@ ERROR_ENCOUNTERED_1:
 			if (FAILED(hr))
 				return hr;
 		}
+	}
+
+	// Flush to disk so file size is visible immediately
+	m_fileDb.Flush();
+
+	{
+		char _dbg3[256];
+		sprintf(_dbg3, "CVWOdb::CommitAs: done, file pos=%lld\n", (long long)m_fileDb.GetPosition());
+		OutputDebugStringA(_dbg3);
+		printf("%s", _dbg3); fflush(stdout);
 	}
 
 	return S_OK;
