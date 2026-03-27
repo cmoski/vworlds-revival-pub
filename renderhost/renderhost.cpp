@@ -556,8 +556,21 @@ public:
                                 DISPATCH_PROPERTYPUT, &dpPut2, NULL, NULL, NULL);
                             Log("Set VWClient on tree: hr=0x%08X", hr);
                         }
-                        // Defer TPList — seed with Global, then poll ControlManager for selection
+                        // TPList: set VWClient (re-exposed in dispatch map) + defer Global seed
                         if (m_pExplorer->m_pPropDisp) {
+                            OLECHAR* vwcName = L"VWClient";
+                            DISPID vwcDispid;
+                            hr = m_pExplorer->m_pPropDisp->GetIDsOfNames(IID_NULL, &vwcName, 1, LOCALE_USER_DEFAULT, &vwcDispid);
+                            if (SUCCEEDED(hr)) {
+                                CComVariant vClient2b(pClient.p);
+                                DISPID putid2b = DISPID_PROPERTYPUT;
+                                DISPPARAMS dpPut2b = { &vClient2b, &putid2b, 1, 1 };
+                                hr = m_pExplorer->m_pPropDisp->Invoke(vwcDispid, IID_NULL, LOCALE_USER_DEFAULT,
+                                    DISPATCH_PROPERTYPUT, &dpPut2b, NULL, NULL, NULL);
+                                Log("Set VWClient on TPList (dispid=%d): hr=0x%08X", vwcDispid, hr);
+                            } else {
+                                Log("TPList: GetIDsOfNames(VWClient) still fails hr=0x%08X", hr);
+                            }
                             m_pExplorer->m_pWorldDisp = pWorld;
                             m_pExplorer->SetTimer(997, 3000, NULL);
                             Log("TPList: deferred TargetObjectProperty binding (timer 997, 3s)");

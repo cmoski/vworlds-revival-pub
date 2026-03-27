@@ -74,6 +74,8 @@ BEGIN_DISPATCH_MAP(CTPListCtrl, CPropEdCtrl)
 	DISP_FUNCTION(CTPListCtrl, "DoFocus", DoFocus, VT_EMPTY, VTS_NONE)
 	DISP_STOCKPROP_FONT()
 	//}}AFX_DISPATCH_MAP
+	// Re-expose base class VWClient (MFC dispatch maps don't chain to base)
+	DISP_PROPERTY_EX(CTPListCtrl, "VWClient", GetVWClient, SetVWClient, VT_DISPATCH)
 END_DISPATCH_MAP()
 
 
