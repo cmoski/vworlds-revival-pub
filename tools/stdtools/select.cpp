@@ -1,4 +1,4 @@
-// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+// Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved.
 // In installing/viewing this source code, you agree to the terms of the
 // Microsoft Research Source License (MSRSL) included in the root of this source tree
 // and available from http://www.vworlds.org/license.asp.
@@ -314,7 +314,8 @@ BOOL CVWSelectToolObject::OnLButtonDown( UINT nFlags, POINT pt  )
 	goto EXIT_SUCCEEDED;
 
 EXIT_FAIL:
-	ASSERT(0);
+	TRACE("CVWSelectTool::OnLButtonDown: failed hr=0x%08X (pUIView=%p, pControlMgr=%p)\n",
+		hr, m_pUIView, m_pControlManager);
 EXIT_SUCCEEDED:
 
 	VariantClear(&varHitResult);

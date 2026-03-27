@@ -1261,6 +1261,7 @@ target_include_directories(vwrendvw PRIVATE
 
 target_compile_definitions(vwrendvw PRIVATE
     _WINDLL _USRDLL _AFXDLL
+    USE_CONTROLMANAGER
 )
 
 target_precompile_headers(vwrendvw PRIVATE
