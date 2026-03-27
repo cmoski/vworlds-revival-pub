@@ -485,12 +485,26 @@ public:
     CWnd m_soundWnd;    // Vwsound OCX (1x1 hidden child for audio playback)
     CComPtr<IDispatch> m_pRendererDisp;
     CComPtr<IDispatch> m_pSoundDisp;
+    CEdit m_chatHistory;   // Chat log (multiline readonly)
+    CEdit m_chatInput;     // Chat input (single line)
+    CFont m_chatFont;
+    CString m_chatText;
+    static const int CHAT_HEIGHT = 120;
+
+    void AppendChat(const CString& text)
+    {
+        m_chatText += text + "\r\n";
+        if (m_chatHistory.m_hWnd) {
+            m_chatHistory.SetWindowText(m_chatText);
+            m_chatHistory.LineScroll(m_chatHistory.GetLineCount());
+        }
+    }
 
     BOOL CreateAndHost()
     {
         if (!Create(NULL, "VWorlds Render Host",
             WS_OVERLAPPEDWINDOW | WS_VISIBLE,
-            CRect(50, 50, 850, 700)))
+            CRect(50, 50, 850, 750)))
         {
             Log("FAIL: CFrameWnd::Create failed");
             return FALSE;
@@ -499,12 +513,15 @@ public:
 
         CRect rc;
         GetClientRect(&rc);
+        int chatTop = rc.Height() - CHAT_HEIGHT;
+        int inputH = 22;
 
+        // 3D viewport (top portion)
         BOOL bCreated = m_ocxWnd.CreateControl(
             CLSID_VWRenderView,
             "VWRenderView",
             WS_CHILD | WS_VISIBLE,
-            rc,
+            CRect(0, 0, rc.Width(), chatTop),
             this,
             100
         );
@@ -522,6 +539,29 @@ public:
         } else {
             Log("FAIL: GetControlUnknown returned NULL");
         }
+
+        // Chat font
+        m_chatFont.CreateFont(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+            DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
+
+        // Chat history (bottom, above input)
+        m_chatHistory.Create(
+            WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_BORDER |
+            ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
+            CRect(0, chatTop, rc.Width(), rc.Height() - inputH),
+            this, 110);
+        m_chatHistory.SetFont(&m_chatFont);
+
+        // Chat input (very bottom)
+        m_chatInput.Create(
+            WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
+            CRect(0, rc.Height() - inputH, rc.Width(), rc.Height()),
+            this, 111);
+        m_chatInput.SetFont(&m_chatFont);
+
+        m_chatText = "*** Welcome to VWorlds ***\r\n";
+        m_chatHistory.SetWindowText(m_chatText);
 
         // Host Vwsound OCX as 1x1 hidden child (audio only, no visual)
         BOOL bSound = m_soundWnd.CreateControl(
@@ -547,8 +587,14 @@ public:
     afx_msg void OnSize(UINT nType, int cx, int cy)
     {
         CFrameWnd::OnSize(nType, cx, cy);
+        int chatTop = cy - CHAT_HEIGHT;
+        int inputH = 22;
         if (m_ocxWnd.m_hWnd)
-            m_ocxWnd.MoveWindow(0, 0, cx, cy);
+            m_ocxWnd.MoveWindow(0, 0, cx, chatTop);
+        if (m_chatHistory.m_hWnd)
+            m_chatHistory.MoveWindow(0, chatTop, cx, CHAT_HEIGHT - inputH);
+        if (m_chatInput.m_hWnd)
+            m_chatInput.MoveWindow(0, cy - inputH, cx, inputH);
     }
 
     afx_msg void OnTimer(UINT_PTR nIDEvent)
@@ -919,6 +965,40 @@ BOOL CRenderFrame::PreTranslateMessage(MSG* pMsg)
             Log("SaveDatabase (Ctrl+S): hr=0x%08X", hr);
             if (SUCCEEDED(hr))
                 SetWindowText("VWorlds Render Host [Saved]");
+        }
+        return TRUE;
+    }
+    // Enter in chat input = Say
+    if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_RETURN &&
+        m_chatInput.m_hWnd && pMsg->hwnd == m_chatInput.m_hWnd)
+    {
+        CString text;
+        m_chatInput.GetWindowText(text);
+        text.Trim();
+        if (!text.IsEmpty() && theApp.m_pWorld) {
+            // Get user avatar and call Say
+            CComPtr<IThing> pUser;
+            theApp.m_pWorld->get_User(&pUser);
+            if (pUser) {
+                CComBSTR bstrText(text);
+                // Call Say method on user
+                OLECHAR* sayName = L"Say";
+                DISPID sayDispid;
+                CComPtr<IDispatch> pUserDisp;
+                pUser->QueryInterface(IID_IDispatch, (void**)&pUserDisp);
+                if (pUserDisp) {
+                    HRESULT hr = pUserDisp->GetIDsOfNames(IID_NULL, &sayName, 1, LOCALE_USER_DEFAULT, &sayDispid);
+                    if (SUCCEEDED(hr)) {
+                        CComVariant vText(bstrText);
+                        DISPPARAMS dp = { &vText, NULL, 1, 0 };
+                        hr = pUserDisp->Invoke(sayDispid, IID_NULL, LOCALE_USER_DEFAULT,
+                            DISPATCH_METHOD, &dp, NULL, NULL, NULL);
+                    }
+                }
+            }
+            // Show locally (server echo may or may not arrive)
+            AppendChat(theApp.m_user + " says, \"" + text + "\"");
+            m_chatInput.SetWindowText("");
         }
         return TRUE;
     }
