@@ -16,6 +16,12 @@ CComModule _Module;
 static const CLSID CLSID_VWRenderView =
     { 0x44fac783, 0x0ca4, 0x11d0, { 0x89, 0xa9, 0x00, 0xa0, 0xc9, 0x05, 0x41, 0x29 } };
 
+// ThingTree (Object Explorer) CLSID
+static const CLSID CLSID_ThingTree =
+    { 0xef7d6571, 0x0161, 0x11d2, { 0x88, 0xbe, 0x00, 0xc0, 0x4f, 0xc3, 0x2e, 0xf3 } };
+
+static const int EXPLORER_WIDTH = 250; // pixels for left panel
+
 static FILE* g_logFile = NULL;
 static bool g_trace = false;
 
@@ -34,6 +40,60 @@ void Log(const char* fmt, ...)
 }
 
 // Main frame window hosting the OCX
+// Object Explorer in its own popout window
+class CExplorerFrame : public CFrameWnd
+{
+public:
+    CWnd m_ocxWnd;
+    CComPtr<IDispatch> m_pExplorerDisp;
+    static const int MARGIN = 20; // left margin so +/- buttons aren't clipped
+
+    BOOL CreateAndHost()
+    {
+        if (!Create(NULL, "VWorlds Object Explorer",
+            WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+            CRect(820, 50, 1220, 700)))
+            return FALSE;
+
+        CRect rc;
+        GetClientRect(&rc);
+        rc.left += MARGIN;
+
+        BOOL bCreated = m_ocxWnd.CreateControl(
+            CLSID_ThingTree,
+            "ThingTree",
+            WS_CHILD | WS_VISIBLE,
+            rc,
+            this,
+            101
+        );
+        if (!bCreated) {
+            Log("WARN: ThingTree OCX failed");
+            return FALSE;
+        }
+
+        LPUNKNOWN pUnk = m_ocxWnd.GetControlUnknown();
+        if (pUnk)
+            pUnk->QueryInterface(IID_IDispatch, (void**)&m_pExplorerDisp);
+        Log("PASS: Object Explorer created");
+        return TRUE;
+    }
+
+    afx_msg void OnSize(UINT nType, int cx, int cy)
+    {
+        CFrameWnd::OnSize(nType, cx, cy);
+        if (m_ocxWnd.m_hWnd)
+            m_ocxWnd.MoveWindow(MARGIN, 0, cx - MARGIN, cy);
+    }
+
+    DECLARE_MESSAGE_MAP()
+};
+
+BEGIN_MESSAGE_MAP(CExplorerFrame, CFrameWnd)
+    ON_WM_SIZE()
+END_MESSAGE_MAP()
+
+// Main render window
 class CRenderFrame : public CFrameWnd
 {
 public:
@@ -42,40 +102,37 @@ public:
 
     BOOL CreateAndHost()
     {
-        // Create frame window
         if (!Create(NULL, "VWorlds Render Host",
             WS_OVERLAPPEDWINDOW | WS_VISIBLE,
-            CRect(100, 100, 900, 700)))
+            CRect(50, 50, 850, 700)))
         {
             Log("FAIL: CFrameWnd::Create failed");
             return FALSE;
         }
         Log("Frame window created: %p", m_hWnd);
 
-        // Host VWRenderView OCX via MFC CreateControl
         CRect rc;
         GetClientRect(&rc);
 
         BOOL bCreated = m_ocxWnd.CreateControl(
-            CLSID_VWRenderView,  // CLSID
-            "VWRenderView",       // Window name
+            CLSID_VWRenderView,
+            "VWRenderView",
             WS_CHILD | WS_VISIBLE,
             rc,
-            this,                 // Parent
-            100                   // Control ID
+            this,
+            100
         );
 
         if (!bCreated) {
             Log("FAIL: CreateControl(VWRenderView) failed, error %lu", GetLastError());
             return FALSE;
         }
-        Log("PASS: VWRenderView OCX created via MFC CreateControl");
+        Log("PASS: VWRenderView OCX created");
 
-        // Get IDispatch
         LPUNKNOWN pUnk = m_ocxWnd.GetControlUnknown();
         if (pUnk) {
             pUnk->QueryInterface(IID_IDispatch, (void**)&m_pRendererDisp);
-            Log("PASS: IDispatch obtained: %p", (IDispatch*)m_pRendererDisp);
+            Log("PASS: Renderer IDispatch: %p", (IDispatch*)m_pRendererDisp);
         } else {
             Log("FAIL: GetControlUnknown returned NULL");
         }
@@ -102,10 +159,11 @@ class CRenderApp : public CWinApp
 {
 public:
     CRenderFrame* m_pFrame;
+    CExplorerFrame* m_pExplorer;
     CString m_server, m_world, m_user;
     bool m_autoconnect, m_connectOnly, m_waitDebugger;
 
-    CRenderApp() : m_pFrame(NULL), m_autoconnect(false),
+    CRenderApp() : m_pFrame(NULL), m_pExplorer(NULL), m_autoconnect(false),
         m_connectOnly(false), m_waitDebugger(false)
     {
         m_server = "localhost";
@@ -159,6 +217,14 @@ public:
             return FALSE;
         }
         m_pMainWnd = m_pFrame;
+
+        // Create Object Explorer popout window
+        m_pExplorer = new CExplorerFrame();
+        if (!m_pExplorer->CreateAndHost()) {
+            Log("WARN: Object Explorer failed, continuing without it");
+            delete m_pExplorer;
+            m_pExplorer = NULL;
+        }
 
         // Auto-connect if requested
         if (m_autoconnect && m_pFrame->m_pRendererDisp) {
@@ -265,9 +331,21 @@ public:
                         DISPPARAMS dpPut = { &vClient, &putid, 1, 1 };
                         hr = m_pFrame->m_pRendererDisp->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT,
                             DISPATCH_PROPERTYPUT, &dpPut, NULL, NULL, NULL);
-                        Log("Set VWClient: hr=0x%08X", hr);
-                    } else {
-                        Log("GetIDsOfNames(VWClient): hr=0x%08X", hr);
+                        Log("Set VWClient on renderer: hr=0x%08X", hr);
+                    }
+
+                    // Set VWClient on Object Explorer too
+                    if (m_pExplorer && m_pExplorer->m_pExplorerDisp) {
+                        name = L"VWClient";
+                        hr = m_pExplorer->m_pExplorerDisp->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_USER_DEFAULT, &dispid);
+                        if (SUCCEEDED(hr)) {
+                            CComVariant vClient2(pClient.p);
+                            DISPID putid2 = DISPID_PROPERTYPUT;
+                            DISPPARAMS dpPut2 = { &vClient2, &putid2, 1, 1 };
+                            hr = m_pExplorer->m_pExplorerDisp->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT,
+                                DISPATCH_PROPERTYPUT, &dpPut2, NULL, NULL, NULL);
+                            Log("Set VWClient on explorer: hr=0x%08X", hr);
+                        }
                     }
                 }
             }
