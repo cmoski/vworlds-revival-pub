@@ -35,17 +35,19 @@ if /i "%WORLD%"=="DesktopWorld" (
     %CSCRIPT% /nologo "%SCRIPTS%\create_allworlds.vbs" %WORLD%
 )
 
-echo Starting server...
-start "VWorlds Server" "%BUILD%\serverV2.exe"
+set CDB="C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\cdb.exe"
+
+echo Starting server under debugger...
+start "VWorlds Server (cdb)" %CDB% -g -G -c "sxe -c \".echo ===SERVER ASSERT===;kp 5;g\" asrt;g" "%BUILD%\serverV2.exe"
 timeout /t 3 /nobreak >nul
 
-echo Starting Player 1 (Alice - alice.spr)...
-start "Alice" "%BUILD%\renderhost.exe" --trace --autoconnect --server localhost --world %WORLD% --user Alice --avatar alice.spr
+echo Starting Player 1 (Alice - alice.spr) under debugger...
+start "Alice (cdb)" %CDB% -g -G -c "sxe -c \".echo ===ASSERT===;kp 5;g\" asrt;g" "%BUILD%\renderhost.exe" --trace --autoconnect --server localhost --world %WORLD% --user Alice --avatar alice.spr
 
 timeout /t 2 /nobreak >nul
 
-echo Starting Player 2 (Bob - bob.spr)...
-start "Bob" "%BUILD%\renderhost.exe" --trace --autoconnect --server localhost --world %WORLD% --user Bob --avatar bob.spr
+echo Starting Player 2 (Bob - bob.spr) under debugger...
+start "Bob (cdb)" %CDB% -g -G -c "sxe -c \".echo ===ASSERT===;kp 5;g\" asrt;g" "%BUILD%\renderhost.exe" --trace --autoconnect --server localhost --world %WORLD% --user Bob --avatar bob.spr
 
 echo.
 echo Both clients launched with different avatars!

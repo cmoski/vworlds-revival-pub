@@ -368,8 +368,21 @@ HRESULT CInternetFileManagerObject::GetFileSimplified(BSTR bstrURL, BSTR *pbstrF
 				hr = INETFILE_E_FILENOTFOUND;
 			}
 		}
+
+		// Log failed resolution with full URL list for diagnosis
+		if (hr == INETFILE_E_FILENOTFOUND)
+		{
+			CStringA strFile(bstrURL);
+			TRACE("InetFile: FAILED to resolve '%s' after trying %d RootURLs (pid=%d)\n",
+				(LPCSTR)strFile, m_RootURLs.GetSize(), GetCurrentProcessId());
+			for (int i = 0; i < m_RootURLs.GetSize(); i++)
+			{
+				CStringA strUrl(m_RootURLs[i]);
+				TRACE("  RootURL[%d]: %s\n", i, (LPCSTR)strUrl);
+			}
+		}
 	}
-	
+
 	return hr;
 }
 
