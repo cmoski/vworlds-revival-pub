@@ -117,37 +117,8 @@ public:
 
     afx_msg void OnTimer(UINT_PTR nIDEvent)
     {
-        if (nIDEvent == 998 && m_pPropDisp)
-        {
-            // Poll the RENDER VIEW's TargetObjectProperty (the 3D-selected object)
-            // and sync to TPList's TargetObjectProperty
-            if (m_pRendererDisp)
-            {
-                OLECHAR* name = L"TargetObjectProperty";
-                DISPID dispid;
-                HRESULT hr = m_pRendererDisp->GetIDsOfNames(
-                    IID_NULL, &name, 1, LOCALE_USER_DEFAULT, &dispid);
-                if (SUCCEEDED(hr))
-                {
-                    DISPPARAMS dpGet = { NULL, NULL, 0, 0 };
-                    CComVariant varTarget;
-                    hr = m_pRendererDisp->Invoke(dispid, IID_NULL,
-                        LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dpGet, &varTarget, NULL, NULL);
-                    if (SUCCEEDED(hr) && varTarget.vt == VT_DISPATCH && varTarget.pdispVal)
-                    {
-                        if (varTarget.pdispVal != m_lastTarget.pdispVal)
-                        {
-                            m_lastTarget = varTarget;
-                            // Set on TPList TargetObjectProperty (dispid 2)
-                            DISPID putid = DISPID_PROPERTYPUT;
-                            DISPPARAMS dpPut = { &varTarget, &putid, 1, 1 };
-                            m_pPropDisp->Invoke(2, IID_NULL, LOCALE_USER_DEFAULT,
-                                DISPATCH_PROPERTYPUT, &dpPut, NULL, NULL, NULL);
-                        }
-                    }
-                }
-            }
-        }
+        // Selection sync disabled for now — TPList shows world props by default
+        // TODO: wire ControlManager selection to update TPList target
         CFrameWnd::OnTimer(nIDEvent);
     }
 
