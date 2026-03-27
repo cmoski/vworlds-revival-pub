@@ -474,14 +474,26 @@ public:
                                 DISPATCH_PROPERTYPUT, &dpPut2, NULL, NULL, NULL);
                             Log("Set VWClient on tree: hr=0x%08X", hr);
                         }
-                        // TPList VWClient (dispid 1)
+                        // TPList VWClient (via GetIDsOfNames — dispid 1 is SelectionList, not VWClient!)
                         if (m_pExplorer->m_pPropDisp) {
-                            CComVariant vClient2b(pClient.p);
-                            DISPID putid2b = DISPID_PROPERTYPUT;
-                            DISPPARAMS dpPut2b = { &vClient2b, &putid2b, 1, 1 };
-                            hr = m_pExplorer->m_pPropDisp->Invoke(1, IID_NULL, LOCALE_USER_DEFAULT,
-                                DISPATCH_PROPERTYPUT, &dpPut2b, NULL, NULL, NULL);
+                            name = L"VWClient";
+                            hr = m_pExplorer->m_pPropDisp->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_USER_DEFAULT, &dispid);
+                            if (SUCCEEDED(hr)) {
+                                CComVariant vClient2b(pClient.p);
+                                DISPID putid2b = DISPID_PROPERTYPUT;
+                                DISPPARAMS dpPut2b = { &vClient2b, &putid2b, 1, 1 };
+                                hr = m_pExplorer->m_pPropDisp->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT,
+                                    DISPATCH_PROPERTYPUT, &dpPut2b, NULL, NULL, NULL);
+                            }
                             Log("Set VWClient on props: hr=0x%08X", hr);
+
+                            // Enable selection response (dispid 3 = RespondToSelectionEvents)
+                            CComVariant vTrue((VARIANT_BOOL)VARIANT_TRUE);
+                            DISPID putidR = DISPID_PROPERTYPUT;
+                            DISPPARAMS dpR = { &vTrue, &putidR, 1, 1 };
+                            hr = m_pExplorer->m_pPropDisp->Invoke(3, IID_NULL, LOCALE_USER_DEFAULT,
+                                DISPATCH_PROPERTYPUT, &dpR, NULL, NULL, NULL);
+                            Log("Set RespondToSelection on props: hr=0x%08X", hr);
                         }
                     }
 

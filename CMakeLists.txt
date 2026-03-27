@@ -813,6 +813,7 @@ add_custom_command(
 add_library(objexplr SHARED
     vwocx/objexplr/StdAfx.cpp
     vwocx/objexplr/objexplr.cpp
+    vwstudio/vwstudio_i.c
     vwocx/objexplr/3clmlist.cpp
     vwocx/objexplr/4ClmList.cpp
     vwocx/objexplr/booldrop.cpp
@@ -853,12 +854,14 @@ target_include_directories(objexplr PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/vwocx/vwview
     ${VWORLDS_COMMON_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/vwsystem
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwstudio
 )
 
 target_compile_definitions(objexplr PRIVATE
     _WINDLL
     _USRDLL
     _AFXDLL
+    USE_CONTROLMANAGER
 )
 
 target_precompile_headers(objexplr PRIVATE
