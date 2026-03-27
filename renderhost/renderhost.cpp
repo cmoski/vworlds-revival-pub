@@ -20,6 +20,10 @@ static const CLSID CLSID_VWRenderView =
 static const CLSID CLSID_ThingTree =
     { 0xef7d6571, 0x0161, 0x11d2, { 0x88, 0xbe, 0x00, 0xc0, 0x4f, 0xc3, 0x2e, 0xf3 } };
 
+// TPList (Thing Property List) CLSID
+static const CLSID CLSID_TPList =
+    { 0xef7d655d, 0x0161, 0x11d2, { 0x88, 0xbe, 0x00, 0xc0, 0x4f, 0xc3, 0x2e, 0xf3 } };
+
 // Vwsound (Sound playback) CLSID
 static const CLSID CLSID_Vwsound =
     { 0x05769b8c, 0xa180, 0x11d1, { 0x83, 0xe9, 0x00, 0xc0, 0x4f, 0xb6, 0xfa, 0x46 } };
@@ -48,46 +52,91 @@ void Log(const char* fmt, ...)
 class CExplorerFrame : public CFrameWnd
 {
 public:
-    CWnd m_ocxWnd;
+    CWnd m_treeWnd;     // ThingTree (top)
+    CWnd m_propWnd;     // TPList property editor (bottom)
     CComPtr<IDispatch> m_pExplorerDisp;
-    static const int MARGIN = 20; // left margin so +/- buttons aren't clipped
+    CComPtr<IDispatch> m_pPropDisp;
+    static const int MARGIN = 20;
+    CComVariant m_lastTarget; // track selection for change detection
 
     BOOL CreateAndHost()
     {
         if (!Create(NULL, "VWorlds Object Explorer",
             WS_OVERLAPPEDWINDOW | WS_VISIBLE,
-            CRect(820, 50, 1220, 700)))
+            CRect(820, 50, 1250, 750)))
             return FALSE;
 
         CRect rc;
         GetClientRect(&rc);
-        rc.left += MARGIN;
+        int halfH = rc.Height() / 2;
 
-        BOOL bCreated = m_ocxWnd.CreateControl(
-            CLSID_ThingTree,
-            "ThingTree",
+        // ThingTree on top
+        BOOL bTree = m_treeWnd.CreateControl(
+            CLSID_ThingTree, "ThingTree",
             WS_CHILD | WS_VISIBLE,
-            rc,
-            this,
-            101
+            CRect(MARGIN, 0, rc.Width(), halfH),
+            this, 101
         );
-        if (!bCreated) {
-            Log("WARN: ThingTree OCX failed");
-            return FALSE;
+        if (bTree) {
+            LPUNKNOWN pUnk = m_treeWnd.GetControlUnknown();
+            if (pUnk)
+                pUnk->QueryInterface(IID_IDispatch, (void**)&m_pExplorerDisp);
+            Log("PASS: ThingTree created");
         }
 
-        LPUNKNOWN pUnk = m_ocxWnd.GetControlUnknown();
-        if (pUnk)
-            pUnk->QueryInterface(IID_IDispatch, (void**)&m_pExplorerDisp);
-        Log("PASS: Object Explorer created");
+        // TPList (property editor) on bottom
+        BOOL bProp = m_propWnd.CreateControl(
+            CLSID_TPList, "TPList",
+            WS_CHILD | WS_VISIBLE | WS_BORDER,
+            CRect(MARGIN, halfH, rc.Width(), rc.Height()),
+            this, 103
+        );
+        if (bProp) {
+            LPUNKNOWN pUnk = m_propWnd.GetControlUnknown();
+            if (pUnk)
+                pUnk->QueryInterface(IID_IDispatch, (void**)&m_pPropDisp);
+            Log("PASS: TPList (property editor) created");
+        }
+
+        // Start polling timer for selection sync
+        SetTimer(998, 500, NULL);
+
         return TRUE;
     }
 
     afx_msg void OnSize(UINT nType, int cx, int cy)
     {
         CFrameWnd::OnSize(nType, cx, cy);
-        if (m_ocxWnd.m_hWnd)
-            m_ocxWnd.MoveWindow(MARGIN, 0, cx - MARGIN, cy);
+        int halfH = cy / 2;
+        if (m_treeWnd.m_hWnd)
+            m_treeWnd.MoveWindow(MARGIN, 0, cx - MARGIN, halfH);
+        if (m_propWnd.m_hWnd)
+            m_propWnd.MoveWindow(MARGIN, halfH, cx - MARGIN, cy - halfH);
+    }
+
+    afx_msg void OnTimer(UINT_PTR nIDEvent)
+    {
+        if (nIDEvent == 998 && m_pExplorerDisp && m_pPropDisp)
+        {
+            // Poll ThingTree's TargetObjectProperty (dispid 2) and sync to TPList
+            DISPPARAMS dpGet = { NULL, NULL, 0, 0 };
+            CComVariant varTarget;
+            HRESULT hr = m_pExplorerDisp->Invoke(2, IID_NULL, LOCALE_USER_DEFAULT,
+                DISPATCH_PROPERTYGET, &dpGet, &varTarget, NULL, NULL);
+            if (SUCCEEDED(hr) && varTarget.vt == VT_DISPATCH && varTarget.pdispVal)
+            {
+                // Only update if selection changed
+                if (varTarget.pdispVal != m_lastTarget.pdispVal)
+                {
+                    m_lastTarget = varTarget;
+                    DISPID putid = DISPID_PROPERTYPUT;
+                    DISPPARAMS dpPut = { &varTarget, &putid, 1, 1 };
+                    m_pPropDisp->Invoke(2, IID_NULL, LOCALE_USER_DEFAULT,
+                        DISPATCH_PROPERTYPUT, &dpPut, NULL, NULL, NULL);
+                }
+            }
+        }
+        CFrameWnd::OnTimer(nIDEvent);
     }
 
     DECLARE_MESSAGE_MAP()
@@ -95,6 +144,7 @@ public:
 
 BEGIN_MESSAGE_MAP(CExplorerFrame, CFrameWnd)
     ON_WM_SIZE()
+    ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 // Main render window
@@ -413,17 +463,25 @@ public:
                         Log("Set VWClient on renderer: hr=0x%08X", hr);
                     }
 
-                    // Set VWClient on Object Explorer too
-                    if (m_pExplorer && m_pExplorer->m_pExplorerDisp) {
-                        name = L"VWClient";
-                        hr = m_pExplorer->m_pExplorerDisp->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_USER_DEFAULT, &dispid);
-                        if (SUCCEEDED(hr)) {
+                    // Set VWClient on Object Explorer (ThingTree + TPList)
+                    if (m_pExplorer) {
+                        // ThingTree VWClient
+                        if (m_pExplorer->m_pExplorerDisp) {
                             CComVariant vClient2(pClient.p);
                             DISPID putid2 = DISPID_PROPERTYPUT;
                             DISPPARAMS dpPut2 = { &vClient2, &putid2, 1, 1 };
-                            hr = m_pExplorer->m_pExplorerDisp->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT,
+                            hr = m_pExplorer->m_pExplorerDisp->Invoke(1, IID_NULL, LOCALE_USER_DEFAULT,
                                 DISPATCH_PROPERTYPUT, &dpPut2, NULL, NULL, NULL);
-                            Log("Set VWClient on explorer: hr=0x%08X", hr);
+                            Log("Set VWClient on tree: hr=0x%08X", hr);
+                        }
+                        // TPList VWClient (dispid 1)
+                        if (m_pExplorer->m_pPropDisp) {
+                            CComVariant vClient2b(pClient.p);
+                            DISPID putid2b = DISPID_PROPERTYPUT;
+                            DISPPARAMS dpPut2b = { &vClient2b, &putid2b, 1, 1 };
+                            hr = m_pExplorer->m_pPropDisp->Invoke(1, IID_NULL, LOCALE_USER_DEFAULT,
+                                DISPATCH_PROPERTYPUT, &dpPut2b, NULL, NULL, NULL);
+                            Log("Set VWClient on props: hr=0x%08X", hr);
                         }
                     }
 
