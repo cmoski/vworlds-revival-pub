@@ -56,9 +56,9 @@ public:
     CWnd m_propWnd;     // TPList property editor (bottom)
     CComPtr<IDispatch> m_pExplorerDisp;
     CComPtr<IDispatch> m_pPropDisp;
-    CComPtr<IDispatch> m_pRendererDisp; // ref to render view for selection polling
+    CComPtr<IDispatch> m_pWorldDisp; // world for deferred Global lookup
     static const int MARGIN = 20;
-    CComVariant m_lastTarget; // track selection for change detection
+    CComVariant m_lastTarget;
 
     BOOL CreateAndHost()
     {
@@ -96,9 +96,7 @@ public:
             LPUNKNOWN pUnk = m_propWnd.GetControlUnknown();
             if (pUnk)
                 pUnk->QueryInterface(IID_IDispatch, (void**)&m_pPropDisp);
-            Log("PASS: TPList created, pPropDisp=%p", (IDispatch*)m_pPropDisp);
-        } else {
-            Log("FAIL: TPList creation failed");
+            Log("PASS: TPList (property editor) created");
         }
 
         // Start polling timer for selection sync
@@ -119,8 +117,48 @@ public:
 
     afx_msg void OnTimer(UINT_PTR nIDEvent)
     {
-        // Selection sync disabled for now — TPList shows world props by default
-        // TODO: wire ControlManager selection to update TPList target
+        if (nIDEvent == 997 && m_pPropDisp && m_pWorldDisp)
+        {
+            KillTimer(997);
+            HRESULT hr;
+
+            // Get Global object from world via GetIDsOfNames
+            OLECHAR* globalName = L"Global";
+            DISPID globalDispid;
+            hr = m_pWorldDisp->GetIDsOfNames(IID_NULL, &globalName, 1, LOCALE_USER_DEFAULT, &globalDispid);
+            if (FAILED(hr)) { Log("TPList: Global lookup failed hr=0x%08X", hr); }
+            else
+            {
+                DISPPARAMS dpGet = { NULL, NULL, 0, 0 };
+                CComVariant varGlobal;
+                hr = m_pWorldDisp->Invoke(globalDispid, IID_NULL, LOCALE_USER_DEFAULT,
+                    DISPATCH_PROPERTYGET, &dpGet, &varGlobal, NULL, NULL);
+
+                if (SUCCEEDED(hr) && varGlobal.vt == VT_DISPATCH && varGlobal.pdispVal)
+                {
+                    // Set TargetObjectProperty on TPList via GetIDsOfNames
+                    OLECHAR* targetName = L"TargetObjectProperty";
+                    DISPID targetDispid;
+                    hr = m_pPropDisp->GetIDsOfNames(IID_NULL, &targetName, 1, LOCALE_USER_DEFAULT, &targetDispid);
+                    if (SUCCEEDED(hr))
+                    {
+                        DISPID putid = DISPID_PROPERTYPUT;
+                        DISPPARAMS dpPut = { &varGlobal, &putid, 1, 1 };
+                        hr = m_pPropDisp->Invoke(targetDispid, IID_NULL, LOCALE_USER_DEFAULT,
+                            DISPATCH_PROPERTYPUT, &dpPut, NULL, NULL, NULL);
+                        Log("TPList: Set TargetObjectProperty to Global: hr=0x%08X", hr);
+                    }
+                    else
+                    {
+                        Log("TPList: GetIDsOfNames(TargetObjectProperty) failed hr=0x%08X", hr);
+                    }
+                }
+                else
+                {
+                    Log("TPList: Global get failed hr=0x%08X vt=%d", hr, varGlobal.vt);
+                }
+            }
+        }
         CFrameWnd::OnTimer(nIDEvent);
     }
 
@@ -310,9 +348,6 @@ public:
             delete m_pExplorer;
             m_pExplorer = NULL;
         }
-        // Give explorer a reference to render view for selection polling
-        if (m_pExplorer && m_pFrame->m_pRendererDisp)
-            m_pExplorer->m_pRendererDisp = m_pFrame->m_pRendererDisp;
 
         // Auto-connect if requested
         if (m_autoconnect && m_pFrame->m_pRendererDisp) {
@@ -462,31 +497,11 @@ public:
                                 DISPATCH_PROPERTYPUT, &dpPut2, NULL, NULL, NULL);
                             Log("Set VWClient on tree: hr=0x%08X", hr);
                         }
-                        // TPList — set VWClient via base class (PropEd) dispatch
-                        // TPList dispid 1 = SelectionList, but the base PropEd's VWClient
-                        // is accessible via GetIDsOfNames which chains to the base map
+                        // Defer TPList population — set TargetObjectProperty to Global after world loads
                         if (m_pExplorer->m_pPropDisp) {
-                            // Try direct dispid approach — set via base class VWClient
-                            // MFC dispatch chaining: GetIDsOfNames("VWClient") finds it in PropEd base
-                            name = L"VWClient";
-                            hr = m_pExplorer->m_pPropDisp->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_USER_DEFAULT, &dispid);
-                            Log("TPList VWClient dispid lookup: hr=0x%08X dispid=%d", hr, SUCCEEDED(hr) ? dispid : -1);
-                            if (SUCCEEDED(hr)) {
-                                CComVariant vClient2b(pClient.p);
-                                DISPID putid2b = DISPID_PROPERTYPUT;
-                                DISPPARAMS dpPut2b = { &vClient2b, &putid2b, 1, 1 };
-                                hr = m_pExplorer->m_pPropDisp->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT,
-                                    DISPATCH_PROPERTYPUT, &dpPut2b, NULL, NULL, NULL);
-                            }
-                            Log("Set VWClient on props: hr=0x%08X", hr);
-
-                            // Enable selection response (dispid 3 = RespondToSelectionEvents)
-                            CComVariant vTrue((VARIANT_BOOL)VARIANT_TRUE);
-                            DISPID putidR = DISPID_PROPERTYPUT;
-                            DISPPARAMS dpR = { &vTrue, &putidR, 1, 1 };
-                            hr = m_pExplorer->m_pPropDisp->Invoke(3, IID_NULL, LOCALE_USER_DEFAULT,
-                                DISPATCH_PROPERTYPUT, &dpR, NULL, NULL, NULL);
-                            Log("Set RespondToSelection on props: hr=0x%08X", hr);
+                            m_pExplorer->m_pWorldDisp = pWorld;
+                            m_pExplorer->SetTimer(997, 3000, NULL);
+                            Log("TPList: deferred TargetObjectProperty binding (timer 997, 3s)");
                         }
                     }
 
