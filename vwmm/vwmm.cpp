@@ -1,4 +1,4 @@
-// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+// Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved.
 // In installing/viewing this source code, you agree to the terms of the
 // Microsoft Research Source License (MSRSL) included in the root of this source tree
 // and available from http://www.vworlds.org/license.asp.
@@ -70,9 +70,9 @@ interface IWorld;
 #include "VWPkTl.h"
 
 // tools
-//#include "vwbufo.h"
-//#include "vw3dbufo.h"
-//#include "vwsoundo.h"
+#include "vwbufo.h"
+#include "vw3dbufo.h"
+#include "vwsoundo.h"
 
 // modules
 #include "vwmmexo.h"
@@ -129,7 +129,12 @@ interface IWorld;
 #include "vwpktool_i.c"
 
 // tools
-//#include "vwsound_i.c"
+// VWSound IIDs (from vwsound_i.c)
+#include "vwsound_i.c"
+// VWSound CLSIDs (in vwmm.idl coclasses but not generated into _i.c)
+DEFINE_GUID(CLSID_VWSound,       0x96732829,0x482A,0x11D0,0x89,0xAB,0x00,0xA0,0xC9,0x05,0x41,0x29);
+DEFINE_GUID(CLSID_SoundBuffer,   0x9673282D,0x482A,0x11D0,0x89,0xAB,0x00,0xA0,0xC9,0x05,0x41,0x29);
+DEFINE_GUID(CLSID_Sound3DBuffer, 0x9673282F,0x482A,0x11D0,0x89,0xAB,0x00,0xA0,0xC9,0x05,0x41,0x29);
 #include "spritemn_i.c"
 
 // modules
@@ -159,9 +164,9 @@ BEGIN_OBJECT_MAP(ObjectMap)
 	OBJECT_ENTRY(CLSID_Sound, CSoundObject)	
 
 // tools
-//	OBJECT_ENTRY(CLSID_VWSound, CVWSoundObject)                           	
-//	OBJECT_ENTRY(CLSID_SoundBuffer, CSoundBufferObject)                   	
-//	OBJECT_ENTRY(CLSID_Sound3DBuffer, CSound3DBufferObject)               	
+	OBJECT_ENTRY(CLSID_VWSound, CVWSoundObject)
+	OBJECT_ENTRY(CLSID_SoundBuffer, CSoundBufferObject)
+	OBJECT_ENTRY(CLSID_Sound3DBuffer, CSound3DBufferObject)
 // graphics
 	OBJECT_ENTRY(CLSID_VWFrame, CVWFrameObject)
 	OBJECT_ENTRY(CLSID_VWGeometryCache, CVWGeometryCacheObject)

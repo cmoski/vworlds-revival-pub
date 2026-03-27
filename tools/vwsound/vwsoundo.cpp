@@ -1,4 +1,4 @@
-// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+// Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved.
 // In installing/viewing this source code, you agree to the terms of the
 // Microsoft Research Source License (MSRSL) included in the root of this source tree
 // and available from http://www.vworlds.org/license.asp.
@@ -15,7 +15,7 @@ EXTERN_C const CLSID CLSID_SoundBuffer;
 
 CComBSTR CVWSoundObject::m_bstrInetfile;
 						
-#define ReportSoundError(hr) SUCCEEDED(hr) ? hr : ReportError("VWSYSTEM.Sound", IID_IVWSound, hr, 0x700, 0x800, )
+#define ReportSoundError(hr) SUCCEEDED(hr) ? hr : ReportError("VWSYSTEM.Sound", IID_IVWSound, hr, 0x700, 0x800)
 
 /////////////////////////////////////////////////////////////////////////////
 // ErrorInfo stuff
@@ -480,8 +480,8 @@ HRESULT CVWSoundObject::LoadSoundBuffer( CString& strFile, BOOL b3D, IDirectSoun
 
 	// create a sound buffer
 	dsbd.dwSize = sizeof(dsbd);
-	//dsbd.dwFlags = DSBCAPS_STATIC | DSBCAPS_CTRLVOLUME | DSBCAPS_LOCSOFTWARE;
-	dsbd.dwFlags = DSBCAPS_STATIC | DSBCAPS_CTRLDEFAULT ;
+	// DSBCAPS_CTRLDEFAULT removed in modern DirectSound SDK
+	dsbd.dwFlags = DSBCAPS_STATIC | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY | DSBCAPS_CTRLPAN;
 	if (b3D)
 		dsbd.dwFlags |= DSBCAPS_CTRL3D;
 
@@ -650,7 +650,7 @@ HRESULT CVWSoundObject::CreateMapping( CString& strFile, void **ppvMapping )
 
 		if (FAILED(hr = pInetfile->FindCachedFile(bstrFile, &bstrURLPath.m_str, &bstrFilePath.m_str, &bFound)) || !bFound)
 		{
-			if (FAILED(hr = pInetfile->GetFileEx(bstrFile, &bstrURLPath.m_str, &bstrFilePath.m_str))) 
+			if (FAILED(hr = pInetfile->GetFileEx(bstrFile, VARIANT_FALSE, &bstrURLPath.m_str, &bstrFilePath.m_str)))
 			{
 				m_pClient->Report(CComBSTR(CString("Failed to download file: ") + CString(bstrFile)), -1);
 				goto ERROR_ENCOUNTERED;

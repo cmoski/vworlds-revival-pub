@@ -1013,6 +1013,12 @@ add_library(vwmm SHARED
     # -- sprite manager --
     spritemn/spritemo.cpp
 
+    # -- sound tool (DirectSound playback) --
+    tools/vwsound/vwsoundo.cpp
+    tools/vwsound/vwbufo.cpp
+    tools/vwsound/vw3dbufo.cpp
+    tools/vwsound/util.cpp
+
     # -- module/mm (multimedia exemplar implementations) --
     module/mm/mmthing.cpp
     module/mm/mmavatar.cpp
@@ -1070,6 +1076,7 @@ target_include_directories(vwmm PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/property/vwadata
     ${CMAKE_CURRENT_SOURCE_DIR}/property/pickdata
     ${CMAKE_CURRENT_SOURCE_DIR}/property/sound
+    ${CMAKE_CURRENT_SOURCE_DIR}/tools/vwsound
     ${CMAKE_CURRENT_SOURCE_DIR}/uitools/vwpktool
     ${CMAKE_CURRENT_SOURCE_DIR}/uitools/vwnvtool
     ${CMAKE_CURRENT_SOURCE_DIR}/d2d
@@ -1097,6 +1104,7 @@ target_link_libraries(vwmm PRIVATE
     vwsystem
     d3drm
     ddraw
+    dsound
     dxguid
     winmm
     uuid
