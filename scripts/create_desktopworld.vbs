@@ -107,6 +107,18 @@ G "MG Thing2",           M & "thing2.X",         0.0, 0.0,  0.0,  0.0, 0.0, 1.0
 G "MG Thing4",           M & "thing4.X",         0.0, 0.0,  0.0,  0.0, 0.0, 1.0
 G "MG Thing5",           M & "thing5.X",         0.0, 0.0,  0.0,  0.0, 0.0, 1.0
 
+' === SOUNDS ===
+WScript.Echo "Adding sounds..."
+' SetSound args: waveURL, isLooping, volume, frequency, pan
+' Sound path relative to ContentPath\Worlds\DesktopWorld\
+LobbyRm.SetSound "sounds\chimes.wav", True, 0, 0, 0
+If Err.Number <> 0 Then
+    WScript.Echo "  Room sound: " & Err.Description & " (0x" & Hex(Err.Number) & ")"
+    Err.Clear
+Else
+    WScript.Echo "  Lobby ambient: chimes.wav (looping)"
+End If
+
 WScript.Echo objCount & " objects placed"
 WScript.Echo "Done!"
 WScript.Quit 0

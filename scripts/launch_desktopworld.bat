@@ -33,10 +33,13 @@ if not exist "%WORLDS%\desktopworld.vwc" (
     exit /b 1
 )
 
+set CDB="C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\cdb.exe"
+
 echo [4/4] Launching...
-start "VWorlds Server" "%BUILD%\serverV2.exe"
+start "VWorlds Server (cdb)" %CDB% -g -G -c "sxe -c \".echo ===SERVER ASSERT===;kp 5;g\" asrt;g" "%BUILD%\serverV2.exe"
 timeout /t 3 /nobreak >nul
-"%BUILD%\renderhost.exe" --trace --autoconnect --server localhost --world DesktopWorld --user Explorer
+%CDB% -g -G -c "sxe -c \".echo ===ASSERT===;kp 5;g\" asrt;g" "%BUILD%\renderhost.exe" --trace --autoconnect --server localhost --world DesktopWorld --user Explorer
 
 taskkill /f /im serverV2.exe 2>nul
+taskkill /f /im cdb.exe 2>nul
 pause

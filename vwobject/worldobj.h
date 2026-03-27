@@ -1750,7 +1750,7 @@ ERROR_ENCOUNTERED:
 			CObjectPropertyPtr PropPtr = *pDest;
 			CThingPtr ThingPtr = *pDest;
 
-			TRACE("CloneProperty: VT_DISPATCH, PropPtr=%p, ThingPtr=%p\n", (IObjectProperty*)PropPtr, (IThing*)ThingPtr);
+			// CloneProperty diagnostic traces removed — use VWTRACE if needed
 
 			// if it's an objectproperty, but not a thing
 			if (PropPtr != NULL && ThingPtr == NULL)
@@ -1786,27 +1786,23 @@ ERROR_ENCOUNTERED:
 				// This should clone IObjectPropertys, but not referenced things...
 				// remember IThings will not be cloned, but referenced
 				hr = MarshallProperty(*pDest, MARSHALL_BYID | MARSHALL_BYREF | MARSHALL_TOMEMORY, pMarshall);
-				TRACE("CloneProperty: MarshallProperty hr=0x%08X\n", hr);
-				if (FAILED(hr))
+					if (FAILED(hr))
 					goto ERROR_ENCOUNTERED;
 
 				// convert pbuffer to pUbuffer
 				hr = pMarshall->Detach(&pbyte, &lLen);
-				TRACE("CloneProperty: Detach hr=0x%08X, len=%lu\n", hr, lLen);
-				if (FAILED(hr))
+					if (FAILED(hr))
 					goto ERROR_ENCOUNTERED;
 
 				hr = pUnMarshall->Attach(pbyte, lLen);
-				TRACE("CloneProperty: Attach hr=0x%08X\n", hr);
-				if (FAILED(hr))
+					if (FAILED(hr))
 					goto ERROR_ENCOUNTERED;
 
 				::VariantClear(pDest);
 
 				// Unmarshall back into the destination (in place, actually)
 				hr = UnMarshallProperty(pUnMarshall, pDest);
-				TRACE("CloneProperty: UnMarshallProperty hr=0x%08X, vt=%d\n", hr, pDest->vt);
-				if (FAILED(hr))
+					if (FAILED(hr))
 					goto ERROR_ENCOUNTERED;
 
 ERROR_ENCOUNTERED:
