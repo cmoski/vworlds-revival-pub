@@ -1323,6 +1323,33 @@ target_link_libraries(renderhost PRIVATE
 )
 
 # =============================================================================
+# webclient.exe - Original HTML client hosted in WebBrowser control
+# =============================================================================
+
+add_executable(webclient WIN32
+    webclient/webclient.cpp
+)
+
+target_compile_definitions(webclient PRIVATE
+    _ATL_APARTMENT_THREADED
+    _AFXDLL
+    _ATL_ALLOW_DEPRECATED_FUNCTIONS
+)
+
+set_target_properties(webclient PROPERTIES DISABLE_PRECOMPILE_HEADERS ON)
+
+target_link_libraries(webclient PRIVATE
+    ole32
+    oleaut32
+    uuid
+    user32
+    gdi32
+    shell32
+    advapi32
+    comdlg32
+)
+
+# =============================================================================
 # Summary
 # =============================================================================
 message(STATUS "")
