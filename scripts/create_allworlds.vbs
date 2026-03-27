@@ -69,8 +69,7 @@ Case "gallery"
     G "Wall1",     GL & "wall1gl.x",     3.34,1.97, 2.73, 0.0, 0.0,-1.0
     G "Wall2",     GL & "wall2gl.x",     2.83,2.0, -3.34, 0.0, 0.0, 1.0
     G "Wall3",     GL & "wall3gl.x",    15.92,2.0, -7.93, 0.0, 0.0, 1.0
-    G "Ramp1",     GL & "ramp1gl.x",    -2.04,0.65,-3.34, 0.0, 0.0, 1.0
-    G "Ramp2",     GL & "ramp2gl.x",     9.68,0.65,-3.34, 0.0, 0.0, 1.0
+    ' ramp1gl.x and ramp2gl.x not shipped in Gallery content
 
 Case "home"
     Const HM = "SDK\Library\Models\_HomeCl\"

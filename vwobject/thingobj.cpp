@@ -2405,6 +2405,19 @@ STDMETHODIMP CThingObject::get_Property(BSTR bstrPropertyName, VARIANT* pvar)
 
 	hr = get_PropertyExt(bstrPropertyName, nHashOrig, NULL, pvar);
 
+	// Log first property-not-found per property name (suppressed by ReportError rate limiter)
+	if (hr == VWOBJECT_E_PROPERTYNOTEXIST)
+	{
+		static CString s_lastPropName;
+		CString strPropName(bstrPropertyName);
+		if (strPropName != s_lastPropName)
+		{
+			TRACE("get_Property: '%s' not found on id=%d\n",
+				(LPCSTR)CStringA(bstrPropertyName), m_lObjectID);
+			s_lastPropName = strPropName;
+		}
+	}
+
 	return ReportThingError(hr);
 }
 
