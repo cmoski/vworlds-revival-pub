@@ -75,6 +75,7 @@ If Err.Number <> 0 Then
 Else
     World.Global.DefaultRoom = Room
     Err.Clear
+    Room.GeometryName = "" : Err.Clear
     WScript.Echo "Room created"
 End If
 

@@ -32,6 +32,8 @@ World.Global.DefaultAvatarExemplar.InitializeSpriteGraphics "default.spr", 0.0, 
 Set Room = World.CreateInstance("Main", World.Exemplar("Room"))
 If Err.Number <> 0 Then : WScript.Echo "FAIL Room: " & Err.Description : WScript.Quit 1 : End If
 World.Global.DefaultRoom = Room : Err.Clear
+' Room should have no visible geometry — lobby/office/etc geometry comes from artifacts inside it
+Room.GeometryName = "" : Err.Clear
 
 objCount = 0
 Sub G(name, geom, px, py, pz, dx, dy, dz)

@@ -30,6 +30,7 @@ World.Global.DefaultAvatarExemplar.InitializeSpriteGraphics "default.spr", 0.0, 
 Set LobbyRm = World.CreateInstance("Lobby Room", World.Exemplar("Room"))
 If Err.Number <> 0 Then : WScript.Echo "FAIL Room: " & Err.Description : WScript.Quit 1 : End If
 World.Global.DefaultRoom = LobbyRm : Err.Clear
+LobbyRm.GeometryName = "" : Err.Clear
 WScript.Echo "Room OK"
 
 ' Helper: create artifact with InitializeGraphics (geomName, posX, posY, posZ, dirX, dirY, dirZ)
