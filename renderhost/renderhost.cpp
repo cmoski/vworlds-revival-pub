@@ -407,16 +407,15 @@ public:
 
                     // Set VWClient + RenderRoot on Vwsound control
                     if (m_pFrame->m_pSoundDisp) {
-                        // VWClient
-                        name = L"VWClient";
-                        hr = m_pFrame->m_pSoundDisp->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_USER_DEFAULT, &dispid);
-                        if (SUCCEEDED(hr)) {
+                        // VWClient — use dispid 1 directly (ODL: [id(1)] IDispatch* VWClient)
+                        // GetIDsOfNames fails due to MFC dispatch map inheritance
+                        {
                             CComVariant vClient3(pClient.p);
                             DISPID putid3 = DISPID_PROPERTYPUT;
                             DISPPARAMS dpPut3 = { &vClient3, &putid3, 1, 1 };
-                            hr = m_pFrame->m_pSoundDisp->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT,
+                            hr = m_pFrame->m_pSoundDisp->Invoke(1, IID_NULL, LOCALE_USER_DEFAULT,
                                 DISPATCH_PROPERTYPUT, &dpPut3, NULL, NULL, NULL);
-                            Log("Set VWClient on sound: hr=0x%08X", hr);
+                            Log("Set VWClient on sound (dispid=1): hr=0x%08X", hr);
                         }
 
                         // RenderRoot (render view OCX dispatch for 3D listener position)
@@ -429,6 +428,19 @@ public:
                             hr = m_pFrame->m_pSoundDisp->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT,
                                 DISPATCH_PROPERTYPUT, &dpPut4, NULL, NULL, NULL);
                             Log("Set RenderRoot on sound: hr=0x%08X", hr);
+                        }
+
+                        // Trigger sound refresh by toggling Enable
+                        // (VWClient was set after connection, so OnUserConnect was missed)
+                        name = L"Enable";
+                        hr = m_pFrame->m_pSoundDisp->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_USER_DEFAULT, &dispid);
+                        if (SUCCEEDED(hr)) {
+                            CComVariant vTrue((VARIANT_BOOL)VARIANT_TRUE);
+                            DISPID putid5 = DISPID_PROPERTYPUT;
+                            DISPPARAMS dpPut5 = { &vTrue, &putid5, 1, 1 };
+                            hr = m_pFrame->m_pSoundDisp->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT,
+                                DISPATCH_PROPERTYPUT, &dpPut5, NULL, NULL, NULL);
+                            Log("Set Enable on sound (trigger refresh): hr=0x%08X", hr);
                         }
                     }
                 }

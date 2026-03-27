@@ -1,4 +1,4 @@
-// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+// Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved.
 // In installing/viewing this source code, you agree to the terms of the
 // Microsoft Research Source License (MSRSL) included in the root of this source tree
 // and available from http://www.vworlds.org/license.asp.
@@ -982,16 +982,22 @@ void  CVwsoundCtrl::CheckThingForSound(IThing *pThing)
 	static CComBSTR bstrClientSound("ClientSound");
 	CComVariant var;
 	CThingPtr pUser;
-	
+
 	if (m_pWorld)
 	{
 		m_pWorld->get_User(&pUser.p);
-		
+
 		if (!IsIgnoring(pUser,pThing))
 		{
-			if (SUCCEEDED(pThing->get_Property(bstrSound, &var)))
+			HRESULT hrSound = pThing->get_Property(bstrSound, &var);
+			if (SUCCEEDED(hrSound))
+			{
+				long id = 0;
+				pThing->get_ID(&id);
+				TRACE("CheckThingForSound: found Sound on id=%d, vt=%d\n", id, var.vt);
 				RenderSound(pThing, STANDARDMAP,var , -1, NULL);
-			
+			}
+
 			var.Clear();
 
 			if (SUCCEEDED(pThing->get_Property(bstrClientSound, &var)))
