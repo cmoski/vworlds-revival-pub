@@ -11,10 +11,16 @@
 CComModule _Module;
 #include <atlcom.h>
 #include <stdio.h>
+#include <activscp.h>   // IActiveScript, IActiveScriptParse
 
 // VWorlds COM interfaces for ControlManager selection polling
 #include <vwobject.h>    // IWorld, IThing, IPropertyList
 #include <vwuiobjs.h>    // IVWControlManager
+
+// VBScript engine CLSID
+// {B54F3741-5B07-11cf-A4B0-00AA004A55E8}
+static const CLSID CLSID_VBScript =
+    { 0xb54f3741, 0x5b07, 0x11cf, { 0xa4, 0xb0, 0x00, 0xaa, 0x00, 0x4a, 0x55, 0xe8 } };
 
 // VWRenderView CLSID
 static const CLSID CLSID_VWRenderView =
@@ -52,6 +58,246 @@ void Log(const char* fmt, ...)
 }
 
 // Main frame window hosting the OCX
+// =====================================================================
+// Command Window — VBScript console
+// =====================================================================
+
+// Minimal IActiveScriptSite for hosting VBScript in renderhost
+class CMinimalScriptSite : public IActiveScriptSite
+{
+    ULONG m_cRef;
+    CString* m_pOutput;  // append output here
+    CComPtr<IUnknown> m_pWorldUnk;
+public:
+    bool m_bSuppressErrors;  // suppress during expression-attempt
+    CMinimalScriptSite(CString* pOutput, IUnknown* pWorldUnk)
+        : m_cRef(1), m_pOutput(pOutput), m_pWorldUnk(pWorldUnk), m_bSuppressErrors(false) {}
+
+    // IUnknown
+    STDMETHOD(QueryInterface)(REFIID riid, void** ppv) {
+        if (riid == IID_IUnknown || riid == IID_IActiveScriptSite) {
+            *ppv = static_cast<IActiveScriptSite*>(this);
+            AddRef();
+            return S_OK;
+        }
+        *ppv = NULL;
+        return E_NOINTERFACE;
+    }
+    STDMETHOD_(ULONG, AddRef)() { return ++m_cRef; }
+    STDMETHOD_(ULONG, Release)() {
+        ULONG c = --m_cRef;
+        if (c == 0) delete this;
+        return c;
+    }
+
+    // IActiveScriptSite
+    STDMETHOD(GetLCID)(LCID* plcid) { *plcid = LOCALE_USER_DEFAULT; return S_OK; }
+    STDMETHOD(GetItemInfo)(LPCOLESTR pstrName, DWORD dwReturnMask, IUnknown** ppunkItem, ITypeInfo** ppti) {
+        if (ppti) *ppti = NULL;
+        if (ppunkItem) *ppunkItem = NULL;
+        if (_wcsicmp(pstrName, L"World") == 0) {
+            if (dwReturnMask & SCRIPTINFO_IUNKNOWN && ppunkItem && m_pWorldUnk) {
+                *ppunkItem = m_pWorldUnk;
+                (*ppunkItem)->AddRef();
+                return S_OK;
+            }
+        }
+        return TYPE_E_ELEMENTNOTFOUND;
+    }
+    STDMETHOD(GetDocVersionString)(BSTR* pbstrVersion) { *pbstrVersion = SysAllocString(L"1.0"); return S_OK; }
+    STDMETHOD(OnScriptTerminate)(const VARIANT*, const EXCEPINFO*) { return S_OK; }
+    STDMETHOD(OnStateChange)(SCRIPTSTATE) { return S_OK; }
+    STDMETHOD(OnScriptError)(IActiveScriptError* pError) {
+        if (m_bSuppressErrors) return S_OK;
+        EXCEPINFO ei = {};
+        pError->GetExceptionInfo(&ei);
+        DWORD ctx; ULONG line; LONG ch;
+        pError->GetSourcePosition(&ctx, &line, &ch);
+        CString msg;
+        if (ei.bstrDescription)
+            msg.Format("Error: %S", ei.bstrDescription);
+        else
+            msg.Format("Error (line %d)", line + 1);
+        if (m_pOutput) *m_pOutput += msg + "\r\n";
+        SysFreeString(ei.bstrSource);
+        SysFreeString(ei.bstrDescription);
+        SysFreeString(ei.bstrHelpFile);
+        return S_OK;
+    }
+    STDMETHOD(OnEnterScript)() { return S_OK; }
+    STDMETHOD(OnLeaveScript)() { return S_OK; }
+};
+
+// Command Window frame
+class CCommandFrame : public CFrameWnd
+{
+public:
+    CEdit m_editOutput;
+    CEdit m_editInput;
+    CFont m_font;
+    CString m_outputText;
+    CComPtr<IActiveScript> m_pScript;
+    CComPtr<IActiveScriptParse> m_pParse;
+    CMinimalScriptSite* m_pSite;
+    CComPtr<IDispatch> m_pWorldDisp;
+
+    CCommandFrame() : m_pSite(NULL) {}
+
+    BOOL CreateAndHost(IDispatch* pWorldDisp)
+    {
+        m_pWorldDisp = pWorldDisp;
+
+        if (!Create(NULL, "VWorlds Command Window",
+            WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+            CRect(100, 400, 560, 720)))
+            return FALSE;
+
+        CRect rc;
+        GetClientRect(&rc);
+
+        // Monospace font
+        m_font.CreateFont(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+            DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
+
+        // Output pane (top ~85%)
+        int inputH = 24;
+        m_editOutput.Create(
+            WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_BORDER |
+            ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
+            CRect(4, 4, rc.Width() - 4, rc.Height() - inputH - 8),
+            this, 201);
+        m_editOutput.SetFont(&m_font);
+
+        // Input pane (bottom)
+        m_editInput.Create(
+            WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
+            CRect(4, rc.Height() - inputH - 4, rc.Width() - 4, rc.Height() - 4),
+            this, 202);
+        m_editInput.SetFont(&m_font);
+        m_editInput.SetFocus();
+
+        // Initialize VBScript engine
+        InitScriptEngine();
+
+        m_outputText = "VWorlds Command Window\r\nType VBScript commands. World object is available.\r\n\r\n";
+        m_editOutput.SetWindowText(m_outputText);
+
+        return TRUE;
+    }
+
+    void InitScriptEngine()
+    {
+        HRESULT hr;
+
+        // Create VBScript engine
+        hr = CoCreateInstance(CLSID_VBScript, NULL, CLSCTX_INPROC_SERVER,
+            IID_IActiveScript, (void**)&m_pScript);
+        if (FAILED(hr)) { Log("CmdWin: CoCreateInstance(VBScript) failed hr=0x%08X", hr); return; }
+
+        hr = m_pScript->QueryInterface(IID_IActiveScriptParse, (void**)&m_pParse);
+        if (FAILED(hr)) { Log("CmdWin: QI(IActiveScriptParse) failed hr=0x%08X", hr); return; }
+
+        // Create script site
+        m_pSite = new CMinimalScriptSite(&m_outputText, m_pWorldDisp);
+        hr = m_pScript->SetScriptSite(m_pSite);
+        if (FAILED(hr)) { Log("CmdWin: SetScriptSite failed hr=0x%08X", hr); return; }
+
+        hr = m_pParse->InitNew();
+        if (FAILED(hr)) { Log("CmdWin: InitNew failed hr=0x%08X", hr); return; }
+
+        // Add "World" as a named item
+        hr = m_pScript->AddNamedItem(L"World", SCRIPTITEM_ISVISIBLE | SCRIPTITEM_GLOBALMEMBERS);
+        if (FAILED(hr)) { Log("CmdWin: AddNamedItem(World) failed hr=0x%08X", hr); return; }
+
+        // Start the engine
+        hr = m_pScript->SetScriptState(SCRIPTSTATE_CONNECTED);
+        if (FAILED(hr)) { Log("CmdWin: SetScriptState failed hr=0x%08X", hr); return; }
+
+        Log("CmdWin: VBScript engine initialized OK");
+    }
+
+    void ExecuteCommand(const CString& cmd)
+    {
+        if (!m_pParse) return;
+
+        // Show command in output
+        m_outputText += ">> " + cmd + "\r\n";
+
+        // Try as statement first (assignments like x.Fog = True must be statements)
+        EXCEPINFO ei = {};
+        CComVariant varResult;
+        HRESULT hr = m_pParse->ParseScriptText(
+            CComBSTR(cmd), NULL, NULL, NULL, 0, 0,
+            0, NULL, &ei);
+
+        if (SUCCEEDED(hr)) {
+            // Statement worked — no result to show
+            varResult.vt = VT_EMPTY;
+        } else {
+            // Statement failed — retry as expression (for World.Version etc.)
+            m_pSite->m_bSuppressErrors = true;
+            memset(&ei, 0, sizeof(ei));
+            HRESULT hr2 = m_pParse->ParseScriptText(
+                CComBSTR(cmd), NULL, NULL, NULL, 0, 0,
+                SCRIPTTEXT_ISEXPRESSION,
+                &varResult, &ei);
+            m_pSite->m_bSuppressErrors = false;
+            if (SUCCEEDED(hr2)) hr = hr2;  // expression succeeded
+        }
+
+        if (SUCCEEDED(hr)) {
+            // Show result if expression returned a value
+            if (varResult.vt != VT_EMPTY) {
+                CComVariant varStr;
+                if (SUCCEEDED(VariantChangeType(&varStr, &varResult, 0, VT_BSTR))) {
+                    CString strResult(varStr.bstrVal);
+                    m_outputText += strResult + "\r\n";
+                }
+            }
+            m_outputText += "OK\r\n";
+        }
+
+        // Update display
+        m_editOutput.SetWindowText(m_outputText);
+        m_editOutput.LineScroll(m_editOutput.GetLineCount());
+    }
+
+    afx_msg void OnSize(UINT nType, int cx, int cy)
+    {
+        CFrameWnd::OnSize(nType, cx, cy);
+        int inputH = 24;
+        if (m_editOutput.m_hWnd)
+            m_editOutput.MoveWindow(4, 4, cx - 8, cy - inputH - 12);
+        if (m_editInput.m_hWnd)
+            m_editInput.MoveWindow(4, cy - inputH - 4, cx - 8, inputH);
+    }
+
+    virtual BOOL PreTranslateMessage(MSG* pMsg)
+    {
+        // Enter key in input = execute
+        if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_RETURN &&
+            pMsg->hwnd == m_editInput.m_hWnd)
+        {
+            CString cmd;
+            m_editInput.GetWindowText(cmd);
+            cmd.Trim();
+            if (!cmd.IsEmpty()) {
+                ExecuteCommand(cmd);
+                m_editInput.SetWindowText("");
+            }
+            return TRUE;
+        }
+        return CFrameWnd::PreTranslateMessage(pMsg);
+    }
+
+    DECLARE_MESSAGE_MAP()
+};
+
+BEGIN_MESSAGE_MAP(CCommandFrame, CFrameWnd)
+    ON_WM_SIZE()
+END_MESSAGE_MAP()
+
 // Object Explorer in its own popout window
 class CExplorerFrame : public CFrameWnd
 {
@@ -341,12 +587,14 @@ class CRenderApp : public CWinApp
 public:
     CRenderFrame* m_pFrame;
     CExplorerFrame* m_pExplorer;
+    CCommandFrame* m_pCmdWin;
     CComPtr<IWorld> m_pWorld;  // for SaveDatabase
     CString m_server, m_world, m_user, m_avatar;
-    bool m_autoconnect, m_connectOnly, m_waitDebugger, m_editMode;
+    bool m_autoconnect, m_connectOnly, m_waitDebugger, m_editMode, m_cmdWin;
 
-    CRenderApp() : m_pFrame(NULL), m_pExplorer(NULL), m_autoconnect(false),
-        m_connectOnly(false), m_waitDebugger(false), m_editMode(false)
+    CRenderApp() : m_pFrame(NULL), m_pExplorer(NULL), m_pCmdWin(NULL),
+        m_autoconnect(false), m_connectOnly(false), m_waitDebugger(false),
+        m_editMode(false), m_cmdWin(false)
     {
         m_server = "localhost";
         m_world = "TestWorld";
@@ -388,6 +636,7 @@ public:
             m_avatar = rest.SpanExcluding(" ");
         }
         if (cmdLine.Find("--edit") >= 0) m_editMode = true;
+        if (cmdLine.Find("--cmdwin") >= 0) m_cmdWin = true;
 
         Log("=== VWorlds Render Host (MFC) ===");
         Log("Server: %s, World: %s, User: %s", (LPCSTR)m_server, (LPCSTR)m_world, (LPCSTR)m_user);
@@ -631,6 +880,18 @@ public:
                     if (m_editMode && m_pFrame) {
                         m_pFrame->SetTimer(999, 2000, NULL); // fire after 2 seconds
                         Log("Edit mode deferred (will activate in 2s)");
+                    }
+
+                    // Create Command Window if requested
+                    if (m_cmdWin && m_pWorld) {
+                        m_pCmdWin = new CCommandFrame();
+                        CComPtr<IDispatch> pWorldDisp;
+                        m_pWorld->QueryInterface(IID_IDispatch, (void**)&pWorldDisp);
+                        if (!m_pCmdWin->CreateAndHost(pWorldDisp)) {
+                            Log("WARN: Command Window failed to create");
+                            delete m_pCmdWin;
+                            m_pCmdWin = NULL;
+                        }
                     }
                 }
             }
