@@ -1,182 +1,111 @@
-' create_desktopworld.vbs - Create DesktopWorld with lobby + music garden geometry
+' create_desktopworld.vbs - Recreate DesktopWorld from original SDK wizard data
+' Positions extracted from SDK/wizards/world/Kits/DesktopWorld.htm
 ' Run with: C:\Windows\SysWOW64\cscript.exe /nologo create_desktopworld.vbs
 Option Explicit
 On Error Resume Next
 
-Dim Client, World, Lobby
-Dim DW_LOBBY, DW_MUSIC
+Dim Client, World, LobbyRm
+Const L = "worlds\desktopworld\models\lobby\"
+Const M = "worlds\desktopworld\models\musicgarden\"
 
-DW_LOBBY = "worlds\desktopworld\models\lobby\"
-DW_MUSIC = "worlds\desktopworld\models\musicgarden\"
-
-' Create VWClient
 Set Client = CreateObject("VWSYSTEM.Client.1")
-If Err.Number <> 0 Then
-    WScript.Echo "FAIL: " & Err.Description
-    WScript.Quit 1
-End If
-Client.Initialize
-Err.Clear
+If Err.Number <> 0 Then : WScript.Echo "FAIL: " & Err.Description : WScript.Quit 1 : End If
+Client.Initialize : Err.Clear
 
-' Create world
 Set World = Client.ConnectLocal("DesktopWorld")
-If Err.Number <> 0 Then
-    WScript.Echo "FAIL ConnectLocal: " & Err.Description
-    WScript.Quit 1
-End If
-WScript.Echo "World created: " & World.Version
+If Err.Number <> 0 Then : WScript.Echo "FAIL: " & Err.Description : WScript.Quit 1 : End If
+WScript.Echo "World: " & World.Version
 World.TraceLevel("*") = 4
 
-' Load modules
-World.CreateCOMModule "Multimedia", "VWSYSTEM.MultimediaEx.1", 3
-Err.Clear
-World.CreateCOMModule "Studio", "VWSTUDIO.StudioEx.1", 3
-Err.Clear
-World.CreateCOMModule "Foundation", "VWEXEMP.FoundationExemplars.1", 3
-Err.Clear
-WScript.Echo "Modules loaded"
+' Modules
+World.CreateCOMModule "Multimedia", "VWSYSTEM.MultimediaEx.1", 3 : Err.Clear
+World.CreateCOMModule "Studio", "VWSTUDIO.StudioEx.1", 3 : Err.Clear
+World.CreateCOMModule "Foundation", "VWEXEMP.FoundationExemplars.1", 3 : Err.Clear
+WScript.Echo "Modules OK"
 
-' Global properties
-World.Global.DefaultSpriteFile = "default.spr"
-Err.Clear
-World.Global.DefaultAvatarExemplar.InitializeSpriteGraphics "default.spr", 0.0, 1.0, 0.0, 1.0, 0.0, 0.0
-Err.Clear
+World.Global.DefaultSpriteFile = "default.spr" : Err.Clear
+World.Global.DefaultAvatarExemplar.InitializeSpriteGraphics "default.spr", 0.0, 1.0, 0.0, 1.0, 0.0, 0.0 : Err.Clear
 
-' Create the Lobby room
-Set Lobby = World.CreateInstance("Lobby", World.Exemplar("Room"))
-If Err.Number <> 0 Then
-    WScript.Echo "FAIL Room: " & Err.Description
-    WScript.Quit 1
-End If
-World.Global.DefaultRoom = Lobby
-Err.Clear
-WScript.Echo "Lobby created"
+' Room
+Set LobbyRm = World.CreateInstance("Lobby Room", World.Exemplar("Room"))
+If Err.Number <> 0 Then : WScript.Echo "FAIL Room: " & Err.Description : WScript.Quit 1 : End If
+World.Global.DefaultRoom = LobbyRm : Err.Clear
+WScript.Echo "Room OK"
 
-' ===== Helper subs =====
-Sub PlaceGeom(name, geomFile, posX, posY, posZ)
-    Dim thing
-    Set thing = World.CreateInstance(name, World.Exemplar("Artifact"))
+' Helper: create artifact with InitializeGraphics (geomName, posX, posY, posZ, dirX, dirY, dirZ)
+Dim objCount : objCount = 0
+Sub G(name, geom, px, py, pz, dx, dy, dz)
+    Dim t
+    Set t = World.CreateInstance(name, World.Exemplar("Artifact"))
     If Err.Number = 0 Then
-        thing.MoveInto Lobby
-        thing.GeometryName = geomFile
+        t.MoveInto LobbyRm
+        t.InitializeGraphics geom, px, py, pz, dx, dy, dz
         Err.Clear
-        thing.Position.X = posX
-        thing.Position.Y = posY
-        thing.Position.Z = posZ
-        Err.Clear
+        objCount = objCount + 1
     Else
+        WScript.Echo "  SKIP " & name & ": " & Err.Description
         Err.Clear
     End If
 End Sub
 
-Sub PlaceSprite(name, sprFile, posX, posY, posZ)
-    Dim thing
-    Set thing = World.CreateInstance(name, World.Exemplar("Artifact"))
-    If Err.Number = 0 Then
-        thing.MoveInto Lobby
-        thing.GeometryName = sprFile
-        Err.Clear
-        thing.Position.X = posX
-        thing.Position.Y = posY
-        thing.Position.Z = posZ
-        Err.Clear
-    Else
-        Err.Clear
-    End If
-End Sub
+WScript.Echo "Building lobby..."
 
-' ===== LOBBY FURNITURE (.x models with textures) =====
-WScript.Echo "Placing lobby tables..."
-PlaceGeom "Table1", DW_LOBBY & "table1.x", -6.0, 0.0, -4.0
-PlaceGeom "Table2", DW_LOBBY & "table2.x",  6.0, 0.0, -4.0
-PlaceGeom "Table3", DW_LOBBY & "table3.x", -6.0, 0.0,  4.0
-PlaceGeom "Table4", DW_LOBBY & "table4.x",  6.0, 0.0,  4.0
-PlaceGeom "Table5", DW_LOBBY & "table5.x",  0.0, 0.0,  0.0
+' === LOBBY STRUCTURE (walls, floor, ceiling) ===
+G "Lobby",               L & "lobby.X",          0.0, 0.31, 0.0,  0.0, 0.0, 1.0
+G "Patio walls lobby",   L & "lobbywallsG1.X",   0.0, 0.31, 0.0,  0.0, 0.0, 1.0
+G "Walls facing patio",  L & "lobbywallsG.X",    0.0, 0.31, 0.0,  0.0, 0.0, 1.0
+G "Gamewalls steps",     L & "gamewallsP.X",     0.0, 0.31, 0.0,  0.0, 0.0, 1.0
+G "Gamewalls",           L & "gamewallsL.X",     0.0, 0.31, 0.0,  0.0, 0.0, 1.0
+G "Chat Floor",          L & "floorchat.X",      0.0, 0.31, 0.0,  0.0, 0.0, 1.0
+G "Chat Furniture",      L & "chatfurniture.X",  0.0, 0.31, 0.0,  0.0, 0.0, 1.0
+G "Chat Desk",           L & "chatdsk.X",        4.77,-0.129,0.0, 0.0, 0.0, 1.0
+G "Patio walls",         L & "patiowall.X",      0.0, 0.31, 0.0,  0.0, 0.0, 1.0
+G "Patio",               L & "patio.X",          0.0, 0.31, 0.0,  0.0, 0.0, 1.0
+G "Seattle",             L & "background.X",     0.0, 0.0,  0.0,  0.0, 0.0, 1.0
+G "Ceiling",             L & "ceiling.X",        0.0, 0.3,  0.0,  0.0, 0.0, 1.0
+G "Overview Mask",       L & "overvwedge.X",     0.0, 0.16, 0.0,  0.0, 0.0, 1.0
+G "Roof",                L & "roof.X",           0.0, 0.355,0.0,  0.0, 0.0, 1.0
+G "Cloud",               L & "cloud.X",          0.0, 1.0,  0.0,  0.0, 0.0, 1.0
 
-' ===== LOBBY SPRITES (2D characters and items) =====
-WScript.Echo "Placing lobby characters..."
+' === LOBBY OBJECTS (furniture, posters, gadgets) ===
+G "Logo",                L & "logo.X",           0.0, 0.0,  0.0,  0.0, 0.0, 1.0
+G "VW Info",             L & "postpat.X",        0.0, 0.0,  0.0,  0.0, 0.0, 1.0
+G "Seattle News",        L & "desknews.X",       4.0, 1.3,  15.0, -0.05,0.0,-1.0
+G "Rolodex",             L & "deskrolo.X",       12.0,1.125,15.2, 0.05,0.0, 1.0
+G "FAQ Computer",        L & "puter2.X",         11.0,1.125,15.1, -0.05,0.0,-1.0
+G "Movie Poster",        L & "postmov.X",        15.2,0.0, -10.0, -1.0,0.0, 0.0
+G "Music View",          L & "musicview.X",      0.0, 0.32, 0.0,  0.0, 0.0, 1.0
+G "BBS Poster",          L & "postbbs.X",        0.0, 0.32, 0.0,  0.0, 0.0, 1.0
+G "Travel Poster",       L & "posttrv.X",        0.0, 0.32, 0.0,  0.0, 0.0, 1.0
+G "Transportation",      L & "transpo.X",        14.5,1.156,2.4,  0.8, 0.0, 1.0
+G "DW News",             L & "desknews.X",       16.7,1.43, 2.9,  -0.6,0.0, 1.0
+G "Gallery",             L & "housing.X",        13.2,1.3, -2.0,  0.5, 0.0,-1.0
 
-' Tab sprites (table-top items)
-PlaceSprite "Tab1", DW_LOBBY & "tab1.spr", -6.0, 1.0, -4.0
-PlaceSprite "Tab2", DW_LOBBY & "tab2.spr",  6.0, 1.0, -4.0
-PlaceSprite "Tab3", DW_LOBBY & "tab3.spr", -6.0, 1.0,  4.0
-PlaceSprite "Tab4", DW_LOBBY & "tab4.spr",  6.0, 1.0,  4.0
-PlaceSprite "Tab5", DW_LOBBY & "tab5.spr",  0.0, 1.0,  0.0
+' === TABLES ===
+G "Table1",              L & "table1.x",         0.0, 0.0,  0.0,  0.0, 0.0, 1.0
+G "Table2",              L & "table2.x",         0.0, 0.0,  0.0,  0.0, 0.0, 1.0
+G "Table3",              L & "table3.x",         0.0, 0.0,  0.0,  0.0, 0.0, 1.0
+G "Table4",              L & "table4.x",         0.0, 0.0,  0.0,  0.0, 0.0, 1.0
+G "Table5",              L & "table5.x",         0.0, 0.0,  0.0,  0.0, 0.0, 1.0
 
-' Avatar characters scattered around lobby
-PlaceSprite "Alice1", DW_LOBBY & "alice1.spr", -3.0, 0.0, -2.0
-PlaceSprite "Betty1", DW_LOBBY & "betty1.spr",  3.0, 0.0, -2.0
-PlaceSprite "Lili1",  DW_LOBBY & "lili1.spr",  -3.0, 0.0,  2.0
-PlaceSprite "Russ1",  DW_LOBBY & "russ1.spr",   3.0, 0.0,  2.0
-PlaceSprite "Sean1",  DW_LOBBY & "sean1.spr",   0.0, 0.0, -6.0
+' === BOTS ===
+G "Phebe",               L & "bot3.spr",         8.443,1.531,17.063, 0.0,0.0,-1.0
+G "Morris",              L & "botb.spr",         14.696,1.181,0.835, -0.5,0.0,0.5
 
-' Bots
-PlaceSprite "Bot1", DW_LOBBY & "bot1.spr", -8.0, 0.0, 0.0
-PlaceSprite "Bot2", DW_LOBBY & "bot2.spr",  8.0, 0.0, 0.0
-PlaceSprite "Bot3", DW_LOBBY & "bot3.spr",  0.0, 0.0, 8.0
+' === MUSIC GARDEN ===
+WScript.Echo "Building music garden..."
+G "MG Overview",         M & "oviewpic.X",       0.3, 0.3, -2.5,  0.0, 0.0, 1.0
+G "MG Props",            M & "muscprop.X",       0.0, 1.5,  0.0,  0.0, 0.0, 1.0
+G "MG Floor",            M & "floor1.X",         0.0, 0.0,  0.0,  0.0, 0.0, 1.0
+G "MG Shaker",           M & "thing3.X",         15.0,0.0,  34.0, 1.0, 0.0, 0.0
+G "MG Sun",              M & "sun.X",            0.0, 4.0,  0.0,  0.0, 0.0, 1.0
+G "MG Ceiling",          M & "ceiling.X",        0.0, 5.0,  0.0,  0.0, 0.0, 1.0
+G "MG Easels",           M & "easels.X",         0.0, 0.0,  0.0,  0.0, 0.0, 1.0
+G "MG Thing1",           M & "thing1.X",         0.0, 0.0,  0.0,  0.0, 0.0, 1.0
+G "MG Thing2",           M & "thing2.X",         0.0, 0.0,  0.0,  0.0, 0.0, 1.0
+G "MG Thing4",           M & "thing4.X",         0.0, 0.0,  0.0,  0.0, 0.0, 1.0
+G "MG Thing5",           M & "thing5.X",         0.0, 0.0,  0.0,  0.0, 0.0, 1.0
 
-' Decorative sprites
-PlaceSprite "Graphic", DW_LOBBY & "graphic.spr", -10.0, 0.0, -6.0
-PlaceSprite "Demo",    DW_LOBBY & "demo.spr",     10.0, 0.0, -6.0
-PlaceSprite "Moods",   DW_LOBBY & "moods.spr",     0.0, 0.0, -8.0
-
-' Test sprites (sample objects)
-PlaceSprite "Test1", DW_LOBBY & "test1.spr", -10.0, 0.0,  6.0
-PlaceSprite "Test2", DW_LOBBY & "test2.spr",  -8.0, 0.0,  6.0
-PlaceSprite "Test3", DW_LOBBY & "test3.spr",  -6.0, 0.0,  6.0
-PlaceSprite "Test4", DW_LOBBY & "test4.spr",  10.0, 0.0,  6.0
-PlaceSprite "Test5", DW_LOBBY & "test5.spr",   8.0, 0.0,  6.0
-PlaceSprite "Test6", DW_LOBBY & "test6.spr",   6.0, 0.0,  6.0
-
-' ===== MUSIC GARDEN (.X models with textures) =====
-WScript.Echo "Placing music garden..."
-
-' Room structure
-PlaceGeom "MG_Floor",   DW_MUSIC & "floor1.X",   0.0, -0.1, -20.0
-PlaceGeom "MG_Ceiling", DW_MUSIC & "ceiling.X",  0.0,  5.0, -20.0
-PlaceGeom "MG_Easels",  DW_MUSIC & "easels.X",   0.0,  0.0, -20.0
-PlaceGeom "MG_Props",   DW_MUSIC & "muscprop.X",  0.0, 0.0, -20.0
-PlaceGeom "MG_Mask",    DW_MUSIC & "maskGM.X",    0.0, 0.0, -20.0
-PlaceGeom "MG_Overview", DW_MUSIC & "oviewpic.X", 0.0, 0.0, -20.0
-PlaceGeom "MG_Sun",     DW_MUSIC & "sun.X",       0.0, 4.0, -20.0
-
-' Music garden sculptures/things
-PlaceGeom "MG_Thing1",     DW_MUSIC & "thing1.X",      -4.0, 0.0, -18.0
-PlaceGeom "MG_Thing1Ball", DW_MUSIC & "thing1ball1.X",  -4.0, 1.0, -18.0
-PlaceGeom "MG_Thing2",     DW_MUSIC & "thing2.X",        4.0, 0.0, -18.0
-PlaceGeom "MG_Thing3",     DW_MUSIC & "thing3.X",       -4.0, 0.0, -22.0
-PlaceGeom "MG_Thing4",     DW_MUSIC & "thing4.X",        4.0, 0.0, -22.0
-PlaceGeom "MG_Thing41",    DW_MUSIC & "thing41.X",       2.0, 0.0, -22.0
-PlaceGeom "MG_Thing42",    DW_MUSIC & "thing42.X",       6.0, 0.0, -22.0
-PlaceGeom "MG_Thing43",    DW_MUSIC & "thing43.X",       2.0, 0.0, -24.0
-PlaceGeom "MG_Thing44",    DW_MUSIC & "thing44.X",       6.0, 0.0, -24.0
-PlaceGeom "MG_Thing45",    DW_MUSIC & "thing45.X",       4.0, 0.0, -26.0
-PlaceGeom "MG_Thing5",     DW_MUSIC & "thing5.X",        0.0, 0.0, -24.0
-
-WScript.Echo "Placed " & 5 + 11 + 12 + 7 + 11 & " objects"
-
-' Room boundary (large area covering lobby + music garden)
-Dim boundary
-Set boundary = World.Global.CreateBoundary()
-If Err.Number = 0 Then
-    boundary.InsertVertexSafe -1, -15.0, -30.0
-    boundary.InsertVertexSafe -1,  15.0, -30.0
-    boundary.InsertVertexSafe -1,  15.0,  15.0
-    boundary.InsertVertexSafe -1, -15.0,  15.0
-    boundary.HeightUpper = 6.0
-    boundary.HeightLower = -1.0
-    boundary.IsPassable = False
-    Err.Clear
-
-    Dim blist
-    Set blist = World.Global.CreateBoundaryList()
-    If Err.Number = 0 Then
-        blist.Add boundary
-        Lobby.BoundaryList = blist
-        Err.Clear
-    End If
-End If
-Err.Clear
-
-WScript.Echo "Done! Use: renderhost --world DesktopWorld"
+WScript.Echo objCount & " objects placed"
+WScript.Echo "Done!"
 WScript.Quit 0
