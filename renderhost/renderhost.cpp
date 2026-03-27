@@ -171,11 +171,32 @@ public:
             m_ocxWnd.MoveWindow(0, 0, cx, cy);
     }
 
+    afx_msg void OnTimer(UINT_PTR nIDEvent)
+    {
+        if (nIDEvent == 999 && m_pRendererDisp)
+        {
+            KillTimer(999);
+            OLECHAR* name = L"EditMode";
+            DISPID dispid;
+            HRESULT hr = m_pRendererDisp->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_USER_DEFAULT, &dispid);
+            if (SUCCEEDED(hr)) {
+                CComVariant vMode((long)1);
+                DISPID putid = DISPID_PROPERTYPUT;
+                DISPPARAMS dp = { &vMode, &putid, 1, 1 };
+                hr = m_pRendererDisp->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT,
+                    DISPATCH_PROPERTYPUT, &dp, NULL, NULL, NULL);
+                Log("Set EditMode=1 (Studio editing): hr=0x%08X", hr);
+            }
+        }
+        CFrameWnd::OnTimer(nIDEvent);
+    }
+
     DECLARE_MESSAGE_MAP()
 };
 
 BEGIN_MESSAGE_MAP(CRenderFrame, CFrameWnd)
     ON_WM_SIZE()
+    ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 // MFC App
@@ -185,10 +206,10 @@ public:
     CRenderFrame* m_pFrame;
     CExplorerFrame* m_pExplorer;
     CString m_server, m_world, m_user, m_avatar;
-    bool m_autoconnect, m_connectOnly, m_waitDebugger;
+    bool m_autoconnect, m_connectOnly, m_waitDebugger, m_editMode;
 
     CRenderApp() : m_pFrame(NULL), m_pExplorer(NULL), m_autoconnect(false),
-        m_connectOnly(false), m_waitDebugger(false)
+        m_connectOnly(false), m_waitDebugger(false), m_editMode(false)
     {
         m_server = "localhost";
         m_world = "TestWorld";
@@ -229,6 +250,7 @@ public:
             CString rest = cmdLine.Mid(pos + 9);
             m_avatar = rest.SpanExcluding(" ");
         }
+        if (cmdLine.Find("--edit") >= 0) m_editMode = true;
 
         Log("=== VWorlds Render Host (MFC) ===");
         Log("Server: %s, World: %s, User: %s", (LPCSTR)m_server, (LPCSTR)m_world, (LPCSTR)m_user);
@@ -442,6 +464,12 @@ public:
                                 DISPATCH_PROPERTYPUT, &dpPut5, NULL, NULL, NULL);
                             Log("Set Enable on sound (trigger refresh): hr=0x%08X", hr);
                         }
+                    }
+
+                    // Defer Studio editing mode — renderer needs to fully initialize first
+                    if (m_editMode && m_pFrame) {
+                        m_pFrame->SetTimer(999, 2000, NULL); // fire after 2 seconds
+                        Log("Edit mode deferred (will activate in 2s)");
                     }
                 }
             }
