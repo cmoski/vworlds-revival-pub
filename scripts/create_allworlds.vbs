@@ -55,15 +55,6 @@ Case "gallery"
     Const GL = "SDK\Library\Models\_Gallery\"
     WScript.Echo "Building Gallery..."
 
-    ' Sound test: looping chimes on the room (chimes.wav copied to Client\Shared)
-    Room.SetSound "client\shared\chimes.wav", True, 0, 0, 0
-    If Err.Number <> 0 Then
-        WScript.Echo "  Sound: " & Err.Description
-        Err.Clear
-    Else
-        WScript.Echo "  Sound: chimes.wav set on room"
-    End If
-
     G "Ceiling",   GL & "ceilingl.x",   0.0, 3.95, 0.0,  0.0, 0.0, 1.0
     G "Entry",     GL & "entrypoint.x", -6.0, 1.0,  1.5, -0.85,0.0,-0.15
     G "Desk",      GL & "deskgl.x",     -8.7, 0.5, -1.3,  0.0, 0.0, 1.0
