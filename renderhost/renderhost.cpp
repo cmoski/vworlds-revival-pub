@@ -56,6 +56,7 @@ public:
     CWnd m_propWnd;     // TPList property editor (bottom)
     CComPtr<IDispatch> m_pExplorerDisp;
     CComPtr<IDispatch> m_pPropDisp;
+    CComPtr<IDispatch> m_pRendererDisp; // ref to render view for selection polling
     static const int MARGIN = 20;
     CComVariant m_lastTarget; // track selection for change detection
 
@@ -116,23 +117,34 @@ public:
 
     afx_msg void OnTimer(UINT_PTR nIDEvent)
     {
-        if (nIDEvent == 998 && m_pExplorerDisp && m_pPropDisp)
+        if (nIDEvent == 998 && m_pPropDisp)
         {
-            // Poll ThingTree's TargetObjectProperty (dispid 2) and sync to TPList
-            DISPPARAMS dpGet = { NULL, NULL, 0, 0 };
-            CComVariant varTarget;
-            HRESULT hr = m_pExplorerDisp->Invoke(2, IID_NULL, LOCALE_USER_DEFAULT,
-                DISPATCH_PROPERTYGET, &dpGet, &varTarget, NULL, NULL);
-            if (SUCCEEDED(hr) && varTarget.vt == VT_DISPATCH && varTarget.pdispVal)
+            // Poll the RENDER VIEW's TargetObjectProperty (the 3D-selected object)
+            // and sync to TPList's TargetObjectProperty
+            if (m_pRendererDisp)
             {
-                // Only update if selection changed
-                if (varTarget.pdispVal != m_lastTarget.pdispVal)
+                OLECHAR* name = L"TargetObjectProperty";
+                DISPID dispid;
+                HRESULT hr = m_pRendererDisp->GetIDsOfNames(
+                    IID_NULL, &name, 1, LOCALE_USER_DEFAULT, &dispid);
+                if (SUCCEEDED(hr))
                 {
-                    m_lastTarget = varTarget;
-                    DISPID putid = DISPID_PROPERTYPUT;
-                    DISPPARAMS dpPut = { &varTarget, &putid, 1, 1 };
-                    m_pPropDisp->Invoke(2, IID_NULL, LOCALE_USER_DEFAULT,
-                        DISPATCH_PROPERTYPUT, &dpPut, NULL, NULL, NULL);
+                    DISPPARAMS dpGet = { NULL, NULL, 0, 0 };
+                    CComVariant varTarget;
+                    hr = m_pRendererDisp->Invoke(dispid, IID_NULL,
+                        LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dpGet, &varTarget, NULL, NULL);
+                    if (SUCCEEDED(hr) && varTarget.vt == VT_DISPATCH && varTarget.pdispVal)
+                    {
+                        if (varTarget.pdispVal != m_lastTarget.pdispVal)
+                        {
+                            m_lastTarget = varTarget;
+                            // Set on TPList TargetObjectProperty (dispid 2)
+                            DISPID putid = DISPID_PROPERTYPUT;
+                            DISPPARAMS dpPut = { &varTarget, &putid, 1, 1 };
+                            m_pPropDisp->Invoke(2, IID_NULL, LOCALE_USER_DEFAULT,
+                                DISPATCH_PROPERTYPUT, &dpPut, NULL, NULL, NULL);
+                        }
+                    }
                 }
             }
         }
@@ -325,6 +337,9 @@ public:
             delete m_pExplorer;
             m_pExplorer = NULL;
         }
+        // Give explorer a reference to render view for selection polling
+        if (m_pExplorer && m_pFrame->m_pRendererDisp)
+            m_pExplorer->m_pRendererDisp = m_pFrame->m_pRendererDisp;
 
         // Auto-connect if requested
         if (m_autoconnect && m_pFrame->m_pRendererDisp) {

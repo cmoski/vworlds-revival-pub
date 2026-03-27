@@ -1110,13 +1110,14 @@ BOOL CVWUIView::CreateHelperComponents(VARIANT_BOOL bCreateControlManager)
 	static CComBSTR bstrControlManager("ControlManager");
 	VARIANT_BOOL vBool = VARIANT_FALSE;
 
-	//if( m_pControlManager ) goto SUCCEEDED;			
-	if( !m_pWorld ) goto EXIT_FAIL;						
+	//if( m_pControlManager ) goto SUCCEEDED;
+	if( !m_pWorld ) { TRACE("CVWUIView::CreateHelperComponents: m_pWorld is NULL\n"); goto EXIT_FAIL; }
 
 #ifdef USE_CONTROLMANAGER
 	if (bCreateControlManager)
 	{
-		if( !m_pControlManager )											
+		TRACE("CVWUIView::CreateHelperComponents: looking for ControlManager (m_pControlManager=%p)\n", m_pControlManager);
+		if( !m_pControlManager )
 		{	
 			// check to see if the tool exists first
 			if (FAILED(hr = m_pWorld->IsValidTool(bstrControlManager, &vBool)))
