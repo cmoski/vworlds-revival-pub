@@ -1,4 +1,4 @@
-// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+// Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved.
 // In installing/viewing this source code, you agree to the terms of the
 // Microsoft Research Source License (MSRSL) included in the root of this source tree
 // and available from http://www.vworlds.org/license.asp.
@@ -596,7 +596,10 @@ void CWebBrowserHelperCtrl::TrackThingMenu(LPDISPATCH pDispatch)
 			hr = m_Menu.CreatePopupFromPropList(ListPtr, &wParam);
 			if (SUCCEEDED(hr))
 			{
-				VERIFY(m_Menu.TrackPopupMenu(TPM_LEFTALIGN | /* TPM_LEFTBUTTON | */ TPM_RIGHTBUTTON, ptCursor.x, ptCursor.y, this));
+				// Use parent window if our HWND isn't valid (WebBrowser hosting)
+			CWnd* pOwner = (m_hWnd && ::IsWindow(m_hWnd)) ? this : AfxGetMainWnd();
+			if (pOwner)
+				m_Menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, ptCursor.x, ptCursor.y, pOwner);
 			}
 		}
 	}
