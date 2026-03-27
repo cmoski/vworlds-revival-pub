@@ -47,7 +47,7 @@ inline HRESULT ReportError(LPSTR lpszCLSID, REFIID iid, HRESULT hr, HRESULT hrLo
 {
 	HLOCAL lpMsgBuf = NULL;
 
-	if (HRESULT_FACILITY(hr) == FACILITY_ITF && 
+	if (HRESULT_FACILITY(hr) == FACILITY_ITF &&
 		HRESULT_CODE(hr) >= 0x0200)
 	{
 		if (HRESULT_CODE(hr) >= hrLower && HRESULT_CODE(hr) < hrUpper)
@@ -60,6 +60,26 @@ inline HRESULT ReportError(LPSTR lpszCLSID, REFIID iid, HRESULT hr, HRESULT hrLo
 
 			CString strError;
 			strError.LoadString(resid);
+
+			// Rate-limit repeated errors: report first, count rest
+			static HRESULT s_lastHR = S_OK;
+			static long s_suppressCount = 0;
+			if (hr == s_lastHR && s_suppressCount > 0)
+			{
+				InterlockedIncrement(&s_suppressCount);
+				// Every 100 suppressed, log a summary
+				if ((s_suppressCount % 100) == 0)
+					TRACE("ReportError: suppressed %ld repeated hr=0x%08X (%s)\n",
+						s_suppressCount, hr, (LPCTSTR)strError);
+				return hr; // skip VWReportError and TRACE for repeats
+			}
+			if (hr != s_lastHR && s_suppressCount > 0)
+			{
+				TRACE("ReportError: %ld occurrences of hr=0x%08X suppressed\n",
+					s_suppressCount, s_lastHR);
+			}
+			s_lastHR = hr;
+			s_suppressCount = 1;
 
 			VWReportError(lpszCLSID, (LPCTSTR)strError, iid, hr);
 
