@@ -1,0 +1,42 @@
+<html>
+<head>
+<title>Worlds</title>
+<link rel=stylesheet href=global.css>
+<script language=vbs src=scripts/NoSelection.vbs></script>
+<script language=vbs src=scripts/Directory.vbs></script>
+</head>
+<body scroll=no style="margin:7px 18px;">
+	<table class=vwText cellspacing=0 cellpadding=0 style=height:100%;width:100%;>
+		<tr>
+			<td>
+				<div style=padding-bottom:6px;>
+					Select a Virtual World or related Web page to visit.
+				</div>
+				<table class=vwHead1 width=100% height=20px cellspacing=0 cellpadding=0 bgcolor=#798E87>
+					<tr>
+						<td align=left style=padding-left:3px;width:170px;>
+							<div id=divCol1 style=color:white;cursor:hand; title="Sort by Virtual World" SortID=1 ColName="Virtual World">Virtual World</div>
+						</td>
+						<td width=70px align=left>
+							<div id=divCol2 style=color:white;cursor:hand; title="Sort by number of connected Avatars" SortID=2 ColName="Avatars">Avatars</div>
+						</td>
+						<td align=left>
+							<div id=divCol3 style=color:white;cursor:hand; title="Sort by Web Page" SortID=3 ColName="Web Page">Web Page</div>
+						</td>
+					</tr>
+				</table>
+				<iframe id=fraServerList src="DSListing.htm" style=width:100%;height:180px;></iframe>
+				<div id=divTime style=padding-top:3px;>
+					Querying Directory... Please Wait...
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td align=right valign=bottom style="border-top:1 solid gray;padding-top:4px;">
+				<button id=btnRefresh class=vwButton>Refresh</button>&nbsp;&nbsp;
+				<button id=btnClose onclick=window.close class=vwButton>Close</button>
+			</td>
+		</tr>
+	</table>
+</body>
+</html>

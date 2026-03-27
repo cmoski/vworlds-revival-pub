@@ -1,0 +1,37 @@
+'======================================
+' Desc: This file is used to attach script
+'       to the style vwLink. The routines
+'       change the color of the link text
+'       as the mouse is moved over the link.
+'======================================
+<public:attach event=onmouseover onevent=DoMouseOver() />
+<public:attach event=onmouseout onevent=DoMouseOut() />
+
+<script language=vbs>
+Option Explicit
+
+
+
+'======================================
+' Name: DoMouseOver
+' Desc: This routine, attached to the onmouseover
+'       event, sets the color of the link text.
+'--------------------------------------
+Sub DoMouseOver
+	element.style.color = "mediumvioletred"
+End Sub
+'======================================
+
+
+
+'======================================
+' Name: DoMouseOut
+' Desc: This routine, attached to the onmouseout
+'       event, restores the color of the link text.
+'--------------------------------------
+Sub DoMouseOut
+	element.style.color = ""
+End Sub
+'======================================
+
+</script>

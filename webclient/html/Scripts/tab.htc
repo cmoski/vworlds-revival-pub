@@ -1,0 +1,75 @@
+'======================================
+' Desc: This file is used to attached
+'       to the style vwControlTab. The routines are
+'       designed for the tabs in the main window.
+'       The three routines affect the tabs during
+'       mouse rollovers and clicks.
+'======================================
+<public:attach event=onmouseover onevent=DoMouseOver() />
+<public:attach event=onmouseout onevent=DoMouseOut() />
+<public:attach event=onclick onevent=DoClick() />
+
+<script language=vbs>
+Option Explicit
+
+
+
+'======================================
+' Name: DoMouseOver
+' Desc: This routine is attached to the onmouseover
+'       event. It updates the status bar text using
+'       the elements alt attribute text.
+'--------------------------------------
+Sub DoMouseOver
+	window.status =	element.alt
+End Sub
+'======================================
+
+
+
+'======================================
+' Name: DoMouseOut
+' Desc: This routine is attached to the onmouseout
+'       event. It clears the status bar text.
+'--------------------------------------
+Sub DoMouseOut
+	window.status =	""
+End Sub
+'======================================
+
+
+
+'======================================
+' Name: DoClick
+' Desc: This routine is attached to the onclick
+'       event. It expects the element to have the
+'       attributes called inActive, Active, tabTitle,
+'       and iFrame. If the tab is displaying the
+'       inActive image, determined by image being
+'       displayed, all the tabs are iterated. Their
+'       images are set to inActive and the iframe
+'       element associated with them, indicated by
+'       the iFrame attribute, is hidden. Then the
+'       elements image is set to the Active value,
+'       the iframe element is displayed, and the text
+'       for the title is set to the tabTitle attribute.
+'--------------------------------------
+Sub DoClick
+	Dim objEl
+
+	If StrComp(element.inActive, Right(element.src, Len(element.inActive)), vbTextCompare) = 0 Then
+		For Each objEl In element.document.all("imgTabs")
+			If StrComp(objEl.Active, Right(objEl.src, Len(objEl.Active)), vbTextCompare) = 0 Then
+				objEl.src = objEl.inActive
+				element.document.all(objEl.iFrame).style.display = "none"
+				Exit For
+			End If
+		Next
+		element.src = element.Active
+		element.document.all(element.iFrame).style.display = ""
+		element.document.all("divTitle").innerText = element.tabTitle
+	End If
+End Sub
+'======================================
+
+</script>

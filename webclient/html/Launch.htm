@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>Microsoft Virtual Worlds Launch Menu</title>
+<script language=vbs>
+Option Explicit
+
+Sub document_onclick
+	If window.event.srcElement.tagName = "A" Then
+		window.event.returnValue = False
+		window.open window.event.srcElement.href, "_blank", "location=no,menubar=no,resizable=yes,scrollbars=no,toolbar=no,status=yes"
+	End If
+End Sub
+
+</script
+</head>
+<body style=margin:5px;>
+	<a href=Client.htm>Example Client</a>
+</body>
+</html>

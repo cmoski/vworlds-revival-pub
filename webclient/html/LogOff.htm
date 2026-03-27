@@ -1,0 +1,27 @@
+<html>
+<head>
+<title>Log Off Host Control</title>
+<link rel=stylesheet href=global.css>
+<script language=vbs src=scripts/NoSelection.vbs></script>
+<script language=vbs src=scripts/LogOff.vbs></script>
+</head>
+<body scroll=no style="margin:7px 18px;">
+	<table cellpadding=0 cellspacing=0 width=100% height=100%>
+		<tr>
+			<td id=lblDesc class=vwText height=10px>
+			</td>
+		</tr>
+		<tr>
+			<td style=padding-bottom:5px;>
+				<textarea id=txtReason class=vwInput style=width:100%;height:100%;></textarea>
+			</td>
+		</tr>
+		<tr>
+			<td height=10px align=right valign=bottom style="border-top:1 solid gray;padding-top:4px;">
+				<button id=btnLogOff onclick=DoLogOff class=vwButton>Log Off</button>&nbsp;&nbsp;
+				<button id=btnCancel onclick=window.close class=vwButton>Cancel</button>
+			</td>
+		</tr>
+	</table>
+</body>
+</html>

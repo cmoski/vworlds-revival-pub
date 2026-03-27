@@ -1,0 +1,101 @@
+'======================================
+' Desc: This file is used to attached
+'       to the style vwMenuItem. The routines are
+'       designed for the menu items at the top of the main window.
+'       The three routines affect the menu items during
+'       mouse rollovers and clicks.
+'======================================
+<public:attach event=onmouseover onevent=DoMouseOver() />
+<public:attach event=onmouseout onevent=DoMouseOut() />
+<public:attach event=onclick onevent=DoClick() />
+
+<script language=vbs>
+Option Explicit
+
+
+
+'======================================
+' Name: DoMouseOver
+' Desc: This routine is attached to the onmouseover
+'       event. It changes the text to white and
+'       updates the status bar text of the element
+'       to which the style is applied.
+'--------------------------------------
+Sub DoMouseOver
+	If element.enabled Then
+		element.style.color = "white"
+		window.status = element.title
+	Else
+		element.style.cursor = "default"
+	End If
+End Sub
+'======================================
+
+
+
+'======================================
+' Name: DoMouseOut
+' Desc: This routine is attached to the onmouseout
+'       event. It resets the color for the
+'       text and clears the status bar text of
+'       the element to which the style is applied.
+'--------------------------------------
+Sub DoMouseOut
+	If element.enabled Then
+		element.style.color = ""
+		window.status = ""
+	End If
+End Sub
+'======================================
+
+
+
+'======================================
+' Name: DoClick
+' Desc: This routine is attached to the onclick
+'       event. If the element is enabled the menu item
+'       clicked is determined from the element.id.
+'       If Log Off was clicked a confirmation dialog is displayed
+'       and if the user confirms the ShowLogon method of the top
+'       most page is called.
+'       If Worlds was clicked the Worlds dialog is displayed,
+'       referred to  as Directory below. If a new world is chosen
+'       the ConnectFromDS method of the top most page is called.
+'       If Camera was clicked a Virtual Worlds UI event is fired
+'       that requests the Camera dialog be displayed.
+'       If Options was clicked the Options dialog is displayed. If
+'       this dialog indicates changes were made the method
+'       UpdateFromOptions is called. This method is expected to
+'       be associated with the page where the style vwMenuItem is
+'       applied.
+'--------------------------------------
+Sub DoClick
+	Dim strWorldURL, blnOptionsChanged
+
+	If element.enabled Then
+		Select Case element.id
+		Case "mnuLogOff"
+			If MsgBox("Do you want to log off Microsoft Virtual Worlds?", vbQuestion + vbYesNo, top.sstrAppName) = vbYes Then
+				top.ShowLogon
+			End If
+		Case "mnuDirectory"
+			strWorldURL = ""
+			strWorldURL = window.showModalDialog("Directory.htm", top, "dialogHeight:326px;dialogWidth:506px;status:no;help:no")
+			If strWorldURL <> "" Then
+				top.ConnectFromDS strWorldURL
+			End If
+		Case "mnuCamera"
+			sobjWorld.FireUIEvent sobjUser, "vwShowCamera", True
+		Case "mnuOptions"
+			blnOptionsChanged = False
+			blnOptionsChanged = window.showModalDialog("Options.htm", top, "dialogHeight:334px;dialogWidth:412px;status:no;help:no")
+			If blnOptionsChanged Then
+				UpdateFromOptions
+			End If
+		Case Else
+		End Select
+	End If
+End sub
+'======================================
+
+</script>

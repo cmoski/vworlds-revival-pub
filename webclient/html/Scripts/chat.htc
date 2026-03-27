@@ -1,0 +1,83 @@
+'======================================
+' Desc: This file is used to attached
+'       to the style vwChatButton. The routines
+'       are designed for the button like images used
+'       in the chat area. The three routines affect the
+'       menu items during mouse rollovers and clicks.
+'======================================
+<public:attach event=onmouseover onevent=DoMouseOver() />
+<public:attach event=onmouseout onevent=DoMouseOut() />
+<public:attach event=onclick onevent=DoClick() />
+
+<script language=vbs>
+Option Explicit
+
+
+
+'======================================
+' Name: DoMouseOver
+' Desc: This routine is attached to the onmouseover
+'       event. It expects the element that was clicked
+'       to have an attribute called mOver refers to a valid
+'       image. It also expects the element's alt attribute
+'       to contain the action that will be preformed.
+'       If the element is enabled the image is changed and
+'       the status text is updated, otherwise the cursor
+'       is set to the default for the page.
+'--------------------------------------
+Sub DoMouseOver
+	If element.enabled Then
+		element.src = element.mOver
+		window.status = window.event.srcElement.alt & " text to others"
+	Else
+		element.style.cursor = "default"
+	End If
+End Sub
+'======================================
+
+
+
+'======================================
+' Name: DoMouseOut
+' Desc: This routine is attached to the onmouseout
+'       event. It expects the element that was clicked
+'       to have an attribute called mOut refers to a valid
+'       image. If the element is enabled the image is
+'       changed and the status text is cleared.
+'--------------------------------------
+Sub DoMouseOut
+	If element.enabled Then
+		element.src = element.mOut
+		window.status = ""
+	End If
+End Sub
+'======================================
+
+
+
+'======================================
+' Name: DoClick
+' Desc: This routine is attached to the onclick
+'       event. If the element is enabled performs
+'       the action for one of three buttons by
+'       calling corresponding routines. These
+'       called routines must be included in the
+'       script associated with the page containing
+'       the element.
+'--------------------------------------
+Sub DoClick
+	If element.enabled Then
+		Select Case element.id
+		Case "btnSay"
+			DoSay
+		Case "btnEmote"
+			DoEmote
+		Case "btnWhisper"
+			DoWhisper
+		Case Else
+		End Select
+	End If
+End Sub
+'======================================
+
+</script>

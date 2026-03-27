@@ -56,7 +56,7 @@ public:
 
             // Navigate to the original client HTML
             CComVariant vtEmpty;
-            CComBSTR url("file:///F:/VWorlds/Microsoft Virtual Worlds/Local Content/Client/Basic/Client.htm");
+            CComBSTR url("file:///F:/VWorlds/src/webclient/html/Client.htm");
             m_pBrowser->Navigate(url, &vtEmpty, &vtEmpty, &vtEmpty, &vtEmpty);
             printf("Navigating to Client.htm\n");
         }

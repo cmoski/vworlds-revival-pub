@@ -1808,6 +1808,7 @@ ERROR_ENCOUNTERED:
 HRESULT CVWClientObject::OnInvokeMethod(IThing* pthing, BSTR bstr, DISPPARAMS* pdispparams)
 {
 	HRESULT hr = S_OK;
+	TRACE("CVWClientObject::OnInvokeMethod: method='%s' cArgs=%d\n", CString(bstr), pdispparams ? pdispparams->cArgs : 0);
 #ifdef HANDLE_CLIENT_EVENTS
 #ifdef _DEBUG
 	CComBSTR bstrContainerName("n/a");
@@ -1934,28 +1935,35 @@ HRESULT CVWClientObject::OnInvokeMethod(IThing* pthing, BSTR bstr, DISPPARAMS* p
 				IPropertyList* pproplist;
 
 				hr = ::CreatePropertyList(m_pPrimaryWorld, &pproplist);
+				printf("Tell: CreatePropertyList hr=0x%08X world=%p\n", hr, m_pPrimaryWorld); fflush(stdout);
 				if (SUCCEEDED(hr))
 				{
 					// orphan this proplist
 					/* hr = */ pproplist->put_World(NULL);
 
 					hr = pproplist->AddThing(pFrom);
+					TRACE("Tell: AddThing hr=0x%08X\n", hr);
 					if (FAILED(hr))
 						goto ERROR_ENCOUNTERED_TELL;
 
 					hr = pproplist->AddObjectProperty(pToList);
+					TRACE("Tell: AddObjectProperty hr=0x%08X\n", hr);
 					if (FAILED(hr))
 						goto ERROR_ENCOUNTERED_TELL;
 
 					hr = pproplist->AddString(bstrTellMsg);
+					TRACE("Tell: AddString hr=0x%08X\n", hr);
 					if (FAILED(hr))
 						goto ERROR_ENCOUNTERED_TELL;
 
 					hr = pproplist->AddLong(lval);
+					TRACE("Tell: AddLong hr=0x%08X\n", hr);
 					if (FAILED(hr))
 						goto ERROR_ENCOUNTERED_TELL;
 
+					TRACE("CVWClientObject: FireOnUIEvent(OnTell) about to fire\n");
 					hr = FireOnUIEvent(pthing, CComBSTR(VW_TELL_EVENT_STR), CComVariant(pproplist));
+					TRACE("CVWClientObject: FireOnUIEvent(OnTell) hr=0x%08X\n", hr);
 
 ERROR_ENCOUNTERED_TELL:
 					SAFERELEASE(pproplist);
