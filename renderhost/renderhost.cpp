@@ -12,6 +12,10 @@ CComModule _Module;
 #include <atlcom.h>
 #include <stdio.h>
 
+// VWorlds COM interfaces for ControlManager selection polling
+#include <vwobject.h>    // IWorld, IThing, IPropertyList
+#include <vwuiobjs.h>    // IVWControlManager
+
 // VWRenderView CLSID
 static const CLSID CLSID_VWRenderView =
     { 0x44fac783, 0x0ca4, 0x11d0, { 0x89, 0xa9, 0x00, 0xa0, 0xc9, 0x05, 0x41, 0x29 } };
@@ -57,8 +61,11 @@ public:
     CComPtr<IDispatch> m_pExplorerDisp;
     CComPtr<IDispatch> m_pPropDisp;
     CComPtr<IDispatch> m_pWorldDisp; // world for deferred Global lookup
+    CComPtr<IVWControlManager> m_pControlMgr; // ControlManager for selection polling
     static const int MARGIN = 20;
     CComVariant m_lastTarget;
+
+    CExplorerFrame() : m_targetDispid(0), m_targetDispidValid(false) {}
 
     BOOL CreateAndHost()
     {
@@ -115,50 +122,102 @@ public:
             m_propWnd.MoveWindow(MARGIN, halfH, cx - MARGIN, cy - halfH);
     }
 
+    // Cache TPList's TargetObjectProperty dispid (looked up once)
+    DISPID m_targetDispid;
+    bool m_targetDispidValid;
+
+    void SetTPListTarget(IDispatch* pThing)
+    {
+        if (!m_pPropDisp || !pThing) return;
+
+        // Lookup TargetObjectProperty dispid once
+        if (!m_targetDispidValid) {
+            OLECHAR* targetName = L"TargetObjectProperty";
+            HRESULT hr = m_pPropDisp->GetIDsOfNames(IID_NULL, &targetName, 1, LOCALE_USER_DEFAULT, &m_targetDispid);
+            if (FAILED(hr)) { Log("TPList: GetIDsOfNames(TargetObjectProperty) failed hr=0x%08X", hr); return; }
+            m_targetDispidValid = true;
+        }
+
+        CComVariant varThing(pThing);
+        DISPID putid = DISPID_PROPERTYPUT;
+        DISPPARAMS dpPut = { &varThing, &putid, 1, 1 };
+        HRESULT hr = m_pPropDisp->Invoke(m_targetDispid, IID_NULL, LOCALE_USER_DEFAULT,
+            DISPATCH_PROPERTYPUT, &dpPut, NULL, NULL, NULL);
+        // Only log on change, not every poll
+        static IDispatch* s_lastLogged = NULL;
+        if (pThing != s_lastLogged) {
+            Log("TPList: Set TargetObjectProperty: hr=0x%08X target=%p", hr, pThing);
+            s_lastLogged = pThing;
+        }
+    }
+
     afx_msg void OnTimer(UINT_PTR nIDEvent)
     {
+        // Timer 997: initial seed with Global object
         if (nIDEvent == 997 && m_pPropDisp && m_pWorldDisp)
         {
             KillTimer(997);
-            HRESULT hr;
 
-            // Get Global object from world via GetIDsOfNames
             OLECHAR* globalName = L"Global";
             DISPID globalDispid;
-            hr = m_pWorldDisp->GetIDsOfNames(IID_NULL, &globalName, 1, LOCALE_USER_DEFAULT, &globalDispid);
-            if (FAILED(hr)) { Log("TPList: Global lookup failed hr=0x%08X", hr); }
-            else
+            HRESULT hr = m_pWorldDisp->GetIDsOfNames(IID_NULL, &globalName, 1, LOCALE_USER_DEFAULT, &globalDispid);
+            if (SUCCEEDED(hr))
             {
                 DISPPARAMS dpGet = { NULL, NULL, 0, 0 };
                 CComVariant varGlobal;
                 hr = m_pWorldDisp->Invoke(globalDispid, IID_NULL, LOCALE_USER_DEFAULT,
                     DISPATCH_PROPERTYGET, &dpGet, &varGlobal, NULL, NULL);
-
                 if (SUCCEEDED(hr) && varGlobal.vt == VT_DISPATCH && varGlobal.pdispVal)
                 {
-                    // Set TargetObjectProperty on TPList via GetIDsOfNames
-                    OLECHAR* targetName = L"TargetObjectProperty";
-                    DISPID targetDispid;
-                    hr = m_pPropDisp->GetIDsOfNames(IID_NULL, &targetName, 1, LOCALE_USER_DEFAULT, &targetDispid);
-                    if (SUCCEEDED(hr))
-                    {
-                        DISPID putid = DISPID_PROPERTYPUT;
-                        DISPPARAMS dpPut = { &varGlobal, &putid, 1, 1 };
-                        hr = m_pPropDisp->Invoke(targetDispid, IID_NULL, LOCALE_USER_DEFAULT,
-                            DISPATCH_PROPERTYPUT, &dpPut, NULL, NULL, NULL);
-                        Log("TPList: Set TargetObjectProperty to Global: hr=0x%08X", hr);
-                    }
-                    else
-                    {
-                        Log("TPList: GetIDsOfNames(TargetObjectProperty) failed hr=0x%08X", hr);
-                    }
+                    SetTPListTarget(varGlobal.pdispVal);
+                    Log("TPList: seeded with Global: hr=0x%08X", hr);
                 }
                 else
-                {
                     Log("TPList: Global get failed hr=0x%08X vt=%d", hr, varGlobal.vt);
+            }
+            else
+                Log("TPList: Global lookup failed hr=0x%08X", hr);
+        }
+
+        // Timer 998: poll ControlManager's SelectionList and sync to TPList
+        if (nIDEvent == 998 && m_pWorldDisp && m_pPropDisp)
+        {
+            // Get ControlManager via IWorld::get_Tool (proper COM, not IDispatch)
+            if (!m_pControlMgr) {
+                CComPtr<IWorld> pWorld;
+                HRESULT hr = m_pWorldDisp->QueryInterface(IID_IWorld, (void**)&pWorld);
+                if (SUCCEEDED(hr)) {
+                    CComPtr<IUnknown> pToolUnk;
+                    hr = pWorld->get_Tool(CComBSTR("ControlManager"), &pToolUnk);
+                    if (SUCCEEDED(hr) && pToolUnk) {
+                        hr = pToolUnk->QueryInterface(IID_IVWControlManager, (void**)&m_pControlMgr);
+                        if (SUCCEEDED(hr))
+                            Log("TPList: got ControlManager via IWorld: %p", (IVWControlManager*)m_pControlMgr);
+                    }
+                }
+            }
+            if (m_pControlMgr) {
+                CComPtr<IPropertyList> pSelList;
+                HRESULT hr = m_pControlMgr->get_SelectionList(&pSelList);
+                if (SUCCEEDED(hr) && pSelList) {
+                    long count = 0;
+                    pSelList->get_Count(&count);
+                    if (count > 0) {
+                        CComPtr<IObjectProperty> pObj;
+                        hr = pSelList->get_ObjectProperty(0, &pObj);
+                        if (SUCCEEDED(hr) && pObj) {
+                            CComPtr<IDispatch> pDisp;
+                            pObj->QueryInterface(IID_IDispatch, (void**)&pDisp);
+                            if (pDisp && pDisp.p != m_lastTarget.pdispVal) {
+                                m_lastTarget = pDisp.p;
+                                SetTPListTarget(pDisp);
+                            }
+                        }
+                    }
                 }
             }
         }
+
         CFrameWnd::OnTimer(nIDEvent);
     }
 
@@ -497,7 +556,7 @@ public:
                                 DISPATCH_PROPERTYPUT, &dpPut2, NULL, NULL, NULL);
                             Log("Set VWClient on tree: hr=0x%08X", hr);
                         }
-                        // Defer TPList population — set TargetObjectProperty to Global after world loads
+                        // Defer TPList — seed with Global, then poll ControlManager for selection
                         if (m_pExplorer->m_pPropDisp) {
                             m_pExplorer->m_pWorldDisp = pWorld;
                             m_pExplorer->SetTimer(997, 3000, NULL);

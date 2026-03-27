@@ -839,6 +839,7 @@ add_library(objexplr SHARED
     vwcommon/vwuiview.cpp
     vwcommon/cmddel.cpp
     vwocx/vwview/viewctl.cpp
+    vwstudio/vwstudio_i.c
     # Resources and exports
     vwocx/objexplr/objexplr.rc
     vwocx/objexplr/objexplr.def
@@ -853,12 +854,14 @@ target_include_directories(objexplr PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/vwocx/vwview
     ${VWORLDS_COMMON_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/vwsystem
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwstudio
 )
 
 target_compile_definitions(objexplr PRIVATE
     _WINDLL
     _USRDLL
     _AFXDLL
+    USE_CONTROLMANAGER
 )
 
 target_precompile_headers(objexplr PRIVATE
@@ -1288,11 +1291,18 @@ endif() # VWORLDS_HAS_D3DRM
 
 add_executable(renderhost WIN32
     renderhost/renderhost.cpp
+    vwcommon/vwobject_i.c
+    vwcommon/vwuiobjs_i.c
+)
+
+target_include_directories(renderhost PRIVATE
+    ${VWORLDS_COMMON_DIR}
 )
 
 target_compile_definitions(renderhost PRIVATE
     _ATL_APARTMENT_THREADED
     _AFXDLL
+    _ATL_ALLOW_DEPRECATED_FUNCTIONS
 )
 
 # No precompiled headers for this target

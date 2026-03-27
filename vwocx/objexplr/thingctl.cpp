@@ -1,4 +1,4 @@
-// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+// Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved.
 // In installing/viewing this source code, you agree to the terms of the
 // Microsoft Research Source License (MSRSL) included in the root of this source tree
 // and available from http://www.vworlds.org/license.asp.
@@ -612,11 +612,17 @@ LPDISPATCH CThingTreeCtrl::GetVWClient()
 	return CVWUIView::GetVWClient();
 }
 
-void CThingTreeCtrl::SetVWClient(LPDISPATCH newValue) 
+void CThingTreeCtrl::SetVWClient(LPDISPATCH newValue)
 {
 	HRESULT hr = S_OK;
 
 	CVWUIView::SetVWClient(newValue);
+
+#ifdef USE_CONTROLMANAGER
+	// Wire to ControlManager for selection event propagation
+	if (m_pWorld)
+		CreateHelperComponents(VARIANT_TRUE);
+#endif
 
 	if (m_pVWClient && m_pWorld)
 	{
