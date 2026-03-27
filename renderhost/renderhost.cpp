@@ -20,6 +20,10 @@ static const CLSID CLSID_VWRenderView =
 static const CLSID CLSID_ThingTree =
     { 0xef7d6571, 0x0161, 0x11d2, { 0x88, 0xbe, 0x00, 0xc0, 0x4f, 0xc3, 0x2e, 0xf3 } };
 
+// Vwsound (Sound playback) CLSID
+static const CLSID CLSID_Vwsound =
+    { 0x05769b8c, 0xa180, 0x11d1, { 0x83, 0xe9, 0x00, 0xc0, 0x4f, 0xb6, 0xfa, 0x46 } };
+
 static const int EXPLORER_WIDTH = 250; // pixels for left panel
 
 static FILE* g_logFile = NULL;
@@ -98,7 +102,9 @@ class CRenderFrame : public CFrameWnd
 {
 public:
     CWnd m_ocxWnd;
+    CWnd m_soundWnd;    // Vwsound OCX (1x1 hidden child for audio playback)
     CComPtr<IDispatch> m_pRendererDisp;
+    CComPtr<IDispatch> m_pSoundDisp;
 
     BOOL CreateAndHost()
     {
@@ -135,6 +141,24 @@ public:
             Log("PASS: Renderer IDispatch: %p", (IDispatch*)m_pRendererDisp);
         } else {
             Log("FAIL: GetControlUnknown returned NULL");
+        }
+
+        // Host Vwsound OCX as 1x1 hidden child (audio only, no visual)
+        BOOL bSound = m_soundWnd.CreateControl(
+            CLSID_Vwsound,
+            "Vwsound",
+            WS_CHILD,  // not visible
+            CRect(0, 0, 1, 1),
+            this,
+            102
+        );
+        if (bSound) {
+            LPUNKNOWN pSndUnk = m_soundWnd.GetControlUnknown();
+            if (pSndUnk)
+                pSndUnk->QueryInterface(IID_IDispatch, (void**)&m_pSoundDisp);
+            Log("PASS: Vwsound (DirectSound) control created");
+        } else {
+            Log("WARN: Vwsound control failed, no audio");
         }
 
         return TRUE;
@@ -378,6 +402,33 @@ public:
                             hr = m_pExplorer->m_pExplorerDisp->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT,
                                 DISPATCH_PROPERTYPUT, &dpPut2, NULL, NULL, NULL);
                             Log("Set VWClient on explorer: hr=0x%08X", hr);
+                        }
+                    }
+
+                    // Set VWClient + RenderRoot on Vwsound control
+                    if (m_pFrame->m_pSoundDisp) {
+                        // VWClient
+                        name = L"VWClient";
+                        hr = m_pFrame->m_pSoundDisp->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_USER_DEFAULT, &dispid);
+                        if (SUCCEEDED(hr)) {
+                            CComVariant vClient3(pClient.p);
+                            DISPID putid3 = DISPID_PROPERTYPUT;
+                            DISPPARAMS dpPut3 = { &vClient3, &putid3, 1, 1 };
+                            hr = m_pFrame->m_pSoundDisp->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT,
+                                DISPATCH_PROPERTYPUT, &dpPut3, NULL, NULL, NULL);
+                            Log("Set VWClient on sound: hr=0x%08X", hr);
+                        }
+
+                        // RenderRoot (render view OCX dispatch for 3D listener position)
+                        name = L"RenderRoot";
+                        hr = m_pFrame->m_pSoundDisp->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_USER_DEFAULT, &dispid);
+                        if (SUCCEEDED(hr)) {
+                            CComVariant vRender(m_pFrame->m_pRendererDisp.p);
+                            DISPID putid4 = DISPID_PROPERTYPUT;
+                            DISPPARAMS dpPut4 = { &vRender, &putid4, 1, 1 };
+                            hr = m_pFrame->m_pSoundDisp->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT,
+                                DISPATCH_PROPERTYPUT, &dpPut4, NULL, NULL, NULL);
+                            Log("Set RenderRoot on sound: hr=0x%08X", hr);
                         }
                     }
                 }
