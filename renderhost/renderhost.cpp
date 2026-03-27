@@ -460,10 +460,15 @@ public:
                                 DISPATCH_PROPERTYPUT, &dpPut2, NULL, NULL, NULL);
                             Log("Set VWClient on tree: hr=0x%08X", hr);
                         }
-                        // TPList VWClient (via GetIDsOfNames — dispid 1 is SelectionList, not VWClient!)
+                        // TPList — set VWClient via base class (PropEd) dispatch
+                        // TPList dispid 1 = SelectionList, but the base PropEd's VWClient
+                        // is accessible via GetIDsOfNames which chains to the base map
                         if (m_pExplorer->m_pPropDisp) {
+                            // Try direct dispid approach — set via base class VWClient
+                            // MFC dispatch chaining: GetIDsOfNames("VWClient") finds it in PropEd base
                             name = L"VWClient";
                             hr = m_pExplorer->m_pPropDisp->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_USER_DEFAULT, &dispid);
+                            Log("TPList VWClient dispid lookup: hr=0x%08X dispid=%d", hr, SUCCEEDED(hr) ? dispid : -1);
                             if (SUCCEEDED(hr)) {
                                 CComVariant vClient2b(pClient.p);
                                 DISPID putid2b = DISPID_PROPERTYPUT;
