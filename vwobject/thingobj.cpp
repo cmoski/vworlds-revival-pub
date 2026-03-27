@@ -17,7 +17,7 @@
 
 #define SUPPORT_ONINVOKEMETHODFAILED
 
-// Disabled for local editor — re-enable for multi-user security
+// Disabled for local editor — re-enable for multi-user deployments
 //#define SUPPORT_CHECKPROPERTYSECURITY
 //#define SUPPORT_INVOKEONPROPERTYACCESS
 

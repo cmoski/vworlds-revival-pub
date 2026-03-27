@@ -1298,6 +1298,7 @@ add_executable(renderhost WIN32
 
 target_include_directories(renderhost PRIVATE
     ${VWORLDS_COMMON_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwobject
 )
 
 target_compile_definitions(renderhost PRIVATE

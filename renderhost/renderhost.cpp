@@ -481,16 +481,8 @@ public:
                         hr = pWorld->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &dp2, &vUserObj, NULL, NULL);
                         Log("World.Connect('%s',''): hr=0x%08X", (LPCSTR)m_user, hr);
 
-                        // Make user a wizard for full edit access
-                        if (SUCCEEDED(hr) && vUserObj.vt == VT_DISPATCH && vUserObj.pdispVal)
-                        {
-                            CComPtr<IThing> pUser;
-                            vUserObj.pdispVal->QueryInterface(IID_IThing, (void**)&pUser);
-                            if (pUser) {
-                                hr = pUser->put_BOOL(CComBSTR("IsWizard"), VARIANT_TRUE);
-                                Log("Set IsWizard=TRUE on %s: hr=0x%08X", (LPCSTR)m_user, hr);
-                            }
-                        }
+                        // Note: IsWizard on avatar would grant full access with security enabled.
+                        // Property security is currently disabled at compile time for local editing.
 
                         // Set avatar sprite if --avatar specified
                         if (SUCCEEDED(hr) && m_avatar.GetLength() > 0 &&
