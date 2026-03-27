@@ -909,11 +909,11 @@ add_library(uictrl SHARED
     vwocx/uictrl/soundctl.cpp
     vwocx/uictrl/userctl.cpp
     vwocx/uictrl/whelpct.cpp
-    # vwsfvwct.cpp - VWSelfView avatar preview OCX. Needs DirectDraw headers
-    # resolved in PCH context. ddraw.h in stdafx.h + d3drm_legacy includes not
-    # enough — MFImage.h/PalMgr.h still can't find IDirectDraw. Investigate
-    # VC_EXTRALEAN or header include order. Works in vwmm build (different stdafx).
-    # vwocx/uictrl/vwsfvwct.cpp
+    vwocx/uictrl/vwsfvwct.cpp
+    # IID files for VWSelfView (Direct2DRM, SpriteManager, GeometrySprite)
+    vwcommon/d2d_i.c
+    vwcommon/spritemn_i.c
+    vwcommon/vwgeomsp_i.c
     # Base control class from vwview (NOT vwview.cpp - has its own DLL entry)
     vwocx/vwview/viewctl.cpp
     # Shared utilities
@@ -937,35 +937,38 @@ target_include_directories(uictrl PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/vwocx/uictrl
     ${CMAKE_CURRENT_SOURCE_DIR}/vwocx/vwview
     ${VWORLDS_COMMON_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/compat
-    ${CMAKE_CURRENT_SOURCE_DIR}/vwsystem
-    ${CMAKE_CURRENT_SOURCE_DIR}/vwstudio
+    # D3DRM headers from legacy bundle (d3drm*.h only, no conflicting d3dtypes.h)
+    # System SDK provides ddraw.h, d3dtypes.h via DIRECT3D_VERSION=0x0700
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/d3drm_legacy/x86/include_d3drm_only
     ${CMAKE_CURRENT_SOURCE_DIR}/d2d/d2dutils/include
     ${CMAKE_CURRENT_SOURCE_DIR}/d2d/mmimage/include
     ${CMAKE_CURRENT_SOURCE_DIR}/vwrender
     ${CMAKE_CURRENT_SOURCE_DIR}/vwmm
-    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/d3drm_legacy/x86/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwsystem
+    ${CMAKE_CURRENT_SOURCE_DIR}/vwstudio
 )
 
 target_compile_definitions(uictrl PRIVATE
     _WINDLL
     _USRDLL
     _AFXDLL
+    DIRECT3D_VERSION=0x0700
 )
 
 target_precompile_headers(uictrl PRIVATE
     "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/vwocx/uictrl/stdafx.h>"
 )
-set_source_files_properties(vwocx/uictrl/vwsfvwct.cpp PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 
 target_link_libraries(uictrl PRIVATE
     d2dutils
+    vwmm
     uuid
     ole32
     oleaut32
     dsound
     wininet
     ddraw
+    dxguid
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/d3drm_legacy/x86/lib/d3drm.lib
 )
 

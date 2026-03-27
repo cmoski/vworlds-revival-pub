@@ -1,4 +1,4 @@
-// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+// Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved.
 // In installing/viewing this source code, you agree to the terms of the
 // Microsoft Research Source License (MSRSL) included in the root of this source tree
 // and available from http://www.vworlds.org/license.asp.
@@ -28,9 +28,78 @@ static char THIS_FILE[] = __FILE__;
 
 #define TimerPeriod 100
 
-HRESULT CreateClipper(IDirectDraw *pDD, HWND hWnd, IDirectDrawClipper **ppClipper);
-HRESULT CreateFrontBuffer(IDirectDraw *pDD, IDirect2DRM *pD2DRM, IDirectDrawSurface **ppFrontBuffer);
-HRESULT CreateGraphicsTools(IWorld *pWorld, IDirectDraw **ppDD, IDirect2DRM **ppD2DRM, IDirect3DRM **ppD3DRM, IVWGeometryCache **ppVWGCache);
+// IID_IDirect3DRM not in modern dxguid.lib â€” define manually
+#include <initguid.h>
+DEFINE_GUID(IID_IDirect3DRM, 0x2bc49361, 0x8327, 0x11cf, 0xac, 0x4a, 0x0, 0x0, 0xc0, 0x38, 0x25, 0xa1);
+
+// These helpers were in a shared utility file not included in the source release.
+// Reimplemented based on usage patterns in vwrendrt.cpp and ddutil.cpp.
+
+HRESULT CreateClipper(IDirectDraw *pDD, HWND hWnd, IDirectDrawClipper **ppClipper)
+{
+    if (!pDD || !ppClipper) return E_POINTER;
+    HRESULT hr = pDD->CreateClipper(0, ppClipper, NULL);
+    if (SUCCEEDED(hr))
+        hr = (*ppClipper)->SetHWnd(0, hWnd);
+    return hr;
+}
+
+HRESULT CreateFrontBuffer(IDirectDraw *pDD, IDirect2DRM *pD2DRM, IDirectDrawSurface **ppFrontBuffer)
+{
+    if (!pDD || !ppFrontBuffer) return E_POINTER;
+    DDSURFACEDESC ddsd;
+    memset(&ddsd, 0, sizeof(ddsd));
+    ddsd.dwSize = sizeof(ddsd);
+    ddsd.dwFlags = DDSD_CAPS;
+    ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
+    return pDD->CreateSurface(&ddsd, ppFrontBuffer, NULL);
+}
+
+HRESULT CreateGraphicsTools(IWorld *pWorld, IDirectDraw **ppDD, IDirect2DRM **ppD2DRM, IDirect3DRM **ppD3DRM, IVWGeometryCache **ppVWGCache)
+{
+    // Get shared graphics tools from the world's tool map (created by vwmm)
+    if (!pWorld) return E_POINTER;
+    HRESULT hr;
+    CComPtr<IUnknown> pToolUnk;
+
+    // DirectDraw
+    if (ppDD) {
+        *ppDD = NULL;
+        hr = pWorld->get_Tool(CComBSTR("DirectDraw"), &pToolUnk);
+        if (SUCCEEDED(hr) && pToolUnk) {
+            pToolUnk->QueryInterface(IID_IDirectDraw, (void**)ppDD);
+            pToolUnk.Release();
+        }
+    }
+    // Direct2DRM
+    if (ppD2DRM) {
+        *ppD2DRM = NULL;
+        hr = pWorld->get_Tool(CComBSTR("Direct2DRM"), &pToolUnk);
+        if (SUCCEEDED(hr) && pToolUnk) {
+            pToolUnk->QueryInterface(IID_IDirect2DRM, (void**)ppD2DRM);
+            pToolUnk.Release();
+        }
+    }
+    // Direct3DRM
+    if (ppD3DRM) {
+        *ppD3DRM = NULL;
+        hr = pWorld->get_Tool(CComBSTR("Direct3DRM"), &pToolUnk);
+        if (SUCCEEDED(hr) && pToolUnk) {
+            pToolUnk->QueryInterface(IID_IDirect3DRM, (void**)ppD3DRM);
+            pToolUnk.Release();
+        }
+    }
+    // GeometryCache
+    if (ppVWGCache) {
+        *ppVWGCache = NULL;
+        hr = pWorld->get_Tool(CComBSTR("VWGeometryCache"), &pToolUnk);
+        if (SUCCEEDED(hr) && pToolUnk) {
+            pToolUnk->QueryInterface(__uuidof(IVWGeometryCache), (void**)ppVWGCache);
+            pToolUnk.Release();
+        }
+    }
+    return S_OK;
+}
 
 typedef CVWComPtr<IThing, NULL, &IID_IThing> CThingPtr;
 
