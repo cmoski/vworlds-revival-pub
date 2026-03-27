@@ -1293,6 +1293,7 @@ add_executable(renderhost WIN32
     renderhost/renderhost.cpp
     vwcommon/vwobject_i.c
     vwcommon/vwuiobjs_i.c
+    vwcommon/vwprop_i.c
 )
 
 target_include_directories(renderhost PRIVATE

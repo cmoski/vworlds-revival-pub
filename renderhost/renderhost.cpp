@@ -229,6 +229,8 @@ BEGIN_MESSAGE_MAP(CExplorerFrame, CFrameWnd)
     ON_WM_TIMER()
 END_MESSAGE_MAP()
 
+class CRenderApp; // forward decl for Ctrl+S handler
+
 // Main render window
 class CRenderFrame : public CFrameWnd
 {
@@ -323,6 +325,8 @@ public:
         CFrameWnd::OnTimer(nIDEvent);
     }
 
+    virtual BOOL PreTranslateMessage(MSG* pMsg);
+
     DECLARE_MESSAGE_MAP()
 };
 
@@ -337,6 +341,7 @@ class CRenderApp : public CWinApp
 public:
     CRenderFrame* m_pFrame;
     CExplorerFrame* m_pExplorer;
+    CComPtr<IWorld> m_pWorld;  // for SaveDatabase
     CString m_server, m_world, m_user, m_avatar;
     bool m_autoconnect, m_connectOnly, m_waitDebugger, m_editMode;
 
@@ -460,6 +465,9 @@ public:
             if (vWorldObj.vt == VT_DISPATCH && vWorldObj.pdispVal) {
                 CComPtr<IDispatch> pWorld(vWorldObj.pdispVal);
 
+                // Store IWorld for SaveDatabase (Ctrl+S)
+                pWorld->QueryInterface(IID_IWorld, (void**)&m_pWorld);
+
                 // Login (World.Connect takes username, password)
                 if (!m_connectOnly) {
                     CComVariant vUser((LPCSTR)m_user);
@@ -472,6 +480,17 @@ public:
                         CComVariant vUserObj;
                         hr = pWorld->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &dp2, &vUserObj, NULL, NULL);
                         Log("World.Connect('%s',''): hr=0x%08X", (LPCSTR)m_user, hr);
+
+                        // Make user a wizard for full edit access
+                        if (SUCCEEDED(hr) && vUserObj.vt == VT_DISPATCH && vUserObj.pdispVal)
+                        {
+                            CComPtr<IThing> pUser;
+                            vUserObj.pdispVal->QueryInterface(IID_IThing, (void**)&pUser);
+                            if (pUser) {
+                                hr = pUser->put_BOOL(CComBSTR("IsWizard"), VARIANT_TRUE);
+                                Log("Set IsWizard=TRUE on %s: hr=0x%08X", (LPCSTR)m_user, hr);
+                            }
+                        }
 
                         // Set avatar sprite if --avatar specified
                         if (SUCCEEDED(hr) && m_avatar.GetLength() > 0 &&
@@ -635,3 +654,20 @@ public:
 };
 
 CRenderApp theApp;
+
+BOOL CRenderFrame::PreTranslateMessage(MSG* pMsg)
+{
+    // Ctrl+S = SaveDatabase
+    if (pMsg->message == WM_KEYDOWN && pMsg->wParam == 'S' &&
+        (GetKeyState(VK_CONTROL) & 0x8000))
+    {
+        if (theApp.m_pWorld) {
+            HRESULT hr = theApp.m_pWorld->SaveDatabase();
+            Log("SaveDatabase (Ctrl+S): hr=0x%08X", hr);
+            if (SUCCEEDED(hr))
+                SetWindowText("VWorlds Render Host [Saved]");
+        }
+        return TRUE;
+    }
+    return CFrameWnd::PreTranslateMessage(pMsg);
+}

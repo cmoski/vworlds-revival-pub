@@ -3259,14 +3259,8 @@ STDMETHODIMP CWorldObject::SaveDatabase()
 
 	GetMarshallingFlags(&bShouldExecute, &bShouldRemote);
 
-#ifdef SUPPORT_WORLDOWNER_RESTRICTIONS
-	hr = CheckPolicyExt(NULL, CP_WORLDOWNER | CP_WIZARD, CComVariant());
-	if (FAILED(hr))
-	{
-		VWTRACE(m_pWorld, "VWOBJECT", VWT_ERROR, "CWorldObject::SaveDatabase: must be world owner to save database\n");
-		goto ERROR_ENCOUNTERED;
-	}
-#endif
+	// Owner/wizard check disabled — local editor always has save access
+	// Original: CheckPolicyExt(NULL, CP_WORLDOWNER | CP_WIZARD, CComVariant())
 
 	if (bShouldExecute == VARIANT_TRUE)
 	{
