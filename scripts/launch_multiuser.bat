@@ -39,16 +39,16 @@ echo Starting server...
 start "VWorlds Server" "%BUILD%\serverV2.exe"
 timeout /t 3 /nobreak >nul
 
-echo Starting Player 1 (Alice)...
-start "Alice" "%BUILD%\renderhost.exe" --trace --autoconnect --server localhost --world %WORLD% --user Alice
+echo Starting Player 1 (Alice - alice.spr)...
+start "Alice" "%BUILD%\renderhost.exe" --trace --autoconnect --server localhost --world %WORLD% --user Alice --avatar alice.spr
 
 timeout /t 2 /nobreak >nul
 
-echo Starting Player 2 (Bob)...
-start "Bob" "%BUILD%\renderhost.exe" --trace --autoconnect --server localhost --world %WORLD% --user Bob
+echo Starting Player 2 (Bob - bob.spr)...
+start "Bob" "%BUILD%\renderhost.exe" --trace --autoconnect --server localhost --world %WORLD% --user Bob --avatar bob.spr
 
 echo.
-echo Both clients launched. Look for each other's avatar sprites!
+echo Both clients launched with different avatars!
 echo Close both render windows when done.
 echo.
 pause

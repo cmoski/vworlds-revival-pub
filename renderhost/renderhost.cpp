@@ -160,7 +160,7 @@ class CRenderApp : public CWinApp
 public:
     CRenderFrame* m_pFrame;
     CExplorerFrame* m_pExplorer;
-    CString m_server, m_world, m_user;
+    CString m_server, m_world, m_user, m_avatar;
     bool m_autoconnect, m_connectOnly, m_waitDebugger;
 
     CRenderApp() : m_pFrame(NULL), m_pExplorer(NULL), m_autoconnect(false),
@@ -200,6 +200,10 @@ public:
         if ((pos = cmdLine.Find("--user ")) >= 0) {
             CString rest = cmdLine.Mid(pos + 7);
             m_user = rest.SpanExcluding(" ");
+        }
+        if ((pos = cmdLine.Find("--avatar ")) >= 0) {
+            CString rest = cmdLine.Mid(pos + 9);
+            m_avatar = rest.SpanExcluding(" ");
         }
 
         Log("=== VWorlds Render Host (MFC) ===");
@@ -290,6 +294,35 @@ public:
                         CComVariant vUserObj;
                         hr = pWorld->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &dp2, &vUserObj, NULL, NULL);
                         Log("World.Connect('%s',''): hr=0x%08X", (LPCSTR)m_user, hr);
+
+                        // Set avatar sprite if --avatar specified
+                        if (SUCCEEDED(hr) && m_avatar.GetLength() > 0 &&
+                            vUserObj.vt == VT_DISPATCH && vUserObj.pdispVal)
+                        {
+                            // Call InitializeSpriteGraphics(sprite, x, y, z, dx, dy, dz)
+                            // This is a server-side method that properly creates sprite geometry
+                            OLECHAR* initName = L"InitializeSpriteGraphics";
+                            DISPID initDispid;
+                            hr = vUserObj.pdispVal->GetIDsOfNames(IID_NULL, &initName, 1, LOCALE_USER_DEFAULT, &initDispid);
+                            if (SUCCEEDED(hr)) {
+                                // Args reversed for DISPPARAMS: dz, dy, dx, z, y, x, sprite
+                                CComVariant initArgs[] = {
+                                    CComVariant(1.0f),    // dz (direction)
+                                    CComVariant(0.0f),    // dy
+                                    CComVariant(0.0f),    // dx
+                                    CComVariant(0.0f),    // z (position)
+                                    CComVariant(1.0f),    // y
+                                    CComVariant(0.0f),    // x
+                                    CComVariant((LPCSTR)m_avatar) // sprite filename
+                                };
+                                DISPPARAMS dpInit = { initArgs, NULL, 7, 0 };
+                                hr = vUserObj.pdispVal->Invoke(initDispid, IID_NULL, LOCALE_USER_DEFAULT,
+                                    DISPATCH_METHOD, &dpInit, NULL, NULL, NULL);
+                                Log("InitializeSpriteGraphics('%s'): hr=0x%08X", (LPCSTR)m_avatar, hr);
+                            } else {
+                                Log("InitializeSpriteGraphics not found: hr=0x%08X", hr);
+                            }
+                        }
                     }
 
                     // Set content path on the world's Inetfile tool
