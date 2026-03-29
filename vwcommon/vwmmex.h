@@ -605,6 +605,12 @@ EXTERN_C const IID IID_IMultimediaExemplar;
         virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE OnLightLoadGeometry( 
             /* [in] */ IVWFrame *pNewFrame) = 0;
         
+        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE ActorInitialize( void) = 0;
+        
+        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE ActorSetJointRotation( 
+            /* [in] */ BSTR bstrJointName,
+            /* [in] */ double angle) = 0;
+        
     };
     
     
@@ -1415,6 +1421,16 @@ EXTERN_C const IID IID_IMultimediaExemplar;
             IMultimediaExemplar * This,
             /* [in] */ IVWFrame *pNewFrame);
         
+        DECLSPEC_XFGVIRT(IMultimediaExemplar, ActorInitialize)
+        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *ActorInitialize )( 
+            IMultimediaExemplar * This);
+        
+        DECLSPEC_XFGVIRT(IMultimediaExemplar, ActorSetJointRotation)
+        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *ActorSetJointRotation )( 
+            IMultimediaExemplar * This,
+            /* [in] */ BSTR bstrJointName,
+            /* [in] */ double angle);
+        
         END_INTERFACE
     } IMultimediaExemplarVtbl;
 
@@ -1805,6 +1821,12 @@ EXTERN_C const IID IID_IMultimediaExemplar;
 
 #define IMultimediaExemplar_OnLightLoadGeometry(This,pNewFrame)	\
     ( (This)->lpVtbl -> OnLightLoadGeometry(This,pNewFrame) ) 
+
+#define IMultimediaExemplar_ActorInitialize(This)	\
+    ( (This)->lpVtbl -> ActorInitialize(This) ) 
+
+#define IMultimediaExemplar_ActorSetJointRotation(This,bstrJointName,angle)	\
+    ( (This)->lpVtbl -> ActorSetJointRotation(This,bstrJointName,angle) ) 
 
 #endif /* COBJMACROS */
 
