@@ -88,6 +88,7 @@ HRESULT CMultimediaExemplarObject::InstallActorExemplar(IModule* pModule)
     {
         { METHOD_CLIENT, "SetJointRotation",   "ActorSetJointRotation",   PSBIT_NONE, PS_ALLEXECUTEMETHOD },
         { METHOD_CLIENT, "InitializeActor",    "ActorInitialize",         PSBIT_NONE, PS_ALLEXECUTEMETHOD },
+        { METHOD_CLIENT, "PlayAnimation",      "ActorPlayAnimation",      PSBIT_NONE, PS_ALLEXECUTEMETHOD },
     };
     int cMethod = sizeof(rgMethod)/sizeof(rgMethod[0]);
     int iMethod;
@@ -222,5 +223,157 @@ STDMETHODIMP CMultimediaExemplarObject::ActorSetJointRotation(BSTR bstrJointName
 
     pFrame2->AddTransform(D3DRMCOMBINE_REPLACE, mat);
 
+    return S_OK;
+}
+
+///////////////////////////////////////////////////////////////////////
+// Apply XYZ rotation in degrees to a D3DRM frame
+
+void CMultimediaExemplarObject::ApplyJointRotationXYZ(LPDIRECT3DRMFRAME pFrame, float xDeg, float yDeg, float zDeg)
+{
+    if (!pFrame) return;
+
+    const float DEG2RAD = 3.14159265f / 180.0f;
+    float xr = xDeg * DEG2RAD, yr = yDeg * DEG2RAD, zr = zDeg * DEG2RAD;
+
+    float cx = cosf(xr), sx = sinf(xr);
+    float cy = cosf(yr), sy = sinf(yr);
+    float cz = cosf(zr), sz = sinf(zr);
+
+    D3DRMMATRIX4D mat;
+    mat[0][0] = cy*cz;             mat[0][1] = cy*sz;             mat[0][2] = -sy;    mat[0][3] = 0;
+    mat[1][0] = sx*sy*cz - cx*sz;  mat[1][1] = sx*sy*sz + cx*cz;  mat[1][2] = sx*cy;  mat[1][3] = 0;
+    mat[2][0] = cx*sy*cz + sx*sz;  mat[2][1] = cx*sy*sz - sx*cz;  mat[2][2] = cx*cy;  mat[2][3] = 0;
+
+    D3DVECTOR pos;
+    LPDIRECT3DRMFRAME pParent = NULL;
+    pFrame->GetParent(&pParent);
+    pFrame->GetPosition(pParent, &pos);
+    mat[3][0] = pos.x; mat[3][1] = pos.y; mat[3][2] = pos.z; mat[3][3] = 1;
+    if (pParent) pParent->Release();
+
+    pFrame->AddTransform(D3DRMCOMBINE_REPLACE, mat);
+}
+
+///////////////////////////////////////////////////////////////////////
+// PlayAnimation — reads .anim file and animates joints
+// Format: "framenum: JointName xr yr zr JointName xr yr zr ..."
+// VBScript: actor.PlayAnimation "worlds\ACMonsters\02000034_AttackHigh1.anim"
+
+STDMETHODIMP CMultimediaExemplarObject::ActorPlayAnimation(BSTR bstrAnimFile)
+{
+    AFX_MANAGE_STATE(AfxGetStaticModuleState())
+
+    HRESULT hr = S_OK;
+    CComPtr<IThing> pThis;
+
+    if (FAILED(hr = m_pWorld->get_This(&pThis)))
+        return hr;
+
+    // Resolve the file path via InetFile
+    CString strFile(bstrAnimFile);
+    CComPtr<IUnknown> pInetUnk;
+    hr = m_pWorld->get_Tool(CComBSTR("Inetfile"), &pInetUnk);
+
+    CString strFullPath;
+    if (SUCCEEDED(hr) && pInetUnk) {
+        CComPtr<IDispatch> pInetDisp;
+        pInetUnk->QueryInterface(IID_IDispatch, (void**)&pInetDisp);
+        if (pInetDisp) {
+            OLECHAR* getName = L"GetFileLocalPath";
+            DISPID dispid;
+            hr = pInetDisp->GetIDsOfNames(IID_NULL, &getName, 1, LOCALE_USER_DEFAULT, &dispid);
+            if (SUCCEEDED(hr)) {
+                CComVariant vFile(bstrAnimFile);
+                DISPPARAMS dp = { &vFile, NULL, 1, 0 };
+                CComVariant vPath;
+                hr = pInetDisp->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &dp, &vPath, NULL, NULL);
+                if (SUCCEEDED(hr) && vPath.vt == VT_BSTR)
+                    strFullPath = CString(vPath.bstrVal);
+            }
+        }
+    }
+
+    // Fallback: try direct path
+    if (strFullPath.IsEmpty()) {
+        CString basePath = "F:\\VWorlds\\Microsoft Virtual Worlds\\Local Content\\";
+        strFullPath = basePath + strFile;
+    }
+
+    // Open and parse the .anim file
+    CStdioFile animFile;
+    if (!animFile.Open(strFullPath, CFile::modeRead | CFile::typeText)) {
+        VWTRACE(m_pWorld, "VWMMTHING", VWT_ERROR, "PlayAnimation: can't open '%s'\n", (LPCSTR)strFullPath);
+        return E_FAIL;
+    }
+
+    // Parse header
+    CString line;
+    int fps = 30;
+    int numFrames = 0;
+    while (animFile.ReadString(line)) {
+        line.TrimLeft(); line.TrimRight();
+        if (line.IsEmpty() || line[0] == '#') {
+            if (line.Find("fps:") >= 0) sscanf((LPCSTR)line + line.Find("fps:") + 4, "%d", &fps);
+            if (line.Find("frames:") >= 0) sscanf((LPCSTR)line + line.Find("frames:") + 7, "%d", &numFrames);
+            continue;
+        }
+        break; // first data line
+    }
+
+    if (fps <= 0) fps = 30;
+    int sleepMs = 1000 / fps;
+
+    VWTRACE(m_pWorld, "VWMMTHING", VWT_METHOD, "PlayAnimation: %d frames at %d fps from '%s'\n", numFrames, fps, (LPCSTR)strFullPath);
+
+    // Play frames
+    do {
+        if (line.IsEmpty() || line[0] == '#') continue;
+
+        // Parse: "framenum: JointName xr yr zr JointName xr yr zr ..."
+        int frameNum = 0;
+        char* pBuf = line.GetBuffer(4096);
+        int pos = 0;
+        sscanf(pBuf, "%d: %n", &frameNum, &pos);
+
+        while (pBuf[pos]) {
+            char jointName[64] = {0};
+            float xr = 0, yr = 0, zr = 0;
+            int consumed = 0;
+            if (sscanf(&pBuf[pos], "%s %f %f %f%n", jointName, &xr, &yr, &zr, &consumed) < 4)
+                break;
+            pos += consumed;
+            while (pBuf[pos] == ' ') pos++;
+
+            // Look up the joint frame
+            CString propName;
+            propName.Format("Joint_%s", jointName);
+            CComVariant varJoint;
+            hr = pThis->get_Property(CComBSTR(propName), &varJoint);
+            if (SUCCEEDED(hr) && varJoint.vt == VT_DISPATCH && varJoint.pdispVal) {
+                CComPtr<IJoint> pJoint;
+                varJoint.pdispVal->QueryInterface(IID_IJoint, (void**)&pJoint);
+                if (pJoint) {
+                    void* pData = NULL;
+                    pJoint->GetAppData(&pData);
+                    if (pData)
+                        ApplyJointRotationXYZ((LPDIRECT3DRMFRAME)pData, xr, yr, zr);
+                }
+            }
+        }
+        line.ReleaseBuffer();
+
+        // Wait for next frame
+        Sleep(sleepMs);
+        MSG msg;
+        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+
+    } while (animFile.ReadString(line));
+
+    animFile.Close();
+    VWTRACE(m_pWorld, "VWMMTHING", VWT_METHOD, "PlayAnimation: done\n");
     return S_OK;
 }

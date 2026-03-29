@@ -17,6 +17,8 @@ CComModule _Module;
 #include <vwobject.h>    // IWorld, IThing, IPropertyList
 #include <vwuiobjs.h>    // IVWControlManager
 #include <vwclient.h>    // IVWClientSite, IID_IVWClientSite
+#include <vector.h>      // IVector
+#include <math.h>
 
 // Spuck demo (spuck.cpp)
 void SetSpuckRenderer(IDispatch* pDisp);
@@ -70,6 +72,7 @@ void Log(const char* fmt, ...)
 // =====================================================================
 class CRenderFrame; // forward decl
 static CRenderFrame* g_pRenderFrame = NULL; // for event sink callback
+static IWorld* g_pCullWorld = NULL; // for distance culling timer
 
 class CClientEventSink : public IVWClientSite, public IDispatch
 {
@@ -702,6 +705,75 @@ public:
                 Log("Set EditMode=1 (Studio editing): hr=0x%08X", hr);
             }
         }
+        // Timer 996: distance culling — hide objects far from camera
+        // Processes 5 objects per tick to avoid event flood
+        if (nIDEvent == 996 && g_pCullWorld)
+        {
+            static float cullDist = 40.0f;
+            static long cullIdx = 0;
+            static const long BATCH_SIZE = 5;
+
+            CComPtr<IThing> pUser;
+            g_pCullWorld->get_User(&pUser);
+            if (pUser) {
+                CComPtr<IObjectProperty> pPosObj;
+                pUser->get_ObjectProperty(CComBSTR("Position"), &pPosObj);
+                CComPtr<IVector> pCamPos;
+                if (pPosObj) pPosObj->QueryInterface(__uuidof(IVector), (void**)&pCamPos);
+                if (pCamPos) {
+                    float cx, cy, cz;
+                    pCamPos.p->get_x(&cx); pCamPos.p->get_y(&cy); pCamPos.p->get_z(&cz);
+
+                    CComPtr<IThing> pGlobal;
+                    g_pCullWorld->get_Global(&pGlobal);
+                    CComPtr<IObjectProperty> pRoomObj;
+                    if (pGlobal) pGlobal->get_ObjectProperty(CComBSTR("DefaultRoom"), &pRoomObj);
+                    CComPtr<IThing> pRoom;
+                    if (pRoomObj) pRoomObj->QueryInterface(IID_IThing, (void**)&pRoom);
+
+                    if (pRoom) {
+                        CComPtr<IPropertyList> pContents;
+                        pRoom->get_Contents(&pContents);
+                        if (pContents) {
+                            long count = 0;
+                            pContents->get_Count(&count);
+                            if (cullIdx >= count) cullIdx = 0;
+
+                            long end = cullIdx + BATCH_SIZE;
+                            if (end > count) end = count;
+
+                            for (long i = cullIdx; i < end; i++) {
+                                CComPtr<IObjectProperty> pObj;
+                                pContents->get_ObjectProperty(i, &pObj);
+                                CComPtr<IThing> pThing;
+                                if (pObj) pObj->QueryInterface(IID_IThing, (void**)&pThing);
+                                if (!pThing) continue;
+
+                                CComPtr<IObjectProperty> pTPosObj;
+                                pThing->get_ObjectProperty(CComBSTR("Position"), &pTPosObj);
+                                CComPtr<IVector> pTPos;
+                                if (pTPosObj) pTPosObj->QueryInterface(__uuidof(IVector), (void**)&pTPos);
+                                if (!pTPos) continue;
+
+                                float tx, ty, tz;
+                                pTPos.p->get_x(&tx); pTPos.p->get_y(&ty); pTPos.p->get_z(&tz);
+
+                                float dx = tx-cx, dy = ty-cy, dz = tz-cz;
+                                float dist = sqrtf(dx*dx + dy*dy + dz*dz);
+
+                                VARIANT_BOOL bVis = (dist < cullDist) ? VARIANT_TRUE : VARIANT_FALSE;
+                                VARIANT_BOOL bCurVis = VARIANT_TRUE;
+                                pThing->get_BOOL(CComBSTR("IsVisible"), &bCurVis);
+                                if (bCurVis != bVis)
+                                    pThing->put_BOOL(CComBSTR("IsVisible"), bVis);
+                            }
+                            cullIdx = end;
+                        }
+                    }
+                }
+            }
+        }
+
         CFrameWnd::OnTimer(nIDEvent);
     }
 
@@ -928,6 +1000,7 @@ public:
 
                     // Register event sink for chat/system messages
                     g_pRenderFrame = m_pFrame;
+                    g_pCullWorld = m_pWorld; // for distance culling
                     SetSpuckRenderer(m_pFrame->m_pRendererDisp);
                     {
                         CComPtr<IConnectionPointContainer> pCPC;
@@ -1035,6 +1108,12 @@ public:
                     if (m_editMode && m_pFrame) {
                         m_pFrame->SetTimer(999, 2000, NULL); // fire after 2 seconds
                         Log("Edit mode deferred (will activate in 2s)");
+                    }
+
+                    // Start distance culling timer
+                    if (m_pFrame) {
+                        m_pFrame->SetTimer(996, 2000, NULL); // every 2s
+                        Log("Distance culling enabled (50 unit radius, 2s interval)");
                     }
 
                     // Create Command Window if requested

@@ -372,5 +372,8 @@ cpp_quote("#define VWMM_E_LABELFONTSIZE			MAKE_HRESULT(SEVERITY_ERROR, FACILITY_
 		[helpstring("Rotate a named joint by angle (radians, around Z axis)")]
 		HRESULT ActorSetJointRotation([in] BSTR bstrJointName, [in] double angle);
 
+		[helpstring("Play a .anim file on the actor")]
+		HRESULT ActorPlayAnimation([in] BSTR bstrAnimFile);
+
 
 	};

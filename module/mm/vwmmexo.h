@@ -233,7 +233,9 @@ protected:
 	HRESULT InstallActorExemplar(IModule* pModule);
 	STDMETHOD(ActorInitialize)();
 	STDMETHOD(ActorSetJointRotation)(BSTR bstrJointName, double angle);
+	STDMETHOD(ActorPlayAnimation)(BSTR bstrAnimFile);
 	void CreateJointsFromFrame(IThing* pThis, LPDIRECT3DRMFRAME pFrame, int& jointID);
+	void ApplyJointRotationXYZ(LPDIRECT3DRMFRAME pFrame, float xDeg, float yDeg, float zDeg);
 
 	HRESULT RemoveInterpolateAnim(IThing *pThing, BSTR bstrProperty);
 	HRESULT PutInterpolateAnim(IThing *pThing, BSTR bstrProperty, IVWAnimation *pAnimation);
