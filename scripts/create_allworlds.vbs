@@ -157,32 +157,8 @@ Case "spuck"
     G "Ground",    SE & "ground.x",     0.0, 0.0,  0.0,  0.0, 0.0, 0.0
     G "Sky",       SE & "sky.x",        0.0,-10.0, 0.0,  0.0, 0.0, 0.0
 
-    ' Spuck -- assembled from avatar sprites!
-    ' Each part is a sprite at character scale
-    Dim spuck
-    Set spuck = World.CreateInstance("Spuck", World.Exemplar("Artifact"))
-    If Err.Number = 0 Then
-        spuck.MoveInto Room
-        spuck.InitializeSpriteGraphics "alice.spr", 0.0, 1.0, 5.0, 0.0, 0.0, 1.0
-        Err.Clear
-        objCount = objCount + 1
-        WScript.Echo "Spuck created with alice sprite at (0, 1, 5)"
-    Else
-        WScript.Echo "Spuck failed: " & Err.Description
-        Err.Clear
-    End If
-
-    ' Bob standing nearby
-    Dim buddy
-    Set buddy = World.CreateInstance("SpuckBuddy", World.Exemplar("Artifact"))
-    If Err.Number = 0 Then
-        buddy.MoveInto Room
-        buddy.InitializeSpriteGraphics "bob.spr", 2.0, 1.0, 5.0, 0.0, 0.0, 1.0
-        Err.Clear
-        objCount = objCount + 1
-    Else
-        Err.Clear
-    End If
+    ' Spuck -- hierarchical .x model with named frames for bone animation
+    G "Spuck",     "spuck.x",            0.0, 0.0, 5.0,  0.0, 0.0, 1.0
 
     ' Some scenery trees
     G "Tree1",     SE & "tree1.X",      10.0, 5.0,-10.0, -1.0, 0.0, 0.0
