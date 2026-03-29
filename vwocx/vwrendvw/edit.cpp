@@ -1,4 +1,4 @@
-// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+// Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved.
 // In installing/viewing this source code, you agree to the terms of the
 // Microsoft Research Source License (MSRSL) included in the root of this source tree
 // and available from http://www.vworlds.org/license.asp.
@@ -110,17 +110,17 @@ void CVWRenderViewCtrl::SetEditMode(long  nEditMode)
 	VARIANT_BOOL			bForceBackBuffer = VARIANT_FALSE;
 	int nSize, i;
 
-	if (!m_pRenderingContext)
+	if (!m_pRenderingContext || !m_pVWRenderRoot)
 		goto EXIT_FAIL;
 
 	// set the navigation tool as current
 	OnToolsNavigate();
 
 	hr = m_pVWRenderRoot->get_Scene(&pvwfScene);
-	if(FAILED(hr)) goto EXIT_FAIL;
+	if(FAILED(hr) || !pvwfScene) goto EXIT_FAIL;
 
 	hr = m_pVWRenderRoot->get_Camera(&pvwfCamera);
-	if(FAILED(hr)) goto EXIT_FAIL;
+	if(FAILED(hr) || !pvwfCamera) goto EXIT_FAIL;
 
 	if (!m_nEditingMode && nEditMode)
 	{
