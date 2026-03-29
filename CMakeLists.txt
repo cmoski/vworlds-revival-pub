@@ -1043,6 +1043,7 @@ add_library(vwmm SHARED
     module/mm/mmroom.cpp
     module/mm/mmportal.cpp
     module/mm/mmlight.cpp
+    module/mm/mmactor.cpp
     module/mm/mmhost.cpp
     module/mm/mmartfct.cpp
     module/mm/vwmmexo.cpp
