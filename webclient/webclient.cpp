@@ -51,8 +51,8 @@ public:
         }
 
         if (m_pBrowser) {
-            // Suppress script error dialogs
-            m_pBrowser->put_Silent(VARIANT_TRUE);
+            // Don't suppress — needed for VBScript event dispatch
+            // m_pBrowser->put_Silent(VARIANT_TRUE);
 
             // Navigate to the original client HTML
             CComVariant vtEmpty;

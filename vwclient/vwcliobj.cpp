@@ -405,6 +405,7 @@ STDMETHODIMP CVWClientObject::Connect(BSTR bstrInitialURL, IWorld** ppWorld)
 
 	m_pPrimaryWorld = *ppWorld;
 	SAFEADDREF(m_pPrimaryWorld);
+	TRACE("CVWClientObject::Connect: m_pPrimaryWorld set to %p, this=%p\n", m_pPrimaryWorld, this);
 
 	m_pPrimaryCon = pVWConnection;
 	SAFEADDREF(m_pPrimaryCon);
@@ -1638,8 +1639,11 @@ HRESULT CVWClientObject::FireOnUIEvent(IThing* pthing, BSTR bstrEventName, VARIA
 {
     HRESULT hr = S_OK;
 
+	TRACE("CVWClientObject::FireOnUIEvent: event='%s' this=%p\n", CString(bstrEventName), this);
+
 	START_EVENT(CVWClientObject, IVWClientSite)
 
+			TRACE("CVWClientObject::FireOnUIEvent: dispatching to sink %p\n", pEvent);
 			hr = pEvent->OnUIEvent(pthing, bstrEventName, varArg);
 
 	FINISH_EVENT()
@@ -1808,7 +1812,7 @@ ERROR_ENCOUNTERED:
 HRESULT CVWClientObject::OnInvokeMethod(IThing* pthing, BSTR bstr, DISPPARAMS* pdispparams)
 {
 	HRESULT hr = S_OK;
-	TRACE("CVWClientObject::OnInvokeMethod: method='%s' cArgs=%d\n", CString(bstr), pdispparams ? pdispparams->cArgs : 0);
+	TRACE("CVWClientObject::OnInvokeMethod: method='%s' cArgs=%d this=%p pWorld=%p\n", CString(bstr), pdispparams ? pdispparams->cArgs : 0, this, m_pPrimaryWorld);
 #ifdef HANDLE_CLIENT_EVENTS
 #ifdef _DEBUG
 	CComBSTR bstrContainerName("n/a");
@@ -1935,7 +1939,7 @@ HRESULT CVWClientObject::OnInvokeMethod(IThing* pthing, BSTR bstr, DISPPARAMS* p
 				IPropertyList* pproplist;
 
 				hr = ::CreatePropertyList(m_pPrimaryWorld, &pproplist);
-				printf("Tell: CreatePropertyList hr=0x%08X world=%p\n", hr, m_pPrimaryWorld); fflush(stdout);
+				TRACE("TELL: CreatePropertyList hr=0x%08X world=%p proplist=%p\n", hr, m_pPrimaryWorld, pproplist);
 				if (SUCCEEDED(hr))
 				{
 					// orphan this proplist

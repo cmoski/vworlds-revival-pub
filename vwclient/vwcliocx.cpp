@@ -1,4 +1,4 @@
-// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+// Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved.
 // In installing/viewing this source code, you agree to the terms of the
 // Microsoft Research Source License (MSRSL) included in the root of this source tree
 // and available from http://www.vworlds.org/license.asp.
@@ -50,7 +50,8 @@ HRESULT CVWClientOCX::FinalConstruct()
 			hr = pconnptctr->FindConnectionPoint(IID_IVWClientSite, &pconnpt);
 			if (SUCCEEDED(hr))
 			{
-				pconnpt->Advise(GetUnknown(), &m_dwCookie);
+				hr = pconnpt->Advise(GetUnknown(), &m_dwCookie);
+				TRACE("CVWClientOCX::FinalConstruct: Advise hr=0x%08X cookie=%d this=%p client=%p\n", hr, m_dwCookie, this, m_pVWClientObject);
 				pconnpt->Release();
 
 				// artificially Release
@@ -147,8 +148,9 @@ STDMETHODIMP CVWClientOCX::OnUserReconnect(IVWClient* pVWClient, IWorld* pWorld,
 }
 
 STDMETHODIMP CVWClientOCX::OnUIEvent(IThing* pthing, BSTR bstrEventName, VARIANT varArg)
-{ 
-	FireOnUIEvent(pthing, bstrEventName, varArg); 
+{
+	TRACE("CVWClientOCX::OnUIEvent: event='%s' this=%p\n", CString(bstrEventName), this);
+	FireOnUIEvent(pthing, bstrEventName, varArg);
 
 	return S_OK;
 }

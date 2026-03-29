@@ -1306,21 +1306,25 @@ endif() # VWORLDS_HAS_D3DRM
 
 add_executable(renderhost WIN32
     renderhost/renderhost.cpp
+    renderhost/spuck.cpp
     vwcommon/vwobject_i.c
     vwcommon/vwuiobjs_i.c
     vwcommon/vwprop_i.c
     vwcommon/vwclient_i.c
+    vwcommon/vwrender_i.c
 )
 
 target_include_directories(renderhost PRIVATE
     ${VWORLDS_COMMON_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/vwobject
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/d3drm_legacy/x86/include_d3drm_only
 )
 
 target_compile_definitions(renderhost PRIVATE
     _ATL_APARTMENT_THREADED
     _AFXDLL
     _ATL_ALLOW_DEPRECATED_FUNCTIONS
+    DIRECT3D_VERSION=0x0700
 )
 
 # No precompiled headers for this target
@@ -1335,6 +1339,7 @@ target_link_libraries(renderhost PRIVATE
     shell32
     advapi32
     comdlg32
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/d3drm_legacy/x86/lib/d3drm.lib
 )
 
 # =============================================================================

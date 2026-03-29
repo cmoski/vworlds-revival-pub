@@ -18,6 +18,10 @@ CComModule _Module;
 #include <vwuiobjs.h>    // IVWControlManager
 #include <vwclient.h>    // IVWClientSite, IID_IVWClientSite
 
+// Spuck demo (spuck.cpp)
+void CreateSpuck(IWorld* pWorld);
+void AnimateSpuck();
+
 // VBScript engine CLSID
 // {B54F3741-5B07-11cf-A4B0-00AA004A55E8}
 static const CLSID CLSID_VBScript =
@@ -287,6 +291,25 @@ public:
 
         // Show command in output
         m_outputText += ">> " + cmd + "\r\n";
+
+        // Special commands
+        if (cmd.CompareNoCase("spuck") == 0) {
+            CComPtr<IWorld> pWorld;
+            if (m_pWorldDisp)
+                m_pWorldDisp->QueryInterface(IID_IWorld, (void**)&pWorld);
+            CreateSpuck(pWorld);
+            m_outputText += "Spuck created! Type 'animate' to wave.\r\n";
+            m_editOutput.SetWindowText(m_outputText);
+            m_editOutput.LineScroll(m_editOutput.GetLineCount());
+            return;
+        }
+        if (cmd.CompareNoCase("animate") == 0) {
+            AnimateSpuck();
+            m_outputText += "Animating...\r\n";
+            m_editOutput.SetWindowText(m_outputText);
+            m_editOutput.LineScroll(m_editOutput.GetLineCount());
+            return;
+        }
 
         // Try as statement first (assignments like x.Fog = True must be statements)
         EXCEPINFO ei = {};
