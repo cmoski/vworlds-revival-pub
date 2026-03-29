@@ -158,10 +158,19 @@ Case "spuck"
     G "Sky",       SE & "sky.x",        0.0,-10.0, 0.0,  0.0, 0.0, 0.0
 
     ' Spuck -- Actor exemplar with bone animation
-    ' InitializeActor must be called from Command Window after world loads
-    ' (the method handler needs the Multimedia module fully initialized)
-    G "Spuck",     "spuck.x",            0.0, 0.0, 5.0,  0.0, 0.0, 1.0
-    WScript.Echo "Spuck placed. Use Command Window: spuck, then animate"
+    Dim spuckActor
+    Set spuckActor = World.CreateInstance("Spuck", World.Exemplar("Actor"))
+    If Err.Number = 0 Then
+        spuckActor.MoveInto Room
+        spuckActor.InitializeGraphics "spuck.x", 0.0, 0.0, 5.0, 0.0, 0.0, 1.0
+        Err.Clear
+        objCount = objCount + 1
+        WScript.Echo "Spuck Actor created! Use InitializeActor + SetJointRotation in Command Window"
+    Else
+        WScript.Echo "Actor failed (" & Err.Description & "), using Artifact"
+        Err.Clear
+        G "Spuck", "spuck.x", 0.0, 0.0, 5.0, 0.0, 0.0, 1.0
+    End If
 
     ' Some scenery trees
     G "Tree1",     SE & "tree1.X",      10.0, 5.0,-10.0, -1.0, 0.0, 0.0

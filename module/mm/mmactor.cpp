@@ -17,6 +17,68 @@ extern HRESULT _GetFrameHelper(IThing *pThing, IVWFrame **ppvwf);
 ///////////////////////////////////////////////////////////////////////
 // Install Actor Exemplar
 
+// Recursive helper: walk D3DRM frame tree and create joints for named frames
+void CMultimediaExemplarObject::CreateJointsFromFrame(IThing* pThis, LPDIRECT3DRMFRAME pParentFrame, int& jointID)
+{
+    LPDIRECT3DRMFRAMEARRAY pChildren = NULL;
+    pParentFrame->GetChildren(&pChildren);
+    if (!pChildren) return;
+
+    DWORD count = pChildren->GetSize();
+    VWTRACE(m_pWorld, "VWMMTHING", VWT_METHOD,
+        "CreateJointsFromFrame: parent=%p children=%d\n", pParentFrame, count);
+
+    for (DWORD i = 0; i < count; i++)
+    {
+        LPDIRECT3DRMFRAME pChild = NULL;
+        pChildren->GetElement(i, &pChild);
+        if (!pChild) continue;
+
+        char szName[128] = {0};
+        DWORD nameSize = sizeof(szName);
+        pChild->GetName(&nameSize, szName);
+
+        VWTRACE(m_pWorld, "VWMMTHING", VWT_METHOD,
+            "CreateJointsFromFrame: child %d name='%s'\n", i, szName);
+
+        if (szName[0] != '\0' && _stricmp(szName, "Root") != 0)
+        {
+            // Create a CJoint for this named frame
+            CComPtr<IJoint> pJoint;
+            CLSID clsid;
+            CLSIDFromProgID(L"VWSYSTEM.Joint.1", &clsid);
+            HRESULT hr = CoCreateInstance(clsid, NULL, CLSCTX_INPROC_SERVER,
+                IID_IJoint, (void**)&pJoint);
+
+            if (SUCCEEDED(hr) && pJoint)
+            {
+                pJoint->SetID(jointID++);
+                pJoint->AddDOF(8);  // XR
+                pJoint->AddDOF(16); // YR
+                pJoint->AddDOF(32); // ZR
+
+                pChild->AddRef();
+                pJoint->SetAppData((void*)pChild);
+
+                CString propName;
+                propName.Format("Joint_%s", szName);
+                pThis->AddPropertyExt(CComBSTR(propName),
+                    CComVariant((IDispatch*)(IJoint*)pJoint),
+                    PSBIT_HIDDEN, PS_ALLACCESSPROPERTY,
+                    VT_DISPATCH, IID_IJoint, NULL);
+
+                VWTRACE(m_pWorld, "VWMMTHING", VWT_METHOD,
+                    "ActorInitialize: joint '%s' id=%d frame=%p\n", szName, jointID-1, pChild);
+            }
+        }
+
+        // Recurse into children
+        CreateJointsFromFrame(pThis, pChild, jointID);
+        pChild->Release();
+    }
+    pChildren->Release();
+}
+
 HRESULT CMultimediaExemplarObject::InstallActorExemplar(IModule* pModule)
 {
     HRESULT hr = S_OK;
@@ -78,80 +140,25 @@ STDMETHODIMP CMultimediaExemplarObject::ActorInitialize()
         return hr;
 
     // Get the geometry frame
-    if (FAILED(hr = _GetFrameHelper(pThis, &pFrame)))
+    hr = _GetFrameHelper(pThis, &pFrame);
+    if (FAILED(hr) || !pFrame)
     {
-        VWTRACE(m_pWorld, "VWMMTHING", VWT_ERROR, "ActorInitialize: no geometry frame\n");
-        return hr;
+        VWTRACE(m_pWorld, "VWMMTHING", VWT_ERROR, "ActorInitialize: no geometry frame (load geometry first)\n");
+        return E_FAIL;
     }
 
     // Get the D3DRM frame to walk children
     IDirect3DRMFrame *pd3drmf = NULL;
-    if (FAILED(hr = pFrame->get_Frame3D(&pd3drmf)) || !pd3drmf)
+    hr = pFrame->get_Frame3D(&pd3drmf);
+    if (FAILED(hr) || !pd3drmf)
     {
         VWTRACE(m_pWorld, "VWMMTHING", VWT_ERROR, "ActorInitialize: no D3DRM frame\n");
         return E_FAIL;
     }
 
-    // Walk frame hierarchy and create joints for each named child
-    LPDIRECT3DRMFRAMEARRAY pChildren = NULL;
-    pd3drmf->GetChildren(&pChildren);
-    if (pChildren)
-    {
-        DWORD count = pChildren->GetSize();
-        int jointID = 1;
-
-        for (DWORD i = 0; i < count; i++)
-        {
-            LPDIRECT3DRMFRAME pChild = NULL;
-            pChildren->GetElement(i, &pChild);
-            if (pChild)
-            {
-                char szName[128] = {0};
-                DWORD nameSize = sizeof(szName);
-                pChild->GetName(&nameSize, szName);
-
-                if (szName[0] != '\0')
-                {
-                    // Create a CJoint for this named frame
-                    CComPtr<IJoint> pJoint;
-                    CLSID clsid;
-                    CLSIDFromProgID(L"VWSYSTEM.Joint.1", &clsid);
-                    hr = CoCreateInstance(clsid, NULL, CLSCTX_INPROC_SERVER,
-                        IID_IJoint, (void**)&pJoint);
-
-                    if (SUCCEEDED(hr) && pJoint)
-                    {
-                        pJoint->SetID(jointID++);
-                        pJoint->AddDOF(8);  // XR
-                        pJoint->AddDOF(16); // YR
-                        pJoint->AddDOF(32); // ZR
-
-                        // Store D3DRM frame pointer as AppData
-                        // Note: SetJointPositionD3D expects IVWFrame*, but for
-                        // direct frame manipulation we store the raw pointer.
-                        // The animation in spuck.cpp handles this correctly.
-                        pChild->AddRef(); // prevent release while joint holds it
-                        pJoint->SetAppData((void*)pChild);
-
-                        // Store joint as a property on the Thing for VBScript access
-                        CString propName;
-                        propName.Format("Joint_%s", szName);
-                        pThis->AddPropertyExt(CComBSTR(propName),
-                            CComVariant((IDispatch*)(IJoint*)pJoint),
-                            PSBIT_HIDDEN, PS_ALLACCESSPROPERTY,
-                            VT_DISPATCH, IID_IJoint, NULL);
-
-                        VWTRACE(m_pWorld, "VWMMTHING", VWT_METHOD,
-                            "ActorInitialize: created joint '%s' (id=%d)\n", szName, jointID-1);
-                    }
-                }
-
-                // Recurse into children (TODO: nested hierarchy)
-                pChild->Release();
-            }
-        }
-        pChildren->Release();
-    }
+    // Recursively walk frame hierarchy and create joints for all named frames
+    int jointID = 1;
+    CreateJointsFromFrame(pThis, pd3drmf, jointID);
 
     SAFERELEASE(pd3drmf);
     VWTRACE(m_pWorld, "VWMMTHING", VWT_METHOD, "ActorInitialize: done\n");
