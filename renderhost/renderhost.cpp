@@ -19,6 +19,7 @@ CComModule _Module;
 #include <vwclient.h>    // IVWClientSite, IID_IVWClientSite
 
 // Spuck demo (spuck.cpp)
+void SetSpuckRenderer(IDispatch* pDisp);
 void CreateSpuck(IWorld* pWorld);
 void AnimateSpuck();
 
@@ -927,6 +928,7 @@ public:
 
                     // Register event sink for chat/system messages
                     g_pRenderFrame = m_pFrame;
+                    SetSpuckRenderer(m_pFrame->m_pRendererDisp);
                     {
                         CComPtr<IConnectionPointContainer> pCPC;
                         hr = pClient->QueryInterface(IID_IConnectionPointContainer, (void**)&pCPC);
