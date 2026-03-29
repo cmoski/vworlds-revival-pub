@@ -65,7 +65,7 @@ Set the position of the given DOF and update the geometry to reflect that change
 STDMETHODIMP CJoint::SetPosition(DegreesOfFreedom DOF, double position) {
 	HRESULT hr;
 	hr = SetDOF(DOF, position);
-	if (SUCCEEDED(hr)) {
+	if (SUCCEEDED(hr) && pfUpdateJoint) {
 		pfUpdateJoint((IJoint *)this, dof, state, order);
 	}
 	return hr;
@@ -219,7 +219,8 @@ root node.
 */
 STDMETHODIMP CJoint::UpdateGeometry() {
 	((IJoint *)this)->AddRef();
-	pfUpdateJoint((IJoint *)this, dof, state, order);
+	if (pfUpdateJoint)
+		pfUpdateJoint((IJoint *)this, dof, state, order);
 	for (int c =0; c < numChildren; c++) {
 		children->GetAt(c)->UpdateGeometry();
 	}

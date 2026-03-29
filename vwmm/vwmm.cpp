@@ -200,6 +200,10 @@ public:
 
 CVwmmApp theApp;
 
+// Forward declare the D3DRM joint update callback from vwgeoma.cpp
+typedef int DegreesOfFreedom;
+extern void SetJointPositionD3D(IJoint *ij, DegreesOfFreedom DOF, double s[], int order[]);
+
 BOOL CVwmmApp::InitInstance()
 {
 #ifdef _MERGE_PROXYSTUB
@@ -207,6 +211,10 @@ BOOL CVwmmApp::InitInstance()
 #endif
 	_Module.Init(ObjectMap, m_hInstance);
 	AfxEnableControlContainer();
+
+	// Wire the bone system callback — makes CJoint::SetPosition apply to D3DRM frames
+	CJoint::pfUpdateJoint = SetJointPositionD3D;
+
 	return CWinApp::InitInstance();
 }
 
