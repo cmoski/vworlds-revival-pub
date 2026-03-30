@@ -156,6 +156,7 @@ End Sub
 '       same object variables when the user disconnects.
 '--------------------------------------
 Sub HandleUIEvent(objFrom, strEventName, vntArgs)
+	If IsEmpty(sobjVWClient) Or sobjVWClient Is Nothing Then Exit Sub
 	Select Case strEventName
 	Case "OnUserConnect"
 		If vntArgs is sobjVWClient.World.User Then

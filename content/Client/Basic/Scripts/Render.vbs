@@ -408,6 +408,8 @@ End Sub
 '       renderview's CenterViewOnObject.
 '--------------------------------------
 Sub HandleUIEvent(objFrom, strEventName, vntArgs)
+	' OnTopLoad sets sobjVWClient — skip events until initialization completes
+	If IsEmpty(sobjVWClient) Or sobjVWClient Is Nothing Then Exit Sub
 	Select Case strEventName
 	Case "OnUserConnect"
 		If vntArgs Is sobjVWClient.World.User Then

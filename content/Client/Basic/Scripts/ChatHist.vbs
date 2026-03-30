@@ -639,6 +639,7 @@ End Function
 '       after making appropriate checks.
 '--------------------------------------
 Sub HandleUIEvent(objFrom, strEventName, vntArgs)
+	If IsEmpty(sobjVWClient) Or sobjVWClient Is Nothing Then Exit Sub
 	Dim objCell1, objText, arrCells, objUser, strWhisperLeft, strWhisperRight, objImg, objSpan, objCell2
 
 	Select Case strEventName

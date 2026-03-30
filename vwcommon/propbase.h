@@ -820,24 +820,32 @@ public:
 
 // macros to ease the redundant pain of firing events
 // use pEvent to call your event interface
-
-// 02-11-98 dv - removed the hresult check
+//
+// Snapshot-then-invoke: copy sinks while locked, QI for typed interface,
+// unlock, then invoke callbacks. Safe against re-entrant Advise/Unadvise.
 
 #define START_EVENT(class, iface) \
+	{ \
 	Lock(); \
-	\
-	IUnknown** pp = m_vec.begin(); \
-    while (pp < m_vec.end()) \
-    { \
-        if (*pp != NULL) \
-        { \
-			iface* pEvent = reinterpret_cast<iface*>(*pp);
+	int _nSinks = m_vec.GetSize(); \
+	if (_nSinks > 64) { TRACE("START_EVENT: sink count %d truncated to 64\n", _nSinks); _nSinks = 64; } \
+	iface* _pSnap[64]; \
+	int _nValid = 0; \
+	for (int _i = 0; _i < _nSinks; _i++) { \
+		IUnknown* _p = m_vec.GetAt(_i); \
+		if (_p) { \
+			iface* _pTyped = NULL; \
+			if (SUCCEEDED(_p->QueryInterface(__uuidof(iface), (void**)&_pTyped)) && _pTyped) \
+				_pSnap[_nValid++] = _pTyped; \
+		} \
+	} \
+	Unlock(); \
+	for (int _j = 0; _j < _nValid; _j++) { \
+		iface* pEvent = _pSnap[_j];
 
 #define FINISH_EVENT() \
-        } \
-        pp++; \
-    } \
-	\
-    Unlock();
+		_pSnap[_j]->Release(); \
+	} \
+	}
 
 #endif //__PROPBASE_H

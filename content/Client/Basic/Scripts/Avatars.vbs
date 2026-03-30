@@ -318,6 +318,7 @@ End Function
 '       avatars image.
 '--------------------------------------
 Sub HandleUIEvent(objFrom, strEventName, vntArgs)
+	If IsEmpty(sobjVWClient) Or sobjVWClient Is Nothing Then Exit Sub
 	Dim objImg
 
 	Select Case strEventName

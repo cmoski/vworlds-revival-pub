@@ -272,6 +272,7 @@ End Function
 '       list items image.
 '--------------------------------------
 Sub HandleUIEvent(objFrom, strEventName, vntArgs)
+	If IsEmpty(sobjVWClient) Or sobjVWClient Is Nothing Then Exit Sub
 	Dim objItem, objImg
 
 	Select Case strEventName

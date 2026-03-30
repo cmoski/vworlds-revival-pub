@@ -242,6 +242,7 @@ end sub
 '--------------------------------------
 Sub HandleUIEvent(objFrom, strEventName, vntArgs)
 	Dim intCount
+	If IsEmpty(sobjVWClient) Or sobjVWClient Is Nothing Then Exit Sub
 
 	Select Case strEventName
 	Case "OnGeometryChanged"

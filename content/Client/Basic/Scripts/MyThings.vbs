@@ -238,6 +238,7 @@ End Function
 '--------------------------------------
 Sub HandleUIEvent(objFrom, strEventName, vntArgs)
 	Dim objItem, objImg
+	If IsEmpty(sobjVWClient) Or sobjVWClient Is Nothing Then Exit Sub
 
 	Select Case strEventName
 	Case "OnUserConnect"

@@ -584,6 +584,7 @@ End Sub
 '--------------------------------------
 Sub HandleUIEvent(objFrom, strEventName, vntArgs)
 	Dim objCell1, objText, arrCells, objUser, strWhisperLeft, strWhisperRight
+	If IsEmpty(sobjVWClient) Or sobjVWClient Is Nothing Then Exit Sub
 
 	Select Case strEventName
 	Case "OnUserConnect"

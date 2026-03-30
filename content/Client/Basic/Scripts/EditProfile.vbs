@@ -312,6 +312,7 @@ end sub
 '       if the user is disconnected.
 '--------------------------------------
 Sub HandleUIEvent(objFrom, strEventName, vntArgs)
+	If IsEmpty(sobjVWClient) Or sobjVWClient Is Nothing Then Exit Sub
 	Select Case strEventName
 	Case "OnGeometryChanged"
 		UpdateThumbnailImage

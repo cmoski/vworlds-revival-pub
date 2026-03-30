@@ -81,9 +81,9 @@ void CVWClientOCX::FinalRelease()
 			hr = pconnptctr->FindConnectionPoint(IID_IVWClientSite, &pconnpt);
 			if (SUCCEEDED(hr))
 			{
-				// artificially addref ptr
-				IUnknown* p = (IUnknown *)m_dwCookie;
-				p->AddRef();
+				// AddRef to prevent destruction during Unadvise
+				// (balances the artificial Release in FinalConstruct)
+				GetUnknown()->AddRef();
 
 				pconnpt->Unadvise(m_dwCookie);
 				pconnpt->Release();

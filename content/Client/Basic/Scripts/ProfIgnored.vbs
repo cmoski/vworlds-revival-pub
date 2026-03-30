@@ -304,6 +304,7 @@ End Sub
 '       update the list of ignored users.
 '--------------------------------------
 Sub HandleUIEvent(objFrom, strEventName, vntArgs)
+	If IsEmpty(sobjVWClient) Or sobjVWClient Is Nothing Then Exit Sub
 	Select Case strEventName
 	Case "OnNameChanged", "IgnoredUser", "UnignoredUser"
 		RefreshIgnoredList
