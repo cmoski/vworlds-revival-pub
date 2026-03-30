@@ -1,7 +1,9 @@
 // spuck.cpp - Animate Spuck using the original CJoint bone system
 // Wires pfUpdateJoint to D3DRM frames from the hierarchical spuck.x model
 
+#ifndef _ATL_ALLOW_DEPRECATED_FUNCTIONS
 #define _ATL_ALLOW_DEPRECATED_FUNCTIONS
+#endif
 #ifndef _AFXDLL
 #define _AFXDLL
 #endif

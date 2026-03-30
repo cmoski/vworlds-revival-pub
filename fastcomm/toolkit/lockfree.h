@@ -136,28 +136,27 @@ Avail on intel pentiums and above.
 	}
 */
 
-#pragma warning (disable: 4035)		// function doesn't return value warning.
+// VS2022+ provides InterlockedCompareExchange64 as an intrinsic.
+// Only use the custom asm implementation on very old toolchains.
+#if defined(_MSC_VER) && (_MSC_VER < 1300)
+#pragma warning (disable: 4035)
 inline __int64 InterlockedCompareExchange64 (volatile __int64* pDestination, __int64 exchange, __int64 comperand)
 {
 	__asm
 	{
 		mov esi, pDestination
-
 		mov eax, DWORD PTR comperand[0]
 		mov edx, DWORD PTR comperand[4]
-
 		mov ebx, DWORD PTR exchange[0]
 		mov ecx, DWORD PTR exchange[4]
-
-		_emit 0xF0		// lock
-		_emit 0x0F		// cmpxchg8b [esi]
+		_emit 0xF0
+		_emit 0x0F
 		_emit 0xC7
 		_emit 0x0E
-
-		// result is in DX,AX
 	}
 }
-#pragma warning (default: 4035)		// function doesn't return value warning
+#pragma warning (default: 4035)
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //The basic lockfree stack, suitable for use as a free list-------------------------------//

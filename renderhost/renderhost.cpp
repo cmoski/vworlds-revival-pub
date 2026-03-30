@@ -1,7 +1,9 @@
 // renderhost.cpp - Minimal VWorlds render host
 // Uses MFC CWnd::CreateControl to host the VWRenderView OCX with full OLE support.
 
+#ifndef _ATL_ALLOW_DEPRECATED_FUNCTIONS
 #define _ATL_ALLOW_DEPRECATED_FUNCTIONS
+#endif
 #ifndef _AFXDLL
 #define _AFXDLL
 #endif

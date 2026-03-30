@@ -1,7 +1,9 @@
 // webclient.cpp - Host the original VWorlds HTML client in a WebBrowser control
 // Uses CWnd::CreateControl to host the WebBrowser OCX directly (no doc/view)
 
+#ifndef _ATL_ALLOW_DEPRECATED_FUNCTIONS
 #define _ATL_ALLOW_DEPRECATED_FUNCTIONS
+#endif
 #ifndef _AFXDLL
 #define _AFXDLL
 #endif
