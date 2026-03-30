@@ -12,6 +12,8 @@
 #include <afxdisp.h>
 #include <afxctl.h>
 #include <atlbase.h>
+#include <wininet.h>
+#pragma comment(lib, "wininet.lib")
 CComModule _Module;
 #include <atlcom.h>
 #include <exdisp.h>    // IWebBrowser2
@@ -24,8 +26,15 @@ public:
     CWnd m_browserWnd;
     CComPtr<IWebBrowser2> m_pBrowser;
 
-    BOOL CreateAndHost()
+    CString m_cookieUser, m_cookieWorld;
+
+    BOOL CreateAndHost(const CString& clientPath = "Client\\Basic\\Client.htm",
+                       const CString& user = "", const CString& server = "", const CString& world = "")
     {
+        if (!world.IsEmpty()) {
+            m_cookieUser = user;
+            m_cookieWorld = server + "/" + world;
+        }
         if (!Create(NULL, "Microsoft Virtual Worlds",
             WS_OVERLAPPEDWINDOW | WS_VISIBLE,
             CRect(50, 50, 1074, 818)))
@@ -72,7 +81,7 @@ public:
                 if (RegQueryValueExA(hKey, "ContentPath", NULL, NULL, (LPBYTE)buf, &bufSize) == ERROR_SUCCESS) {
                     htmlPath = buf;
                     if (htmlPath.Right(1) != "\\") htmlPath += "\\";
-                    htmlPath += "Client\\Basic\\Client.htm";
+                    htmlPath += clientPath;
                 }
                 RegCloseKey(hKey);
             }
@@ -82,15 +91,24 @@ public:
                 GetModuleFileNameA(NULL, exePath, MAX_PATH);
                 CString exeDir(exePath);
                 exeDir = exeDir.Left(exeDir.ReverseFind('\\'));
-                // Try ../content/Client/Basic/ (release layout)
-                htmlPath = exeDir + "\\..\\content\\Client\\Basic\\Client.htm";
+                // Try ../content/ (release layout)
+                htmlPath = exeDir + "\\..\\content\\" + clientPath;
                 if (GetFileAttributesA(htmlPath) == INVALID_FILE_ATTRIBUTES) {
-                    // Try webclient/html/ (dev layout)
+                    // Try ../webclient/html/ (dev layout)
                     htmlPath = exeDir + "\\..\\webclient\\html\\Client.htm";
                 }
             }
             CString fileUrl = "file:///" + htmlPath;
             fileUrl.Replace('\\', '/');
+
+            // Set cookies for authoring client (reads sUser, sWorld from cookies)
+            if (!m_cookieWorld.IsEmpty()) {
+                InternetSetCookieA("file:///vworlds", "sUser", (LPCSTR)m_cookieUser);
+                InternetSetCookieA("file:///vworlds", "sWorld", (LPCSTR)m_cookieWorld);
+                InternetSetCookieA("file:///vworlds", "sLogoffURL", "vwStartClient.htm");
+                printf("Set cookies: sUser=%s sWorld=%s\n", (LPCSTR)m_cookieUser, (LPCSTR)m_cookieWorld);
+            }
+
             CComBSTR url(fileUrl);
             m_pBrowser->Navigate(url, &vtEmpty, &vtEmpty, &vtEmpty, &vtEmpty);
             printf("Navigating to %s\n", (LPCSTR)fileUrl);
@@ -120,6 +138,9 @@ public:
 
     CWebClientApp() : m_pFrame(NULL) {}
 
+    CString m_clientPath; // relative to ContentPath, e.g. "Client\html\client.htm"
+    CString m_world, m_user, m_server;
+
     virtual BOOL InitInstance()
     {
         AllocConsole();
@@ -129,10 +150,41 @@ public:
         AfxEnableControlContainer();
         _Module.Init(NULL, m_hInstance);
 
+        // Parse command line
+        CString cmdLine(m_lpCmdLine);
+        int pos;
+        if ((pos = cmdLine.Find("--client ")) >= 0) {
+            CString rest = cmdLine.Mid(pos + 9);
+            rest.TrimLeft();
+            if (rest.GetLength() > 0 && rest[0] == '"') {
+                rest = rest.Mid(1);
+                m_clientPath = rest.SpanExcluding("\"");
+            } else {
+                m_clientPath = rest.SpanExcluding(" ");
+            }
+        }
+        if ((pos = cmdLine.Find("--world ")) >= 0) {
+            CString rest = cmdLine.Mid(pos + 8);
+            m_world = rest.SpanExcluding(" \"");
+        }
+        if ((pos = cmdLine.Find("--user ")) >= 0) {
+            CString rest = cmdLine.Mid(pos + 7);
+            m_user = rest.SpanExcluding(" \"");
+        }
+        if ((pos = cmdLine.Find("--server ")) >= 0) {
+            CString rest = cmdLine.Mid(pos + 9);
+            m_server = rest.SpanExcluding(" \"");
+        }
+        if (m_clientPath.IsEmpty())
+            m_clientPath = "Client\\Basic\\Client.htm";
+        if (m_server.IsEmpty()) m_server = "localhost";
+        if (m_user.IsEmpty()) m_user = "Explorer";
+
         printf("=== VWorlds Web Client ===\n");
+        printf("Client: %s\n", (LPCSTR)m_clientPath);
 
         m_pFrame = new CWebFrame();
-        if (!m_pFrame->CreateAndHost()) {
+        if (!m_pFrame->CreateAndHost(m_clientPath, m_user, m_server, m_world)) {
             printf("FAIL: Could not create web frame\n");
             return FALSE;
         }

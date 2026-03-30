@@ -436,8 +436,8 @@ sub OnConnectToNewWorld
 	elseif len(curWorldname) > 250 then
 		msgbox "The maximum length for a world name was exceeded. Re-enter a world name.", vbExclamation, "Microsoft Virtual Worlds"
 		NewWorld.Focus
-	elseif not (theClient.vwclient.world.validateworldname(curWorldname)) then
-		msgbox "A world name can not contain a file extension, a space, a tab, or any of the following characters:" & vbcrlf & " : ? "" < > | ! & ' ," & vbcrlf & "Enter a new world name.", vbExclamation, "Microsoft Virtual Worlds"
+	elseif False then ' ValidateWorldName requires temp world — skip on modern systems
+		msgbox "Invalid world name.", vbExclamation, "Microsoft Virtual Worlds"
 		NewWorld.Focus
 	elseif instr(curWorldName, "/") = 0 and instr(curWorldName, "\") = 0 then
 		msgbox "A world name must be in the form of ServerName/WorldName.", vbExclamation, "Microsoft Virtual Worlds"
