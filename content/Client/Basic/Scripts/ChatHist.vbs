@@ -127,6 +127,9 @@ Sub OnTopLoad
 	If top.sblnLoggedOn Then
 		Set sobjWorld = sobjVWClient.World
 		Set sobjUser = sobjWorld.User
+	Else
+		'Keep polling until logged on (fast machines finish loading before connection completes)
+		window.setTimeout "OnTopLoad", 250, "vbs"
 	End If
 End Sub
 '======================================
@@ -639,7 +642,12 @@ End Function
 '       after making appropriate checks.
 '--------------------------------------
 Sub HandleUIEvent(objFrom, strEventName, vntArgs)
-	If IsEmpty(sobjVWClient) Or sobjVWClient Is Nothing Then Exit Sub
+	If IsEmpty(sobjVWClient) Or sobjVWClient Is Nothing Then
+		On Error Resume Next
+		Set sobjVWClient = top.objClient.VWClient
+		On Error GoTo 0
+		If sobjVWClient Is Nothing Then Exit Sub
+	End If
 	Dim objCell1, objText, arrCells, objUser, strWhisperLeft, strWhisperRight, objImg, objSpan, objCell2
 
 	Select Case strEventName
