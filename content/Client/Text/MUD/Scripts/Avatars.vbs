@@ -80,6 +80,8 @@ Sub OnTopLoad
 		Set sobjWorld = sobjVWClient.World
 		Set sobjUser = sobjWorld.User
 		RegenAvatarList
+	Else
+		window.setTimeout "OnTopLoad", 250, "vbs"
 	End If
 'dim objItem
 '	For Each objItem in sobjUser.Container.Contents

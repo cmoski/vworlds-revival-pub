@@ -88,6 +88,8 @@ Sub OnTopLoad
 	If top.sblnLoggedOn Then
 		Set sobjWorld = sobjVWClient.World
 		Set sobjUser = sobjWorld.User
+	Else
+		window.setTimeout "OnTopLoad", 250, "vbs"
 	End If
 End Sub
 '======================================

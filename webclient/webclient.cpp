@@ -101,10 +101,13 @@ public:
             CString fileUrl = "file:///" + htmlPath;
             fileUrl.Replace('\\', '/');
 
-            // Set cookies for authoring client (reads sUser, sWorld from cookies)
-            // Must use same URL as the page for document.cookie to see them
+            // Set cookies for the HTML client (reads sUser, sWorld from document.cookie)
+            // Use the page's directory URL so each client type has its own cookie space
             if (!m_cookieWorld.IsEmpty()) {
+                // Use directory of the HTML file as cookie URL
                 CString cookieUrl = fileUrl;
+                int lastSlash = cookieUrl.ReverseFind('/');
+                if (lastSlash > 0) cookieUrl = cookieUrl.Left(lastSlash + 1);
                 InternetSetCookieA((LPCSTR)cookieUrl, "sUser", (LPCSTR)m_cookieUser);
                 InternetSetCookieA((LPCSTR)cookieUrl, "sWorld", (LPCSTR)m_cookieWorld);
                 InternetSetCookieA((LPCSTR)cookieUrl, "sLogoffURL", "vwStartClient.htm");
