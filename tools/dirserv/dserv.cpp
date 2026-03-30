@@ -46,7 +46,7 @@ STDMETHODIMP CDServ::ConnectEx2(HWND hNotificationWindow, BSTR bstrLDAP)
 	AFX_MANAGE_STATE(AfxGetStaticModuleState())
 
 	m_bConnected = true;
-	TRACE("CDServ::ConnectEx2: local mode (LDAP path ignored)\n");
+	OutputDebugStringA("=== DSERV ConnectEx2: local mode active ===\n");
 
 	// Post notification if window provided (original contract)
 	if (hNotificationWindow)
@@ -90,8 +90,13 @@ STDMETHODIMP CDServ::AddWorld(BSTR bstrWorldGUID, BSTR bstrWorldURL, BSTR bstrWo
 
 	m_worldMap.SetAt(guid, rec);
 
-	TRACE("CDServ::AddWorld: '%s' url='%s' users=%s\n",
-		(LPCSTR)guid, (LPCSTR)rec.url, (LPCSTR)rec.userCount);
+	{
+		CString msg;
+		msg.Format("=== DSERV AddWorld: guid='%s' url='%s' users=%s ===\n",
+			(LPCSTR)guid, (LPCSTR)rec.url, (LPCSTR)rec.userCount);
+		OutputDebugStringA((LPCSTR)msg);
+		TRACE("%s", (LPCSTR)msg);  // also goes to server's debug output
+	}
 
 	return S_OK;
 }

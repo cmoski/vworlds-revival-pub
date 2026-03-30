@@ -1973,14 +1973,10 @@ HRESULT CVWServer::OpenWorld(BSTR bstrURL, BSTR bstrFileName, VARIANT_BOOL bCrea
 			goto ERROR_ENCOUNTERED;
 		}
 
-		//don't send to DS.
-		if(0)
-		{
-			//Put result in DS.			
-			hr = UpdateDS(bstrGUID, bstrFileName, 0);
-			if (FAILED(hr))
-				goto ERROR_ENCOUNTERED;	
-		}
+		// Register world in directory service (local store)
+		hr = UpdateDS(bstrGUID, bstrFileName, 0);
+		if (FAILED(hr))
+			goto ERROR_ENCOUNTERED;
 	} 
 	// Need to put the ServerName in non-create case 
 	// (ServerName is null in create case)
@@ -2725,7 +2721,9 @@ HRESULT CVWServer::UpdateDS(BSTR bstrGUID, BSTR path, int NewUserCount)
 	// check to see if the world in the DS
 	IsWorldRegisteredInDS(path, &bIsInDS);
 	
-	if (bIsInDS)
+	TRACE("UpdateDS: bIsInDS=%d for path='%s'\n", bIsInDS, CString(path));
+	// Always register in local directory (original checked bIsInDS registry flag,
+	// but that was only set by the ADSI setup wizard which no longer exists)
 	{
 		CComBSTR	bstrInfoURL;
 
