@@ -2,15 +2,28 @@
 
 **Microsoft Virtual Worlds v1.5 (February 2000)** — modernized to build and run on Windows 11 with Visual Studio 2022.
 
-A COM/ATL-based multi-user 3D virtual worlds platform from Microsoft Research, originally targeting Windows 98/2000 with Visual C++ 6.0 and Direct3D Retained Mode. This project brings the full platform back to life: rendering, networking, scripting, persistence, and editing tools — all functional on modern Windows.
+## The Story
 
-## Quick Start (Release)
+Back in 1999-2000, Microsoft Research built one of the first collaborative 3D virtual world platforms. It was called Virtual Worlds — a multi-user environment where people could meet, build, and script together in shared 3D spaces. I was an early beta tester. We logged in through an HTML client, walked around as sprite avatars, chatted, built rooms, and imagined what the future of online collaboration would look like. This was years before Second Life, a decade before VRChat.
+
+Then the project was shelved. Microsoft Research released the source code under a research license, and the world moved on to newer APIs and different visions of virtual reality.
+
+Twenty-six years later, I found the source code again. Visual C++ 6.0, COM/ATL, Direct3D Retained Mode, Windows 98 — none of it builds on anything modern. But the code was still there, and the vision was still interesting. So I set out to resurrect it: get it compiling on Visual Studio 2022, running on Windows 11, rendering real 3D worlds, with multi-user networking, the original scripting system, and even bone animation imported from Asheron's Call.
+
+This project is a preservation effort. One of the earliest collaborative virtual environments, brought back to life so people can see what we were building at the turn of the millennium.
+
+## Quick Start
+
+The easiest way to try VWorlds is to download a pre-built release. No Visual Studio or build tools required.
 
 1. Download the latest release from [Releases](https://github.com/cmoski/vworlds-revival/releases)
 2. Extract the zip anywhere
-3. Run `install.bat` as Administrator (registers COM DLLs, sets registry paths, installs VC++ runtime if needed)
+3. Run `install.bat` as Administrator — this registers the COM DLLs, sets up registry paths, and installs the VC++ runtime if you don't have it
 4. Run `launch.bat` to enter the Gallery world
 5. Run `launch.bat DesktopWorld` for the full lobby with music garden
+6. Run `launch_multiuser.bat` to test two clients seeing each other
+
+No need to install Visual Studio, configure CMake, or register anything manually. The installer handles everything.
 
 ## What Works
 
