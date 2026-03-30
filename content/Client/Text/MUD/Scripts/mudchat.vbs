@@ -98,13 +98,23 @@ strTeleport =		"A shimmering portal appears in space.  "+ _
 					"You take a deep breath and step into the haze, greeting the brief dizziness that overcomes you."+vbCRLF+ _
 					"You are teleported to [~0]!"
 
-strHelp = 			"The following commands are available:"+vbCRLF+vbCRLF+ _
-					"@list rooms: lists all the rooms in the world and their ids"+vbCRLF+ _
-					"@create room <optional_roomname>: creates a new room and teleports you to it"+vbCRLF+ _
-					"@create object <optional_objname>: creates a new object in the current room"+vbCRLF+ _
-					"@create portal <destination_roomname>: creates a portal to the destination room and a matching portal back to this room"+vbCRLF+ _
-					"@destroy room <optional_roomname>: destroys a specified room (current room is default)"+vbCRLF+vbCRLF+ _
-					"!<script_command>: executes a command in the script engine"+vbCRLF
+strHelp = 			"VWorlds MUD Client — Commands:"+vbCRLF+vbCRLF+ _
+					"LOOK: describe the room and its contents"+vbCRLF+ _
+					"LOOK <name>: examine an object or person"+vbCRLF+ _
+					"SAY <text> or ""<text>: speak to the room"+vbCRLF+ _
+					"EMOTE <text> or :<text>: express an action"+vbCRLF+ _
+					"INVENTORY: list what you are carrying"+vbCRLF+ _
+					"TAKE <name>: pick up an object"+vbCRLF+ _
+					"DROP <name>: drop an object"+vbCRLF+ _
+					"MOVE <direction>: move through a portal (N/S/E/W/NE/SE/NW/SW/U/D)"+vbCRLF+ _
+					"N, S, E, W: shorthand for movement directions"+vbCRLF+vbCRLF+ _
+					"Builder commands:"+vbCRLF+ _
+					"@list rooms: lists all the rooms in the world"+vbCRLF+ _
+					"@create room <name>: create a room and teleport to it"+vbCRLF+ _
+					"@create object <name>: create an object in this room"+vbCRLF+ _
+					"@create portal <roomname>: create a portal and return portal"+vbCRLF+ _
+					"@destroy room <name>: destroy a room"+vbCRLF+vbCRLF+ _
+					"!<script>: execute VBScript directly"+vbCRLF
 
 '======================================
 
@@ -207,6 +217,10 @@ Sub OnTopLoad
 		EnableButtons True
 		txtChat.select
 		txtChat.focus
+		' Show welcome and help on first connect
+		sobjWorld.FireUIEvent sobjUser, "MUDReport", "Welcome to " & sobjWorld.WorldName & "." & vbCRLF & "Type HELP for a list of commands. Type LOOK to see your surroundings." & vbCRLF
+	Else
+		window.setTimeout "OnTopLoad", 250, "vbs"
 	End If
 
 	top.sstrChatText = txtChat.value
