@@ -11,6 +11,9 @@ World.CreateCOMModule "Studio", "VWSTUDIO.StudioEx.1", 3
 World.CreateCOMModule "Foundation", "VWEXEMP.FoundationExemplars.1", 3
 World.Global.DefaultSpriteFile = "default.spr"
 World.Global.DefaultAvatarExemplar.InitializeSpriteGraphics "default.spr", 0.0, 1.0, 0.0, 1.0, 0.0, 0.0
+World.Global.DirectoryServicePage = "http://localhost:7002/ds"
+World.Global.DefaultAvatarExemplar.IsAuthor = True
+World.Global.DefaultAvatarExemplar.IsWizard = True
 
 Set Room = World.CreateInstance("EmpyreanStudy", World.Exemplar("Room"))
 World.Global.DefaultRoom = Room

@@ -26,6 +26,8 @@ WScript.Echo "Modules OK"
 World.Global.DefaultSpriteFile = "default.spr" : Err.Clear
 World.Global.DefaultAvatarExemplar.InitializeSpriteGraphics "default.spr", 0.0, 1.0, 0.0, 1.0, 0.0, 0.0 : Err.Clear
 World.Global.DirectoryServicePage = "http://localhost:7002/ds" : Err.Clear
+World.Global.DefaultAvatarExemplar.IsAuthor = True : Err.Clear
+World.Global.DefaultAvatarExemplar.IsWizard = True : Err.Clear
 
 ' Room
 Set LobbyRm = World.CreateInstance("Lobby Room", World.Exemplar("Room"))
