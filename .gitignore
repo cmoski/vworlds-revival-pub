@@ -47,5 +47,7 @@ CMakeSettings.json
 *.log
 *.tlog
 
-# Claude settings
+# Local config (not tracked)
 .claude/
+CLAUDE.md
+AGENTS.md
