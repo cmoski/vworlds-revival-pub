@@ -234,8 +234,9 @@ protected:
 	STDMETHOD(ActorInitialize)();
 	STDMETHOD(ActorSetJointRotation)(BSTR bstrJointName, double angle);
 	STDMETHOD(ActorPlayAnimation)(BSTR bstrAnimFile);
+	STDMETHOD(ActorPlayAllAnimations)();
 	void CreateJointsFromFrame(IThing* pThis, LPDIRECT3DRMFRAME pFrame, int& jointID);
-	void ApplyJointRotationXYZ(LPDIRECT3DRMFRAME pFrame, float xDeg, float yDeg, float zDeg);
+	void ApplyJointRotationXYZ(LPDIRECT3DRMFRAME pFrame, float xDeg, float yDeg, float zDeg, void* pRestPose = NULL);
 
 	HRESULT RemoveInterpolateAnim(IThing *pThing, BSTR bstrProperty);
 	HRESULT PutInterpolateAnim(IThing *pThing, BSTR bstrProperty, IVWAnimation *pAnimation);

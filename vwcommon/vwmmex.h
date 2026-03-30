@@ -611,6 +611,11 @@ EXTERN_C const IID IID_IMultimediaExemplar;
             /* [in] */ BSTR bstrJointName,
             /* [in] */ double angle) = 0;
         
+        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE ActorPlayAnimation( 
+            /* [in] */ BSTR bstrAnimFile) = 0;
+        
+        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE ActorPlayAllAnimations( void) = 0;
+        
     };
     
     
@@ -1431,6 +1436,15 @@ EXTERN_C const IID IID_IMultimediaExemplar;
             /* [in] */ BSTR bstrJointName,
             /* [in] */ double angle);
         
+        DECLSPEC_XFGVIRT(IMultimediaExemplar, ActorPlayAnimation)
+        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *ActorPlayAnimation )( 
+            IMultimediaExemplar * This,
+            /* [in] */ BSTR bstrAnimFile);
+        
+        DECLSPEC_XFGVIRT(IMultimediaExemplar, ActorPlayAllAnimations)
+        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *ActorPlayAllAnimations )( 
+            IMultimediaExemplar * This);
+        
         END_INTERFACE
     } IMultimediaExemplarVtbl;
 
@@ -1828,11 +1842,28 @@ EXTERN_C const IID IID_IMultimediaExemplar;
 #define IMultimediaExemplar_ActorSetJointRotation(This,bstrJointName,angle)	\
     ( (This)->lpVtbl -> ActorSetJointRotation(This,bstrJointName,angle) ) 
 
+#define IMultimediaExemplar_ActorPlayAnimation(This,bstrAnimFile)	\
+    ( (This)->lpVtbl -> ActorPlayAnimation(This,bstrAnimFile) ) 
+
+#define IMultimediaExemplar_ActorPlayAllAnimations(This)	\
+    ( (This)->lpVtbl -> ActorPlayAllAnimations(This) ) 
+
 #endif /* COBJMACROS */
 
 
 #endif 	/* C style interface */
 
+
+
+/* [helpstring] */ HRESULT STDMETHODCALLTYPE IMultimediaExemplar_ActorPlayAllAnimations_Proxy( 
+    IMultimediaExemplar * This);
+
+
+void __RPC_STUB IMultimediaExemplar_ActorPlayAllAnimations_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
 
 
 

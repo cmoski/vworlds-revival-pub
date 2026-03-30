@@ -375,5 +375,7 @@ cpp_quote("#define VWMM_E_LABELFONTSIZE			MAKE_HRESULT(SEVERITY_ERROR, FACILITY_
 		[helpstring("Play a .anim file on the actor")]
 		HRESULT ActorPlayAnimation([in] BSTR bstrAnimFile);
 
+		[helpstring("Play all .anim files for this actor")]
+		HRESULT ActorPlayAllAnimations();
 
 	};
