@@ -58,14 +58,24 @@ for %%d in (vwsystem vwmm vwfound vwprops vwstudio vwrendvw objexplr uictrl) do 
 )
 
 REM Set up registry paths (using install location)
+REM reg.exe /d with trailing backslash+quote issue: write to temp .reg file instead
 echo.
 echo Setting registry paths...
-C:\Windows\SysWOW64\reg.exe add "HKLM\Software\Microsoft\V-Worlds\Paths" /v WorldPath /t REG_SZ /d "%WORLDS%\" /f >nul
-C:\Windows\SysWOW64\reg.exe add "HKLM\Software\Microsoft\V-Worlds\Paths" /v ContentPath /t REG_SZ /d "%CONTENT%\" /f >nul
-C:\Windows\SysWOW64\reg.exe add "HKLM\Software\Microsoft\V-Worlds\Paths" /v AvatarGraphicsPath /t REG_SZ /d "%CONTENT%\Avatar Graphics\" /f >nul
-C:\Windows\SysWOW64\reg.exe add "HKLM\Software\Microsoft\V-Worlds\Paths" /v AvatarPath /t REG_SZ /d "%CONTENT%\Avatar Graphics\" /f >nul
-C:\Windows\SysWOW64\reg.exe add "HKLM\Software\Microsoft\V-Worlds\Paths" /v HelpPath /t REG_SZ /d "%ROOT%docs\" /f >nul
-C:\Windows\SysWOW64\reg.exe add "HKLM\Software\Microsoft\V-Worlds\Paths" /v WorldWizPath /t REG_SZ /d "%CONTENT%\SDK\Wizards\World\" /f >nul
+
+REM Escape backslashes for .reg file format
+set "P=%ROOT:\=\\%"
+> "%TEMP%\vworlds_paths.reg" (
+    echo Windows Registry Editor Version 5.00
+    echo.
+    echo [HKEY_LOCAL_MACHINE\Software\Microsoft\V-Worlds\Paths]
+    echo "WorldPath"="%P%worlds\\"
+    echo "ContentPath"="%P%content\\"
+    echo "AvatarGraphicsPath"="%P%content\\Avatar Graphics\\"
+    echo "AvatarPath"="%P%content\\Avatar Graphics\\"
+    echo "HelpPath"="%P%docs\\"
+    echo "WorldWizPath"="%P%content\\SDK\\Wizards\\World\\"
+)
+C:\Windows\SysWOW64\reg.exe import "%TEMP%\vworlds_paths.reg" >nul 2>&1
 echo   Paths set to: %ROOT%
 
 echo.
