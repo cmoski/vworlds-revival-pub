@@ -1,0 +1,443 @@
+<html><head>
+<LINK Rel=Stylesheet href="..\..\..\..\client\shared\global.css">
+<object id="elements" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
+  <param name="DataURL" value="landscape.csv">
+  <param name="UseHeader" value="True">
+  <param name="TextQualifier" value="'">
+</object>
+<script language="VBSCRIPT">
+
+Public ctlBottom, ctlTop
+
+Sub window_onload
+	Set ctlTop = lstStyle
+	Set ctlBottom = lstStyle
+	Set parent.ctlBottom = ctlBottom
+End Sub
+
+sub document_onKeyPress
+	select case window.event.keycode
+	case 27
+		top.buttons.OnCancel
+	case 13
+		If Not top.buttons.finishbtn.disabled Then
+			top.buttons.OnFinish
+		ElseIf Not top.buttons.nextbtn.disabled Then
+			top.buttons.OnNext
+		End If
+	case Else
+	end select
+end sub
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+Dim RoomType
+Dim WorldType
+WorldType = "Outdoor"
+RoomType = "Landscape"
+
+dim rs
+dim ready
+
+Dim NewRoom
+Dim PortalNameTo
+Dim PortalNameFrom
+Dim CurrentRoom
+
+ready = false
+
+sub elements_ondatasetcomplete
+	set rs = elements.recordset
+	fillin_select
+end sub
+
+function verify()
+	verify = ready
+end function
+
+sub fillin_select()
+	dim el
+
+	rs.MoveFirst
+	' interate on world templates
+	Do Until rs.EOF
+			set el = document.CreateElement("OPTION")
+			el.value = rs.Fields(0).value
+			el.text = rs.Fields(0).value
+			lstStyle.add el
+			rs.MoveNext
+	Loop
+
+	lstStyle.SelectedIndex = top.SelectedStyleIndex
+	choseName
+end sub
+
+sub choseName()
+	dim selected
+	selected = lstStyle.selectedIndex
+
+	rs.MoveFirst
+	rs.Move selected
+	ready = true
+
+	top.RoomType = rs.fields(0)
+	top.Quota = rs.fields(5)
+	'the fifth field in the .csv file is the number of objects in the room
+	top.Geometry = ""
+end sub
+
+sub CreateRoom()
+
+	'top.goWorld.trace "building room " + top.NewRoomName + " of type: " + RoomType + " with geometry: " + top.Geometry
+	set NewRoom = top.goWorld.CreateInstance(top.NewRoomName, top.goWorld.Exemplar("Room"))
+	NewRoom.InitializeGraphics top.Geometry, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0
+	NewRoom.BackgroundColor = &HBDD5E8
+	NewRoom.Description = top.NewRoomDesc
+
+	'top.goWorld.trace "done creating Room " + top.NewRoomName
+	'top.goWorld.trace top.RoomType
+
+	Select Case top.RoomType
+		case "Valley"
+			NewRoom.InitializeGraphics "", 0.0, 0.0, 0.0, 1.0, 0.0, 0.0
+			NewRoom.BackgroundColor = "#99dd99"
+		case "Hill Top"
+			NewRoom.InitializeGraphics "", 0.0, 0.0, 0.0, 1.0, 0.0, 0.0
+			NewRoom.BackgroundColor = 0
+
+	End Select
+
+	'top.goWorld.trace "done creating NewRoom"
+
+	'Now add objects to the NewRoom
+	Select Case top.RoomType
+
+		case "Valley"
+			NewRoom.Defaultavatarposition.set 0,0.930,0
+			Dim groundv
+			set groundv= top.goWorld.CreateInstance("ground", "Artifact",NewRoom)
+			groundv.Description = ""
+			groundv.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\ground.x", 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+			groundv.IsUIVisible = False
+			groundv.IsMoveable = false
+
+			Dim sound
+			set sound= top.goWorld.CreateInstance("sound", "Artifact", NewRoom)
+			sound.Description = ""
+			sound.InitializeGraphics "", 0.0, 2.0, 0.0, 1.0, 0.0, 0.0
+			sound.IsUIVisible = False
+			sound.SetSound "SDK\library\sounds\cricket2.wav", True, -1200,0,0
+
+			Dim Entry2
+			set Entry2= top.goWorld.CreateInstance("entry point", "artifact", NewRoom)
+			Entry2.Description = "Moves you to the spot where you entered this room."
+			Entry2.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\entrypoint.x", 0.0, 1.05, 0.0, -1.0, 0.0, -0.0
+			Entry2.IsMoveable = False
+
+			Dim overview1
+			set overview1= top.goWorld.CreateInstance("overview","artifact", NewRoom)
+			overview1.InitializeSpriteGraphics "",-21.27,6.1,7.65,0.93,0.0,-0.36
+			overview1.IsUIVisible = False
+			overview1.IsCameraAnchor = True
+
+
+			Dim skyv
+			set skyv= top.goWorld.CreateInstance("sky", "Artifact",NewRoom)
+			skyv.Description = ""
+			skyv.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\sky.x", 0.0, -10.0, 0.0, 0.0, 0.0, 0.0
+			skyv.IsUIVisible = False
+			skyv.IsMoveable= false
+
+			Dim hills
+			set hills= top.goWorld.CreateInstance("hills", "Artifact",NewRoom)
+			hills.Description = ""
+			hills.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\hills.x", 0.0, 0.13, 0.0, 0.0, 0.0, 0.0
+			hills.IsUIVisible = False
+			hills.IsMoveable= false
+			CreatehillsBoundaries(hills)
+
+			Dim cloud
+			set cloud= top.goWorld.CreateInstance("cloud", "Artifact",NewRoom)
+			cloud.Description = ""
+			cloud.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\cloud.x", 0.0, 10.0, 0.0, 0.0, 0.0, 0.0
+			cloud.RotationAxis.set 0,1,0
+			cloud.RotationRate = 0.002
+			cloud.Scale.Set 0.3, 0.3, 0.3
+			cloud.IsUIVisible = False
+
+			Dim lighta
+			set lighta= top.goWorld.CreateInstance("ambient light", "Artifact",NewRoom)
+			lighta.Description = ""
+			lighta.InitializeGraphics "SDK\Library\Models\lights\lightdown-transparent.3ds", 16.0, 16.0, 16.0, 1.0, 0.0, 0.0
+			lighta.IsUIVisible = False
+
+		case "Hill Top"
+			NewRoom.Defaultavatarposition.set 24.1,1.704,19.1
+			Dim plants1
+			set plants1 = top.goWorld.CreateInstance("plants","artifact",NewRoom)
+			plants1.InitializeSpriteGraphics "SDK\Library\Models\_EmptyLandscape\hilltop\plants1.gif",-8.34,1.45,19.8,0.0,0.0,-1.0
+			plants1.scale.set 0.5,0.9,0.5
+			plants1.IsUIVisible = False
+			plants1.IsMoveable= false
+			'plants1.Set3DSound "sdk\library\fountain.wav", true
+
+			Dim sound1
+			set sound1= top.goWorld.CreateInstance("sound", "Artifact", NewRoom)
+			sound1.Description = ""
+			sound1.InitializeGraphics "", 0.0, 2.0, 0.0, 1.0, 0.0, 0.0
+			sound1.IsUIVisible = False
+			sound1.SetSound "SDK\library\sounds\cricket2.wav", True, -1200,0,0
+
+			Dim lightc
+			set lightc= top.goWorld.CreateInstance("ambient light", "Artifact",NewRoom)
+			lightc.Description = ""
+			lightc.InitializeGraphics "SDK\Library\Models\lights\lightdown-transparent.3ds", 16.0, 16.0, 16.0, 1.0, 0.0, 0.0
+			lightc.IsUIVisible = False
+
+			Dim Entry1
+			set Entry1 = top.goWorld.CreateInstance("entry point", "artifact", NewRoom)
+			Entry1.Description = "Moves you to the spot where you entered this room."
+			Entry1.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\entrypoint.x", -3.39, 1.8, 35.55, -0.88, 0.0, -0.471
+			Entry1.IsMoveable = False
+
+			Dim overview
+			set overview= top.goWorld.CreateInstance("overview","artifact", NewRoom)
+			overview.InitializeSpriteGraphics "",-31.31,1.8,33.71,0.92,0.0,-0.4
+			overview.IsUIVisible = False
+			overview.IsCameraAnchor = True
+
+
+
+			Dim Ground2
+			set Ground2 = top.goWorld.CreateInstance("ground", "artifact",NewRoom)
+			Ground2.Description = ""
+			Ground2.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\groundh.x", 22, -1.0, 35, -1.0, 0.0, 0.0
+			Ground2.IsUIVisible = False
+			Ground2.IsMoveable= false
+			CreateGround2Boundaries(ground2)
+
+			Dim birds
+			set birds= top.goWorld.CreateInstance("birds", "Artifact",NewRoom)
+			birds.Description = ""
+			birds.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\birds.x", 0.0, 20.0, 0.0, 0.0, 0.0, 0.0
+			birds.RotationAxis.set 0,1,0
+			birds.RotationRate = 0.002
+			birds.scale.set 0.3, 0.3, 0.3
+			birds.IsUIVisible = False
+
+
+			Dim sky
+			set sky = top.goWorld.CreateInstance("sky", "artifact",NewRoom)
+			sky.Description = ""
+			sky.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\sky1.x", 27.5, 95.0, -22.4, 0.0, 0.0, 0.0
+			sky.IsUIVisible = False
+			sky.IsMoveable= false
+
+			Dim Tree1
+			set Tree1 = top.goWorld.CreateInstance("tree1", "Artifact",NewRoom)
+			Tree1.Description = ""
+			Tree1.ApproachDistance = 20
+			Tree1.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\Tree1.x", 105, 13, -35, -1.0, 0.0, 0.0
+			Tree1.IsUIVisible = False
+			Tree1.IsMoveable= false
+
+			Dim Forest
+			set Forest = top.goWorld.CreateInstance("forest", "Artifact",NewRoom)
+			Forest.Description = ""
+			Forest.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\Foresth.x", -3.89, 9, 28.72, 0.933, 0.0, 0.358
+			Forest.IsUIVisible = False
+			Forest.IsMoveable = false
+
+
+			Dim tree2
+			set tree2= top.goWorld.CreateInstance("tree2", "Artifact",NewRoom)
+			tree2.Description = ""
+			Tree2.ApproachDistance = 20
+			tree2.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\Tree2.x", 53.53, 10.07, 3.16, -0.5, 0.0, 0.866
+			tree2.IsUIVisible = False
+			tree2.IsMoveable= false
+
+			Dim tree3
+			set tree3= top.goWorld.CreateInstance("tree3", "Artifact",NewRoom)
+			tree3.Description = ""
+			tree3.ApproachDistance = 20
+			tree3.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\Tree3.x", 19.6, 10.07, 75.82, 0.0, 0.0, -1
+			tree3.IsUIVisible = False
+			tree3.IsMoveable= false
+
+			Dim tree4
+			set tree4= top.goWorld.CreateInstance("tree4", "Artifact",NewRoom)
+			tree4.Description = ""
+			tree4.ApproachDistance = 20
+			tree4.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\Tree4.x", -25.82, 10.07, 5.56, 1.0, 0.0, 0.0
+			tree4.IsUIVisible = False
+			tree4.IsMoveable= false
+
+			Dim tree5
+			set tree5= top.goWorld.CreateInstance("tree5", "Artifact",NewRoom)
+			tree5.Description = ""
+			tree5.ApproachDistance = 20
+			tree5.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\Tree5.x", -12.02, 10.07, -10.0, -0.398, 0.0, 0.917
+			tree5.IsUIVisible = False
+			tree5.IsMoveable= false
+
+			Dim tree6
+			set tree6= top.goWorld.CreateInstance("tree6", "Artifact",NewRoom)
+			tree6.Description = ""
+			tree6.ApproachDistance = 20
+			tree6.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\Tree6.x", -18.5, 10.07, 37.0, 0.422, 0.0, -0.91
+			tree6.IsUIVisible = False
+			tree6.IsMoveable= false
+
+			Dim View
+			set View = top.goWorld.CreateInstance("view", "Artifact",NewRoom)
+			View.Description = ""
+			View.ApproachDistance = 40
+			View.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\Viewh.x", 76, 13, 125, -1, 0.0, -1
+			View.IsUIVisible = False
+			View.IsMoveable = false
+
+			'top.goWorld.trace "out of hilltop"
+
+	case else
+
+			'top.goWorld.trace "bad room type .csv string match..."
+
+	End Select
+	'top.goWorld.trace "added objects in new room..."
+
+end sub
+
+
+Sub CreateGround2Boundaries(thething)
+	Dim theBoundaryList_t
+	set theBoundaryList_t = top.goWorld.CreateBoundary(Array(_
+		-37.837, 52.7031, -36.9292, -2.21893, 14.3615, -3.12673, 35.6949, -0.857229, _
+		34.7871, 31.8236, 13.9076, 53.6109))
+	theBoundaryList_t.HeightUpper = 10.88011
+	theBoundaryList_t.HeightLower = 1.88011
+	thething.BoundaryList.Add theBoundaryList_t
+End Sub
+
+Sub CreateHillsBoundaries(thething)
+	Dim theBoundaryList_t
+	set theBoundaryList_t = top.goWorld.CreateBoundary(Array(_
+		13.844, -20.539, -12.4823, -21.4468, -24.7376, -6.46809, -23.3759, 16.6808, _
+		-10.2128, 22.5816, 12.0284, 23.0355, 25.6454, 13.0496, 24.2837, -9.19149_
+		))
+	theBoundaryList_t.HeightUpper = 6.02975
+	theBoundaryList_t.HeightLower = 0.0
+	thething.BoundaryList.Add theBoundaryList_t
+End Sub
+
+sub CreatePortals()
+ 'top.goWorld.trace "creating portals now"
+
+
+	if not top.bNoPortal then
+
+		PortalNameTo = "portal to " + top.NewRoomName
+		PortalNameFrom = "portal to " + top.goUser.container.toascii
+
+		' add portal objects to both rooms, pointing towards each other
+		' create the objects
+		Dim p_curr_new
+		set p_curr_new = top.goWorld.CreateInstance(PortalNameTo, "Portal", CurrentRoom)
+		p_curr_new.Description = "portal from "+currentRoom.name+" to "+newroom.name
+
+		Dim p_new_curr
+		set p_new_curr = top.goWorld.CreateInstance(PortalNameFrom, "Portal", NewRoom)
+		p_new_curr.Description = "portal from "+newroom.name+" to "+currentRoom.name
+
+		Select Case top.RoomType
+			case "Valley"
+
+				p_curr_new.InitializeGraphics "SDK\Library\Models\_OfficeHT\portalht.x", top.goUser.position.x+.2, 1.83, top.goUser.position.z+.2, 1.0, 0.0, 0.0
+				p_curr_new.RenderQuality=4
+				p_curr_new.EntryRadius = 0.5
+
+				p_new_curr.InitializeGraphics "SDK\Library\Models\_OfficeHT\portalht.x", 0, 1.8, 15.55, -0.5, 0.0, 0.87
+				p_new_curr.EntryPoint.Set 2.5, 0.93, 15.37
+				p_new_curr.EntryOrientation.Set 0.45, 0.0, -0.9
+				p_new_curr.EntryRadius = 0.5
+				p_new_curr.RenderQuality= 4
+
+			case "Hill Top"
+
+				p_curr_new.InitializeGraphics "SDK\Library\Models\_OfficeHT\portalht.x", top.goUser.position.x+.2, 1.83, top.goUser.position.z+.2, 1.0, 0.0, 0.0
+
+				p_new_curr.InitializeGraphics "SDK\Library\Models\_OfficeHT\portalht.x", 0.0, 2.2, 0.0, 1.0, 0.0, 0.0
+				p_new_curr.EntryPoint.Set 1.5, 2.0, 0.6
+				p_new_curr.EntryOrientation.Set 1, 0, 0.198
+				p_new_curr.EntryRadius = 0.5
+
+		End Select
+
+		' Set position & orientation of new portal entry point in front of you to be similar as if you dropped it 
+		' (as the Object Wizard does)	
+		p_curr_new.EntryPoint.Set top.goUser.Position.X + 1, 1.83, top.goUser.Position.Z + 1
+		p_curr_new.EntryOrientation.Set -top.goUser.Direction.X, 0, -top.goUser.Direction.Z
+
+		'Create boundaries around each portal
+		p_curr_new.IsSolid = True
+		p_new_curr.IsSolid = True
+
+		p_curr_new.Destinations.Add p_new_curr
+		p_new_curr.Destinations.Add p_curr_new
+
+	end if
+
+end sub
+
+' Review: can we move this into the top Finish sub?
+' Also, we should move check for bNoPortal in this sub - don't want to even call CreatePortals
+sub Finish()
+	dim crlf
+	crlf = chr(13) + chr(10)
+
+	set CurrentRoom = top.goUser.container
+
+	if top.goUser.objectquota >= 0 then
+	 	if cint(top.goUser.objectquota) >= cint(top.quota) then
+			CreateRoom
+			CreatePortals
+			if top.bTeleport then
+				top.goUser.Teleport NewRoom
+			else
+				msgbox "Room " & top.NewRoomName & " was created successfully.", vbInformation, "Microsoft Virtual Worlds"
+			end if
+		else
+			msgbox "Your avatar has an object quota of " & cstr(top.goUser.objectquota) & " objects." & crlf & "You do not have permission to make the " & cstr(top.quota) & " objects required to complete this room.", vbInformation, "Microsoft Virtual Worlds"
+		end if
+	else
+		CreateRoom
+		CreatePortals
+		if top.bTeleport then
+			top.goUser.Teleport NewRoom
+		else
+			msgbox "Room " & top.NewRoomName & " was created successfully.", vbInformation, "Microsoft Virtual Worlds"
+		end if
+	end if
+end sub
+
+</script>
+</head>
+<body>
+	<div class=vLabel style=top:0;left:10;>Styles:</div>
+	<select id=lstStyle class=vInput style=left:10;top:15;width:150; size=7 onchange=choseName></select>
+	<div class=vLabel style=top:0;left:180;>Preview:</div>
+	<img datafld=previewGIF datasrc="#elements" id=imgPreview style=position:absolute;left:180;top:15;></img>
+	<div id=lblDesc class=vInput datafld="description" datasrc="#elements" style=left:10;top:130;width:400;>
+</body>
+</html>

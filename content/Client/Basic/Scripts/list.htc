@@ -1,0 +1,67 @@
+'======================================
+' Desc: This file is used to attached
+'       to the styles vwAvatarFriend, vwAvatarIgnore,
+'       vwAvatarOther, vwAvatarSelf, and vwItem. The
+'       routines are designed for the list items on
+'       the tabs. The three routines affect the menu
+'       items during mouse rollovers and context menus.
+'======================================
+<public:attach event=onmouseover onevent=DoMouseOver() />
+<public:attach event=onmouseout onevent=DoMouseOut() />
+<public:attach event=oncontextmenu onevent=DoContextMenu() />
+
+<script language=vbs>
+Option Explicit
+
+
+
+'======================================
+' Name: DoMouseOver
+' Desc: This routine is attached to the onmouseover
+'       event. It underlines the text and changes
+'       the status bar text of the element
+'       to which the style is applied.
+'--------------------------------------
+Sub DoMouseOver
+	element.style.textDecoration = "underline"
+	window.status = "Click for details, right-click for menu."
+End Sub
+'======================================
+
+
+
+'======================================
+' Name: DoMouseOut
+' Desc: This routine is attached to the onmouseout
+'       event. It remove the underline from the
+'       text and clears the status bar text of
+'       the element to which the style is applied.
+'--------------------------------------
+Sub DoMouseOut
+	element.style.textDecoration = ""
+	window.status = ""
+End Sub
+'======================================
+
+
+
+'======================================
+' Name: DoContextMenu
+' Desc: This routine is attached to the oncontextmenu
+'       event. It prevents the IE context menu from
+'       displaying and in instead shows the Virtual
+'       Worlds context menu associated with the object
+'       represented by the item receiving the mouse click.
+'       The element that is associated with this event
+'       is expected to have an attribute called linkedItemID
+'       that is the Virtual Worlds ID for the represented
+'       object.
+'--------------------------------------
+Sub DoContextMenu
+	window.event.cancelBubble = True
+	window.event.returnValue = False
+	top.objWebHelper.TrackThingMenu sobjWorld.ObjectByID(element.linkedItemID)
+End Sub
+'======================================
+
+</script>

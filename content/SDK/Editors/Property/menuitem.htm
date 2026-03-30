@@ -1,0 +1,68 @@
+<HTML>
+<HEAD>
+<style>
+.head {font-family: Arial;font-size:12pt;color:"#67675D";font-weight:bold}</style>
+</HEAD>
+<BODY BGCOLOR="#F4F4E8" LEFTMARGIN=19 TOPMARGIN=12>
+<div class="head" align="center">Menu Item</div><br>
+<OBJECT id="helper" classid="clsid:7E3832CF-4F4E-11D0-89AB-00A0C9054129"
+		border="0" width="0" height="0">
+</OBJECT>
+<SCRIPT LANGUAGE="VBScript">
+On error resume next
+
+dim menuitem
+dim flags
+dim thing
+
+sub Window_OnLoad
+	on error resume next
+	set menuitem = helper.arg.editMenu.property(helper.arg.editItem)
+    set menuitem = helper.arg.editThing.property(helper.arg.editPropName)
+
+	newStatus.value = menuitem.StatusText
+	flags = menuitem.Flags
+	EnableCheck.checked = (flags and CLng(2)) = 0
+end sub
+
+sub Window_OnUnload
+end sub
+
+sub OnOk
+	menuitem.StatusText = newStatus.value
+	if EnableCheck.checked then
+		flags = flags and not CLng(2)
+	else
+		flags = flags or CLng(2)
+	end if
+	menuitem.Flags = flags
+	
+	on error resume next
+	helper.arg.editMenu.property(helper.arg.editItem) = menuitem
+	helper.arg.editThing.property(helper.arg.editPropName) = menuitem
+
+	helper.CloseWindow()
+end sub
+
+sub OnCancel
+	helper.CloseWindow()
+end sub
+
+</SCRIPT>
+
+<table>
+<tr>
+<td>Status Bar Text</td>
+</tr>
+<tr>
+<td><textarea name=newStatus rows=3 cols=40></textarea></td>
+</tr>
+<tr>
+<td align=center><br><br><input type=checkbox id=EnableCheck>Menu Item Is Enabled</input></td>
+</tr>
+</table>
+<br>
+<INPUT TYPE="BUTTON" NAME="ok" ID="ok" size="30" VALUE="Ok" ONCLICK="OnOk" LANGUAGE="VBScript" TITLE="Accept this menu choice">
+<INPUT TYPE="BUTTON" NAME="cancel" ID="cancel" size="30" VALUE="Cancel" ONCLICK="OnCancel" LANGUAGE="VBScript" TITLE="Do not create the menu item">
+</BODY>
+</HTML>

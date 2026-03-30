@@ -1,0 +1,131 @@
+<html>
+<head>
+<link rel=stylesheet href=../../shared/global.css>
+<STYLE ID=SpeakingStyles>
+.TextGesture {display: "none";}
+.TextMessage {display: "none";}
+.TextEvent {display: "none";}
+.MuffledTextMessage {color:SteelBlue}
+.MyName {color: 000000; font: normal normal bold 8pt/11pt verdana, sans-serif; muffle:1;}
+.SpeakerName {color: 000000; font: normal normal bold 8pt/11pt verdana, sans-serif; muffle:1;}
+.SpokenText {color: 000000; font: normal normal normal 8pt/11pt verdana, sans-serif; muffle:1;}
+.EmoteText {color: 000000; font: normal normal normal 8pt/11pt verdana, sans-serif; muffle:1;}
+.WhisperText {color: DarkBlue; font: normal normal bold 8pt/11pt verdana, sans-serif; muffle:1;}
+.ReportText {color: 000000; font: normal normal bold 8pt/11pt verdana, sans-serif;}
+.ErrorText {color: 1e729a; font: normal normal bold 8pt/11pt verdana, sans-serif;}
+.TraceText {color: gray; font-size: 8pt; font-family: Verdana, Sans-Serif;}
+.MsgText {color: Brown; font: normal normal bold 8pt/11pt verdana, sans-serif;}
+.ActionText {color: 000000; font: normal normal normal 8pt/11pt verdana, sans-serif; muffle:1;}
+.ThumbNailImage {margin-left: 4; margin-right: 4; border: 0; width: 16; height: 16;}
+</STYLE>
+<!--include scripts-->
+<script language="vbscript" src="../vbs/document_OnSelectStart.vbs">
+</script>
+<!--end include scripts-->
+
+<script language=vbs>
+
+option explicit
+
+dim prevSpeaker
+prevSpeaker = ""
+
+sub document_onclick
+	dim elem
+	set elem = window.event.srcElement
+	if elem.id = "WhisperReplyButton" then
+		top.ChatBoxHistoryPtr.ReplyToWhisper top.ClientUserPtr.Name, elem.ReplyTo
+	elseif elem.id = "lnkLinkToObject" then
+		top.LinkToObject elem.getAttribute("vwObjectId")
+	elseif elem.className = "ThumbNailImage" then
+		parent.ApproachAvatar elem.linkedUser
+	elseif elem.className = "ReplyToFriendRequest" then
+		ReplyToFriendRequest elem.requester, (ucase(elem.accept) = "YES")
+	end if
+end sub
+
+sub ReplyToFriendRequest (avName, bAccept)
+	dim avatar
+	set avatar = top.ClientUserPtr.container.findwithin(avName)
+	if avatar is Nothing then
+		msgbox elem.requester & " has left the room.", vbInformation, "Microsoft Virtual Worlds"
+	else
+		avatar.FinalizeFriend top.ClientUserPtr, bAccept
+	end if
+end sub
+
+sub ScrollToBottom
+	ContentContainer.scrollIntoView false
+end sub
+
+sub makeBlurb (blurbId, speakerName, blurbText, bAddQuotes, triThumbnail, triSpeaker)
+	' Add a blurb containing text; 
+	' blurbId can be ""
+	' speakerName can be ""
+	' bAddQuotes = true/false put quotes around blurbText
+	' tri-state flag values: 0=no, 1=yes, 2=auto
+	' For auto: thumbnail and speaker blocks are added if the current speaker
+	' has changed since the last blurb.
+'msgbox "makeBlurb"
+	dim elem, speakerChanged
+	speakerChanged = (speakerName <> prevSpeaker)
+	set elem = document.createElement("span")
+	elem.id = blurbId
+	elem.className = "chatBlurb"
+	elem.style.position = "relative"
+	elem.style.display = "block"
+	document.all("ContentContainer").insertAdjacentElement "BeforeEnd", elem
+	if triThumbnail = 1 or (triThumbnail = 2 and speakerChanged) then
+		appendThumbnail speakerName, elem
+	end if
+	if triSpeaker = 1 or (triSpeaker = 2 and speakerChanged) then
+		appendSpeakerName speakerName, elem
+	end if
+	appendBlurbText blurbText, bAddQuotes, elem
+	ScrollToBottom
+	prevSpeaker = speakerName
+end sub
+
+sub appendThumbnail (avName, toElement)
+'msgbox "appendThumbnail"
+	dim avatar
+	set avatar = top.ClientUserPtr.container.findwithin(avName)
+	if not (avatar is Nothing) then
+		top.insertThumbnailElement avatar, document, toElement
+	end if
+end sub
+
+sub appendSpeakerName (speakerName, toElement)
+'msgbox "appendSpeakerName"
+	dim elem
+	set elem = document.createElement("span")
+	elem.className = "SpeakerName"
+	elem.innerHTML = speakerName & ":&nbsp;"
+	elem.style.display = "inline"
+	toElement.insertAdjacentElement "BeforeEnd", elem
+end sub
+
+sub appendBlurbText (blurbText, bAddQuotes, toElement)
+'msgbox "appendBlurbText"
+	dim elem, theText
+	set elem = document.createElement("span")
+	elem.className = "SpokenText"
+	elem.style.display = "inline"
+	if bAddQuotes then
+		elem.innerHTML = chr(34) & blurbText & chr(34)
+	else
+		elem.innerHTML = blurbText
+	end if
+	toElement.insertAdjacentElement "BeforeEnd", elem
+end sub
+
+</script>
+</head>
+
+<body class=ClientBackgroundLight style=margin:4px;>
+
+<div id=ContentContainer class=ClientTextBlack style="position:absolute;top:0;left:0;">
+</div>
+
+</body>
+</html>

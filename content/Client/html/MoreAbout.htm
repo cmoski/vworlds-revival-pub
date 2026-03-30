@@ -1,0 +1,52 @@
+<html>
+<head>
+<title>More About</title>
+<link rel=stylesheet href=..\shared\global.css>
+<script language=vbs>
+option explicit
+
+Public sarrArgs	'used to hold passed variables
+Public sobjTop	'reference to the top client window
+Public sobjWorld	'reference to the world
+Public sobjUser	'reference to the user
+
+sarrArgs = Array()
+sarrArgs = window.dialogArguments
+Set sobjTop = sarrArgs(0)
+Set sobjWorld = sobjTop.theClient.VWClient.World
+Set sobjUser = sobjWorld.User
+document.title = "More about " & sarrArgs(1).Name
+
+sub window_onload
+	If sarrArgs(1).Description <> "" Then
+		document.body.innerText = sarrArgs(1).Description
+	Else
+		document.body.innerText = "No description available."
+	End if
+end sub
+
+'======================================
+' Name: window_onunload
+' Desc: Fires
+'--------------------------------------
+Sub window_onunload
+	sobjWorld.FireUIEvent sobjUser, "vwMoreAboutClose", True
+End Sub
+'======================================
+
+
+'======================================
+' Name: document_onkeypress
+' Desc: Fires
+'--------------------------------------
+Sub document_onkeypress
+	If window.event.keyCode = 27 Then window.close
+End Sub
+'======================================
+
+
+</script>
+</head>
+<body class=vInput style=padding:5;>
+</body>
+</html>

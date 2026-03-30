@@ -1,0 +1,16 @@
+option explicit
+
+
+sub make_lesson_8 (lesson_8_box)
+	set  lesson_8_box = world.createInstance("light","artifact")
+	lesson_8_box.initializegraphics "SDK\library\models\_ScriptTutorial\omni_light.3DS" , 0 , 1000 , 0 , 0,0,1
+	dim vec
+	set vec = world.createvector(.05,.05,.05)
+	lesson_8_box.scale = vec
+	lesson_8_box.renderquality = 3
+	lesson_8_box.moveinto home
+	lesson_8_box.createandaddmethod World.METHOD_SERVER, Lesson_8_Module,  "text_in" , "OnPeerTell"
+	world.global.addproperty "lesson_8" , lesson_8_box
+	lesson_8_box.IsNoticeable = true
+	lesson_8_box.description = "a scripting tutorial object"
+end sub

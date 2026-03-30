@@ -1,0 +1,1511 @@
+<html>
+<head>
+<title>Avatar Construction Kit</title>
+<link rel=stylesheet href=global.css>
+<OBJECT id=ACKbase classid="CLSID:9B5EF018-672B-11D1-AD0F-9D36F65CBF4B">
+	<PARAM NAME="_Version" VALUE="65536">
+	<PARAM NAME="_ExtentX" VALUE="26">
+	<PARAM NAME="_ExtentY" VALUE="26">
+	<PARAM NAME="_StockProps" VALUE="0">
+</OBJECT>
+<OBJECT id=ACKImageList classid="CLSID:9B5EF01C-672B-11D1-AD0F-9D36F65CBF4B">
+	<PARAM NAME="_Version" VALUE="65536">
+	<PARAM NAME="_ExtentX" VALUE="26">
+	<PARAM NAME="_ExtentY" VALUE="26">
+	<PARAM NAME="_StockProps" VALUE="0">
+</OBJECT>
+<OBJECT id=LoadAvatar classid="CLSID:9B5EF018-672B-11D1-AD0F-9D36F65CBF4B">
+	<PARAM NAME="_Version" VALUE="65536">
+	<PARAM NAME="_ExtentX" VALUE="26">
+	<PARAM NAME="_ExtentY" VALUE="26">
+	<PARAM NAME="_StockProps" VALUE="0">
+</OBJECT>
+<OBJECT id=LibraryImageList classid="CLSID:9B5EF01C-672B-11D1-AD0F-9D36F65CBF4B">
+	<PARAM NAME="_Version" VALUE="65536">
+	<PARAM NAME="_ExtentX" VALUE="26">
+	<PARAM NAME="_ExtentY" VALUE="26">
+	<PARAM NAME="_StockProps" VALUE="0">
+</OBJECT>
+ <OBJECT id=ThumbnailImageList classid="CLSID:9B5EF01C-672B-11D1-AD0F-9D36F65CBF4B">
+	<PARAM NAME="_Version" VALUE="65536">
+	<PARAM NAME="_ExtentX" VALUE="26">
+	<PARAM NAME="_ExtentY" VALUE="26">
+	<PARAM NAME="_StockProps" VALUE="0">
+</OBJECT>
+ <OBJECT id=TempImageList classid="CLSID:9B5EF01C-672B-11D1-AD0F-9D36F65CBF4B">
+	<PARAM NAME="_Version" VALUE="65536">
+	<PARAM NAME="_ExtentX" VALUE="26">
+	<PARAM NAME="_ExtentY" VALUE="26">
+	<PARAM NAME="_StockProps" VALUE="0">
+</OBJECT>
+<OBJECT id=LoadImageList classid="CLSID:9B5EF01C-672B-11D1-AD0F-9D36F65CBF4B">
+	<PARAM NAME="_Version" VALUE="65536">
+	<PARAM NAME="_ExtentX" VALUE="26">
+	<PARAM NAME="_ExtentY" VALUE="26">
+	<PARAM NAME="_StockProps" VALUE="0">
+</OBJECT>
+<script language=vbs>
+
+option explicit
+
+const	AVATAR_WIDTH = 128
+const	AVATAR_HEIGHT = 128
+const	THUMB_WIDTH = 24
+const	THUMB_HEIGHT = 24
+const	TOP_ROW		  = 0
+const	BOT_ROW		  = -1
+
+dim currentGesture, ACKhomePath, DefaultPath
+dim fModified, fLibLoaded, fCropLoaded, fFirstTimeDlg, fNoAvatarName, fZooming, fGifOK
+dim CurScale, CurHcenter, LastHpos, CurVcenter, LastVpos, LastScale
+dim currentBtn, currentState, currentFrame, currentBank, timerID, AvatarName, AvatarFilePath
+dim fAnimating, AnimateFrame, GestureIndex, sMsgTitle
+dim gvLeft, gvTop, gvBot, gvRight, llLeft, llTop, llBot, llRight
+dim ctLeft, ctTop, ctBot, ctRight, thLeft, thTop, thBot, thRight
+dim loopcounter 'kludge to avoid infinite loop
+
+sMsgTitle = "Avatar Construction Kit"
+
+Sub window_onLoad()
+	' File menu on button bar
+	FileMenu.AppendMenuItem("Open")
+
+	' Avatar preview (ACKview)
+	ACKview.BackColor = &HFFFFFF
+	ACKview.EnableScrollBars = false
+	ACKview.DrawTransparent = false
+
+	' gesture view
+	GestureView.imageWidth = 64
+	GestureView.imageHeight = 64
+	GestureView.hSpacing = 4
+	GestureView.BackColor = &HFFFFFF
+	GestureView.InvalidImageColor = &H7F7F7F
+	GestureView.borderColor = &Heeeeee
+	GestureView.SelectionColor = &H0000ff
+	GestureView.font.size = 8
+	GestureView.font.name = "Arial"
+	GestureView.DrawMissingImages = false
+	GestureView.LabelStyle = 0
+	GestureView.DrawTransparent = false
+	GestureView.EnableScrollbars = false
+	GestureView.AppendMenuItem("Open")
+
+	' image library view (Library list)
+	fLibLoaded = false
+	LibraryListView.imageWidth = 64
+	LibraryListView.imageHeight = 64
+	LibraryListView.hSpacing = 6
+	LibraryListView.vSpacing = 6
+	LibraryListView.MarginTop = 6
+	LibraryListView.MarginLeft = 6
+	LibraryListView.BackColor = &Hffffff
+	LibraryListView.SelectionColor = &H0000ff
+	LibraryListView.InvalidImageColor = &H7F7F7F
+	LibraryListView.borderColor = &Heeeeee
+	LibraryListView.font.size = 8
+	LibraryListView.font.name = "Arial"
+	LibraryListView.DrawMissingImages = false
+	LibraryListView.LabelStyle = 0
+	LibraryListView.numRows = 0
+	LibraryListView.numCols = 6
+	LibraryListView.EnableScrollbars = false
+	LibraryListView.DrawTransparent = false
+	LibraryImageList.ImageFile = ""
+	LibraryListView.ImageList = LibraryImageList.ImageList
+	LibraryEmptyMenu
+
+	'current image view control
+	fCropLoaded = false
+	CropTool.ImageList = LibraryImageList.ImageList
+	CropTool.BackColor = &HFFFFFF
+	CropTool.AutoPan = false
+	CropTool.EnableScrollBars = false
+	CropTool.DrawTransparent = false
+	CropToolEmpty
+	CropTool.borderSize = 0
+	CropTool.borderColor = &HFF0000
+
+	' set up default state
+	' initialize globals
+	loopcounter	  = 0
+	fModified	  = false
+	fFirstTimeDlg = true
+	fNoAvatarName = true
+	fAnimating	  = false
+	fZooming	  = false
+	fGifOK		  = false
+	currentState   = 0
+	currentGesture = 0
+	currentFrame   = 0
+	CurScale   = "1.0"
+	LastScale  = 1.0
+	CurHcenter = 64
+	LastHpos   = 0
+	CurVcenter = 64
+	LastVpos   = 0
+	ACKhomePath = document.location.pathname ' get this file
+	if 0 = StrComp(left(ACKhomePath,1),"/",1) then 'check for leading slash
+		ACKhomePath = right(ACKhomePath, len(ACKhomePath) - 1) ' remove the first slash
+	end if
+	ACKhomePath = left(ACKhomePath, len(ACKhomePath) - 7) ' remove ack.htm
+	DefaultPath = left(ACKhomePath, len(ACKhomePath) - 9) ' remove ACK\html\
+	DefaultPath = DefaultPath & "Avatar Graphics\"
+
+	set currentBtn = imgIdle
+	DoResetView
+	'temp image list (needed for copy/paste into an empty image list)
+	TempImageList.ImageFile = ACKhomePath & "deflt.gif"
+	LoadBlank
+
+	'Thumbnail
+	ThumbnailImageList.ImageFile = ACKhomePath & "tBlank.gif"
+	ThumbnailView.ImageList = ThumbnailImageList.ImageList
+	ThumbnailView.AutoPan = False
+	ThumbnailView.EnableScrollBars = False
+	ThumbnailView.DrawTransparent = False
+	ThumbnailView.borderSize = 0
+	ThumbnailView.borderColor = &HFF0000
+end sub
+
+' *************************** LIBRARY ************************* '
+sub RepaintLibraryList
+	dim i
+
+	LibraryListView.ClearImages
+	if LibraryImageList.CountImages > 0 then
+		for i = 0 to LibraryImageList.CountImages - 1
+			LibraryListView.AddImage i, CStr(i + 1) & "/" & CStr(LibraryImageList.CountImages)
+		next
+	end if
+end sub
+
+sub LibraryListView_mouseDownOnImage(whichImage)
+	LibraryListView.CurrentImage = whichImage
+end sub
+
+sub DoLibraryLoad
+	dim newname, count, i, numExisting
+
+	if DefaultPath <> "" then
+		newname = LoadImageList.dlgchooseimage (DefaultPath & "*.gif", false)
+	else
+		newname = LoadImageList.dlgchooseimage (DefaultPath, false)
+	end if
+
+	if newname <> "" then
+		LoadImageList.ImageFile = newName
+		count = LoadImageList.CountImages
+		if count < 1 then
+		    msgbox "Invalid gif file!", vbExclamation, sMsgTitle 'same error for gesture view
+			'msgbox newName & vbcrlf & "This file contains no images or is invalid!", vbExclamation, sMsgTitle
+		else
+			numExisting = LibraryImageList.CountImages
+			for i = 0 to count - 1
+				LibraryImageList.AddImage LoadImageList.ImageList, i
+			next
+			RepaintLibraryList
+			LibraryListView.CurrentImage = LibraryListView.CurrentImage +1
+			LibScrolltoImage numExisting +1,TOP_ROW
+			fLibLoaded = true
+			SetLiveHelp 2
+			LibraryFullMenu
+			DefaultPath = "" 'will not overide user set folder
+		end if
+	end if
+end sub
+
+sub DoLibAvatarLoad
+	dim newname, i, numExisting
+
+	if DefaultPath <> "" then
+		newname = LoadAvatar.DlgChooseAvatar (DefaultPath & "*.spr", false)
+	else
+		newname = LoadAvatar.DlgChooseAvatar (DefaultPath, false)
+	end if
+
+	if newname <> "" then	'check for cancel of dialog
+		if LoadAvatar.SetSpriteFilename(newName) = true then
+			LoadImageList.ImageFile = LoadAvatar.ImageFilename
+			if LoadImageList.CountImages < 1 then
+			    msgbox "Invalid gif file!", vbExclamation, sMsgTitle 'same error for gesture view
+				'msgbox newName & vbcrlf & "This file contains no images or is invalid!", vbExclamation, sMsgTitle
+			else
+				numExisting = LibraryImageList.CountImages
+				for i = 0 to LoadImageList.CountImages - 1
+					LibraryImageList.AddImage LoadImageList.ImageList, i
+				next
+				RepaintLibraryList
+				LibScrolltoImage numExisting +1,TOP_ROW
+				fLibLoaded = true
+				SetLiveHelp 2
+				LibraryFullMenu
+				DefaultPath = "" 'will not overide user set folder
+			end if
+		else
+			' handle error case
+			msgbox "Failed to load avatar!", vbExclamation, sMsgTitle
+		end if
+	end if
+end sub
+
+sub LibraryListView_MenuSelected(strMenu)
+	Select Case strMenu
+		Case "Paste"
+			ACKbase.paste TempImageList.ImageList, 0
+			LibraryImageList.AddImage TempImageList.Imagelist, 0
+			RepaintLibraryList
+			LibraryListView.CurrentImage = LibraryImageList.CountImages - 1
+			LibScrolltoImage LibraryListView.CurrentImage ,BOT_ROW
+			if fLibLoaded = false then
+				fLibLoaded = true
+					SetLiveHelp 3
+				LibraryFullMenu
+			end if
+		Case else
+			doAction strMenu
+	End Select
+end sub
+
+sub LibScrolltoImage (imagenum, ToporBot)
+	dim newoffset, row
+'	the image indicated by imagenum will be scrolled into view
+'	ToporBot indicates which row to scroll it to
+
+	row = cint(imagenum\5.5)+ ToporBot
+	newoffset = (row * (LibraryListView.ImageHeight + LibraryListView.vSpacing))
+	LibraryListView.OffsetV = newoffset
+end sub
+
+sub LibScrollDownOne
+	'validity must be checked before making this call!
+	LibraryListView.OffsetV = LibraryListView.OffsetV + LibraryListView.ImageHeight + LibraryListView.vSpacing
+end sub
+
+sub LibScrollUpOne
+	'validity must be checked before making this call!
+	LibraryListView.OffsetV = LibraryListView.OffsetV - LibraryListView.ImageHeight - LibraryListView.vSpacing
+end sub
+
+' ******** Image library key press stuff ********
+sub LibraryListView_keypress(keycode)
+	Select Case keycode
+		Case 52 'left
+			libleft
+		Case 54 'right
+			libright
+		Case 56 'up
+			libup
+		Case 50 'down
+			libdown
+		Case 46 'delet
+			dolibrarydelete
+	End Select
+end sub
+
+sub LibraryListView_keyup(keycode, shift)
+	Select Case keycode
+		Case 8	'delete
+			dolibrarydelete
+		Case 37 'left
+			libleft
+		Case 39 'right
+			libright
+		Case 38 'up
+			libup
+		Case 40 'down
+			libdown
+		Case 46 'delet
+			dolibrarydelete
+	End Select
+end sub
+
+sub libup
+	dim row, newoffset
+
+	if LibraryListView.CurrentImage > 5 then
+		row = cint(LibraryListView.CurrentImage\5.5)-1
+		LibraryListView.CurrentImage = LibraryListView.CurrentImage - 6
+		if 	LibraryListView.OffsetV > row * (LibraryListView.ImageHeight + LibraryListView.vSpacing) then
+			' must scroll down one
+			newoffset = (row * (LibraryListView.ImageHeight + LibraryListView.vSpacing))
+			LibraryListView.OffsetV = newoffset
+		end if
+	else
+		'beep
+	end if
+end sub
+
+sub libdown
+	dim row
+
+	if LibraryListView.CurrentImage < LibraryImageList.CountImages-6 then
+		'scroll new current to the bottom visible row
+		row = cint(LibraryListView.CurrentImage\5.5)
+		LibraryListView.CurrentImage = LibraryListView.CurrentImage + 6
+		if 	LibraryListView.OffsetV < row * (LibraryListView.ImageHeight + LibraryListView.vSpacing) then
+			' must scroll down one
+			LibScrolltoImage LibraryListView.CurrentImage ,BOT_ROW
+		end if
+	else
+		'beep
+	end if
+end sub
+
+sub libleft
+	if LibraryListView.CurrentImage > 0 then
+		LibraryListView.CurrentImage = LibraryListView.CurrentImage - 1
+	else
+		'beep
+	end if
+
+end sub
+
+sub libright
+	if LibraryListView.CurrentImage < LibraryImageList.CountImages-1 then
+		LibraryListView.CurrentImage = LibraryListView.CurrentImage + 1
+	else
+		'beep
+	end if
+end sub
+
+sub DoLibraryDelete
+	LibraryImageList.RemoveImage LibraryListView.CurrentImage
+	RepaintLibraryList
+	if LibraryImageList.CountImages = 0 then
+		fLibLoaded = false
+		LibraryEmptyMenu
+		SetLiveHelp 1
+	elseif LibraryListView.CurrentImage = LibraryImageList.CountImages then
+		LibraryListView.CurrentImage = LibraryListView.CurrentImage - 1
+
+	end if
+	LibScrolltoImage LibraryListView.CurrentImage ,BOT_ROW
+end sub
+
+sub DoLibraryDeleteAll
+	LibraryImageList.ImageFile = ""
+	LibraryListView.OffsetV = 0
+	RepaintLibraryList
+	fLibLoaded = false
+	LibraryEmptyMenu
+end sub
+
+' ******** Image library menu stuff ********
+sub LibraryEmptyMenu
+	LibraryListView.EnableScrollbars = false
+	LibraryListView.ClearMenu
+	if ACKbase.ClipboardReady then
+		LibraryListView.AppendMenuItem("Paste")
+		LibraryListView.AppendMenuItem("-")
+	end if
+	LibraryListView.AppendMenuItem("Load Image")
+	LibraryListView.AppendMenuItem("Load Avatar Images")
+	'LibraryListView.AppendMenuItem("-")
+	'LibraryListView.AppendMenuItem("Capture From TWAIN Device")
+	ImgGallMenu.ClearMenu
+	if ACKbase.ClipboardReady then
+		ImgGallMenu.AppendMenuItem("Paste")
+		ImgGallMenu.AppendMenuItem("-")
+	end if
+	ImgGallMenu.AppendMenuItem("Load Image")
+	ImgGallMenu.AppendMenuItem("Load Avatar Images")
+	'ImgGallMenu.AppendMenuItem("-")
+	'ImgGallMenu.AppendMenuItem("Capture From TWAIN Device")
+	HelpMenu.ClearMenu
+	HelpMenu.AppendMenuItem("Contents")
+	HelpMenu.AppendMenuItem("About")
+	SetLiveHelp 1
+end sub
+
+sub LibraryFullMenu
+	LibraryListView.EnableScrollbars = true
+	LibraryListView.ClearMenu
+	if ACKbase.ClipboardReady then
+		LibraryListView.AppendMenuItem("Paste")
+		LibraryListView.AppendMenuItem("-")
+	end if
+	LibraryListView.AppendMenuItem("Load Image")
+	LibraryListView.AppendMenuItem("Load Avatar Images")
+	'LibraryListView.AppendMenuItem("-")
+	'LibraryListView.AppendMenuItem("Capture From TWAIN Device")
+	LibraryListView.AppendMenuItem("-")
+	LibraryListView.AppendMenuItem("Delete Image")
+	LibraryListView.AppendMenuItem("Clear All")
+	ImgGallMenu.ClearMenu
+	if ACKbase.ClipboardReady then
+		ImgGallMenu.AppendMenuItem("Paste")
+		ImgGallMenu.AppendMenuItem("-")
+	end if
+	ImgGallMenu.AppendMenuItem("Load Image")
+	ImgGallMenu.AppendMenuItem("Load Avatar Images")
+	'ImgGallMenu.AppendMenuItem("-")
+	'ImgGallMenu.AppendMenuItem("Capture From TWAIN Device")
+	ImgGallMenu.AppendMenuItem("-")
+	ImgGallMenu.AppendMenuItem("Delete Image")
+	ImgGallMenu.AppendMenuItem("Clear All")
+	HelpMenu.ClearMenu
+	HelpMenu.AppendMenuItem("Contents")
+	HelpMenu.AppendMenuItem("About")
+	SetLiveHelp 2
+end sub
+
+' *************** Crop Tool *******************
+'************************* zoom ******************************
+sub DoResetView
+	CropTool.viewscale = 1.0
+	CurScale = "1.0"
+	CurHcenter = AVATAR_WIDTH / 2
+	LastHpos   = 0
+	CurVcenter = AVATAR_HEIGHT / 2
+	LastVpos   = 0
+	ResetZoom
+	CropTool.ResetView
+	CropTool.ViewHPos = cint((CropTool.ImageWidth/2.0)-64.0)
+	CropTool.viewVpos = cint((CropTool.ImageHeight/2.0)-64.0)
+end sub
+
+sub CropTool_MenuSelected(strMenu)
+	dim curWidth
+	dim curHeight
+	dim HPos
+	dim VPos
+	dim result
+
+	Select Case strMenu
+		Case "Paste"
+			ACKbase.paste TempImageList.ImageList, 0
+			LibraryImageList.AddImage TempImageList.Imagelist, 0
+			RepaintLibraryList
+			'CropTool.CurrentImage = LibraryImageList.CountImages - 1
+			LibraryListView.CurrentImage = LibraryImageList.CountImages - 1
+			CropTool.CurrentImage = LibraryListView.CurrentImage
+			DoResetView
+			LibScrolltoImage LibraryListView.CurrentImage ,BOT_ROW
+			fCropLoaded = true
+			CropToolFull
+			SetLiveHelp 3
+		Case "Copy"
+			HPos = Cint(CropTool.ViewHPos/CropTool.ViewScale)
+			VPos = Cint(CropTool.ViewVPos/CropTool.ViewScale)
+			curWidth  = Cint(AVATAR_WIDTH/CropTool.ViewScale)
+			curHeight = Cint(AVATAR_HEIGHT/CropTool.ViewScale)
+			result = CropTool.CopyCurrentImage(HPos,VPos,curWidth,curHeight,AVATAR_WIDTH, AVATAR_HEIGHT, TempImageList.ImageList,0)
+			ACKbase.copy TempImageList.ImageList, 0
+			LibraryFullMenu
+		Case else
+			doAction strMenu
+	end Select
+end sub
+
+sub CropToolEmpty
+	btnReset.className = "bDisabled"
+	btnReset.disabled = true
+	CropTool.EnableScrollBars = false
+	CropTool.ClearMenu
+	if ACKbase.ClipboardReady then
+		CropTool.AppendMenuItem("Paste")
+	end if
+	inpSlider.style.filter = "alpha(opacity=60)"
+	inpSlider.style.cursor = "default"
+	bar.style.filter = "alpha(opacity=60)"
+	ptr.style.filter = "alpha(opacity=60)"
+	fCropLoaded = false
+end sub
+
+sub CropToolFull
+	btnReset.className = "bEnabled"
+	btnReset.disabled = false
+	CropTool.EnableScrollBars = true
+	inpSlider.style.cursor = "hand"
+	inpSlider.style.filter = ""
+	bar.style.filter = ""
+	ptr.style.filter = ""
+	fCropLoaded = true
+	CropTool.ClearMenu
+	CropTool.AppendMenuItem("Copy")
+	if ACKbase.ClipboardReady then
+		CropTool.AppendMenuItem("Paste")
+	end if
+
+end sub
+
+' ************************* Drag and Drop ****************************
+' ******** from gesture view
+sub SetDropTargets
+	' gesture view
+	gvLeft = GestureView.offsetLeft + 2
+	gvTop = GestureView.offsetTop + 2
+	gvBot = GestureView.offsetTop + GestureView.offsetHeight - 1 + 2
+	gvRight = GestureView.offsetLeft + (ackbase.countGestureFrames(currentGesture) * GestureView.ImageWidth) + _
+						((ackbase.countGestureFrames(currentGesture) - 1) * GestureView.hSpacing) + 2
+	' library list view
+	llLeft = LibraryListView.offsetLeft + 2
+	llTop = LibraryListView.offsetTop + 2
+	llBot = LibraryListView.offsetTop + LibraryListView.offsetHeight - 1 + 2
+	llRight = LibraryListView.offsetLeft + LibraryListView.offsetWidth - 1 + 2
+	' current image view
+	ctLeft = CropTool.offsetLeft + 2
+	ctTop = CropTool.offsetTop + 2
+	ctBot = CropTool.offsetTop + CropTool.offsetHeight - 1 + 2
+	ctRight = CropTool.offsetLeft + CropTool.offsetWidth - 1 + 2
+	' Thumbnail view
+	thLeft = ThumbnailView.offsetLeft + 2
+	thTop = ThumbnailView.offsetTop + 2
+	thBot = ThumbnailView.offsetTop + ThumbnailView.offsetHeight - 1 + 2
+	thRight = ThumbnailView.offsetLeft + ThumbnailView.offsetWidth - 1 + 2
+end sub
+
+sub GestureView_DragBegin(x,y)
+	dim whichImage, newX
+
+	SetDropTargets
+	newX = x - gvLeft
+	if newX >= 1 and newX <= 66 then
+		whichImage = 0
+	elseif newX >= 67 and newX <= 134 then
+		whichImage = 1
+	elseif newX >= 135 and newX <= 202 then
+		whichImage = 2
+	elseif newX >= 203 and newX <= 270 then
+		whichImage = 3
+	elseif newX >= 271 and newX <= 338 then
+		whichImage = 4
+	elseif newX >= 339 and newX <= 404 then
+		whichImage = 5
+	end if
+	GestureIndex = ackbase.GestureFrameImage(currentGesture, whichImage)
+	GestureIndex = ackbase.ImageEntryBitmapIndex(GestureIndex, 0)
+	if whichImage < ackbase.countGestureFrames(currentState) then
+		GestureView.BeginDrag -32, -32, 32, 32
+	end if
+end sub
+
+sub GestureView_DragComplete(x,y)
+	dim result
+	SetDropTargets
+	' check to see if drop is in library list view
+	if y > llTop And y < llBot And x > llLeft And x < llRight then
+		LibraryImageList.AddImage ACKImageList.ImageList, GestureIndex
+		RepaintLibraryList
+		LibraryListView.CurrentImage = LibraryImageList.CountImages - 1
+		LibScrolltoImage LibraryListView.CurrentImage ,BOT_ROW
+		if fLibLoaded = false then
+			fLibLoaded = true
+			SetLiveHelp 3
+			LibraryFullMenu
+		end if
+	elseif y > ctTop And y < ctBot And x > ctLeft And x < ctRight then
+		' check to see if drop is in crop
+		LibraryImageList.AddImage ACKImageList.ImageList, GestureIndex
+		RepaintLibraryList
+		LibraryListView.CurrentImage = LibraryImageList.CountImages - 1
+		CropTool.CurrentImage = LibraryListView.CurrentImage
+		DoResetView
+		CropToolFull
+		if fLibLoaded = false then
+			fLibLoaded = true
+			LibraryFullMenu
+		end if
+	elseif y > thTop And y < thBot And x > thLeft And x < thRight then
+		MakeThumbnail "gesture"
+	end if
+end sub
+
+' ******** from library view
+sub LibraryListView_DragBegin(x,y)
+	if fLibLoaded = true then
+		LibraryListView.BeginDrag -32, -32, 32, 32
+	end if
+end sub
+
+sub LibraryListView_DragComplete(x, y)
+	' set boundary boxes for all potential drop targets
+	SetDropTargets
+	if y > gvTop And y < gvBot And x > gvLeft And x <= gvRight then
+		'check to see if drop is in gesture view window
+		DropCurrentOnGesture x, y, "library"
+	elseif y >= thTop And y <= thBot And x >= thLeft And x <= thRight then
+		'check to see if drop is in thumbnail view
+		MakeThumbnail "library"
+		SetLiveHelp 5
+	elseif y >= ctTop And y <= ctBot And x >= ctLeft And x <= ctRight then
+		'check to see if drop is in crop tool
+		CropTool.CurrentImage = LibraryListView.CurrentImage
+		DoResetView
+		CropToolFull
+		SetLiveHelp 3
+	end if
+end sub
+
+' ******** from Crop Tool
+sub CropTool_DragBegin(x,y)
+	if fCropLoaded = true then
+		CropTool.BeginDrag -32, -32, 32, 32
+	end if
+end sub
+
+sub CropTool_DragComplete(x,y)
+	SetDropTargets
+	if y >= gvTop And y <= gvBot And x >= gvLeft And x <= gvRight then
+		' check to see if drop is in gesture view
+		DropCurrentOnGesture x, y, "crop"
+		SetLiveHelp 4
+	elseif y >= thTop And y <= thBot And x >= thLeft And x <= thRight then
+		' check to see if drop is in thumbnail view
+		MakeThumbnail "crop"
+	elseif y > llTop And y < llBot And x > llLeft And x < llRight then
+		LibraryImageList.AddImage CropTool.ImageList, CropTool.CurrentImage
+		dim curWidth, curHeight, HPos, VPos, index, result
+		HPos = Cint(CropTool.ViewHPos / CropTool.ViewScale)
+		VPos = Cint(CropTool.ViewVPos / CropTool.ViewScale)
+		curWidth  = Cint(AVATAR_WIDTH / CropTool.ViewScale)
+		curHeight = Cint(AVATAR_HEIGHT / CropTool.ViewScale)
+		result = LibraryImageList.ReplaceImageCropped(CropTool.ImageList, CropTool.CurrentImage, HPos, VPos, curWidth, curHeight, LibraryImageList.CountImages - 1, AVATAR_WIDTH, AVATAR_HEIGHT)
+		RepaintLibraryList
+		LibraryListView.CurrentImage = LibraryImageList.CountImages - 1
+		LibScrolltoImage LibraryListView.CurrentImage ,BOT_ROW
+		if fLibLoaded = false then
+			fLibLoaded = true
+			SetLiveHelp 2
+			LibraryFullMenu
+		end if
+	end if
+end sub
+
+'***********************************
+'Routine:    DropCurrentOnGesture
+'
+'ArgList:    x - horizontal position
+'			 y - vertical position
+'			 from - drag source
+'***********************************
+sub DropCurrentOnGesture(x, y, from)
+	dim index, curWidth, curHeight, HPos, VPos, whichImage, result, newX
+
+	'determine index into ACKImageList for selected drop position
+	newX = x - gvLeft
+	if newX >= 1 and newX <= 66 then
+		whichImage = 0
+	elseif newX >= 67 and newX <= 134 then
+		whichImage = 1
+	elseif newX >= 135 and newX <= 202 then
+		whichImage = 2
+	elseif newX >= 203 and newX <= 270 then
+		whichImage = 3
+	elseif newX >= 271 and newX <= 338 then
+		whichImage = 4
+	elseif newX >= 339 and newX <= 404 then
+		whichImage = 5
+	end if
+	index = ackbase.GestureFrameImage(currentGesture, whichImage)
+	index = ackbase.ImageEntryBitmapIndex(index, 0)
+	if from = "library" then
+		ACKImageList.ReplaceImage index, LibraryListView.ImageList, LibraryListView.CurrentImage
+	else
+		if (CropTool.ViewScale > 0) then
+			HPos = Cint(CropTool.ViewHPos / CropTool.ViewScale)
+			VPos = Cint(CropTool.ViewVPos / CropTool.ViewScale)
+			curWidth  = Cint(AVATAR_WIDTH / CropTool.ViewScale)
+			curHeight = Cint(AVATAR_HEIGHT / CropTool.ViewScale)
+			result = CropTool.CopyCurrentImage(HPos, VPos, curWidth, curHeight, AVATAR_WIDTH, AVATAR_HEIGHT, ACKImageList.ImageList, index)
+		end if
+	end if
+	ACKView.ImageList = ACKImageList.ImageList
+	InstallStateInMultiFrame
+	fModified = true
+	setAvatarModified
+end sub
+
+' *************************** GESTURE VIEW **************************
+sub LoadAv
+	dim newname
+
+	if fModified then
+		select case msgbox("Avatar has been modified. Do you want to save changes?", vbYesNoCancel + vbQuestion, _
+									sMsgTitle)
+		case vbYes
+			if fNoAvatarName then
+				if not SaveAs then exit sub
+			else
+				SaveAvatar
+			end if
+		case vbCancel
+			exit sub
+		case else
+		end select
+	end if
+	if DefaultPath <> "" then
+		newname = ackbase.dlgchooseavatar (DefaultPath & "*.spr", false)
+	else
+		newname = ackbase.dlgchooseavatar (DefaultPath, false)
+	end if
+	if newname <> "" then
+		'check for valid file type (not case sensitive)
+		if StrComp(right(newname, 3), "spr", vbTextCompare) = 0 then
+			if ackbase.SetSpriteFilename(newName) = true then
+				if fGifOK then
+					imgIdle.click
+					newname = left(newname, instr(newname, ".") - 1)
+					AvatarFilePath = left(newname, InstrRev(newname, "\"))
+					AvatarName = right(newname, len(newname) - InstrRev(newname, "\"))
+					divMenuBar.innerText = AvatarName & ".spr"
+					ackbase.ImageFileName = AvatarName & ".gif"
+					setAvatarModified
+					ClearThumbnail
+					ThumbnailImageList.ImageFile = ACKbase.ThumbNailImage
+					ThumbnailView.ImageList = ThumbnailImageList.ImageList
+					ThumbnailView.CurrentImage = 0
+					DefaultPath = "" 'will not overide user set folder
+				end if
+			else
+				' error reading spr file
+				msgbox "Failed to load avatar!", vbExclamation, sMsgTitle
+			end if
+		else
+			msgbox "Invalid file extension for avatar!", vbExclamation, sMsgTitle
+		end if
+	end if
+end sub
+
+sub LoadBlank
+	if fModified then
+		select case msgbox("Avatar has been modified. Do you want to save changes?", vbYesNoCancel + vbQuestion, _
+									sMsgTitle)
+		case vbYes
+			if fNoAvatarName then
+				if not SaveAs then exit sub
+			else
+				SaveAvatar
+			end if
+		case vbCancel
+			exit sub
+		case else
+		end select
+	end if
+	if ackbase.SetSpriteFilename(ACKhomePath & "blank.spr") = true then
+		'set new default avatar information
+		imgIdle.click
+		AvatarFilePath = ACKhomePath
+		AvatarName = "Untitled"
+		divMenuBar.innerText = AvatarName & ".spr"
+		ackbase.ImageFileName = "blank.gif"
+		ACKbase.ThumbNailImage = "tblank.gif"
+		setAvatarUnmodified
+		ClearThumbnail
+		ThumbnailImageList.ImageFile = ACKhomePath & ACKbase.ThumbNailImage
+		ThumbnailView.ImageList = ThumbnailImageList.ImageList
+		ThumbnailView.CurrentImage = 0
+		fNoAvatarName = true
+	else
+		' error reading .spr file
+		msgbox "Failed to load blank avatar!", vbExclamation, sMsgTitle
+	end if
+end sub
+
+function SaveAs
+	dim newname
+
+	SaveAs = false
+	if fFirstTimeDlg then
+		newname = ACKImageList.DlgChooseImage (DefaultPath & AvatarName & ".spr", true)
+		fFirstTimeDlg = false
+	else
+		newname = ACKImageList.DlgChooseImage (AvatarName & ".spr", true)
+	end if
+	if newname <> "" then
+		newname = left(newname, instr(newname, ".") - 1)
+		AvatarFilePath = left(newname, InstrRev(newname, "\"))
+		AvatarName = right(newname, len(newname) - InstrRev(newname, "\"))
+		divMenuBar.innerText = AvatarName & ".spr"
+		ACKbase.ImageFileName = AvatarName & ".gif"
+		ACKbase.ThumbNailImage = "t" & AvatarName & ".gif"
+		SaveAvatar
+		fNoAvatarName = false
+		SaveAs = true
+		imgIdle.click
+		if not ACKbase.SetSpriteFilename(AvatarFilePath & AvatarName & ".spr") then
+			msgbox "Failed to save avatar!", vbExclamation, sMsgTitle
+		end if
+	end if
+end function
+
+sub SaveAvatar
+	ackbase.SaveSpriteFile(AvatarFilePath & AvatarName & ".spr")
+	ACKImageList.SaveToFile(AvatarFilePath & AvatarName & ".gif")
+	ThumbnailImageList.SaveToFile(AvatarFilePath & "t" & AvatarName & ".gif")
+	fModified = false
+end sub
+
+sub AnimateState
+	dim FrameDur, iBank
+
+	' start it
+	fAnimating = true
+	if AnimateFrame < ackbase.countGestureFrames(currentState) then
+		if cint(currentState) = cint(imgIdle.GestureNum) then
+			FrameDur = 500
+		else
+			if AnimateFrame = 0 then
+				FrameDur = ackbase.gestureframeduration(currentState, AnimateFrame)
+			else
+				FrameDur = ackbase.gestureframeduration(currentState, AnimateFrame) - _
+					ackbase.gestureframeduration(currentState, AnimateFrame - 1)
+			end if
+		end if
+		iBank = ackbase.gestureframeImage(currentState, AnimateFrame)
+		ackview.currentImage = ackbase.imageEntryBitmapIndex(iBank, 0)
+		AnimateFrame = AnimateFrame + 1
+
+		timerID = setTimeout("AnimateState", FrameDur)
+	else
+		fAnimating = false
+		AnimateFrame = 0
+		iBank = ackbase.gestureframeImage(imgIdle.GestureNum, AnimateFrame)
+		ackview.currentImage = ackbase.imageEntryBitmapIndex(iBank, 0)
+	end if
+end sub
+
+sub DoBtnClick(num)
+	dim iBank
+	if fAnimating then
+		' stop it
+		clearTimeout timerID
+		fAnimating = false
+		AnimateFrame = 0
+		iBank = ackbase.gestureframeImage(imgIdle.GestureNum, AnimateFrame)
+		ackview.currentImage = ackbase.imageEntryBitmapIndex(iBank, 0)
+	end if
+	set currentBtn = window.event.srcElement
+	divSelected.style.left = currentBtn.offsetLeft - 2
+	currentBtn.src = currentBtn.DefaultImg
+	currentState = currentBtn.GestureNum
+	currentGesture = currentState
+	StateList_OnChange
+	Select Case num
+		Case "1"
+			desc.innerHTML = "Wave Gesture Frames"
+			setImageNum "A","B","A","B","",""
+		Case "2"
+			desc.innerHTML="Turn Gesture Frames"
+			setImageNum "Left","Back left","Back","Back right","Right",""
+		Case "3"
+			desc.innerHTML="Smile Gesture Frames"
+			setImageNum "A","","","","",""
+		Case "4"
+			desc.innerHTML="Laugh Gesture Frames"
+			setImageNum "A","B","A","B","A","B"
+		Case "5"
+			desc.innerHTML="Flirt Gesture Frames"
+			setImageNum "A","B","","","",""
+		Case "6"
+			desc.innerHTML="Shrug Gesture Frames"
+			setImageNum "A","","","","",""
+		Case "7"
+			desc.innerHTML="Blush Gesture Frames"
+			setImageNum "A","","","","",""
+		Case "8"
+			desc.innerHTML="Angry Gesture Frames"
+			setImageNum "A","","","","",""
+		Case "9"
+			desc.innerHTML="Sleep Gesture Frames"
+			setImageNum "A","","","","",""
+		Case "10"
+			desc.innerHTML="Pose Gesture Frames"
+			setImageNum "A","","","","",""
+		Case "11"
+			desc.innerHTML="Action Gesture Frames"
+			setImageNum "A","B","","","",""
+		Case "12"
+			desc.innerHTML="Idle Gesture Frames"
+			setImageNum "A","B","A","C","",""
+		End select
+end sub
+
+sub setImageNum(a,b,c,d,e,f)
+	img1.innerHTML=a
+	img2.innerHTML=b
+	img3.innerHTML=c
+	img4.innerHTML=d
+	img5.innerHTML=e
+	img6.innerHTML=f
+end sub
+
+sub DoPlay
+	dim iBank
+
+	if fAnimating then
+		' stop it
+		clearTimeout timerID
+		fAnimating = false
+		AnimateFrame = 0
+		iBank = ackbase.gestureframeImage(imgIdle.GestureNum, AnimateFrame)
+		ackview.currentImage = ackbase.imageEntryBitmapIndex(iBank, 0)
+	end if
+	AnimateState
+	SetLiveHelp 0
+end sub
+
+sub ACKbase_OnFileChanged
+	loopcounter = loopcounter+1
+	ACKImageList.ImageFile = ACKbase.ImageFilePath
+	if ACKImageList.ImageFile <> ACKbase.ImageFilePath then
+         ' handle the broken GIF file
+         msgbox "Invalid gif file!", vbExclamation, sMsgTitle
+         'ACKbase.ImageFilePath = ACKhomePath
+         if loopcounter > 2 then
+			' can't load blank avatar
+			msgbox "Failed to load blank avatar!", vbExclamation, sMsgTitle
+			loopcounter = 0
+         else
+			LoadBlank
+         end if
+
+         fGifOK = false
+    else
+		' valid gif file
+ 		ACKView.ImageList = ACKImageList.ImageList
+		' state view stuff
+		GestureView.ImageList = ACKImageList.ImageList
+		currentState = 0
+		InstallStateInMultiFrame
+		fGifOK = true
+		loopcounter = 0
+   end if
+end sub
+
+sub StateList_OnChange
+	SetCurrentFrame 0
+	InstallStateInMultiFrame
+end sub
+
+sub InstallStateInMultiFrame
+	GestureView.ClearImages
+	dim frameText, imageBank, image, numFrames, i
+
+	numFrames = ackbase.countGestureFrames(currentState)
+	for i = 0 to numFrames - 1
+		imageBank = ackbase.gestureframeimage(currentState, i)
+		image = ackbase.ImageEntryBitmapIndex(imageBank, 0)
+		frameText = "Bank " + CStr(imageBank)
+		GestureView.AddImage image, frameText
+	next
+	GestureView.CurrentImage = currentFrame
+end sub
+
+sub SetCurrentFrame(whichFrame)
+	currentFrame = whichFrame
+	GestureView.CurrentImage = currentFrame
+	currentBank = ackbase.GestureFrameImage(currentState, currentFrame)
+end sub
+
+sub Publish
+	dim sprName, gifName, thmbName
+	dim WebPostInstall
+
+	if fModified then
+		msgbox "Avatar file must be saved before publishing.", vbInformation, sMsgTitle
+	else 'already renamed
+		sprName  = AvatarFilePath & AvatarName & ".spr"
+		gifName  = AvatarFilePath & AvatarName & ".gif"
+		thmbName = AvatarFilePath & "t" & AvatarName & ".gif"
+		WebPostInstall = ackbase.Publish ("", Array(sprName, gifName, thmbName))
+		if WebPostInstall = -1 then
+			msgbox "WebPost not installed - check help!", vbExclamation, sMsgTitle
+		end if
+	end if
+end sub
+
+sub RepaintGestureView
+	GestureView.ClearImages
+	InstallStateInMultiFrame
+end sub
+
+sub GestureView_MenuSelected(strMenu)
+	doAction strMenu
+end sub
+
+sub ACKView_MenuSelected(strMenu)
+	doAction strMenu
+end sub
+
+sub GestureView_mouseDownOnImage(whichImage)
+	if currentFrame <> whichImage then
+		SetCurrentFrame(whichImage)
+	end if
+end sub
+
+' ******** gesture key press stuff ********
+sub GestureView_keypress(keycode)
+	Select Case keycode
+		Case 52 'left
+			GestLeft
+		Case 54 'right
+			GestRight
+		Case 56 'up
+
+		Case 50 'down
+
+		Case 46 'delet
+
+	End Select
+end sub
+
+sub GestureView_keyup(keycode, shift)
+	Select Case keycode
+		Case 8	'delete
+
+		Case 37 'left
+			GestLeft
+		Case 39 'right
+			GestRight
+		Case 38 'up
+
+		Case 40 'down
+
+		Case 46 'delet
+
+	End Select
+end sub
+
+sub GestLeft
+	if GestureView.CurrentImage > 0 then
+		GestureView.CurrentImage = GestureView.CurrentImage - 1
+	else
+		'beep
+	end if
+
+end sub
+
+sub GestRight
+	if GestureView.CurrentImage < ackbase.countGestureFrames(currentState)-1 then
+		GestureView.CurrentImage = GestureView.CurrentImage + 1
+	else
+		'beep
+	end if
+end sub
+
+' ******** gesture menu stuff **************
+sub setAvatarModified
+	btnPlay.className = "bEnabled"
+	btnPlay.disabled = false
+	FileMenu.Clearmenu
+	FileMenu.AppendMenuItem("New")
+	FileMenu.AppendMenuItem("Open")
+	FileMenu.AppendMenuItem("Save")
+	FileMenu.AppendMenuItem("Save As")
+	FileMenu.AppendMenuItem("-")
+	FileMenu.AppendMenuItem("Post to Web Server")
+	GestureView.Clearmenu
+	GestureView.AppendMenuItem("New")
+	GestureView.AppendMenuItem("Open")
+	GestureView.AppendMenuItem("Save")
+	GestureView.AppendMenuItem("Save As")
+	GestureView.AppendMenuItem("-")
+	GestureView.AppendMenuItem("Post to Web Server")
+end sub
+
+sub setAvatarUnmodified
+	btnPlay.className = "bDisabled"
+	btnPlay.disabled = true
+	if fCropLoaded then
+		SetLiveHelp (3)
+	else
+		SetLiveHelp (1)
+	end if
+	fModified = false
+	GestureView.Clearmenu
+	GestureView.AppendMenuItem("Open")
+	FileMenu.Clearmenu
+	FileMenu.AppendMenuItem("Open")
+end sub
+
+' *************************** Thumbnail **************************
+
+'***********************************
+'Routine:    MakeThumbnail
+'
+'ArgList:    from - drag source
+'***********************************
+sub MakeThumbnail(from)
+	dim curWidth, curHeight, HPos, VPos, index, result
+
+	ClearThumbnail
+	if from = "library" then
+		ThumbnailView.viewscale = THUMB_WIDTH / AVATAR_WIDTH
+		result = ThumbnailImageList.ReplaceImage(0, LibraryListView.ImageList, LibraryListView.CurrentImage)
+	elseif from = "gesture" then
+		ThumbnailView.viewscale = THUMB_WIDTH / AVATAR_WIDTH
+		result = ThumbnailImageList.ReplaceImage(0, ACKImageList.ImageList, GestureIndex)
+	elseif from = "crop" then
+		HPos = Cint(CropTool.ViewHPos / CropTool.ViewScale)
+		VPos = Cint(CropTool.ViewVPos / CropTool.ViewScale)
+		curWidth  = Cint(AVATAR_WIDTH / CropTool.ViewScale)
+		curHeight = Cint(AVATAR_HEIGHT / CropTool.ViewScale)
+		result = CropTool.CopyCurrentImage(HPos, VPos, curWidth, curHeight, THUMB_WIDTH, THUMB_HEIGHT, ThumbnailImageList.ImageList, 0)
+	end if
+	if result = false then
+		msgbox "Failed to copy image!", vbExclamation, sMsgTitle
+	else
+		ThumbnailView.ImageList = ThumbnailImageList.ImageList
+		ThumbnailView.CurrentImage = 0
+		fModified = true
+		setAvatarModified
+	end if
+end sub
+
+sub ClearThumbnail
+	ThumbnailView.viewhpos = 0
+	ThumbnailView.viewvpos = 0
+	ThumbnailView.viewscale = 1.0
+end sub
+
+' ************************** Button bar ******************************
+sub DoMenu
+	dim x, y
+	window.event.returnValue = false
+	x = 1 - (window.event.clientx - window.event.srcElement.parentElement.offsetLeft)
+	y = 21 - (window.event.clienty - window.event.srcElement.parentElement.offsetTop)
+	document.all(window.event.srcElement.MenuObj).TrackPopupMenu x, y, 0, 0
+end sub
+
+sub FileMenu_MenuSelected(strMenu)
+	doAction strMenu
+end sub
+
+sub ImgGallMenu_MenuSelected(strMenu)
+	Select Case strMenu
+		Case "Paste"
+			ACKbase.paste TempImageList.ImageList, 0
+			LibraryImageList.AddImage TempImageList.imagelist, 0
+			RepaintLibraryList
+			LibraryListView.CurrentImage = LibraryImageList.CountImages - 1
+			LibScrolltoImage LibraryListView.CurrentImage ,BOT_ROW
+			if fLibLoaded = false then
+				fLibLoaded = true
+				SetLiveHelp 3
+				LibraryFullMenu
+			end if
+		Case else
+			doAction strMenu
+	End Select
+end sub
+
+sub HelpMenu_MenuSelected(strMenu)
+	dim sMsg, sMsgTitle
+	sMsgTitle = "About The Avatar Construction Kit"
+	sMsg = "Microsoft Virtual Worlds" & chr(13) & "Avatar Construction Kit (1.50.0.275)" & chr(13) & "Copyright © 1995-2000 Microsoft Corp. ALL RIGHTS RESERVED" & chr(13) & chr(13) & "Portions of this product were created using LEADTOOLS © 1991-1997 LEAD Technologies, Inc. ALL RIGHTS RESERVED."
+	Select Case strMenu
+		Case "Contents"
+			window.ShowHelp("mk:@MSITStore:"&ACKbase.HelpPath&"vworlds.chm::/UIRef/ack/ackintf.htm>sdkall")
+		Case "About"
+			msgbox sMsg, vbOKOnly, sMsgTitle
+		Case else
+	End Select
+end sub
+
+' *************************** GENERAL STUFF **************************
+sub document_onMouseOver
+	select case window.event.srcElement.className
+	case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	case "vMainEnabled"
+		window.event.srcElement.className = "vMainHighlight"
+	case Else
+	end select
+	if window.event.srcElement.tagName = "INPUT" then
+		if window.event.srcElement.type = "image" then
+			window.event.srcElement.src = window.event.srcElement.HiliteImg
+		end if
+	end if
+end sub
+
+sub document_onMouseOut
+	select case window.event.srcElement.className
+	case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	case "vMainHighlight"
+		window.event.srcElement.className = "vMainEnabled"
+	case else
+	end select
+	if window.event.srcElement.tagName = "INPUT" then
+		if window.event.srcElement.type = "image" then
+			window.event.srcElement.src = window.event.srcElement.DefaultImg
+		end if
+	end if
+end sub
+
+sub doAction(function_id)
+	select case function_id
+	case "New"
+		LoadBlank
+	case "Open"
+		LoadAv
+	case "Save"
+		if fNoAvatarName then
+			SaveAs
+		else
+			SaveAvatar
+		end if
+	case "Save As"
+		SaveAs
+	case "Post to Web Server"
+		Publish
+	case "Load Image"
+		DoLibraryLoad
+	case "Load Avatar Images"
+		DoLibAvatarLoad
+	case "Capture From TWAIN Device"
+		LibraryImageList.AddImageFromTWAIN
+	case "Delete Image"
+		DoLibraryDelete
+	case "Clear All"
+		DoLibraryDeleteAll
+	case NULL
+		' this should never be executed
+	case else
+	end select
+end sub
+
+sub SetLiveHelp (stepnum)
+	Select  Case stepnum
+		Case 0
+			LiveHelp.innertext = ""
+		Case 1
+			LiveHelp.innerhtml = "<b>Step 1 of 5</b>, Load an avatar.  Right click in the image library area and choose <b>Load Avatar Images</b>."
+		Case 2
+			LiveHelp.innerhtml = "<b>Step 2 of 5</b>, Drag an image from the <b>Image Library</b> to the <b>Crop Tool</b>."
+		Case 3
+			LiveHelp.innerhtml = "<b>Step 3 of 5</b>, Use the slider bar to zoom the image.  Drag the cropped image from the <b>Crop Tool</b> to the Gesture frames."
+		Case 4
+			LiveHelp.innerhtml = "<b>Step 4 of 5</b>, Drag an image from the <b>Image Library</b> into the <b>Thumbnail</b> area.  You can also drag images from the <b>Image Library</b> into the Gesture frames sequence."
+		Case 5
+			LiveHelp.innerhtml = "<b>Step 5 of 5</b>, Click <u>Play</u> on the <b>Gesture Preview</b> to see the gesture sequence."
+		Case Else
+			LiveHelp.innertext = stepnum
+	end Select
+end sub
+
+'******************** unload **********************************
+sub window_onUnload
+	if fModified then
+		' offer to save work
+		if vbYes = msgbox("Avatar has been modified. Do you want to save changes?", vbYesNoCancel + vbQuestion, _
+									sMsgTitle) then
+			SaveAvatar
+		end if
+	end if
+end sub
+
+sub ZoomSlider(ZoomPos)
+	parent.CurScale = (ZoomPos * 5.0) / 80.0
+	if parent.CropTool.viewhpos <> parent.LastHpos or parent.CropTool.viewvpos <> parent.LastVpos then
+		parent.CurHcenter = (parent.CropTool.viewhpos + 64) / parent.LastScale
+		parent.CurVcenter = (parent.CropTool.viewvpos + 64) / parent.LastScale
+	end if
+		parent.CropTool.viewhpos = parent.CurHcenter * parent.CurScale - 64.0
+		parent.CropTool.viewvpos = parent.CurVcenter * parent.CurScale - 64.0
+	parent.CropTool.ViewScale = parent.CurScale
+	parent.LastHpos = parent.CropTool.viewhpos
+	parent.LastVpos = parent.CropTool.viewvpos
+	parent.LastScale = parent.CurScale
+end sub
+
+sub ResetZoom
+	' set slider to a default zoom of 1
+	ZoomSlider 16
+	ptr.style.left = inpSlider.offsetLeft + 10
+end sub
+
+sub inpSlider_onmousedown
+	inpSlider_onmousemove
+end sub
+
+sub inpSlider_onmousemove
+	dim xPos
+
+	if window.event.button = 1 and inpSlider.style.filter = "" then
+		xPos = window.event.offsetX
+		if xPos < 4 then
+			xPos = 0
+		elseif xPos > 71 then
+			xPos = 68
+		else
+			xPos = xPos - 3
+		end if
+		ptr.style.left = inpSlider.offsetLeft + xPos
+		ZoomSlider xPos + 6
+	end if
+end sub
+
+sub document_OnSelectStart
+	Select Case TypeName(window.event.srcElement)
+		case "HTMLInputTextElement", "HTMLTextAreaElement", "HTMLInputFileElement"
+		case Else
+			window.event.returnValue = false
+	end select
+end sub
+
+</script>
+</head>
+<body>
+	<div class=vH2
+			 id=divMenuBar
+			 style="BACKGROUND-COLOR: #003366;
+							 COLOR:
+							 lightblue;
+							 HEIGHT:
+							 23px;
+							 LEFT:
+							 0px;
+							 PADDING-RIGHT:
+							 10px; PADDING-TOP: 4px; POSITION: absolute; TEXT-ALIGN: right; TOP: 0px; width: 100%">
+	</div>
+	<div style="LEFT: 10px; POSITION: absolute">
+		<a name=btnFile href="" class=vMainEnabled onclick=DoMenu MenuObj = FileMenu>&nbsp;File&nbsp;</a>
+	</div>
+<OBJECT classid=CLSID:9B5EF020-672B-11D1-AD0F-9D36F65CBF4B id=FileMenu
+style="LEFT: 0px; POSITION: absolute; TOP: 25px" tabIndex=-1>
+	<PARAM NAME="_Version" VALUE="65536">
+	<PARAM NAME="_ExtentX" VALUE="26">
+	<PARAM NAME="_ExtentY" VALUE="26">
+	<PARAM NAME="_StockProps" VALUE="0">
+</OBJECT>
+	<div style="LEFT: 47px; POSITION: absolute">
+		<a name=btnImageLib href="" class=vMainEnabled onclick=DoMenu MenuObj = ImgGallMenu>&nbsp;Image Library&nbsp;</a>
+	</div>
+<OBJECT classid=CLSID:9B5EF020-672B-11D1-AD0F-9D36F65CBF4B id=ImgGallMenu
+style="LEFT: 0px; POSITION: absolute; TOP: 25px" tabIndex=-1>
+	<PARAM NAME="_Version" VALUE="65536">
+	<PARAM NAME="_ExtentX" VALUE="26">
+	<PARAM NAME="_ExtentY" VALUE="26">
+	<PARAM NAME="_StockProps" VALUE="0">
+</OBJECT>
+	<div style="LEFT: 152px; POSITION: absolute">
+		<a name=btnHelp href="" class=vMainEnabled onclick=DoMenu MenuObj = HelpMenu>&nbsp;Help&nbsp;</a>
+	</div>
+<OBJECT classid=CLSID:9B5EF020-672B-11D1-AD0F-9D36F65CBF4B id=HelpMenu
+style="LEFT: 0px; POSITION: absolute; TOP: 25px" tabIndex=-1>
+	<PARAM NAME="_Version" VALUE="65536">
+	<PARAM NAME="_ExtentX" VALUE="26">
+	<PARAM NAME="_ExtentY" VALUE="26">
+	<PARAM NAME="_StockProps" VALUE="0">
+</OBJECT>
+
+	<div class=vH1 style="LEFT: 18px; TOP: 26px">
+		Image
+Construction Area
+	</div>
+	<div class=vLabel style="LEFT: 30px; TOP: 55px">
+		Image
+Library
+	</div>
+<OBJECT classid=CLSID:9B5EF024-672B-11D1-AD0F-9D36F65CBF4B id=LibraryListView
+style="HEIGHT: 162px; LEFT: 30px; POSITION: absolute; TOP: 70px; WIDTH: 445px">
+	<PARAM NAME="_Version" VALUE="65536">
+	<PARAM NAME="_ExtentX" VALUE="11774">
+	<PARAM NAME="_ExtentY" VALUE="4286">
+	<PARAM NAME="_StockProps" VALUE="45">
+	<PARAM NAME="ForeColor" VALUE="0">
+	<PARAM NAME="BackColor" VALUE="15267060">
+	<PARAM NAME="BorderStyle" VALUE="1">
+</OBJECT>
+	<div id=LiveHelp class=vLabel style="LEFT: 35px; TOP: 238px; WIDTH: 440px"></div>
+
+	<div class=vLabel style="LEFT: 495px; TOP: 55px">
+		Crop Tool
+	</div>
+<OBJECT classid=CLSID:9B5EF02C-672B-11D1-AD0F-9D36F65CBF4B id=CropTool
+style="HEIGHT: 143px; LEFT: 495px; POSITION: absolute; TOP: 70px; WIDTH: 143px">
+	<PARAM NAME="_Version" VALUE="65536">
+	<PARAM NAME="_ExtentX" VALUE="3784">
+	<PARAM NAME="_ExtentY" VALUE="3784">
+	<PARAM NAME="_StockProps" VALUE="1">
+	<PARAM NAME="BackColor" VALUE="16777215">
+</OBJECT>
+	<img id=bar src="zoombar.gif" style="FILTER: alpha(opacity=60); LEFT: 495px; POSITION: absolute; TOP: 221px">
+	<img id=ptr src="ptr.gif" style="FILTER: alpha(opacity=60); HEIGHT: 14px; LEFT: 505px; POSITION: absolute; TOP: 222px; WIDTH: 7px">
+	<input id=inpSlider title="Zoom Slider"
+				 readonly
+				 style="BACKGROUND-COLOR: transparent;
+								 BORDER-BOTTOM:
+								 0px;
+								 BORDER-LEFT:
+								 0px;
+								 BORDER-RIGHT:
+								 0px;
+								 BORDER-TOP:
+								 0px; FILTER: alpha(opacity=60); HEIGHT: 24px; LEFT: 495px; POSITION: absolute; TOP: 221px; WIDTH: 77px">
+	<button class=bDisabled id=btnReset onclick=DoResetView style="LEFT: 578px; TOP: 221px" title="Reset to Starting Image" type=button>
+		<span style="POSITION: relative; TOP: -1px">Reset</span></button>
+
+	<div class=vH1 style="LEFT: 18px; TOP: 296px">
+		Avatar
+Construction Area
+	</div>
+	<div id=desc class=vLabel style="LEFT: 30px; POSITION: absolute; TOP: 325px"></div>
+<OBJECT classid=CLSID:9B5EF024-672B-11D1-AD0F-9D36F65CBF4B id=GestureView
+style="HEIGHT: 66px; LEFT: 30px; POSITION: absolute; TOP: 340px; WIDTH: 406px">
+	<PARAM NAME="_Version" VALUE="65536">
+	<PARAM NAME="_ExtentX" VALUE="10742">
+	<PARAM NAME="_ExtentY" VALUE="1746">
+	<PARAM NAME="_StockProps" VALUE="45">
+	<PARAM NAME="ForeColor" VALUE="0">
+	<PARAM NAME="BackColor" VALUE="15267060">
+	<PARAM NAME="BorderStyle" VALUE="1">
+</OBJECT>
+	<div id=img1 class=vLabel style="LEFT: 31px; POSITION: absolute; TEXT-ALIGN: center; TOP: 407px; WIDTH: 64px"></div>
+	<div id=img2 class=vLabel style="LEFT: 99px; POSITION: absolute; TEXT-ALIGN: center; TOP: 407px; WIDTH: 64px"></div>
+	<div id=img3 class=vLabel style="LEFT: 167px; POSITION: absolute; TEXT-ALIGN: center; TOP: 407px; WIDTH: 64px"></div>
+	<div id=img4 class=vLabel style="LEFT: 235px; POSITION: absolute; TEXT-ALIGN: center; TOP: 407px; WIDTH: 64px"></div>
+	<div id=img5 class=vLabel style="LEFT: 303px; POSITION: absolute; TEXT-ALIGN: center; TOP: 407px; WIDTH: 64px"></div>
+	<div id=img6 class=vLabel style="LEFT: 371px; POSITION: absolute; TEXT-ALIGN: center; TOP: 407px; WIDTH: 64px"></div>
+
+	<div id=divButtons style="LEFT: 35px; POSITION: absolute; TOP: 430px">
+		<div id=divSelected style="BORDER-BOTTOM: red solid 1px; BORDER-LEFT: red solid 1px; BORDER-RIGHT: red solid 1px; BORDER-TOP: red solid 1px; HEIGHT: 29px; LEFT: 6px; POSITION: absolute; WIDTH: 29px"></div>
+		<input type=image onclick=DoBtnClick(12) id=imgIdle src="idle.gif" style="LEFT: 8px; POSITION: absolute; TOP: 2px" title=Idle GestureNum = 0 HiliteImg = idleh.gif DefaultImg = idle.gif>
+		<input type=image onclick=DoBtnClick(1) id=imgWave src="wave.gif" style="LEFT: 40px; POSITION: absolute; TOP: 2px" title=Wave GestureNum = 1 HiliteImg = waveh.gif DefaultImg = wave.gif>
+		<input type=image onclick=DoBtnClick(2) id=imgTurn src="turn.gif" style="LEFT: 72px; POSITION: absolute; TOP: 2px" title=Turn GestureNum = 7 HiliteImg = turnh.gif DefaultImg = turn.gif>
+		<input type=image onclick=DoBtnClick(3) id=imgSmile src="smile.gif" style="LEFT: 104px; POSITION: absolute; TOP: 2px" title=Smile GestureNum = 2 HiliteImg = smileh.gif DefaultImg = smile.gif>
+		<input type=image onclick=DoBtnClick(4) id=imgLaugh src="talk.gif" style="LEFT: 136px; POSITION: absolute; TOP: 2px" title=Laugh GestureNum = 8 HiliteImg = talkh.gif DefaultImg = talk.gif>
+		<input type=image onclick=DoBtnClick(5) id=imgFlirt src="flirt.gif" style="LEFT: 168px; POSITION: absolute; TOP: 2px" title=Flirt GestureNum = 3 HiliteImg = flirth.gif DefaultImg = flirt.gif>
+		<input type=image onclick=DoBtnClick(6) id=imgShrug src="shrug.gif" style="LEFT: 200px; POSITION: absolute; TOP: 2px" title=Shrug GestureNum = 4 HiliteImg = shrugh.gif DefaultImg = shrug.gif>
+		<input type=image onclick=DoBtnClick(7) id=imgFrown src="blush.gif" style="LEFT: 232px; POSITION: absolute; TOP: 2px" title=Blush GestureNum = 9 HiliteImg = blushh.gif DefaultImg = blush.gif>
+		<input type=image onclick=DoBtnClick(8) id=imgBlush src="frown.gif" style="LEFT: 264px; POSITION: absolute; TOP: 2px" title=Frown GestureNum = 10 HiliteImg = frownh.gif DefaultImg = frown.gif>
+		<input type=image onclick=DoBtnClick(9) id=imgSleep src="sleep.gif" style="LEFT: 296px; POSITION: absolute; TOP: 2px" title=Sleep GestureNum = 12 HiliteImg = sleeph.gif DefaultImg = sleep.gif>
+		<input type=image onclick=DoBtnClick(10) id=imgStill src="still.gif" style="LEFT: 328px; POSITION: absolute; TOP: 2px" title=Pose GestureNum = 11 HiliteImg = stillh.gif DefaultImg = still.gif>
+		<input type=image onclick=DoBtnClick(11) id=imgAction src="action.gif" style="LEFT: 360px; POSITION: absolute; TOP: 2px" title=Act GestureNum = 6 HiliteImg = actionh.gif DefaultImg = action.gif>
+	</div>
+
+	<div class=vLabel style="LEFT: 456px; TOP: 325px">
+		Gesture
+Preview
+	</div>
+<OBJECT classid=CLSID:9B5EF02C-672B-11D1-AD0F-9D36F65CBF4B id=ACKView
+style="HEIGHT: 128px; LEFT: 456px; POSITION: absolute; TOP: 340px; WIDTH: 128px">
+	<PARAM NAME="_Version" VALUE="65536">
+	<PARAM NAME="_ExtentX" VALUE="3387">
+	<PARAM NAME="_ExtentY" VALUE="3387">
+	<PARAM NAME="_StockProps" VALUE="1">
+	<PARAM NAME="BackColor" VALUE="16777215">
+</OBJECT>
+	<button class=bDisabled title="Play Gesture" id=btnPlay onclick=DoPlay style="LEFT: 456px; TOP: 475px" type=button>
+		<span style="POSITION: relative; TOP: -1px">Play</span></button>
+
+	<div class=vLabel style="LEFT: 604px; TOP: 325px">
+		Thumbnail
+	</div>
+	<div class=vLabel style="LEFT: 18px; TOP: 485px">
+		Copyright &#169;1998-2000 Microsoft Corporation. All Rights Reserved.
+	</div>
+
+<OBJECT classid=CLSID:9B5EF02C-672B-11D1-AD0F-9D36F65CBF4B id=ThumbnailView
+style="HEIGHT: 26px; LEFT: 604px; POSITION: absolute; TOP: 340px; WIDTH: 26px">
+	<PARAM NAME="_Version" VALUE="65536">
+	<PARAM NAME="_ExtentX" VALUE="688">
+	<PARAM NAME="_ExtentY" VALUE="688">
+	<PARAM NAME="_StockProps" VALUE="1">
+	<PARAM NAME="BackColor" VALUE="16777215">
+</OBJECT>
+</body>
+</html>

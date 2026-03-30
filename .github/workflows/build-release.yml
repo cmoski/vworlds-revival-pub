@@ -14,18 +14,18 @@ jobs:
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
       - name: Install MFC/ATL components
         run: |
-          # windows-2022 runner has VS2022 Enterprise but may lack MFC/ATL
           & "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" modify `
             --installPath "C:\Program Files\Microsoft Visual Studio\2022\Enterprise" `
             --add Microsoft.VisualStudio.Component.VC.ATLMFC `
             --quiet --norestart --wait 2>$null
-          # If that fails, it's likely already installed
         shell: pwsh
         continue-on-error: true
 
@@ -39,18 +39,22 @@ jobs:
         run: |
           mkdir dist\bin
           mkdir dist\worlds
+          mkdir dist\scripts
 
           :: Binaries
           copy build\Release\*.dll dist\bin\
           copy build\Release\*.exe dist\bin\
           copy third_party\d3drm_legacy\x86\bin\d3drm.dll dist\bin\
 
+          :: Content (sprites, models, SDK, HTML client)
+          xcopy /E /I /Q content dist\content
+
           :: Batch launchers in root
           copy scripts\dist\*.bat dist\
 
           :: World creation scripts
-          copy scripts\create_allworlds.vbs dist\worlds\
-          copy scripts\create_desktopworld.vbs dist\worlds\
+          copy scripts\create_allworlds.vbs dist\scripts\
+          copy scripts\create_desktopworld.vbs dist\scripts\
         shell: cmd
 
       - name: Create release zip
@@ -75,25 +79,30 @@ jobs:
             Microsoft Virtual Worlds v1.5 (2000) modernized for Windows 11 + Visual Studio 2022.
 
             ### Quick Start
-            1. Extract the zip
-            2. Run `install.bat` as Administrator (registers COM DLLs)
-            3. Run `launch.bat` to start a world
+            1. Extract the zip anywhere
+            2. Run `install.bat` as Administrator (registers COM DLLs + sets registry paths)
+            3. Run `launch.bat` to start the Gallery world
+            4. Run `launch.bat DesktopWorld` for the full lobby experience
 
             ### What's included
-            - Pre-built x86 binaries (12 DLLs + 4 executables)
-            - d3drm.dll legacy runtime
-            - Launcher batch files
+            - Pre-built x86 binaries (8 COM DLLs + 4 executables)
+            - d3drm.dll legacy Direct3D Retained Mode runtime
+            - Full content: sprites, 3D models, avatar graphics, SDK world kits
+            - World creation scripts (Gallery, Home, Landscape, Office, DesktopWorld)
+            - Launcher batch files (single-user, multi-user)
             - Source code available in the repository
 
             ### Requirements
             - Windows 10/11 (x64 — runs as 32-bit)
-            - Visual C++ 2022 Redistributable (x86)
+            - [Visual C++ 2022 Redistributable (x86)](https://aka.ms/vs/17/release/vc_redist.x86.exe)
+            - Administrator privileges for install (COM registration + registry)
 
             ### Features
-            - 5 renderable 3D worlds (Gallery, Home, Landscape, Office, DesktopWorld)
-            - Multi-user support (multiple clients connecting to same server)
+            - 5 renderable 3D worlds with real geometry from the original SDK
+            - Multi-user: multiple clients connect to same server, see each other
             - Object Explorer with live property editing
             - Command Window (live VBScript console)
-            - Actor bone animation (Asheron's Call creature import)
-            - Sound playback
+            - Actor bone animation (Asheron's Call creature with 79 animations)
+            - Sound playback (DirectSound)
             - World persistence (Ctrl+S save/load)
+            - Studio editing tools (translate, rotate, scale, boundaries)

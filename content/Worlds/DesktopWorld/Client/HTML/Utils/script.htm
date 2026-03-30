@@ -1,0 +1,195 @@
+<html>
+<head>
+<title>Command Window</title>
+<link rel=stylesheet href=..\..\shared\global.css>
+<object id=scriptocx CLASSID="CLSID:0E5D5946-020F-11D1-83AB-00C04FB6FA46"></OBJECT>
+<script language=vbs>
+
+dim bIsDisconnected
+
+public goTop, goClient, goWorld, goUser
+set goTop = window.dialogArguments
+set goClient = goTop.theClient.VWClient
+set goWorld = goClient.world
+set goUser = goWorld.user
+
+sub window_onload
+	bIsDisconnected = false
+	txtCommand.focus
+	txtCommand.select
+	scriptocx.VwClient = goClient
+
+	'Need to set CurrentWindow variable on main page,
+	'then do an Event Request from the main thread on client page
+	'set goTop.CurrentWindow = window
+	'goTop.AddWindowAfterTimeOut
+	goWorld.fireUIEvent goUser, "EventRequest", window
+end sub
+
+sub window_onunload
+'	on error resume next
+	if bIsDisconnected = false then
+		goWorld.fireUIEvent goUser, "EventRequestCancel", window
+	end if
+	goWorld.fireUIEvent goUser, "vwScriptClose", True
+end sub
+
+sub document_onkeypress
+	select case window.event.keycode
+	case 27
+		window.close
+	case 13
+		if window.event.srcElement.id = "txtCommand" then
+			theText = txtCommand.Value
+			scriptocx.Invoke theText
+			txtCommand.Select
+		end if
+	case else
+	end select
+end sub
+
+sub document_onmouseover
+	select case window.event.srcElement.className
+	case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	case "vwHelp"
+		imgHelp.src = "..\..\images\helpH.gif"
+	case else
+	end select
+end sub
+
+sub document_onmouseout
+	select case window.event.srcElement.className
+	case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	case "vwHelp"
+		imgHelp.src = "..\..\images\help.gif"
+	case else
+	end select
+end sub
+
+sub HandleTrace(theStr)
+	newHTML = Spanify(theStr, "vsTraceText")
+	AppendHTML newHTML, ""
+end sub
+
+sub HandleReport(theStr, reportType)
+	msg = ""
+	overStyle = ""
+	select case reportType
+		case -1
+			msg = "*** " + theStr
+			msgStyle = "vsErrorText"
+			overStyle = "TextMessage"
+		case 0  ' return value
+			msg = Spanify(theStr, "vsReturnText")
+		case 1	' echo
+			msg = Spanify(">> " + theStr, "vsEchoText")
+		case 2  ' result (if any)
+			msg = Spanify(theStr, "vsReturnText")
+		case 3  ' prompt
+			msg = Spanify(theStr, "vsPromptText")
+		case 5 ' whisper
+		case else
+			msg = "REPORT(" + cstr(reportType) + "):  " + theStr
+			msgStyle = "vsReportText"
+	end select
+	if msg <> "" then
+		newHTML = Spanify(msg, msgstyle)
+		AppendHTML newHTML, overStyle
+	end if
+end sub
+
+function Spanify(theText, theClass)
+	theHTML = "<" + "SPAN class="
+	theHTML = theHTML + theClass + ">"
+	theHTML = theHTML + theText + "</SPAN>"
+	Spanify = theHTML
+end function
+
+sub AppendHTML(newHTML, overSpanStyle)
+	newHTML = newHTML + "<BR>"
+	if overSpanStyle <> "" then
+		newHTML = Spanify(newHTML, overSpanStyle)
+	end if
+	newHTML = "<table cellpadding=0 cellspacing=0><tr><td>" & newHTML & "</td></tr></table>"
+	fraOutput.document.body.insertAdjacentHTML "BeforeEnd", newHTML
+	fraOutput.document.body.lastChild.scrollIntoView True
+	intMaxLines = 500
+	if fraOutput.document.body.children.length > intMaxLines + 9 then
+		do while fraOutput.document.body.children.length > intMaxLines
+				fraOutput.document.body.removechild fraOutput.document.body.children(0)
+		loop
+	end if
+end sub
+
+sub HandleUIEvent(who, what, args)
+	if what = "OnReconnect" then
+		goWorld.fireUIEvent goUser, "EventRequestCancel", window
+		bIsDisconnected = true
+	end if
+end sub
+
+sub OnHelp
+	dim helpString
+	window.event.returnValue = false
+	helpString = "mk:@MSITStore:" & goWorld.global.HelpPath
+	helpString = helpString & "vworlds.chm::/UIRef/cmdwin/cwinintf.htm>sdkall"
+	window.showhelp helpString
+end sub
+
+sub window_onresize
+	if left(window.dialogWidth, len(window.dialogWidth) - 2) < 260 then
+		window.dialogWidth = "260px"
+	end if
+	if left(window.dialogHeight, len(window.dialogHeight) - 2) < 155 then
+		window.dialogHeight = "155px"
+	end if
+end sub
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+</SCRIPT>
+</HEAD>
+<body scroll=no style="margin: 7px 18px;">
+	<table cellpadding=0 cellspacing=0 height=100% width=100% border=0>
+		<tr style=padding-bottom:5px;>
+			<td>
+				<iframe id=fraOutput src=scriptoutput.htm style=height:100%;width:100%;></iframe>
+			</td>
+		</tr>
+		<tr height=10px style=padding-bottom:5px;>
+			<td>
+				<input id=txtCommand class=vInput maxlength=1024 style=position:static;width:100%;>
+			</td>
+		</tr>
+		<tr height=10px>
+			<td colspan=3 align=center valign=bottom style="border-top:1 solid gray;padding-top:4px;">
+				<table cellspacing=0 cellpadding=0 style=height:100%;width:100%;>
+					<tr>
+						<td align=left>
+							<a id=lnkHelp onclick=OnHelp href="">
+								<img src=../../images/help.gif border=0 id=imgHelp class=vwHelp style=position:relative;top:2;>
+							</a>
+						</td>
+						<td align=right>
+							<button class=bEnabled onclick=window.close style=position:static;>Close</button>
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+	</table>
+</body>
+</html>

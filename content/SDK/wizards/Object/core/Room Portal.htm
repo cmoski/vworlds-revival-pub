@@ -1,0 +1,45 @@
+<html>
+<head>
+<link rel=stylesheet href=..\..\..\..\client\shared\global.css>
+<script language=vbs>
+
+top.newDesc = "Room Portal"
+top.newType = "Portal"
+top.newFile = "SDK\Library\models\shapes\doorR.x"
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+sub document_onKeyPress
+	select case window.event.keycode
+	case 27
+		top.DoCancel
+	case 13
+		top.DoCreate
+	case else
+	end select
+end sub
+
+</script>
+</head>
+<body class=vBody>
+<div class=vH1 align=center>
+	Room Portal
+</div>
+<div class=vLabel Style=top:35;padding-right:5;>
+	Room portals are doorways between rooms. These objects can transport avatars between the current room and another room in the same world. Portals go in one direction to another room.
+	<p>You can link to the portal in the destination room. You can set the entry point (location of appearing avatars in this room) and the facing direction (which way avatars face on arrival in this room).
+	<p>The default appearance of the portal is an open doorway with a blue sky and a desert setting.
+</div>
+</body>
+</html>

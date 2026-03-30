@@ -1,0 +1,85 @@
+<HTML>
+<HEAD>
+<meta http-equiv="Expires" content="0">
+<META NAME="GENERATOR" Content="Microsoft Developer Studio">
+<META HTTP-EQUIV="Content-Type" content="text/html; charset=iso-8859-1">
+<TITLE>Log Window Pane Selector</TITLE>
+</HEAD>
+
+<SCRIPT LANGUAGE="VBScript">
+
+dim currentBtnName
+dim currentBtn
+
+Sub window_onLoad()
+	currentBtnName="HistoryTab"
+	set currentBtn = document.all.item("HistoryTab")
+end sub
+	
+sub DoMouseEnter
+	if currentBtnName <> window.event.srcElement.name then
+		window.event.srcElement.classname = "HiliteButton"
+	end if
+end sub
+
+sub DoMouseOut
+	if currentBtnName = "" then
+		window.event.srcElement.classname = "InactiveButton"
+	elseif currentBtnName <> window.event.srcElement.name then
+		window.event.srcElement.classname = "InactiveButton"
+	end if
+end sub
+
+
+sub SetDefaultBtn (whichBtn)
+	if currentBtnName <> "" then
+		currentBtn.classname = "InactiveButton"
+	end if
+	set currentBtn = whichBtn
+	if whichBtn is nothing then
+		currentBtnName = ""
+	else
+		currentBtnName = currentBtn.name
+		currentBtn.classname = "ActiveButton"
+	end if
+end sub
+
+sub DoBtnClick
+	DoBtnAction (window.event.srcElement)
+end sub
+
+
+sub DoBtnAction (whichBtn)
+	SetDefaultBtn whichBtn
+	if whichBtn.actionNum = 1 then
+		' history view
+		parent.Log
+	elseif whichBtn.actionNum = 2 then
+		' script view
+		parent.Script
+	end  if
+end sub
+
+</SCRIPT>
+
+<BODY BGCOLOR=WHITE>
+<STYLE>
+.ActiveButton {color: "#990000"; background-color:WHITE; font-weight: bold; font-size: smaller; font-family:sans-serif; cursor:default}
+.InactiveButton {color: "#CCCC99"; background-color: "#003366"; font-weight: bold; font-size: smaller; font-family:sans-serif; cursor:default}
+.HiliteButton {color: white; background-color: "#003366"; font-weight: bold; font-size: smaller; font-family:sans-serif; cursor:default}
+</STYLE>
+<TABLE CELLPADDING=3 CELLSPACING=0 BORDER=0>
+<TR BG="#003366">
+<TD CLASS="InactiveButton" WIDTH=4></TD>
+<TD ID=HistoryTab NAME="HistoryTab" ActionNum=1
+		   CLASS="ActiveButton" OnClick="DoBtnClick" OnMouseOver="DoMouseEnter" OnMouseOut="DoMouseOut" >
+		   History
+<TD CLASS="InactiveButton">|</TD>
+<TD ID=ScriptTab NAME="ScriptTab" ActionNum=2
+           CLASS="InactiveButton" OnClick="DoBtnClick" OnMouseOver="DoMouseEnter" OnMouseOut="DoMouseOut">
+		   Script
+<TD CLASS="InactiveButton" WIDTH=1200></TD>
+</TR>
+</TABLE>
+</BODY>
+</HTML>

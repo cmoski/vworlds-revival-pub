@@ -1,0 +1,139 @@
+<html>
+<head>
+<link rel=stylesheet href=../../../client/shared/global.css>
+<script language=vbs>
+
+dim string
+dim world
+dim editThing
+dim editMap
+dim editList
+
+Public sarrArgs
+
+sarrArgs = Array()
+sarrArgs = window.dialogArguments
+document.title = sarrArgs(0)
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+sub Window_OnLoad
+	On error resume next
+	set editThing = sarrArgs(1).editThing
+	set editMap = sarrArgs(1).editMap
+	set editList = sarrArgs(1).editList
+	string = editThing.property(sarrArgs(1).editPropName)
+	set world = editThing.world
+	string = editMap.property(sarrArgs(1).editPropName)
+	set world = editMap.world
+	string = editList.property(sarrArgs(1).editIndex)
+	set world = editList.world
+	newValue.value = string
+	divObject.innerText = editThing.name
+	if len(divObject.innerText) = 0 then
+		divObject.innerText = sarrArgs(1).divObject.innerText
+	end if
+	divProperty.innerText = sarrArgs(1).editPropName
+	if len(sarrArgs(1).pNameExt) <> 0 then
+		divProperty.innerText = sarrArgs(1).divProperty.innerText & sarrArgs(1).pNameExt
+	end if
+	newValue.select
+end sub
+
+sub Window_OnUnload
+end sub
+
+sub OnOk
+	string=newValue.value
+	On error resume next
+	if IsObject(editThing) then
+		if StrComp(sarrArgs(1).editPropName, "name", vbTextCompare) = 0 then
+			if world.ValidateInstanceName(string) then
+				sarrArgs(1).editThing.property(sarrArgs(1).editPropName) = string
+			else
+				msgbox "The name entered is not valid. A valid name must begin with a letter and can contain numbers, letters, and the underscore character.", vbExclamation, "Microsoft Virtual Worlds"
+				newValue.focus
+				newValue.select
+				exit sub
+			end if
+		else
+			sarrArgs(1).editThing.property(sarrArgs(1).editPropName) = string
+		end if
+	end if
+	sarrArgs(1).editMap.property(sarrArgs(1).editPropName) = string
+	sarrArgs(1).editList.property(sarrArgs(1).editIndex) = string
+	window.close
+end sub
+
+sub OnHelp
+	Dim helpstringsList
+	window.event.returnValue = false
+	on error resume next
+	set helpstringsList = world.global.CreatePropertyList
+	helpstringsList.add "Authoring"
+	helpstringsList.add "Object Explorer"
+	helpstringsList.add "String Editor"
+	world.FireUIEvent world.user, "Help", helpstringsList
+end sub
+
+sub document_OnMouseOver
+	select case window.event.srcElement.className
+	case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	case "vHelp"
+		imgHelp.src="../../../client/shared/helpH.gif"
+	case else
+	end select
+end sub
+
+sub document_OnMouseOut
+	select case window.event.srcElement.className
+	case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	case "vHelp"
+		imgHelp.src="../../../client/shared/help.gif"
+	case else
+	end select
+end sub
+
+sub document_onkeypress
+	select case window.event.keyCode
+	case 27
+		window.close
+	case 13
+		if window.event.srcElement.tagName <> "BUTTON" and window.event.srcElement.tagName <> "A" then OnOK
+	case else
+	end select
+end sub
+
+</script>
+</head>
+<body class=vBody>
+	<div class=vLabel style=left:18;top:7;>Object:</div>
+	<div id=divObject class=vLabel style=left:80;top:7;></div>
+	<div class=vLabel style=left:18;top:25;>Property:</div>
+	<div id=divProperty class=vLabel style=left:80;top:25;></div>
+	<div class=vLabel style=left:18;top:50;>Value:</div>
+	<textarea id=newValue class=vInput rows=10 style=position:absolute;left:18;top:65;width:320;overflow:auto;></textarea>
+	<button class=bEnabled id=btnOK style=left:208;top:211; onclick=OnOK>
+		<span style=position:relative;top:-1;>OK</span>
+	</button>
+	<button class=bEnabled id=btnCancel style=left:278;top:211; onclick=window.close>
+		<span style=position:relative;top:-1;>Cancel</span>
+	</button>
+	<a id=lnkHelp onclick=OnHelp href="">
+		<img src=../../../client/shared/help.gif id=imgHelp class=vHelp style=top:211;>
+	</a>
+</body>
+</html>

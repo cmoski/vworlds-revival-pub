@@ -1,0 +1,458 @@
+<HTML ID=ext>
+<HEAD>
+<TITLE>ComboBox Scriptlet</TITLE>
+</HEAD>
+<BODY>
+
+<SCRIPT LANGUAGE=javascript>
+    var loadCount = 0;
+    var public_description = new public_description_ctor();
+    var inScriptlet = (typeof(window.external.version) == "string");
+    var fDelOrBack;
+    
+    var fNewInitialBackColor = false;
+    var fNewInitialForeColor = false;
+    var stNewInitialValue = "";
+
+    var stAddItemArray = new Array();
+    
+    var stRemoveItemArray = new Array();
+    var iTimeoutID = null;
+    var listHasFocus = false;
+    var dropdownHasFocus = false;
+    var curRange;
+    var iNextLength;
+
+    mListHeight = 100;
+    mInitialComboHeight = 21;
+    mBackColor = "white";
+    mForeColor = "black";
+    mShowValueTooltip = true;
+
+    function public_description_ctor() {
+        this.AddItem = addItem;
+        this.RemoveItem = removeItem;
+		this.RemoveAll = removeComboItems;
+        this.Dropdown = showDropdown;
+
+        this.get_Value = get_Value;
+        this.put_Value = put_Value;
+
+        this.put_BackColor = put_BackColor;
+        this.get_BackColor = get_BackColor;
+
+        this.put_ForeColor = put_ForeColor;
+        this.get_ForeColor = get_ForeColor;
+
+        this.put_ListHeight = put_ListHeight;
+        this.get_ListHeight = get_ListHeight;
+
+        this.put_ShowValueTooltip = put_ShowValueTooltip;
+        this.get_ShowValueTooltip = get_ShowValueTooltip;
+
+    }
+
+
+    function get_ListHeight() {
+        return mListHeight;
+    }
+
+    function put_ListHeight(iHeight) {
+        mListHeight = iHeight;
+        
+        if(loadCount == 2) {
+            if(theDropdown.dropdownVisible) {
+                ext.style.pixelHeight = mInitialComboHeight + mListHeight;
+                theList.height = mListHeight;
+            }
+        }
+    }
+
+    function put_ShowValueTooltip(stValue) {
+        if(stValue == true || stValue == "-1" || stValue == "1" || stValue == "true" || stValue == "True") {
+            mShowValueTooltip = true;
+            
+            if(loadCount == 2) {
+                theList.showValueTooltip = true;
+            }
+
+        } else {
+            mShowValueTooltip = false;
+
+            if(loadCount == 2) {
+                theList.showValueTooltip = false;
+            }
+        }
+    }
+
+    function get_ShowValueTooltip() {
+        return mShowValueTooltip;
+    }     
+            
+    function get_Value() {
+        if(theList.value != null) {
+            return theList.value;
+        } else {
+            return theDropdown.value;
+        }
+    }
+
+    function put_Value(stValue) {
+        if(loadCount == 2) {
+            theDropdown.txtDropdown.value = stValue;
+
+            // set fDelOrBack to true to avoid auto-completion;
+            fDelOrBack = true;
+
+            theList.search(stValue, theDropdown.event, theDropdown.dropdownVisible, fDelOrBack);
+            
+        } else
+            // the nested scriptlets' script engines are not ready to set the Value
+			// so set it when they hit their onReadyStateChange events
+			stNewInitialValue = stValue;
+    }
+    
+            
+
+    
+    function put_ForeColor(stColor) {
+        
+        mForeColor = stColor;
+
+        if(loadCount == 2) {
+                   
+            theList.ForeColor = stColor;
+            theDropdown.ForeColor = stColor;
+        } else
+            // the nested scriptlets' script engines are not ready to set the ForeColor
+			// so set it when they hit their onReadyStateChange events
+			fNewInitialForeColor = true;
+
+    }
+
+    function get_ForeColor() {
+        return mForeColor;
+    }
+
+
+    function put_BackColor(stColor) {
+        mBackColor = stColor;
+        
+        if(loadCount == 2) {
+            
+            theList.BackColor = stColor;
+            theDropdown.BackColor = stColor;
+        } else
+            // the nested scriptlets' script engines are not ready to set the BackColor
+			// so set it when they hit their onReadyStateChange events
+			fNewInitialBackColor = true;
+
+    }
+
+    function get_BackColor() {
+        return mBackColor;
+    }
+
+    function hideDropdown() {
+        theList.height = 1;
+        theDropdown.dropdownVisible = false;
+        ext.style.pixelHeight = mInitialComboHeight;
+    }
+
+    function showDropdown() {
+        theList.height = mListHeight;
+        
+        ext.style.pixelHeight = mInitialComboHeight + mListHeight;
+
+        if(loadCount == 2) 
+            if(!theDropdown.dropdownVisible) {
+                theDropdown.dropdownVisible = true;
+                theList.Init(true);
+            }
+
+        
+        
+    }
+    
+
+    function removeItem(stItem) {
+        
+        if(loadCount != 2) {
+            // the nested scriptlets' script engines are not ready to remove an item, so
+            // queue it in an array
+            stRemoveItemArray[stRemoveItemArray.length] = stItem;
+        
+        } else {
+            theList.removeItem(stItem);
+        }
+    }
+
+
+    function removeComboItems() {
+        for(iIndex = 0; iIndex < stRemoveItemArray.length; iIndex += 1) {
+            theList.removeItem(stRemoveItemArray[iIndex]);
+        }
+    }
+
+
+    function addItem(stItem, stValue) {
+    
+        if(loadCount != 2) {
+            // the nested scriptlets' script engines are not ready to accept a new item, so
+            // queue it in an array
+            iIndex = stAddItemArray.length;
+
+            stAddItemArray[iIndex] = new Array();
+            
+            stAddItemArray[iIndex][0] = stItem;
+            stAddItemArray[iIndex][1] = stValue;
+        
+        } else {
+            theList.addItem(stItem, stValue);
+        }
+    }
+
+    function addComboItems() {
+        for(iIndex = 0; iIndex < stAddItemArray.length; iIndex += 1) {
+            theList.addItem(stAddItemArray[iIndex][0], stAddItemArray[iIndex][1]);
+        }
+    }
+ 
+    function toChar(iNumber) {
+        return unescape("%" + iNumber.toString(16));
+    }
+
+    function InitCombo() {
+        
+            if(fNewInitialBackColor) {
+                theList.BackColor = mBackColor;
+                theDropdown.BackColor = mBackColor;
+            }
+            if(fNewInitialForeColor) {
+                theList.ForeColor = mForeColor;
+                theDropdown.ForeColor = mForeColor;
+            }
+            
+            theList.showValueTooltip = mShowValueTooltip;
+            theList.width = ext.style.pixelWidth;
+            theDropdown.Init();
+            addComboItems();
+            removeComboItems();
+            if(stNewInitialValue != "") 
+                put_Value(stNewInitialValue);
+                
+    }
+</SCRIPT>
+
+<SCRIPT LANGUAGE=javascript FOR=window EVENT=onload>
+    ext.style.pixelHeight = mInitialComboHeight;
+
+    stObjectTag = "<OBJECT ID=theDropdown TYPE=text/x-scriptlet DATA=dropdown.htm WIDTH=" + ext.style.pixelWidth + " HEIGHT=25></OBJECT>"
+    dropdownHTML.innerHTML = stObjectTag;
+
+    stObjectTag = "<OBJECT ID=theList TYPE=text/x-scriptlet WIDTH=" + ext.style.pixelWidth + " HEIGHT=0 STYLE=position:absolute;left:0;top:" + mInitialComboHeight + ">"
+    stObjectTag = stObjectTag + "<PARAM NAME=URL VALUE=list.htm>"
+    stObjectTag = stObjectTag + "<PARAM NAME=Scrollbar VALUE=true></OBJECT>"
+    listHTML.innerHTML = stObjectTag;
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=javascript FOR=theDropdown EVENT=onreadystatechange>
+    if(theDropdown.readyState == 4) {
+        loadCount=loadCount + 1;
+        
+        // must wait for both inner scriptlets to load
+        if(loadCount == 2)
+            InitCombo();
+        
+    }
+</SCRIPT>
+
+<SCRIPT LANGUAGE=javascript FOR=theList EVENT=onreadystatechange>
+    var stObjectTag;
+
+    if(theList.readyState == 4) {
+        loadCount=loadCount + 1;
+    
+        // must wait for both inner scriptlets to load
+        if(loadCount == 2)
+            InitCombo();
+        
+    }
+</SCRIPT>
+
+
+<SCRIPT LANGUAGE=javascript FOR=theDropdown EVENT=onscriptletevent(name,param)>
+    if(name == "showDropdown") {
+        showDropdown();
+
+    } else if(name == "hideDropdown") {
+        
+        hideDropdown();
+        
+    }
+
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=javascript FOR=theList EVENT=onscriptletevent(name,param)>
+    if(name == "hideDropdown") {
+        hideDropdown();
+    
+    } else if(name == "itemSelect") {
+                
+        theDropdown.value = param;
+        if(inScriptlet) 
+            external.raiseEvent("OnChange", param);
+        
+    } else if(name == "matchFound") {
+        
+        if(!fDelOrBack) {
+            theDropdown.txtDropdown.value = param;
+            curRange.collapse(true);
+    
+            // need to reset the curRange to the bookmark so it gets the new value of the dropdown
+            curRange.moveToBookmark(stCurBookmark);
+            curRange.move("character", 1);
+
+            // only auto-complete if the cursor was at the end of the current text in the textbox
+            if(iNextLength == 0) {
+    
+                curRange.moveEnd("textedit");
+            }
+            curRange.select(); 
+        }
+
+        
+               
+        if(inScriptlet) 
+            external.raiseEvent("OnChange", param);
+    
+    } else if(name == "noMatchFound") {
+        
+        if(!fDelOrBack) {
+            theDropdown.txtDropdown.value = param;
+            curRange.collapse(true);
+            
+            // need to reset the curRange to the bookmark so it gets the new value of the dropdown
+            curRange.moveToBookmark(stCurBookmark);
+            curRange.move("character", 1);
+
+            curRange.select();
+        }
+
+        if(inScriptlet) 
+            external.raiseEvent("OnChange", param);
+    }
+    
+</SCRIPT>
+
+<SCRIPT LANGUAGE=javascript FOR=theDropdown EVENT=onkeypress>
+    if(event.keyCode == 13) {
+        // enter key
+        hideDropdown();
+    } else {
+
+        curRange = theDropdown.selectionObject.createRange();
+        stCurBookmark = curRange.getBookmark();
+    
+        // count the characters in front and behind the selection point
+        iPrevLength = 0;
+        while(curRange.moveStart("character", -1) != 0)
+            iPrevLength += 1;
+    
+        iNextLength = 0;
+        while(curRange.moveEnd("character", 1) != 0)
+            iNextLength += 1;
+    
+        // reset the curRange
+        curRange.moveToBookmark(stCurBookmark);
+
+        prevRange = curRange.duplicate();
+        nextRange = curRange.duplicate();
+    
+        //move the prevRange to the beginning
+        prevRange.collapse(true);
+        prevRange.moveStart("character", -iPrevLength);
+    
+        //move the nextRange to the end
+        nextRange.collapse(false);
+        nextRange.moveEnd("character", iNextLength);
+    
+        fDelOrBack = false;
+
+        theList.search(prevRange.text + toChar(theDropdown.event.keyCode) + nextRange.text, theDropdown.event, theDropdown.dropdownVisible, fDelOrBack);
+    }    
+</SCRIPT>
+
+<SCRIPT LANGUAGE=javascript FOR=theDropdown EVENT=onkeydown>
+    
+        if(theDropdown.event.keyCode == 8 || theDropdown.event.keyCode == 46) {
+            curRange = theDropdown.selectionObject.createRange();
+            stCurBookmark = curRange.getBookmark();
+    
+            // count the characters in front and behind the selection point
+            iPrevLength = 0;
+            while(curRange.moveStart("character", -1) != 0)
+                iPrevLength += 1;
+    
+            iNextLength = 0;
+            while(curRange.moveEnd("character", 1) != 0)
+                iNextLength += 1;
+    
+            // reset the curRange
+            curRange.moveToBookmark(stCurBookmark);
+
+            prevRange = curRange.duplicate();
+            nextRange = curRange.duplicate();
+    
+            //move the prevRange to the beginning
+            prevRange.collapse(true);
+            prevRange.moveStart("character", -iPrevLength);
+    
+            //move the nextRange to the end
+            nextRange.collapse(false);
+            nextRange.moveEnd("character", iNextLength);
+            
+            if(curRange.text.length == 0) {
+                // then the backspace or delete key modifies the previous or next ranges respectively
+                if(theDropdown.event.keyCode == 8) {
+                    // backspace key
+                    fChanged = prevRange.moveEnd("character", -1);
+
+                    if(!fChanged) {
+                        // the backspace key didn't modify the text, so do nothing
+                        return;
+                    }
+                } else {
+                    // delete key
+                    fChanged = nextRange.moveStart("character", 1);
+                    
+                    if(!fChanged) {
+                        // the delete key was already at the end of the line, so do nothing
+                        return;
+                    }
+                }
+            }
+               
+            fDelOrBack = true;
+        
+            theList.search(prevRange.text + nextRange.text, theDropdown.event, theDropdown.dropdownVisible, fDelOrBack);
+    
+            
+        }
+
+    
+</SCRIPT>
+
+<SPAN ID="dropdownHTML" STYLE="position:absolute;left:0;top:0">
+<OBJECT ID=theDropdown TYPE=text/x-scriptlet DATA=dropdown.htm WIDTH=21 HEIGHT=25></OBJECT>
+</SPAN>
+<BR>
+<SPAN ID="listHTML">
+
+</SPAN>
+
+
+</BODY>
+</HTML>

@@ -1,0 +1,40 @@
+<html>
+<head>
+<link rel=stylesheet href=global.css>
+<object id=objVWSound classid=clsid:05769b8c-a180-11d1-83e9-00c04fb6fa46></object>
+<script language=vbs src=scripts/NoSelection.vbs></script>
+<script language=vbs src=scripts/ContextMenu.vbs></script>
+<script language=vbs src=scripts/Render.vbs></script>
+</head>
+<body scroll=no>
+	<table cellspacing=0 cellpadding=0 width=100% height=100%>
+		<tr height=25px>
+			<td width=10px class=vwMenuBarBack>
+				&nbsp;&nbsp;&nbsp;
+			</td>
+			<td id=mnuLogOff class=vwMenuItem enabled=false title="Logs off the current world">
+				&nbsp;Log&nbsp;Off</nobr>&nbsp;&nbsp;
+			</td>
+			<td id=mnuDirectory class=vwMenuItem enabled=false title="Logs on to another world">
+				&nbsp;Worlds&nbsp;&nbsp;
+			</td>
+			<td id=mnuCamera class=vwMenuItem enabled=false title="Changes view perspective">
+				&nbsp;Camera&nbsp;&nbsp;
+			</td>
+			<td id=mnuOptions class=vwMenuItem enabled=false title="Changes options for display and audio">
+				&nbsp;Options&nbsp;&nbsp;
+			</td>
+			<td id=divWorldRoom class=vwMenuWorldRoom style=padding-right:10px;>
+			</td>
+		</tr>
+		<tr>
+			<td colspan=7>
+				<object id=objRenderView
+								style=width:100%;height:100%;
+								classid=clsid:44fac783-0ca4-11d0-89a9-00a0c9054129>
+				</object>
+			</td>
+		</tr>
+	</table>
+</body>
+</html>

@@ -1,0 +1,88 @@
+'======================================
+' Desc: This file is used to attached
+'       to the style vwGestureButton. The routines
+'       are designed for the button like images used
+'       for emoting. The three routines affect the
+'       menu items during mouse rollovers and clicks.
+'======================================
+<public:attach event=onmouseover onevent=DoMouseOver() />
+<public:attach event=onmouseout onevent=DoMouseOut() />
+<public:attach event=onclick onevent=DoClick() />
+
+<script language=vbs>
+Option Explicit
+
+
+
+'======================================
+' Name: DoMouseOver
+' Desc: This routine is attached to the onmouseover
+'       event. It expects the element that was clicked
+'       to have an attribute called mOver refers to a valid
+'       image. It also expects the element's alt attribute
+'       to contain the action that will be preformed.
+'       If the element is enabled the image is changed and
+'       the status text is updated, otherwise the cursor
+'       is set to the default for the page.
+'--------------------------------------
+Sub DoMouseOver
+	If element.enabled Then
+		element.src = element.mOver
+		window.status = "Perform " & element.alt & " gesture"
+	Else
+		element.style.cursor = "default"
+	End If
+End Sub
+'======================================
+
+
+
+'======================================
+' Name: DoMouseOut
+' Desc: This routine is attached to the onmouseout
+'       event. It expects the element that was clicked
+'       to have an attribute called mOut refers to a valid
+'       image. If the element is enabled the image is
+'       changed and the status text is cleared.
+'--------------------------------------
+Sub DoMouseOut
+	If element.enabled Then
+		element.src = element.mOut
+		window.status = ""
+	End If
+End Sub
+'======================================
+
+
+
+'======================================
+' Name: DoClick
+' Desc: This routine is attached to the onclick
+'       event. The element is expected to have an
+'       attribute called gesture. If the element is enabled
+'       a check is done to see if the element is in the
+'       Profile dialog. If so then the SelfView object is
+'       told to perform the specified gesture; otherwise a
+'       variable, sstrChatText, is checked for valid chat text
+'       and the user's Emote method is called either with or
+'       without the text from the variable, and finally an event
+'       is fired requesting the chat text box and associated
+'       variables be cleared.
+'--------------------------------------
+Sub DoClick
+	If element.enabled Then
+		If StrComp(Right(top.location, 15), "EditProfile.htm", vbTextCompare) = 0 Then
+			objSelfView.CurrentGesture = objSelfView.NamedGesture(element.gesture)
+		Else
+			If top.sstrChatText = "" Or top.sstrChatText = "Type here and press Enter to speak" Then
+				sobjUser.Emote element.gesture
+			Else
+				sobjUser.Emote element.gesture, top.sstrChatText
+			End If
+			sobjWorld.FireUIEvent sobjUser, "vwClearChatInput", ""
+		End If
+	End If
+End Sub
+'======================================
+
+</script>

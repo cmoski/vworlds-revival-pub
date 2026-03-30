@@ -1,0 +1,56 @@
+<HTML>
+<HEAD>
+<LINK Rel=Stylesheet href=../../../../client/shared/global.css>
+<style>
+	.note {font-family:Webdings;color:#cc6600;font-size:14pt;}
+	.task {font-family:Webdings;color:#009900;font-size:14pt;}
+	.alert {font-family:Webdings;color:#cc0000;font-size:14pt;}
+	.helplink {font-family:Verdana;color:#3300cc;cursor:hand;font-size:8pt;font-weight:bold;}
+	.scriptlink {font-family:Verdana;color:#3300cc;cursor:hand;font-size:9pt;font-weight:bold;}
+</style>
+<TITLE>Group2</TITLE>
+<script language=vbs>
+
+dim world
+
+sub Window_OnLoad
+	set World = top.goWorld
+	if top.frames("Btns").document.readyState = "complete" then
+		top.frames("Btns").BuildButtons(0)
+	end if
+end sub
+
+sub document_onmouseover
+	if (window.event.srcElement.className = "vwMenu") then
+		window.event.srcElement.className = "vwMenuHighlight"
+	end if
+end sub
+
+sub document_onmouseout
+	if (window.event.srcElement.className = "vwMenuHighlight") then
+		window.event.srcElement.className = "vwMenu"
+	end if
+end sub
+
+</script>
+</HEAD>
+<BODY class=vBody>
+	<div class=vH1 style=position:absolute;width:98%;left:10;top:10>
+		World Management
+	</div>
+	<div class=vtext style=position:absolute;width:98%;left:10;top:45;padding-left:10;padding-right:10;>
+		<p>The <b>World Management</b> lessons offer a more detailed look at scripts that interact with multiple users and custom data.
+		<table class=vtext cellspacing=3>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>We look at how to manage data for Virtual Worlds in script, including the use of property lists and maps. You can use these objects to put custom data into the world, so those objects can access that data and make use of it in their behavior. </td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>We also show the dynamic creation and destruction of objects from scripts; this enables a world to alter itself automatically.</td></tr>
+		</table>
+		<p><nobr><a href="entry_det1.htm" class=vwMenu style=font-size:10pt;>7. Entry/Exit Detection</a></nobr>
+			<br>How to manage access by users to certain world areas automatically via script, and
+				set up initial conditions for user interactions.
+		<p><nobr><a href="dynamic_object1.htm" class=vwMenu style=font-size:10pt;>8. Dynamic Object Creation</a></nobr>
+			<br>This is an advanced tutorial.
+	</div>
+</BODY>
+</HTML>

@@ -1,0 +1,204 @@
+<HTML><HEAD>
+<title>Microsoft Virtual Worlds - Change Painting</title>
+<style>
+.vinput1{Font-Size: 8pt;Font-Family: Arial;Color: #000000}
+.vhh1 {Font-Size: 15pt;Font-Weight:bold;Font-Family:Georgia;Color:#810043}
+.vreg {Font-Size:8pt;Font-Family:Verdana;Color:#000000}
+.bHighlightStyle {position:absolute;top:12;width:60;height:18;cursor:hand;text-align:center;
+	border-color: #713252; border-width: 2px; border-style: solid;
+	Font-Size: 8pt;Font-Family: Verdana;Color: #000000;background-color:#FFFFFF}
+.bStyle {position:absolute;top:12;width:60;height:18;cursor:hand;text-align:center;
+	border-color: #713252; border-width: 1px; border-style: solid;
+	Font-Size: 8pt;Font-Family: Verdana;Color: #000000;;background-color:#FFFFFF}
+.bStyle1 {position:absolute;top:12;width:60;height:18;cursor:hand;text-align:center;
+	border-color: #713252; border-width: 1px; border-style: solid;
+	Font-Size: 8pt;Font-Family: Verdana;Color: #713252;}
+.vweb1{Font-Size: 22pt;Font-Family: Webdings;Font-Weight:bold;Color: #713252}
+.vweb2{Font-Size: 8pt;Font-Family: Webdings;Color: #ffffff}
+</style>
+<OBJECT ID="Helper" CLASSID="clsid:7E3832CF-4F4E-11D0-89AB-00A0C9054129"
+        BORDER=0 WIDTH=0 HEIGHT=0>
+</OBJECT>
+<SCRIPT LANGUAGE=VBScript>
+sub document_OnMouseOver
+	if (window.event.srcElement.className = "bStyle") then 
+		window.event.srcElement.className = "bHighlightStyle"
+	end if
+end sub
+
+sub window_OnLoad
+	painting.src = GetPath(paintingSelection)
+	PaintComboBox.value = PaintingSelection
+	frame1rep.src = GetPath(FrameSelection)
+	frame2rep.src = frame1rep.src
+	frame3rep.src = frame1rep.src
+End sub 
+
+sub document_OnMouseOut
+	if (window.event.srcElement.className = "bHighlightStyle") then 
+		window.event.srcElement.className = "bStyle"
+	end if
+end sub
+
+</script>
+<script language = "vbscript">
+Dim page
+Dim PageArray
+Dim PageArraySize
+Dim PaintingSelection
+Dim FrameSelection
+Dim world
+Dim room
+Dim PaintingObject
+Dim BlankFile
+
+page = 0
+PageArray = Array("painting.htm", "frame.htm")
+PageArraySize = 2
+
+set room = Helper.Arg.container
+set world = Helper.Client.World
+set PaintingObject = Helper.Arg
+
+PaintingSelection = PaintingObject.painting
+FrameSelection = PaintingObject.Frame
+
+function GetPath( filename )
+	' Test for a relative path, and make necessary correction to point to local content instead of html
+	if Len(filename) > 0 then
+		select case Left (filename, 4) 
+			case "http"
+				GetPath = filename
+			case "file"
+				GetPath = filename
+			case else
+				' Review: using world-specific content path, will only work for plazas currently...
+				GetPath = World.Global.WorldContentPath +  filename
+		end select
+	else
+		GetPath = "blank.gif"
+	end if
+end function
+
+sub UpdatePainting
+	if PaintComboBox.value <> "Type a new URL here, or choose from the dropdown list" then
+		painting.src = GetPath(PaintComboBox.value)
+		PaintingSelection = PaintComboBox.value
+	end if
+end sub
+
+sub UpdateFrame
+	if PaintComboBox.value <> "Type a new URL here, or choose from the dropdown list" then
+		frame1rep.src = GetPath(PaintComboBox.value)
+		frame2rep.src = frame1rep.src
+		frame3rep.src = frame1rep.src
+		FrameSelection = PaintComboBox.value
+	end if
+end sub
+
+sub update()
+	if (canvas.checked=true) then
+		UpdatePainting
+	else
+		UpdateFrame
+	end if
+End sub	
+
+sub onApply()
+	if (canvas.checked=true) then
+		UpdatePainting
+	else
+		UpdateFrame
+	end if
+	PaintingObject.Painting = GetPath(PaintingSelection)
+	PaintingObject.Frame = GetPath(FrameSelection)
+	helper.closewindow
+End sub	
+
+sub loadfunc(choice)
+ 	if choice=1 then
+		PaintComboBox.Clear
+		painting.src = GetPath(paintingSelection)
+		PaintComboBox.value = PaintingSelection
+	else 
+		PaintComboBox.Clear
+		frame1rep.src = GetPath(FrameSelection)
+		frame2rep.src = frame1rep.src
+		frame3rep.src = frame1rep.src
+		PaintComboBox.value = FrameSelection
+	end if
+ End sub
+
+sub properties
+	Helper.Arg.EditObject
+	Helper.closewindow
+end sub
+  
+sub OnHelp
+	on error resume next
+	' currently vworlds specific, should it be generalized?
+	Dim client
+	set client = Helper.client
+	dim helptopic
+
+	Dim helpstringsList
+	set helpstringsList = client.world.global.CreatePropertyList
+	helpstringsList.add "Authoring Guide"
+	helpstringsList.add "Painting"
+
+	client.world.FireUIEvent client.world.user, "Help", helpstringsList
+end sub
+
+sub OnCancel
+	helper.closewindow
+end sub
+
+</SCRIPT></HEAD>
+<body bgcolor="F4F4E8" topmargin=15 leftmargin=18 text="#000000">
+<div class="vhh1" align="center"><IMAGE align="absmiddle" src="paints.gif" height=27 width=26>Change Painting</div>
+<div class="vinput1" align="center">Select the part of the painting you wish to change<br>then specify the new image or the frame location.</div>
+<div Style="position:relative;left: 12; top:8;">
+<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=4>
+
+<tr><td width=160 class="vinput1"><INPUT TYPE="RADIO" name="R1" id="canvas" VALUE="v1" CHECKED  onClick="loadfunc(1)">Canvas image</td>
+<td width=110 class="vinput1">
+<INPUT TYPE="RADIO" name="R1" id="frame" VALUE="v2" onClick="loadfunc(2)">frame texture</td></tr>
+<tr><td width=160>&nbsp;&nbsp;&nbsp;
+<IMAGE ID="painting" HEIGHT=100 WIDTH=100></td>
+<td align="center">
+<TABLE HEIGHT=30 WIDTH=90 CELLPADDING=0 CELLSPACING=0><TR>
+<TD><IMG SRC="frame1.gif" ID="frame1rep" WIDTH=30 HEIGHT=30></TD>
+<TD><IMG SRC="frame1.gif" ID="frame2rep" WIDTH=30 HEIGHT=30></TD>
+<TD><IMG SRC="frame1.gif" ID="frame3rep" WIDTH=30 HEIGHT=30></TD>
+</TR></TABLE>
+</td></tr>
+
+<tr><td colspan=2 class="vinput1"><div
+style="position:relative;left:24">
+Canvas image URL:</div></td></tr>
+<tr><td colspan=2 class="vinput1"><div
+style="position:relative;left:24">
+<OBJECT ID="PaintComboBox" WIDTH=168 HEIGHT=21
+ CLASSID="CLSID:8BD21D30-EC42-11CE-9E0D-00AA006002F3">
+    <PARAM NAME="VariousPropertyBits" VALUE="746604571">
+    <PARAM NAME="MaxLength" VALUE="150">
+    <PARAM NAME="DisplayStyle" VALUE="3">
+    <PARAM NAME="Size" VALUE="6456;635">
+    <PARAM NAME="MatchEntry" VALUE="1">
+    <PARAM NAME="ShowDropButtonWhen" VALUE="2">
+    <PARAM NAME="Value" VALUE="Pick from the list, or type in a new URL">
+    <PARAM NAME="FontCharSet" VALUE="0">
+    <PARAM NAME="FontPitchAndFamily" VALUE="2">
+    <PARAM NAME="FontWeight" VALUE="0">
+</OBJECT></div></td></tr></table></div>
+<DIV CLASS=bStyle style="position:relative;left:217;top:-16" ID=BtnUpdatePainting  NAME=BtnUpdatePainting ONCLICK="Update()">&nbsp;Preview</DIV>
+
+<!-- Help bttn-->
+<DIV CLASS=bStyle1 ID="helpbtn"	STYLE="position:absolute;;top:292;text-align:left;border:0px" ONCLICK="OnHelp">Help</DIV>
+<DIV CLASS="vweb1" STYLE="position:absolute;left:40;top:284; z-index=-1">=</DIV>
+<DIV CLASS="vweb2" STYLE="position:absolute;left:48;top:289; z-index=-1">s</DIV>
+<!--other buttons -->
+<DIV CLASS=bStyle ID="cancelbtn" STYLE="top:290;left:120;" ONCLICK="properties">&nbsp;Properties&nbsp;</DIV>
+<DIV CLASS=bStyle ID="cancelbtn" STYLE="top:290;left:200;" ONCLICK="OnCancel">&nbsp;Cancel</DIV>
+<DIV CLASS=bStyle ID="cancelbtn" STYLE="top:290;left:270;" ONCLICK="onApply">&nbsp;Apply</DIV>
+</CENTER></BODY></HTML>

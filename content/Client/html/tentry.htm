@@ -1,0 +1,53 @@
+<HTML>
+<head>
+<meta http-equiv="Expires" content="0">
+<title>V-Worlds Text Entry Frameset</title></head>
+
+<SCRIPT LANGUAGE="VBScript">
+
+sub Initialize()
+	TextPaneFrame.Initialize()
+	SayBtnPaneFrame.Initialize()
+	DoPosition
+end sub
+
+dim iReadyCount
+iReadyCount = 0
+
+sub ChildReady(theWin)
+	iReadyCount = iReadyCount + 1
+	if iReadyCount >= 3 then
+		iReadyCount = 3
+		parent.ChildReady(window)
+	end if
+end sub
+
+sub window_onload
+	ChildReady(window)
+	DoPosition
+end sub
+
+sub window_onresize
+	DoPosition
+end sub
+
+sub DoPosition
+	dim TextPanePaneElement
+	topWidth = document.body.offsetWidth - 50
+	set TextPanePaneElement = document.all("TextPaneFrame")
+	if topWidth < 20 then
+		topWidth = 20
+	end if
+	TextPanePaneElement.style.width = topWidth
+end sub
+
+</SCRIPT>
+
+<BODY LEFTMARGIN=0 TOPMARGIN=0  RIGHTMARGIN=0  BOTTOMMARGIN=0 SCROLL=NO>
+<IFRAME NAME="TextPaneFrame" ID="TextPaneFrame" SRC="text.htm" HSPACE=0 BORDER=0 FRAMESPACING=0 VSPACE=0 MARGINHEIGHT=0 MARGINWIDTH=0 scrolling="no" noresize height=100% frameborder="no">
+</IFRAME>
+<IFRAME ID="SayBtnPaneFrame" SRC="saybtns.htm" HSPACE=0 BORDER=0 FRAMESPACING=0 VSPACE=0 MARGINHEIGHT=0 MARGINWIDTH=0 scrolling="no" noresize width=50 height=100% frameborder="no">
+</IFRAME>
+</BODY>
+
+</HTML>

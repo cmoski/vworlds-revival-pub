@@ -1,0 +1,41 @@
+'////////////////////////////////////////////////////////////////////////
+'//  File:		FormButtons.htc
+'//  Purpose:	Rollover functionality to form-style buttons
+'//	 Called by: global.css (behavior for numerous buttons)
+'////////////////////////////////////////////////////////////////////////
+
+<public:attach event=onmouseover onevent=DoOnMouseOver() />
+<public:attach event=onmouseout onevent=DoOnMouseOut() />
+
+<script language="vbscript">
+option explicit
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		DoOnMouseOver()
+'//  Purpose:	When the mouse is over the button, change the class to the 
+'//				mouseOver version of the class by adding "_MO" to the classname.
+'////////////////////////////////////////////////////////////////////////
+sub DoOnMouseOver()
+	dim objButton
+	set objButton = element
+	objButton.ClassName = objButton.className & "_MO"
+	set objButton = nothing
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		DoOnMouseOut()
+'//  Purpose:  	When the mouse moves off the button, change the class from the
+'//				mouseOver version of the class to the original class by removing "_MO".
+'////////////////////////////////////////////////////////////////////////
+sub DoOnMouseOut()
+	dim objButton
+	set objButton = element
+	objButton.ClassName = Replace(objButton.className,"_MO","")	
+	set objButton = nothing
+end sub
+
+</script>
+
+
+  

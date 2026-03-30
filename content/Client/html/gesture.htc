@@ -1,0 +1,56 @@
+<public:attach event=onmouseover onevent=DoMouseOver() />
+<public:attach event=onmouseout onevent=DoMouseOut() />
+<public:attach event=onclick onevent=DoClick() />
+
+<script language=vbs>
+Option Explicit
+
+'======================================
+' Name: DoMouseOver
+' Desc:
+'--------------------------------------
+Sub DoMouseOver
+	If element.enabled Then
+		element.src = element.mOver
+		window.status = "Perform " & element.alt & " gesture"
+	Else
+		element.style.cursor = "default"
+	End If
+End Sub
+'======================================
+
+
+'======================================
+' Name: DoMouseOut
+' Desc:
+'--------------------------------------
+Sub DoMouseOut
+	If element.enabled Then
+		element.src = element.mOut
+		window.status = ""
+	End If
+End Sub
+'======================================
+
+
+'======================================
+' Name: DoClick
+' Desc:
+'--------------------------------------
+Sub DoClick
+	If element.enabled Then
+		If StrComp(Right(top.location, 15), "EditProfile.htm", vbTextCompare) = 0 Then
+			objSelfView.CurrentGesture = objSelfView.NamedGesture(element.gesture)
+		Else
+			If top.sstrChatText = "" Or top.sstrChatText = "Type here and press Enter to speak" Then
+				sobjUser.Emote element.gesture
+			Else
+				sobjUser.Emote element.gesture, top.sstrChatText
+			End If
+			sobjWorld.FireUIEvent sobjUser, "vwClearChatInput", ""
+		End If
+	End If
+End Sub
+'======================================
+
+</script>

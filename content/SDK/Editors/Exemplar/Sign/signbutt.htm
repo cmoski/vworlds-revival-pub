@@ -1,0 +1,109 @@
+<html>
+
+<head>
+<title>Buttons</title>
+<style>
+.textBlue {color:blue}
+</style>
+</head>
+
+<body BGCOLOR="#FFFFFF">
+<script language="VBSCRIPT">
+sub window_OnLoad
+	back.style.visibility = "hidden"
+end sub
+
+sub UpdateButtons
+	if parent.page < 2 then
+		back.style.visibility = "hidden"
+	else
+		back.style.visibility = "visible"
+	end if
+
+	if parent.page < parent.PageArraySize then
+		parent.buttons.next.style.visibility = "visible"
+	else
+		parent.buttons.next.style.visibility = "hidden"
+	end if
+end sub
+
+sub OnHelp
+	msgbox "OnHelp"
+end sub
+
+sub OnCancel
+	parent.helper.closewindow
+end sub
+
+sub OnBack
+	if parent.page > 1 then
+		parent.main = parent.main.navigate(parent.PageArray(parent.page - 2))
+	end if
+end sub
+
+sub OnNext
+	if parent.page < parent.PageArraySize then
+			if parent.main.TextField.value = "" then
+				msgbox "Enter the text to be displayed in the sign.", vbInformation, "Microsoft Virtual Worlds"
+				parent.main.TextField.Focus
+			else
+				parent.main.navigate(parent.PageArray(parent.page))
+			end if
+	end if
+end sub
+
+sub OnFinish
+	parent.Finish
+end sub
+
+sub MouseOut(object)
+	object.style.color="blue"
+end sub
+
+sub MouseOver(object)
+	object.style.color="red"
+end sub
+</script>
+
+
+<table border="0" width="100%">
+  <tr>
+    <td width="40%"><a name="help" onclick="OnHelp" class="textBlue"
+    onmouseover="MouseOver(parent.buttons.help) : window.status='get help'"
+    onmouseout="MouseOut(parent.buttons.help)">help</a></td>
+    <td width="15%"><table border="1" width="100%">
+      <tr>
+        <td width="100%"><p align="center"><a name="cancel" onclick="OnCancel" class="textBlue"
+        onmouseover="MouseOver(parent.buttons.cancel) : window.status='cancel the wizard'"
+        onmouseout="MouseOut(parent.buttons.cancel)">cancel</a></td>
+      </tr>
+    </table>
+    </td>
+    <td width="15%"><table border="1" width="100%">
+      <tr>
+        <td width="100%"><p align="center"><a name="back" onclick="OnBack" class="textBlue"
+        onmouseover="MouseOver(parent.buttons.back) : window.status='go to the previous page'"
+        onmouseout="MouseOut(parent.buttons.back)">back</a></td>
+      </tr>
+    </table>
+    </td>
+    <td width="15%"><table border="1" width="100%">
+      <tr>
+        <td width="100%"><p align="center"><a name="next" onclick="OnNext" class="textBlue"
+        onmouseover="MouseOver(parent.buttons.next) : window.status='go to the next page'"
+        onmouseout="MouseOut(parent.buttons.next)">next</a></td>
+      </tr>
+    </table>
+    </td>
+    <td width="15%"><table border="1" width="100%">
+      <tr>
+        <td width="100%"><p align="center"><a name="finish" onclick="OnFinish" class="textBlue"
+        onmouseover="MouseOver(parent.buttons.finish) : window.status='create the world'"
+        onmouseout="MouseOut(parent.buttons.finish)">finish</a></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>

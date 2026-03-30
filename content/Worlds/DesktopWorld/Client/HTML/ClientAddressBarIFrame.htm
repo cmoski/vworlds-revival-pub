@@ -1,0 +1,145 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//  File:			ClientAddressBarIFrame.htm
+'//  Description:	This file contains the client's address bar and some
+'//					address bar/browser surfing functionality.
+'//					This file is the hosted in the client.htm file.
+'////////////////////////////////////////////////////////////////////////-->
+<html>
+<head>
+<title>ClientAddressBarIFrame</title>
+<link rel=stylesheet href=../shared/global.css>
+
+<!--include scripts-->
+<script language="vbscript" src="../vbs/document_OnSelectStart.vbs">
+</script>
+<!--end include scripts-->
+
+<script language=vbs>
+
+option explicit
+
+'////////////////////////////////////////////////////////////////////////
+'//  Global variables and constants (local to this file)
+'////////////////////////////////////////////////////////////////////////
+
+const fwdImageNormal = "../Images/icnFwd.gif"
+const fwdImageGray = "../Images/icnFwd.gif"
+const backImageNormal = "../Images/icnBack.gif"
+const backImageGray = "../Images/icnBack.gif"
+const ArrowWidth = 162
+dim IsDown
+IsDown = false
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		ChangeURL
+'//  Purpose:	get's the url from URLEnter box and pop's up a new IE
+'//  Called by:	document_onkeypress
+'//				btnGo_onClick
+'////////////////////////////////////////////////////////////////////////
+sub ChangeURL
+	dim GoWhere, Protocol
+		
+	GoWhere = trim(lcase(URLEntry.value))
+	Protocol = instr(1, GoWhere, "://")
+	if Protocol = 0 then GoWhere="http://" & GoWhere
+
+	top.LinkTo GoWhere
+	
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		window_onload
+'//  Purpose:	sets some init values
+'////////////////////////////////////////////////////////////////////////
+sub window_onload
+	URLEntry.value = ""
+	imgPrevURL.setAttribute "src",backImageNormal
+	imgNextURL.setAttribute "src",fwdImageNormal
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		document_onkeypress
+'//  Purpose:	all we care about is a <ENTER>; if so, pop up IE to the URL
+'////////////////////////////////////////////////////////////////////////
+sub document_onkeypress
+	select case window.event.keyCode
+	case 13
+		if window.event.srcElement.id="URLEntry" then ChangeURL
+	case else
+	end select
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		btnGo_onClick
+'//  Purpose:	event handler for the go buttons click; pops up IE
+'////////////////////////////////////////////////////////////////////////
+sub btnGo_onClick
+	if URLEntry.value > "" then ChangeURL
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		GotoPrevURL
+'//  Purpose:	onClick handler for imgPrevURL;
+'//				tells IE to go back a page (this doesn't always work)
+'////////////////////////////////////////////////////////////////////////
+sub GotoPrevURL
+	top.ClientBrowserIFrame.history.back
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		GotoNextURL
+'//  Purpose:	onClick handler for imgNextURL;
+'//				tells IE to go to the next page (also doesn't always work)
+'////////////////////////////////////////////////////////////////////////
+sub GotoNextURL
+	top.ClientBrowserIFrame.history.forward
+end sub
+
+
+</script>
+</head>
+
+<body bgcolor="#FFFFFF" class=ClientBackgroundAddressBar>
+
+<table border=0 cellspacing=0 cellpadding=0 width=100% height=100%>
+<tr><td colspan=7 style="height:1px;background:#ffffff;"></td></tr>
+<tr>
+	<td valign=center width=15>
+		<img src="../images/spacer.gif" width=15 height=1 border=0>
+	</td>
+	<td valign=center width=17>
+		<img id=imgPrevURL onclick=GotoPrevURL border=0 src="../Images/icnBack.gif" alt="Previous Page" style="cursor:hand">
+	</td>
+	<td valign=center width=17>
+		<img id=imgNextURL onclick=GotoNextURL border=0 src="../Images/icnFwd.gif" alt="Next Page" style="cursor:hand">
+	</td>
+	<td valign=center width=15>
+		<img src="../images/spacer.gif" width=10 height=1 border=0>
+	</td>
+	<td valign=center width=54>
+		<span class=ClientTextBlack>
+			Address:
+		</span>
+	</td>
+	<td valign=center width=200>
+		<input id=URLEntry class=ClientTextBlack type=text size=32 maxlength=1024>&nbsp;
+	</td>
+	<td valign=center width=35>
+		<BUTTON ID=btnGo class=btnTeal style="width:25;height:20;cursor:hand">Go</button>
+	</td>
+</tr>
+<tr>
+	<td colspan=7 style="height:1px;background:#587F7E;">
+	</td>
+</tr>
+<tr>
+	<td colspan=7 style="height:1px;background:#ffffff;">
+	</td>
+</tr>
+</table>
+
+</body>
+</html>

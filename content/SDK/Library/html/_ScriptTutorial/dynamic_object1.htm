@@ -1,0 +1,577 @@
+<html>
+<head>
+<LINK Rel=Stylesheet href=../../../../client/shared/global.css>
+<style>
+	.note {font-family:Webdings;color:#cc6600;font-size:14pt;}
+	.task {font-family:Webdings;color:#009900;font-size:14pt;}
+	.alert {font-family:Webdings;color:#cc0000;font-size:14pt;}
+	.helplink {font-family:Verdana;color:#3300cc;cursor:hand;font-size:8pt;font-weight:bold;}
+	.scriptlink {color:#3300cc;cursor:hand;font-size:9pt;font-weight:bold;}
+</style>
+<title>Welcome to Dynamic Object Creation Script Tutorial!</title>
+<script language=vbs src=ComVBScript.htm></script>
+<script LANGUAGE="VBSCRIPT">
+
+dim world
+
+sub Window_OnLoad
+	window.settimeout "top.frames(""Btns"").BuildButtons(theBody.MaxSteps)", 0, "vbs"
+	window.settimeout "top.frames(""Tabs"").HighlightItem mid(window.location, instrRev(window.location, ""/"") + 1, len(window.location) - instrRev(window.location, ""/"") - 4)", 0, "vbs"
+	set world = top.goWorld
+	world.tutorial.start_lesson 8
+	world.fireUIEvent world.user, "EventRequest", window
+end sub
+
+Sub window_onunload
+    world.fireUIEvent world.user, "EventRequestCancel", window
+End sub
+
+</script>
+</head>
+<body id=theBody class=vBody CurrentStep=1 MaxSteps=2>
+	<div class=vh1 Style=position:absolute;left:0;top:10; id=heading>
+		Dynamic Object Creation
+	</div>
+	<div class=vweb style=position:absolute;left:340;top:1; id=circle>=</div>
+
+<!-- Step 1 -->
+<div id=Step1 style=position:absolute;width:99%;left:0;top:44;>
+	<nobr>
+		<div class=vstep Style=position:absolute;left:351;top:-35; id=divSteps>
+			Step 1 of 2
+		</div>
+	</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step One: Persistent Object Creation in Script
+		</div>
+	<div class=vtext id=body style=position:absolute;left:0;top:30;width:99%;height:100%;>
+		<p>This lesson is for advanced scripters who are familiar with the techniques described in the previous lessons. Rather than going through a sub-by-sub explanation of the behaviors in this script, we present the scripts by themselves with basic code comments. Note that many of these subroutines are not in fact, Virtual Worlds methods, but helper scripts in the same file as those that are methods. In this way, a method can have access to scripts that help it do its job and make programming more modular, but you do not have to attach all of them to an object and use Virtual Worlds as the method of access.
+		<table class=vtext cellspacing=3>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Type the word "make" into the chat window to create a stream of graphical objects in a random pattern.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Examine the <span class=helplink HelpString="vworlds.chm::/UIREF/objexpl/intrface.htm" TITLE="Help">Object Explorer</span> to verify that it is actually the "light" object in the room that has the <b>OnPeerTell</b> method, that uses these scripts.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Look at the objects that are created in the room, in the <b>Object Explorer</b>.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Log off of the world when this pattern of objects has been completely created; you will see a notice in the chat window. Log on again to continue this lesson.</td></tr>
+			<tr><td valign=top><span class=note>$</span></td>
+			<td>Notice that the forms that this script created are still there. All objects in the world are "persistent" once they have been placed in the world. You have activated a script that has permanently changed the look of the world and the objects in it.</td></tr>
+			<tr><td valign=top><span class=note>$</span></td>
+			<td>This script actually runs on the server, not the client.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Move on to the next step to look at the script code for this method.</td></tr>
+		</table>
+	</div>
+	<div id=message>
+	</div>
+</div>
+
+<!-- Step 2 -->
+
+<div id=Step2 style=position:absolute;left:0;top:44;width:99%;display:none;>
+	<nobr>
+		<div class=vstep Style=position:absolute;left:351;top:-35; id=divSteps>
+			Step 2 of 2
+		</div>
+	</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step Two: Advanced Scripting
+		</div>
+	<div class=vtext id=body2 style=position:relative;left:0;top:30;width:99%;>
+		<p>Here is the script for the method <b>OnPeerTell</b> on the "light" object, from the file <b>lesson_8_dynamic_objects.vbs</b>.
+		<p>&nbsp;</p>
+	</div><br>
+	<table style=background-color:white;vertical-align:top;padding-left:7;padding-right:5;padding-top:5;width:610;>
+ 	 <tr>
+  	  <td colspan=2 valign=top>
+	  <pre>option explicit
+
+
+dim masterobjectcount
+masterobjectcount = 1
+dim first_flag
+dim slots(20,20)
+
+sub text_in (who, hearers, text, mode)
+	randomize
+	dim avail()
+	dim i
+	dim y
+	dim name
+	dim object
+	dim count
+	dim sx,sy
+	dim completed
+	dim tile_style
+	dim last_style
+	dim spot_count
+	dim free_spots(4)
+	dim num_things
+	dim spot_index
+	dim spot_choice
+	dim last_choice
+	dim uvec
+	dim dvec
+	dim lvec
+	dim rvec
+	dim myvec
+	dim osx
+	dim osy
+
+
+	text = lcase(text)
+
+	if text = "make" then
+			'These vectors are used to determine which way a tile is facing.
+			'This depends on which way the last tile was facing, and which way
+			'the tile style shows the next tile should be...
+
+			set uvec = world.createvector(0,0,1)
+			set dvec = world.createvector(0,0,-1)
+			set lvec = world.createvector(-1,0,0)
+			set rvec = world.createvector(1,0,0)
+			set myvec = world.createvector(0,0,1)
+
+			'If we haven't run this script before in this session, init
+			'all the grid spaces represented by the 2d array 'slots' to zero.
+			'It would be better to use a world.propertylist here
+			'since then the state of the grid that makes tiles
+			'would persist from session to session!
+			'This way logging back on to the world and typing 'make'
+			'makes a new set of tiles right over any
+			'that exist already, which is not the intended effect.
+			'**See if you can modify this script to use world.globals that
+			'are property lists to make this persist.
+
+			if first_flag <> true then
+				for sx = 0 to 19
+					for sy = 0 to 19
+						slots(sx,sy) = 0
+					next
+				next
+				first_flag = true
+			end if
+
+			'sx and sy are the current place in the grid (a 2d array)
+			'that you are checking for tiles.
+			'We start this at a random position between two and fifteen
+			'to give the tiles some room to expand in any direction at first.
+
+			sx = cint((rnd()*13.0))+2
+			sy = cint((rnd()*13.0))+2
+
+			'Since we base all tiles on the tile previous to it in the chain,
+			'we need to make a bogus tile to check against, a pre-tile,
+			'with a style and a direction...
+
+			last_choice = "U"
+			tile_style = int(rnd*3)+1
+			last_style = tile_style
+
+			'We want to know how many tiles we have put down so we can stop
+			'at some reasonable point (we don't want to go adding them forever).
+
+			num_things = 0
+
+			'We need to know if we have reached a state where it isn't
+			'possible to put a new tile next to the one we just put down,
+			'so we can quit. We use the boolean 'completed' to stop
+			'making things in this case, or the case where we have
+			'put down enough tiles to stop.
+
+			completed = false
+
+			do while completed <> true   'This will loop until completed changes!
+
+				num_things = num_things + 1   'We know we are making a new tile, so
+											  'let's increment the number we've made.
+
+				'Now, we check the four directions around our spot in the grid array
+				'for free ones i.e., ones that haven't changed from their original zero.
+				'Value in the slots array...to do this, we make a little array of free
+				'places around our tile (left,right,up,down), and we initialize it before using it.
+
+				for i = 0 to 3
+					free_spots(i)=0
+				next
+
+				'If a spot is full, we will make that place in the free-spots array
+				'non-zero.
+
+				'When we check the spots around us, we need to make absolutely sure
+				'that we are not checking off the edge of the grid array- this
+				'will cause a vbscript error. So we only check certain places
+				'when we are at the edge of the spots array.
+				'If we are inside it we can check in all four spots.
+
+				if sx>0 then
+					if sx<19 then
+						'look left+right
+						if slots(sx-1,sy) <> 0 then
+							free_spots(0) = 1
+						end if
+						if slots(sx+1,sy) <> 0 then
+							free_spots(1) = 1
+						end if
+					else
+						'can't look right
+						free_spots(1) = 1
+						if slots(sx-1,sy) <> 0 then
+							free_spots(0) = 1
+						end if
+					end if
+				else
+					'cant look left
+					free_spots(0) = 1
+					if slots(sx+1,sy) <> 0 then
+						free_spots(1) = 1
+					end if
+				end if
+				if sy> 0 then
+					if sy<19 then
+						'look up + down
+						if slots(sx,sy-1) <> 0 then
+							free_spots(2) = 1
+						end if
+						if slots(sx,sy+1) <> 0 then
+							free_spots(3) = 1
+						end if
+					else
+						'can't look down
+						free_spots(3) = 1
+						if slots(sx,sy-1) <> 0 then
+							free_spots(2) = 1
+						end if
+					end if
+				else
+					'can't look up
+					free_spots(2) = 1
+					if slots(sx,sy+1) <> 0 then
+						free_spots(3) = 1
+					end if
+				end if
+
+				'Well, that's all four spots.
+				'Notice that if we were checking at the edge of the array, we just
+				'counted the spot off the edge that we would have tried
+				'to check illegally as full(1).
+
+				'Now, we scan our array of free spots to see how many there
+				'are (i.e., whats around our spot now). We will have a variable
+				'called spot_count to look at the total number of
+				'free spots, which we get by summing all the values in
+				'the free_spots array. To make sure we have a valid count,
+				'first we init spot_count to assume all the spots are free.
+
+				spot_count = 0
+				for i = 0 to 3
+					spot_count = spot_count + free_spots(i)
+				next
+
+				'Make sure we have less than eleven tiles, or we should quit.
+				if num_things > 11 then
+					completed = true
+				end if
+
+				if completed <> true then
+
+				'Next order of business:
+				'
+				'First, pick among the free spots around us that we found
+				'to randomly pick our next tile spot from them.
+				'Then put a tile in the current sx,sy spot, (we know we can, because
+				'we would never have got here unless the sx,sy spot we're on is free.)
+				'then, pick its tile type based on the next location and the previous one's style.
+
+					if spot_count = 4 then
+						'We have flags in all surrounding slots,
+						'so we know we're blocked in the future after we place this last tile!
+						completed = true
+					end if
+
+					if spot_count <> 4 then   	'Ok, let's figure out which way we're
+												'going next- this is how we know
+												'which tile style to place down.
+												'A turning left one, a turning right
+												'one, or a go straight up or
+												'straight down one.
+
+						redim avail(4-spot_count)  'redim lets you change an array size!
+						spot_index = 0
+						for i = 0 to 3
+							if free_spots(i) = 0 then
+								select case i
+								case 0
+								    avail(spot_index) = "L"
+									spot_index = spot_index + 1
+									'can go left
+								case 1
+									avail(spot_index) = "R"
+									spot_index = spot_index + 1
+									'can go right
+								case 2
+									avail(spot_index) = "U"
+									spot_index = spot_index + 1
+									'can go up
+								case 3
+									avail(spot_index) = "D"
+									spot_index = spot_index + 1
+									'can go down
+								end select
+							end if
+						next
+
+						'Pick a random number between zero and the
+						'number of free spots available (this changes from tile to tile).
+
+						spot_choice = (int(rnd*(4 - spot_count))+1) - 1
+
+					else    'Well, if we got here, we can go anywhere, since they're all free.
+							'Note that this is only possible with the first tile!
+							'So pick at random from all four...
+
+						redim avail(4)
+						avail(0)="L"
+						avail(1)="R"
+						avail(2)="U"
+						avail(3)="D"
+						spot_choice = (int(rnd*(3))+1)
+					end if
+
+					'Place down this tile spot as taken (i.e., a non-zero value in
+					'the grid array). Now figure out where you are going to go,
+					'so you know what kind of tile style you should use...
+
+					slots(sx,sy)=1
+
+					'Save the old value of the place you were, you will need this
+					'for subsequent tiles...
+
+					osx = sx
+					osy = sy
+
+					'tile_style adds randomization to the basic tile look, so we
+					'have cool permutations in the chain that don't actually
+					'change the direction we moved, but look as though we have...
+
+					tile_style = int(rnd*3)+1
+
+					'Start to assemble the name of the tile's texture from your
+					'last style, so they link up correctly...
+
+					name = "wi"&cstr(last_style)
+
+					'This is a pretty 'brute-force' way to do this, we check
+					'each direction independently and redundantly.
+
+					'Complete the name of this tile's texture.
+					'The style of this tile depends not only on
+					'which direction we are heading next, but which way
+					'the last tile was facing ('last_choice'),
+					'and what its randomizer (last_style) was...
+
+					select case avail(spot_choice)
+						case "L"
+								sx = sx - 1
+								select case last_choice
+									case "L"
+										set myvec = lvec
+										tile_style = tile_style + 3
+										'world.trace "L"
+									case "R"
+										set myvec = rvec
+										tile_style = tile_style + 0
+										'world.trace "R"
+										'world.trace "uh oh"
+									case "U"
+										set myvec = uvec
+										tile_style = tile_style + 0
+										'world.trace "U"
+									case "D"
+										set myvec = dvec
+										tile_style = tile_style + 6
+										'world.trace "D"
+									case else
+										'world.trace "invalid last direction"
+								end select
+								if tile_style > 6 then
+									tile_style = tile_style - 6
+									name = name&"z"&cstr(tile_style)
+								else
+									if tile_style > 3 then
+										tile_style = tile_style - 3
+										name = name&"x"&cstr(tile_style)
+									else
+										name = name&"y"&cstr(tile_style)
+									end if
+								end if
+
+						case "R"
+								sx = sx + 1
+								'world.trace "i went right"
+
+								select case last_choice
+									case "L"
+										set myvec = lvec
+										tile_style = tile_style + 0
+										'world.trace "L"
+										'world.trace "uh oh"
+									case "R"
+										set myvec =rvec
+										tile_style = tile_style + 3
+										'world.trace "R"
+									case "U"
+										set myvec =uvec
+										tile_style = tile_style +6
+										'world.trace "U"
+									case "D"
+										set myvec =dvec
+										tile_style = tile_style + 0
+										'world.trace "D"
+									case else
+										'world.trace "invalid last direction"
+								end select
+
+								if tile_style > 6 then
+									tile_style = tile_style - 6
+									name = name&"z"&cstr(tile_style)
+								else
+									if tile_style > 3 then
+										tile_style = tile_style - 3
+										name = name&"x"&cstr(tile_style)
+									else
+										name = name&"y"&cstr(tile_style)
+									end if
+								end if
+						case "U"
+								sy = sy - 1
+								'world.trace "i went up"
+
+
+								select case last_choice
+									case "L"
+										set myvec = lvec
+										tile_style = tile_style + 6
+										'world.trace "L"
+
+									case "R"
+										set myvec = rvec
+										tile_style = tile_style + 0
+										'world.trace "R"
+
+									case "U"
+										set myvec = uvec
+										tile_style = tile_style + 3
+										'world.trace "U"
+									case "D"
+										set myvec =dvec
+										tile_style = tile_style + 0
+										'world.trace "uh oh"
+										'world.trace "D"
+									case else
+										'world.trace "invalid last direction"
+								end select
+
+								if tile_style > 6 then
+									tile_style = tile_style - 6
+									name = name&"z"&cstr(tile_style)
+								else
+									if tile_style > 3 then
+										tile_style = tile_style - 3
+										name = name&"x"&cstr(tile_style)
+									else
+										name = name&"y"&cstr(tile_style)
+									end if
+								end if
+
+						case "D"
+								sy = sy + 1
+								'world.trace "i went down"
+
+								select case last_choice
+									case "L"
+										set myvec = lvec
+										tile_style = tile_style + 0
+										'world.trace "L"
+
+									case "R"
+										set myvec = rvec
+										tile_style = tile_style + 6
+										'world.trace "R"
+
+									case "U"
+										set myvec = uvec
+										tile_style = tile_style + 0
+										'world.trace "uh oh"
+										'world.trace "U"
+									case "D"
+										set myvec =dvec
+										tile_style = tile_style + 3
+										'world.trace "D"
+
+									case else
+										'world.trace "invalid last direction"
+								end select
+
+								if tile_style > 6 then
+									tile_style = tile_style - 6
+									name = name&"z"&cstr(tile_style)
+								else
+									if tile_style > 3 then
+										tile_style = tile_style - 3
+										name = name&"x"&cstr(tile_style)
+									else
+										name = name&"y"&cstr(tile_style)
+									end if
+								end if
+
+						case else
+								'I didn't have a valid tile...
+					end select
+
+					'Now we should have the name of the tile completely...
+					name = name&".x"
+
+					if num_things > 1 then
+						set  object = _
+					world.createInstance( _
+						"tile_"&cstr(masterobjectcount)&"_"&cstr(num_things-1) _
+						,"artifact")
+
+						object.initializegraphics _
+							"SDK\library\models\_ScriptTutorial\"+name , _
+							((osx)*10)-105 , .07 , 105-((osy)*10) , _
+							myvec.x,myvec.y,myvec.z
+
+						object.moveinto world.user.container
+
+						myvec = NULL
+						object = NULL
+					end if
+
+					last_style = tile_style
+					last_choice = avail(spot_choice)
+
+				end if
+			loop
+
+			masterobjectcount = masterobjectcount + 1
+			this.say "I have completed making the objects..."
+	end if
+
+	dim result
+	result = this.invokesupermethod(Array(who,hearers,text,mode))
+
+end sub
+
+
+sub install (module)
+
+end sub</pre>
+		</td>
+	</tr>
+	</table><br>
+</div>
+</body>
+</html>

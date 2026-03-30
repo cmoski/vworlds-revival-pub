@@ -1,0 +1,390 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//  File:			CartBalloons.htm and CartFlowers.htm
+'//  Description:	To allow the user to arrange gifts to then send to any
+'//					of the other avatars in the world
+'//  Called by:		gift_module.vbs:cart_onLButtonUp
+'//					gift_module.vbs:giftPiece_onLButtonUp
+'//
+'//  Notes:			more or less the same code as CartBalloons
+'////////////////////////////////////////////////////////////////////////-->
+<html>
+<head>
+<title>Gift Carts</title>
+<link rel=stylesheet href=../shared/global.css>
+<style>
+.giftPiece
+{ 
+	behavior: url(../htc/movable.htc);
+	cursor: move;
+	mv--boundary:0 278 300 0;
+}
+</style>
+
+<!--include scripts-->
+<script language="vbscript" src="../vbs/document_OnSelectStart.vbs">
+</script>
+<script language="vbscript" src="../vbs/ShowDialog.vbs">
+</script>
+<script language="vbscript" src="../vbs/BuildAvSelList.vbs">
+</script>
+<!--end include scripts-->
+
+<script language=vbs>
+option explicit
+
+'////////////////////////////////////////////////////////////////////////
+'//  Global constants and variables (local to theis file)
+'////////////////////////////////////////////////////////////////////////
+const strItem = "Flower"
+const strInitText = "Type your message here."
+const intPieceMax = 6
+dim world
+dim intPieceCt
+dim intGiftZ
+set world = top.ClientWorldPtr
+intPieceCt = 0
+intGiftZ = intPieceMax + 1
+
+
+' In the world, when the user clicks on a cart, it checks world.atCart; if atCart <> cart.Name
+' it calls cart.enable, which sets atCart = cart.Name and fires UIEvent "SurfToSampleURL" to 
+' invoke this page.
+' When the user clicks on a gift piece, it too checks atCart and if atCart <> the piece's container
+' cart's name it calls cart.enable, otherwise the piece fires UIEvent "AddGiftPiece"
+' which this page handles by adding the piece to the gift.
+' When this page unloads it calls cart.disable to blank atCart.
+' The function world.getCart returns the current cart object.
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		window_onLoad
+'//  Purpose:	To initialize the page after all objects are instantiated
+'////////////////////////////////////////////////////////////////////////
+sub window_onLoad
+	dim cart, prevCart
+	set cart = world.user.container.findwithin(strItem & " Cart")
+	cart.enable
+	top.AddToEventList window
+	BuildAvSelList(false)	' from the include file
+	AddGiftPiece(world.user.container.findwithin("Iris"))
+	MsgCard.style.background = "url(../images/bkg" & strItem & "Note.gif)"
+	MsgText.style.background = "url(../images/bkg" & strItem & "Note.gif)"
+	MsgText.value = strInitText
+	ClearButton.tabIndex = 0		
+	SendButton.tabIndex = 0
+	userList.focus
+	prevCart = replace(mid(document.location.search,2,255), "%20", " ") 
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		window_onBeforeUnload
+'//  Purpose:	To make sure any unsent gifts are properly discarded.
+'//  			No option to send anyway.
+'////////////////////////////////////////////////////////////////////////
+sub window_onBeforeUnload
+	if intPieceCt > 0 then
+		if top.giftPending then
+			showConfirmation "Your unsent " & strItem & " gift is being discarded.", ""
+			top.giftPending = false
+		end if
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		window_onUnload
+'//  Purpose:	To make sure any unsent gifts are properly discarded.
+'//  			No option to send anyway.
+'////////////////////////////////////////////////////////////////////////
+sub window_onUnload
+	dim cart
+	on error resume next	' when the client shuts down, the world goes away before this window unloads 
+	set cart = world.user.container.findwithin(strItem & " Cart")
+	cart.disable
+	top.RemoveFromEventList window
+	set world = nothing
+	set cart = nothing
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		document_onClick
+'//  Purpose:	To change the z order to bring this item to the front.
+'////////////////////////////////////////////////////////////////////////
+sub document_onClick
+	dim thisPiece
+	set thisPiece = window.event.srcElement
+	if thisPiece.className = "giftPiece" then
+    	thisPiece.style.zIndex = intGiftZ
+	    intGiftZ = intGiftZ + 1 
+	end if
+	set thisPiece = nothing
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		HandleUIEvent
+'//  Purpose:	handle UI events passed down from the main client page
+'//  Called by:	client.htm:theclient_OnUIEvent
+'////////////////////////////////////////////////////////////////////////
+sub HandleUIEvent(byVal who, what, byVal arg)
+	if what = "AddGiftPiece" then
+		if who.container.Name = strItem & " Cart" then
+			top.giftPending = true
+			addGiftPiece who
+		end if
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		AddGiftPiece(piece)
+'//  Purpose:	Add an additional item to the gift arrangement area
+'//  Params:	piece - a gift component.
+'//	 Called by:	Window_onLoad, to load an initial piece;
+'//				HandleUIEvent, to handle the AddGiftPiece UI event that is fired
+'//				when the user clicks on an item at a gift cart in the world.
+'////////////////////////////////////////////////////////////////////////
+sub AddGiftPiece(piece)
+	if piece is nothing then exit sub
+	dim newElem
+	feedback.innerHTML = ""
+	if MsgCard.style.display = "none" then
+		MsgCard.style.display = "inline"
+	end if
+	if intPieceCt < intPieceMax then
+		intPieceCt = intPieceCt + 1
+		set newElem = document.createElement("img")
+		newElem.id = "piece" & intPieceCt
+		newElem.className = "giftPiece"
+		newElem.src = top.ClientWorldPtr.ContentPath & piece.HTMLgraphic 
+		newElem.alt = piece.displayName
+		newElem.style.position = "absolute"
+		newElem.style.top = 10
+		newElem.style.left = 40 * intPieceCt
+		newElem.style.cursor = "hand"
+		giftView.insertAdjacentElement "BeforeEnd", newElem
+	else
+		dim strMsg
+		strMsg = "You can only send a maximum of " & intPieceMax & " " & lcase(strItem) & "s."
+		ShowDialog strMsg, ""
+	end if
+	SendButton.disabled = false
+
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		ClearGift
+'//  Purpose:	Remove dynamically generated items from the arrangement area.
+'//	 Called by:	onClick handler for the ClearGift button;
+'//				also called by SendGift
+'////////////////////////////////////////////////////////////////////////
+sub ClearGift
+	dim elem
+	for each elem in giftView.children
+	if elem.className = "giftPiece" then
+		giftView.RemoveChild elem
+	end if
+	next
+	feedback.innerHTML = ""
+	msgText.innerHTML = ""
+	intPieceCt = 0
+	set elem = nothing
+	SendButton.disabled = true
+
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		SendGift
+'//  Purpose:	OnClick handler for the SendGift button; send the gift to the specified person
+'//  Notes:     collects gifts by looking for "IMG" elements. 
+'//				sends to all friends if the user selected that as a destination
+'//				and clears out the "gift basket"
+'//	 Called by:	user clicking the SendGift button;
+'////////////////////////////////////////////////////////////////////////
+sub SendGift
+	dim cart
+	dim elem
+	dim elemCount
+	dim piece
+	dim receiver
+	dim receiverId
+	dim graphicList
+	dim posXList
+	dim posYList
+	set graphicList = world.createPropertyList
+	set posXList = world.createPropertyList
+	set posYList = world.createPropertyList
+	set cart = world.user.container.findwithin(strItem & " Cart")
+	elemCount = 0
+	for each elem in giftView.children
+		if elem.tagName = "IMG" then
+			graphicList.add Right(elem.src,Len(elem.src) - InStrRev(elem.src,"/"))
+			posXList.add elem.style.left
+			posYList.add elem.style.top
+			elemCount = elemCount + 1
+		end if
+	next
+	if elemCount > 0 then
+	
+		'check for max_length
+		const MAX_STR_LENTH = 16000
+		if len(msgText.innerHTML) > MAX_STR_LENTH then
+			msgbox "The message is to large, please limit it to " & MAX_STR_LENTH & " characters."
+			exit sub
+		end if
+
+	
+		if userList.options(userList.selectedIndex).text = strAllFriends then
+			if top.ClientUserPtr.profile.IsValid("Friends") then
+				dim avList, avatar
+				set avList = top.ClientUserPtr.profile.keyvalue("Friends")
+				on error resume next
+				for each avatar in avList
+					avatar.makeGift cart.makesGiftName, cart.showPage, world.user.Name, msgText.innerHTML, graphicList, posXList, posYList, cart.InWorldGraphic
+				next
+				on error goto 0
+				set avatar = nothing
+				set avList = nothing
+			end if
+		else
+			receiverId = userList.options(userList.selectedIndex).value
+			set receiver = world.objectById(receiverId)
+			receiver.makeGift cart.makesGiftName, cart.showPage, world.user.Name, msgText.innerHTML, graphicList, posXList, posYList, cart.InWorldGraphic
+			set receiver = nothing
+		end if
+
+		clearGift
+		MsgCard.style.display = "none"
+		Message.innerHTML = "Your " & LCase(strItem) & "s have been sent.  Send more if you like by clicking on the cart in the 3-D view."
+	else
+		dim strMsg
+		strMsg = "You must select a " & LCase(strItem) & " by clicking on the item in the 3-D view."
+		ShowDialog strMsg, ""	
+	end if
+	set graphicList = nothing
+	set posXList = nothing
+	set posYList = nothing
+	set cart = nothing
+	
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		MsgText_OnFocus
+'//  Purpose:	Blank the msgText input if it contains the default value.
+'////////////////////////////////////////////////////////////////////////
+sub MsgText_OnFocus
+	if Trim(MsgText.value) = strInitText then
+		MsgText.value = "" 
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		CircularTab
+'//  Purpose:	Trap tab-key events on this page
+'//  Called By:	SendButton.onKeyDown
+'////////////////////////////////////////////////////////////////////////
+sub CircularTab
+	if (window.event.keyCode = 9) then		' tab key
+		window.event.returnValue = false
+		userList.focus
+	end if
+end sub
+
+</script>
+</head>
+<body bgcolor=#FFFFFF>
+
+<!--Start Heading Section-->
+<div id=bkgPageHeadingPatch
+	class=bkgPageHeadingPatch>
+</div>
+<div id=bkgPageHeading
+	class=bkgPageHeading
+	style=background-image:url(../images/bkgGiftCarts.gif);>
+</div>
+
+<span id=groupName class=PageHeading>Gift Carts</span>
+<span class=PageHeadingRt><script language=vbscript>document.write strItem</script> Cart</span>
+<hr class=PageHeadingHR>
+<!--End Heading Section-->
+
+
+<div id=Message class=ParaText style="top:40">
+To select a gift click any <script language=vbscript>document.write LCase(strItem)</script> on the cart in the 3D view.  Once selected, arrange as
+you'd like and send it to a friend.
+</div>
+<div id=feedback
+	class=ParaText>
+</div>
+<!--0 293 350 0-->
+<div id=giftView
+	style="position:absolute;
+		left:15;
+		top:100;
+		width:278;
+		height:300;
+		vertical-align:bottom;
+		align:center;">
+</div>		
+
+<div id=msgCard
+	style="position:absolute;
+		top:285;
+		left:15;
+		width:278;
+		height:131;
+		border:1px solid black;">
+	<img src="../images/imgDialogTitleBar.gif"
+		style="position:absolute;
+			left:0;
+			top:0;
+			width:276;
+			height:13;">
+	<span class=ParaText
+		style="position:absolute;
+			top:15;
+			left:17;">To:
+	</span>
+	<select id=userList
+		class=vInput
+		style="top:22;
+			left:40;
+			width:105;"
+		onChange=checkReceiver>
+	</select>
+	<textarea id=msgText class=ParaText
+		style="position:absolute;
+			top:35;
+			left:17;
+			width:243;
+			height:53;"></textarea>
+	<button id=ClearButton
+		class=btnGreen
+		style="position:absolute;
+			top:105;
+			left:152;"
+		onclick=ClearGift>
+		Clear
+	</button>
+	<button id=SendButton
+		class=btnGreen
+		style="position:absolute;
+			top:105;
+			left:210;"
+		onclick=SendGift
+		onKeyDown=CircularTab>
+		Send
+	</button>
+</div>
+
+</body>
+</html>
+
+

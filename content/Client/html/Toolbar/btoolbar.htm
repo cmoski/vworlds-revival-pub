@@ -1,0 +1,1615 @@
+<html>
+
+<head>
+<meta http-equiv="Expires" content="0">
+<meta http-equiv="Page-Enter" CONTENT="BlendTrans(Duration=2)">
+<meta http-equiv="Page-Exit" CONTENT="BlendTrans(Duration=2)">
+<title>Boundary Editor</title>
+<style>
+.vauthor{Font-Size: 11pt;Font-Weight:bold;Font-Family: Verdana;Color:#002F5F}
+.vsmall{Font-Size: 8pt;Font-Family: Verdana;Color: #000000}
+.vlabel{Font-Size: 10pt;Font-Weight: bold;Font-Family: Verdana;Color: #000000 vertical-align:middle }
+</style>
+
+<script language=vbs>
+Option Explicit
+
+Dim ZoomDropDownChanging
+Dim LastSelectedPickData 'always a pick data
+Dim oldFloorHeight, oldCeilingHeight, oldPosX, oldPosZ
+Dim szMsgboxTitle, bDeleteIsDisabled, bSolidIsDisabled, bSinglePassableIsDisabled
+Dim world, user, bIsInitialized
+
+bIsInitialized = false
+szMsgboxTitle = "Microsoft Virtual Worlds"
+bDeleteIsDisabled = TRUE
+bSolidIsDisabled = TRUE
+bSinglePassableIsDisabled = TRUE
+
+
+sub HandleUIEvent(byval who, what, byval args)
+
+	Dim obj, bSelected
+
+	If (Not bIsInitialized) Then
+		Exit Sub
+	End If
+
+	If what = "OnNameChanged" Then
+		bSelected = false
+
+		set obj = GetSelectedObject()
+		If (Not (Obj Is Nothing) ) Then
+			If (Obj.IsOfType("Thing")) Then
+				if (obj.id = who.id) Then
+					bSelected = true
+				End If
+			Else
+				bSelected = true
+			End If
+		End If
+
+		RemoveFromRoomContentDropDown who
+		AddToRoomContentDropDown who
+
+		if (bSelected) Then
+			SelectInRoomContentDropDown who
+		End If
+	Elseif StrComp("OnAddCurrentTool",what,1) = 0 OR StrComp("OnViewModeChanged",what,1) = 0 OR _
+			StrComp("OnGravityChanged",what,1) = 0 OR StrComp("OnCollisionDetectionChanged",what,1) = 0 OR _
+			StrComp("OnSelectionLockChanged",what,1) = 0 Then
+		UpdateButtonStates
+	Elseif StrComp("BoundaryUpdate",what,1) = 0 Then
+		Dim selobj
+
+		'First test if we're getting the remove boundary message
+		if ( CStr(CLng(args) AND 255) = "1") Then
+			set selobj = GetSelectedObject()
+			if (StrComp(typename(selobj), "IVWPickData", 1) = 0) Then
+				If (selobj.thing Is who) Then
+					If (selobj.BoundaryList.Count <= selobj.BoundaryIndex) Then
+						parent.renderer.ControlManager.ClearSelections
+					Elseif ( Not selobj.BoundaryList.property(selobj.BoundaryIndex) Is selobj.Boundary) Then
+						parent.renderer.ControlManager.ClearSelections
+					End If
+				End If
+			Elseif (selobj Is who AND Not parent.renderer.ControlManager.IsSelected(selobj)) Then
+				'At this point we know a boundary is being removed thing and the thing isn't selected.
+				parent.renderer.ControlManager.ClearSelections
+			End If
+		end if
+
+		UpdateButtonStates
+
+	ElseIf what = "OnAddSelection" Then
+		SelectInRoomContentDropDown args
+	Elseif what = "OnRemoveSelection" Then
+		UnselectInRoomContentDropDown args
+	Elseif what = "OnClearSelection" Then
+		UnselectInRoomContentDropDown Nothing
+	Elseif what = "OnContentEnter" Then
+		'world.print "UIEvent: " & what & ", who: " & who.name & ", args: " & args.name
+		If (Not (args Is Nothing) ) Then
+			If (args.id = top.theclient.vwclient.world.user.id) Then
+				'set world =  top.theclient.vwclient.world
+				'set user = world.user
+
+				RefillRoomContentsDropDown
+			Elseif (who.id = user.container.id) Then
+				AddToRoomContentDropDown args
+			End If
+		End If
+	Elseif what = "OnLeaveRoom" Or what = "OnContentLeave" Then
+		If (Not (args Is Nothing) ) Then
+			If (args.id = top.theclient.vwclient.world.user.id) Then
+				'set world =  top.theclient.vwclient.world
+				'set user = world.user
+
+				RefillRoomContentsDropDown
+			Elseif (who.id = user.container.id) Then
+				RemoveFromRoomContentDropDown args
+			End If
+		End If
+	Elseif what = "OnZoomLevelChanged" AND ZoomDropDownChanging = 0 Then
+		Select Case args
+		Case 0.0625
+			ZoomDropDown.selectedIndex = 0
+		Case 0.125
+			ZoomDropDown.selectedIndex = 1
+		Case 0.25
+			ZoomDropDown.selectedIndex = 2
+		Case 0.33
+			ZoomDropDown.selectedIndex = 3
+		Case 0.5
+			ZoomDropDown.selectedIndex = 4
+		Case 1.0
+			ZoomDropDown.selectedIndex = 5
+		Case 2.0
+			ZoomDropDown.selectedIndex = 6
+		Case 3.0
+			ZoomDropDown.selectedIndex = 7
+		Case 4.0
+			ZoomDropDown.selectedIndex = 8
+		Case 8.0
+			ZoomDropDown.selectedIndex = 9
+		Case 16.0
+			ZoomDropDown.selectedIndex = 10
+		End Select
+	Elseif IsObject(who) AND Not (who Is Nothing) AND ObjectsDropDown.selectedIndex >= 0 Then
+		If (who.IsStub = False) AND StrComp(who.name, ObjectsDropDown.Item(ObjectsDropDown.selectedIndex).text, 1) = 0 Then
+			If what = "OnPositionChanged" Then
+				PosX.value = Round(args.x, 3)
+				PosZ.value = Round(args.z, 3)
+			Elseif what = "OnDirectionChanged" Then
+				PosX.value = Round(args.x, 3)
+				PosZ.value = Round(args.z, 3)
+			Elseif what = "OnScaleChanged" Then
+				PosX.value = Round(args.x, 3)
+				PosZ.value = Round(args.z, 3)
+			End If
+
+			oldPosX = CStr(PosX.value)
+			oldPosZ = CStr(PosZ.value)
+
+		End If
+	End If
+End Sub
+
+sub ToolEvent(eventNum, what, args1, args2, args3)
+	If (bIsInitialized) Then
+		if (eventNum >= 3 AND eventNum <= 5 ) Then
+			'if (IsObject(what) AND Not (what Is Nothing) AND ObjectsDropDown.selectedIndex >= 0) Then
+			'	If StrComp(what.name, ObjectsDropDown.Item(ObjectsDropDown.selectedIndex).text, 1) = 0 Then
+					PosX.value = args1
+					PosZ.value = args3
+					oldPosX = CStr(PosX.value)
+					oldPosZ = CStr(PosZ.value)
+			'	End If
+			'End If
+		Elseif (eventNum = 6 ) Then
+			PosX.value = args1
+			PosZ.value = args2
+			oldPosX = CStr(PosX.value)
+			oldPosZ = CStr(PosZ.value)
+		End If
+	End If
+end sub
+
+
+function PosInList(tagName, sItem)
+
+	Dim i
+
+	PosInList = tagName.tags("OPTION").length
+	for i = 0 to tagName.tags("OPTION").length - 1
+		if StrComp(sItem, tagName.tags("OPTION").item(i).text, 1) <= 0 then
+			PosInList = i
+			exit for
+		end if
+	next
+end function
+
+
+sub SelectInRoomContentDropDown(what)
+
+	Dim tmpel, nCount, objID, i, szTool, newval
+
+	if (StrComp(what.type, "PickData", 1) = 0) Then
+
+		newval = CStr(what.thing.id) & "##" & CStr(what.boundaryIndex)
+
+		nCount = ObjectsDropDown.length
+		for i = nCount - 1 to 0 Step -1
+			If (StrComp(newval, CStr(ObjectsDropDown.item(i).value), 1) = 0) Then
+				ObjectsDropDown.SelectedIndex = i
+				ObjectsDropDownOnChange
+				Exit Sub
+			End If
+		next
+
+		set tmpel = document.createElement("OPTION")
+		tmpel.text = what.name
+		tmpel.value = newval
+		set LastSelectedPickData = what
+		DoResetFloorAndCeiling
+
+		ObjectsDropDown.Add tmpel, 0
+		ObjectsDropDown.SelectedIndex = 0
+	Else
+		nCount = ObjectsDropDown.length
+		objID = CStr(what.id)
+
+		for i = 0 to nCount - 1
+			if CStr(objID) = CStr(ObjectsDropDown.item(i).value) then
+				ObjectsDropDown.SelectedIndex = i
+				exit For
+			end if
+		next
+
+		set LastSelectedPickData = Nothing
+
+	End If
+
+	ObjectsDropDownOnChange
+
+End Sub
+
+
+sub UnselectInRoomContentDropDown(obj)
+
+	Dim lastvalue, sellist, nCount, i
+
+	'Will be Nothing if we recieved a ClearSelections
+	If (obj Is Nothing) Then
+		nCount = ObjectsDropDown.length
+		for i = nCount - 1 to 0 Step -1
+			If (InStr(CStr(ObjectsDropDown.item(i).value), "##")) Then
+				ObjectsDropDown.Remove i
+			End If
+		next
+	Else
+		If (obj.IsOfType("PickData")) Then
+			lastvalue = CStr(obj.thing.id) & "##" & CStr(obj.boundaryIndex)
+			nCount = ObjectsDropDown.length
+			for i = nCount - 1 to 0 Step -1
+				if (StrComp(CStr(lastvalue), CStr(ObjectsDropDown.item(i).value), 1) = 0) then
+					ObjectsDropDown.Remove i
+					Exit For
+				end if
+			next
+		End If
+	End If
+
+	ObjectsDropDown.SelectedIndex = -1
+
+	set sellist = parent.renderer.ControlManager.SelectionList
+
+	If (Not Sellist Is Nothing) Then
+		If (sellist.count > 0) Then
+			set obj = sellist.property(0)
+			SelectInRoomContentDropDown obj
+		End If
+	End If
+
+	if (world.Global.SelectionLock) Then
+		DoSelectionLock
+	End If
+
+	ObjectsDropDownOnChange
+
+End Sub
+
+sub AddToRoomContentDropDown(obj)
+	Dim tmpel
+
+	set tmpel = document.createElement("OPTION")
+	tmpel.text = obj.name
+	tmpel.value = CStr(obj.id)
+
+	ObjectsDropDown.Add tmpel, PosInList(ObjectsDropDown, tmpel.text )
+
+End Sub
+
+sub RemoveFromRoomContentDropDown(obj)
+	Dim nCount, objID, i
+
+	nCount = ObjectsDropDown.length
+	objID = CStr(obj.id)
+
+	for i = 0 to nCount - 1
+		if CStr(objID) = CStr(ObjectsDropDown.item(i).value) then
+			ObjectsDropDown.Remove i
+			exit Sub
+		end if
+	next
+
+End Sub
+
+Sub RefillRoomContentsDropDown
+	Dim i, len, roomcontents, obj, tmpel, sellist
+
+	len = ObjectsDropDown.Length
+	For i = 0 to len - 1
+		ObjectsDropDown.Remove 0
+	Next
+
+	if (User.container Is Nothing) Then
+		Exit Sub
+	End If
+
+	set LastSelectedPickData = Nothing
+
+	set tmpel = document.createElement("OPTION")
+	tmpel.text = user.container.name
+	tmpel.value = CStr(user.container.id)
+	ObjectsDropDown.Add tmpel
+
+	set roomcontents = user.container.contents
+
+	for each obj in roomcontents
+		set tmpel = document.createElement("OPTION")
+		tmpel.text = obj.name
+		tmpel.value = CStr(obj.id)
+		ObjectsDropDown.Add tmpel, PosInList(ObjectsDropDown, tmpel.text )
+	next
+
+	set sellist = parent.renderer.ControlManager.SelectionList
+
+	If (sellist.count >= 0) Then
+		'First try to select a boundary in drop down
+		For Each obj In sellist
+			If obj.IsStub = False Then
+				If obj.IsOfType("PickData") Then
+					SelectInRoomContentDropDown(obj)
+					Exit For
+				End If
+			End If
+		Next
+
+		'If not boundaries selected, go ahead do a thing
+		For Each obj In sellist
+			If obj.IsStub = False Then
+				If obj.IsOfType("Thing") Then
+					SelectInRoomContentDropDown(obj)
+					Exit For
+				End If
+			End If
+		Next
+	Else
+		ObjectsDropDown.selectedIndex = -1
+		ObjectsDropDownOnChange
+	End If
+
+
+End Sub
+
+Function GetSelectedObject()
+
+	If (ObjectsDropDown.selectedIndex >= 0) Then
+		set GetSelectedObject = GetSelectedByID( CStr(ObjectsDropDown.Item(ObjectsDropDown.selectedIndex).value) )
+	Else
+		set GetSelectedObject = Nothing
+	End If
+
+End Function
+
+Function GetSelectedByID(value)
+
+	Dim selList, arr, realvalue, obj
+
+	If (IsNull(user.container ) OR (user.container is Nothing) ) Then
+		GetSelectedByID = Nothing
+		Exit Function
+	End IF
+
+	If (CStr(user.container.id) = CStr(value)) Then
+		set GetSelectedByID = user.container
+		Exit Function
+	End If
+
+	set selList = user.container.contents
+	set GetSelectedByID = Nothing
+
+	'Check to see if this is a pick data, if so get it off the selection list.
+	arr = Split(value, "##")
+	if (CInt(UBound(arr)) > 0) Then
+		set sellist = parent.renderer.ControlManager.SelectionList
+
+		for each obj in sellist
+			If (StrComp(obj.type, "PickData", 1) = 0) Then
+				If ( obj.thing.id = CLng(arr(0)) AND obj.boundaryindex = CLng(arr(1)) ) Then
+					set GetSelectedByID = Obj
+				End If
+			End If
+		Next
+	Else
+		set GetSelectedByID = world.ObjectByID(CLng(value))
+	End If
+
+End Function
+
+
+Sub ObjectsDropDownUserPick
+
+	Dim cm, obj
+
+	Set obj = GetSelectedObject()
+	if (Not (obj Is Nothing) ) Then
+		set cm = parent.renderer.ControlManager
+		if (Not cm.IsSelected(obj)) Then
+			cm.Select obj
+		End If
+	End If
+
+end sub
+
+
+Sub ObjectsDropDownOnChange
+	UpdateButtonStates
+End Sub
+
+sub ChangeTransformBoxes
+	SpanZ.style.visibility = "hidden"
+	XLabel.innerHTML = "Degrees:"
+	SpanX.style.left = "452px"
+	PosX.style.left = "54px"
+	PosX.title = "Rotation Degrees"
+end sub
+
+sub RestoreTransformBoxes
+	XLabel.innerHTML = "X:"
+	SpanX.style.left = "424px"
+	PosX.style.left = "14px"
+	PosX.title = "X Value (Relative Coordinates)"
+	SpanZ.style.visibility = "visible"
+end sub
+
+sub HideTransformBoxes
+	SpanX.style.visibility = "hidden"
+	SpanZ.style.visibility = "hidden"
+end sub
+
+sub HideFCBoxes
+	SpanFloor.style.visibility = "hidden"
+	SpanCeiling.style.visibility = "hidden"
+end sub
+
+sub ShowTransformBoxes
+	SpanX.style.visibility = "visible"
+	SpanZ.style.visibility = "visible"
+end sub
+
+sub ShowFCBoxes
+	SpanFloor.style.visibility = "visible"
+	SpanCeiling.style.visibility="visible"
+end sub
+
+sub ShowBoxes
+	ShowTransformBoxes
+	ShowFCBoxes
+end sub
+
+sub HideBoxes
+	HideTransformBoxes
+	HideFCBoxes
+end sub
+
+sub EnableBoxes
+	PosX.disabled = false
+	PosZ.disabled = false
+	SpanX.style.color = "black"
+	SpanZ.style.color = "black"
+	FloorHeight.disabled = false
+	CeilingHeight.disabled = false
+	SpanFloor.style.color = "black"
+	SpanCeiling.style.color = "black"
+	DoResetFloorAndCeiling
+	DeleteButton.filters(0).enabled = false
+	DeleteButton.filters(1).enabled = false
+	SinglePassableButton.filters(0).enabled = false
+	SinglePassableButton.filters(1).enabled = false
+	bDeleteIsDisabled = false
+	bSinglePassableIsDisabled = false
+End Sub
+
+sub DisableBoxes
+	PosX.value = ""
+	PosZ.value = ""
+	PosX.disabled = true
+	PosZ.disabled = true
+	SpanX.style.color = "gray"
+	SpanZ.style.color = "gray"
+	FloorHeight.value = ""
+	CeilingHeight.value = ""
+	FloorHeight.disabled = true
+	CeilingHeight.disabled = true
+	SpanFloor.style.color = "gray"
+	SpanCeiling.style.color = "gray"
+
+	DeleteButton.filters(0).enabled = true
+	DeleteButton.filters(1).enabled = true
+	SinglePassableButton.filters(0).enabled = true
+	SinglePassableButton.filters(1).enabled = true
+	bDeleteIsDisabled = true
+	bSinglePassableIsDisabled = true
+End Sub
+
+
+Sub ResetToolButtons
+	If (bIsInitialized) Then
+		translateButton.Src = "moveup.bmp"
+		rotateButton.Src = "rotup.bmp"
+		scaleButton.Src = "scaleup.bmp"
+		navigateButton.Src = "navup.bmp"
+		ZoomInButton.Src = "ZoomUp.bmp"
+		ZoomOutButton.Src = "ZoomOUp.bmp"
+		createBoundaryButton.Src = "creabUp.bmp"
+
+		RestoreTransformBoxes
+		HideBoxes
+	End If
+End Sub
+
+function PickDataValid
+	PickDataValid = "no"
+	if (isobject(lastselectedpickdata) and not(lastselectedpickdata is nothing)) then
+		PickDataValid = "validonly"
+		if (lastselectedpickdata.thing.checkpropertysecurity("BoundaryList",2)) then
+			PickDataValid = "validandsecure"
+		end if
+	end if
+end function
+
+sub InitToolbarForTool(sToolName)
+	if (sToolName = "") then
+		exit sub
+	else
+		if PickDataValid()="validandsecure" then
+			select case sToolName
+				case "translate"
+					EnableBoxes
+					RestoreTransformBoxes
+					ShowBoxes
+					PosX.value = "0.0"
+					PosZ.value = "0.0"
+
+				case "rotate"
+					EnableBoxes
+					ShowBoxes
+					ChangeTransformBoxes
+					PosX.value = "0.0"
+					PosZ.value = "0.0"
+
+				case "scale"
+					EnableBoxes
+					RestoreTransformBoxes
+					ShowBoxes
+					PosX.value = "1.0"
+					PosZ.value = "1.0"
+				case "navigate", "ZoomIn", "ZoomOut"
+					DoResetFloorAndCeiling
+					PosX.value = ""
+					PosZ.value = ""
+					ShowFCBoxes
+			end select
+			DoResetFloorAndCeiling
+		else
+			if PickDataValid() = "validonly" then
+				ShowFCBoxes
+				DoResetFloorAndCeiling
+			end if
+		end if
+	end if
+end sub
+
+sub DoNavigate()
+
+	if parent.renderer.IsUIToolCurrent("Navigate") Then
+		Exit Sub
+	End If
+
+	parent.renderer.AddCurrentUITool ""
+	parent.renderer.AddCurrentUITool "Navigate"
+	parent.renderer.AddCurrentUITool "VWPickTool"
+	parent.renderer.GetUITool("Select").VertexSelection = False
+
+	ResetToolButtons
+
+	If (bIsInitialized) Then
+		navigateButton.Src = "navdwn.bmp"
+	End If
+
+	InitToolbarForTool("navigate")
+
+	oldPosX = CStr(PosX.value)
+	oldPosZ = CStr(PosZ.value)
+
+	window.status = "Click in window or use arrow keys to pan camera."
+end sub
+
+sub DoTranslate()
+	Dim obj, prop, vec
+
+	if parent.renderer.IsUIToolCurrent("Translate2D") Then
+		Exit Sub
+	End If
+
+	parent.renderer.AddCurrentUITool ""
+	parent.renderer.AddCurrentUITool "Select"
+	parent.renderer.AddCurrentUITool "Translate2D"
+
+	parent.renderer.GetUITool("Select").VertexSelection = True
+
+	ResetToolButtons
+	If (bIsInitialized) Then
+		translateButton.Src = "movedwn.bmp"
+	End If
+
+	InitToolBarForTool("translate")
+
+	oldPosX = CStr(PosX.value)
+	oldPosZ = CStr(PosZ.value)
+
+	window.status = "Click and drag to move. 'X','Z': move on single axis."
+end sub
+
+sub DoRotate()
+	Dim obj, prop
+
+	if parent.renderer.IsUIToolCurrent("Rotate2D") Then
+		Exit Sub
+	End If
+
+	parent.renderer.AddCurrentUITool ""
+	parent.renderer.AddCurrentUITool "Select"
+	parent.renderer.AddCurrentUITool "Rotate2D"
+	parent.renderer.GetUITool("Select").VertexSelection = False
+
+	ResetToolButtons
+
+	If (bIsInitialized) Then
+		rotateButton.Src = "rotdwn.bmp"
+	End If
+
+	InitToolbarForTool("rotate")
+
+	oldPosX = CStr(PosX.value)
+	oldPosZ = CStr(PosZ.value)
+
+	window.status = "Click and drag to rotate."
+end sub
+
+sub DoScale()
+	Dim obj, prop
+
+	if parent.renderer.IsUIToolCurrent("Scale2D") Then
+		Exit Sub
+	End If
+
+	parent.renderer.AddCurrentUITool ""
+	parent.renderer.AddCurrentUITool "Select"
+	parent.renderer.AddCurrentUITool "Scale2D"
+	parent.renderer.GetUITool("Select").VertexSelection = False
+	ResetToolButtons
+	If (bIsInitialized) Then
+		scaleButton.Src = "scaledwn.bmp"
+	End If
+
+	InitToolbarForTool("scale")
+
+	oldPosX = CStr(PosX.value)
+	oldPosZ = CStr(PosZ.value)
+
+	window.status = "Click and drag to scale. 'X','Z': scale on single axis."
+end sub
+
+sub DoCreateBoundary()
+	Dim obj, prop
+
+	if parent.renderer.IsUIToolCurrent("DrawBoundaryTool") Then
+		Exit Sub
+	End If
+
+	parent.renderer.AddCurrentUITool ""
+	parent.renderer.AddCurrentUITool "DrawBoundaryTool"
+	ResetToolButtons
+	If (bIsInitialized) Then
+		createBoundaryButton.Src = "creabdn.bmp"
+	End If
+
+	RestoreTransformBoxes
+	ShowBoxes
+	DoResetFloorAndCeiling
+
+	oldPosX = CStr(PosX.value)
+	oldPosZ = CStr(PosZ.value)
+
+	window.status = "Click: place new vertex. Double-click: finish boundary."
+end sub
+
+sub DoZoomIn()
+
+	if parent.renderer.IsUIToolCurrent("ZoomIn3D") Then
+		if (parent.renderer.GetUITool("ZoomIn3D").Mode = 0) Then
+			Exit Sub
+		End If
+	End If
+
+	parent.renderer.AddCurrentUITool ""
+	parent.renderer.AddCurrentUITool "ZoomIn3D"
+	parent.renderer.GetUITool("ZoomIn3D").Mode = 0
+	ResetToolButtons
+	ZoomInButton.Src = "ZoomDwn.bmp"
+
+	InitToolbarForTool("ZoomIn")
+
+	oldPosX = CStr(PosX.value)
+	oldPosZ = CStr(PosZ.value)
+
+	window.status = "Click in view to zoom in."
+end sub
+
+sub DoZoomOut()
+
+	if parent.renderer.IsUIToolCurrent("ZoomIn3D") Then
+		if (parent.renderer.GetUITool("ZoomIn3D").Mode = 1) Then
+			Exit Sub
+		End If
+	End If
+
+	parent.renderer.AddCurrentUITool ""
+	parent.renderer.AddCurrentUITool "ZoomIn3D"
+	parent.renderer.GetUITool("ZoomIn3D").Mode = 1
+	ResetToolButtons
+	If (bIsInitialized) Then
+		ZoomOutButton.Src = "ZoomODwn.bmp"
+	End If
+
+	InitToolbarForTool("ZoomOut")
+
+	oldPosX = CStr(PosX.value)
+	oldPosZ = CStr(PosZ.value)
+
+	window.status = "Click in view to zoom out."
+end sub
+
+
+sub DoLockX()
+	if (world.global.CheckPropertySecurity("XAxisLocked", 2)) Then
+		world.global.XAxisLocked = Not world.global.XAxisLocked
+
+		if world.global.XAxisLocked then
+			lockXButton.Src = "ButtDwn.bmp"
+		else
+			lockXButton.Src = "ButtUp.bmp"
+		end if
+	else
+		msgbox "Insufficient permission to change axis locks.", vbExclamation, szMsgboxTitle
+	End If
+end sub
+
+
+sub DoLockZ()
+	if (world.global.CheckPropertySecurity("ZAxisLocked", 2)) Then
+		world.global.ZAxisLocked = Not world.global.ZAxisLocked
+
+		if world.global.ZAxisLocked then
+			lockZButton.Src = "ButtDwn.bmp"
+		else
+			lockZButton.Src = "ButtUp.bmp"
+		end if
+	else
+		msgbox "Insufficient permission to change axis locks.", vbExclamation, szMsgboxTitle
+	End If
+end sub
+
+
+sub UpdateButtonStates
+	Dim obj
+
+	'On Error Resume Next
+
+	set world = top.theclient.vwclient.world
+	set user = world.user
+
+	ResetToolButtons
+
+	If parent.renderer.IsUIToolCurrent("Translate2D") Then
+		translateButton.Src = "movedwn.bmp"
+		InitToolbarForTool("translate")
+	Elseif parent.renderer.IsUIToolCurrent("Rotate2D") Then
+		rotateButton.Src = "rotdwn.bmp"
+		InitToolbarForTool("rotate")
+	Elseif parent.renderer.IsUIToolCurrent("Scale2D") Then
+		scaleButton.Src = "scaledwn.bmp"
+		InitToolbarForTool("scale")
+	Else
+		HideBoxes
+		DisableBoxes
+
+		If parent.renderer.IsUIToolCurrent("Navigate") Then
+			navigateButton.Src = "navdwn.bmp"
+			InitToolbarForTool("navigate")
+		ElseIf parent.renderer.IsUIToolCurrent("DrawBoundaryTool") Then
+			createBoundaryButton.Src = "creabDn.bmp"
+			RestoreTransformBoxes
+			ShowBoxes
+			DoResetFloorAndCeiling
+		Elseif parent.renderer.IsUIToolCurrent("ZoomIn3D") Then
+			ZoomInButton.Src = "ZoomDwn.bmp"
+			InitToolbarForTool("navigate")
+		Elseif parent.renderer.IsUIToolCurrent("ZoomOut3D") Then
+			ZoomOutButton.Src = "ZoomODwn.bmp"
+			InitToolbarForTool("navigate")
+		End If
+	End If
+
+	if world.global.XAxisLocked then
+		lockXButton.Src = "ButtDwn.bmp"
+	else
+		lockXButton.Src = "ButtUp.bmp"
+	end if
+
+	if world.global.ZAxisLocked then
+		lockZButton.Src = "ButtDwn.bmp"
+	else
+		lockZButton.Src = "ButtUp.bmp"
+	end if
+
+	if world.global.SelectionLock then
+		SelectionLockButton.Src = "xlockdwn.bmp"
+		SelectionLockButton.TITLE="Lock Selection"
+	else
+		SelectionLockButton.Src = "xlockup.bmp"
+		SelectionLockButton.Title="Lock Selection"
+	end if
+
+	SinglePassableButton.Src = "SPassUp.bmp"
+
+	set obj = GetSelectedObject()
+
+	If (Not (Obj Is Nothing)) Then
+		If (StrComp(obj.type, "PickData", 1) = 0) Then
+
+			bSolidIsDisabled = true
+			SolidButton.filters(0).enabled = true
+			SolidButton.filters(1).enabled = true
+
+			if Obj.boundary.IsPassable then
+				SinglePassableButton.Src = "SPassDwn.bmp"
+			Else
+				SinglePassableButton.Src = "SPassUp.bmp"
+			end if
+
+			if (Obj.thing.CheckPropertySecurity("BoundaryList", 2)) Then
+				DeleteButton.filters(0).enabled = false
+				DeleteButton.filters(1).enabled = false
+				bDeleteIsDisabled = false
+				SinglePassableButton.filters(0).enabled = false
+				SinglePassableButton.filters(1).enabled = false
+				bSinglePassableIsDisabled = false
+				FloorHeight.disabled = false
+				CeilingHeight.disabled = false
+				SpanFloor.style.color = "black"
+				SpanCeiling.style.color = "black"
+			Else
+				DeleteButton.filters(0).enabled = true
+				DeleteButton.filters(1).enabled = true
+				bDeleteIsDisabled = true
+				SinglePassableButton.filters(0).enabled = true
+				SinglePassableButton.filters(1).enabled = true
+				bSinglePassableIsDisabled = true
+				FloorHeight.disabled = true
+				CeilingHeight.disabled = true
+				SpanFloor.style.color = "gray"
+				SpanCeiling.style.color = "gray"
+			End If
+		Else
+			DisableBoxes
+			DeleteButton.filters(0).enabled = true
+			DeleteButton.filters(1).enabled = true
+			bDeleteIsDisabled = true
+			SinglePassableButton.filters(0).enabled = true
+			SinglePassableButton.filters(1).enabled = true
+			bSinglePassableIsDisabled = true
+
+			if (obj.isstub) Then
+				bSolidIsDisabled = true
+				SolidButton.filters(0).enabled = true
+				SolidButton.filters(1).enabled = true
+			ElseIf (obj.CheckPropertySecurity("BoundaryList", 2)) Then
+				bSolidIsDisabled = false
+				SolidButton.filters(0).enabled = false
+				SolidButton.filters(1).enabled = false
+			Else
+				bSolidIsDisabled = true
+				SolidButton.filters(0).enabled = true
+				SolidButton.filters(1).enabled = true
+			End If
+		End If
+	Else
+		DeleteButton.filters(0).enabled = true
+		DeleteButton.filters(1).enabled = true
+		bDeleteIsDisabled = true
+		SinglePassableButton.filters(0).enabled = true
+		SinglePassableButton.filters(1).enabled = true
+		bSinglePassableIsDisabled = true
+		bSolidIsDisabled = true
+		SolidButton.filters(0).enabled = true
+		SolidButton.filters(1).enabled = true
+		HideBoxes
+		DisableBoxes
+	End If
+End Sub
+
+Sub Window_OnLoad
+'	If (Not parent.renderer Is Nothing) AND (Not parent.renderer.ControlManager Is Nothing) Then
+		bIsInitialized = true
+		Initialize
+		top.addToEventList window
+'	End If
+End Sub
+
+Sub Window_OnUnload
+
+	top.removeFromEventList window
+
+	On Error Resume Next
+	top.CloseWindow "BoundaryBrowser"
+
+	Err.Clear
+
+End Sub
+
+Sub Window_OnResize
+	If (Not parent.renderer Is Nothing) AND (Not parent.renderer.ControlManager Is Nothing) Then
+		'Initialize
+	End If
+End Sub
+
+Sub Initialize
+
+	Dim whichMode, obj, prop, sellist
+
+	ZoomDropDownChanging = 0
+
+	set world = top.theclient.vwclient.world
+	set user = world.user
+
+	set LastSelectedPickData = Nothing
+
+	RefillRoomContentsDropDown
+
+	'Unnecessary, but just to make sure....
+	ObjectsDropDownOnChange
+
+	world.global.selectionlock = false
+
+	HandleUIEvent Nothing, "OnZoomLevelChanged", parent.renderer.ZoomLevel
+
+End Sub
+
+
+Function GetCurrentToolName
+
+	If parent.renderer.IsUIToolCurrent("Rotate2D") Then
+		GetCurrentToolName = "r"
+	Elseif parent.renderer.IsUIToolCurrent("Scale2D") Then
+		GetCurrentToolName = "s"
+	ElseIf parent.renderer.IsUIToolCurrent("Translate2D") Then
+		GetCurrentToolName = "t"
+	Else
+		GetCurrentToolName = "?"
+	End If
+
+End Function
+
+Sub CauseBoundaryToRemote(obj)
+
+	Dim sheep
+
+	If (IsObject(obj) and (Not (obj Is Nothing)) And (StrComp(obj.type, "PickData", 1) = 0)) Then
+		set sheep = World.CloneProperty(obj.boundary)
+		obj.thing.boundarylist.Property(obj.BoundaryIndex) = sheep
+	End If
+
+End Sub
+
+Sub DoSetTransform(whichMode)
+
+	Dim obj
+
+	'Force the toolbar to be in the right place, not scrolled away
+	'document.body.scrollLeft = 0
+	'document.body.scrollTop = 0
+
+	If (LastSelectedPickData Is Nothing) Then
+		Exit Sub
+	End If
+
+	set obj = LastSelectedPickData.Boundary
+
+	if (PosX.value = "" Or (PosZ.value = "" AND whichMode <> "r")) Then
+		DoResetTransform whichMode
+	End If
+
+	If (oldPosX = CStr(PosX.value) And oldPosZ = CStr(PosZ.value)) Then
+		Exit Sub
+	End If
+
+
+	If (Not IsNumeric(PosX.value) Or (Not IsNumeric(PosZ.value) AND whichMode <> "r") ) Then
+		Msgbox "Values must be numeric.", vbExclamation, szMsgboxTitle
+		DoResetTransform whichMode
+	End If
+
+	If (Not LastSelectedPickData.thing.CheckPropertySecurity("BoundaryList", 2)) Then
+		DoResetTransform whichMode
+		msgbox "Insufficient permission to modify " & LastSelectedPickData.thing.name & "'s boundaries.", vbExclamation, szMsgboxTitle
+		Exit Sub
+	End If
+
+	If (StrComp(obj.type, "Boundary", 1) = 0) Then
+		If (whichMode = "t") Then
+			if (CSng(PosX.value) > 8388608 OR CSng(PosZ.value) > 8388608) Then
+				if (StrComp(window.event.type, "blur", 1) ) Then 
+					Msgbox "Translation value too large.", vbExclamation, szMsgboxTitle
+				End If
+			Else
+				obj.Translate CSng(PosX.value), CSng(PosZ.value)
+				CauseBoundaryToRemote LastSelectedPickData
+			End If
+			PosX.value = "0.0"
+			PosZ.value = "0.0"
+		ElseIf (whichMode = "r") Then
+			obj.Rotate CSng(PosX.value) / 57.295779513082
+			CauseBoundaryToRemote LastSelectedPickData
+			PosX.value = "0.0"
+			PosZ.value = "0.0"
+		ElseIf (whichMode = "s") Then
+			if ( CSng(PosX.value) <= 0.0 Or CSng(PosZ.value) <= 0.0) Then
+				if (StrComp(window.event.type, "blur", 1) ) Then 
+					Msgbox "Scaling values must be greater than zero.", vbExclamation, szMsgboxTitle
+				end if
+			Elseif ( CSng(PosX.value) > 1000.0 Or CSng(PosZ.value) > 1000.0) Then
+				if (StrComp(window.event.type, "blur", 1) ) Then 
+					Msgbox "Scaling values must be less than 1000.", vbExclamation, szMsgboxTitle
+				end if
+			Else
+				obj.Scale CSng(PosX.value), CSng(PosZ.value)
+				CauseBoundaryToRemote LastSelectedPickData
+			End If
+			PosX.value = "1.0"
+			PosZ.value = "1.0"
+		End If
+
+		oldPosX = CStr(PosX.value)
+		oldPosZ = CStr(PosZ.value)
+
+	End If
+
+End Sub
+
+Sub DoResetTransform(whichMode)
+
+	Dim obj
+
+	set obj = LastSelectedPickData.boundary
+
+	If (StrComp(obj.type, "boundary", 1) = 0) Then
+		If (whichMode = "t") Then
+			PosX.value = "0.0"
+			PosZ.value = "0.0"
+		ElseIf (whichMode = "r") Then
+			PosX.value = "0.0"
+			PosZ.value = "0.0"
+		ElseIf (whichMode = "s") Then
+			PosX.value = "1.0"
+			PosZ.value = "1.0"
+		End If
+
+		oldPosX = CStr(PosX.value)
+		oldPosZ = CStr(PosZ.value)
+
+	End If
+
+
+End Sub
+
+Sub DoSetFloorAndCeiling()
+
+	if (FloorHeight.value = "" Or CeilingHeight.value = "") Then
+		DoResetFloorAndCeiling
+	End If
+
+	If (oldFloorHeight = CStr(FloorHeight.value) And oldCeilingHeight = CStr(CeilingHeight.value)) Then
+		'No change
+		Exit Sub
+	End If
+
+	If (Not LastSelectedPickData.thing.CheckPropertySecurity("BoundaryList", 2)) Then
+		DoResetFloorAndCeiling
+		msgbox "Insufficient permission to modify " & LastSelectedPickData.thing.name & "'s boundaries.", vbExclamation, szMsgboxTitle
+		Exit Sub
+	End If
+
+	If (Not IsNumeric(FloorHeight.value) Or Not IsNumeric(CeilingHeight.value)) Then
+		DoResetFloorAndCeiling
+		Msgbox "Floor and ceiling values must be numeric.", vbExclamation, szMsgboxTitle
+	ElseIf (CSng(FloorHeight.value) < CSng(CeilingHeight.value)) Then
+
+		LastSelectedPickData.boundary.heightlower = CSng(FloorHeight.value)
+		LastSelectedPickData.boundary.heightupper = CSng(CeilingHeight.value)
+
+		oldFloorHeight = CStr(FloorHeight.value)
+		oldCeilingHeight = CStr(CeilingHeight.value)
+
+		CauseBoundaryToRemote LastSelectedPickData
+
+	Else
+		DoResetFloorAndCeiling
+		Msgbox "The boundary's floor height must be less than the ceiling height.", vbExclamation, szMsgboxTitle
+	End If
+
+End Sub
+
+Sub DoResetFloorAndCeiling()
+	if (isobject(LastSelectedPickData) AND not(LastSelectedPickData is nothing)) then
+		FloorHeight.value = Round(LastSelectedPickData.boundary.heightlower, 3)
+		CeilingHeight.value = Round(LastSelectedPickData.boundary.heightupper, 3)
+
+		oldFloorHeight = CStr(FloorHeight.value)
+		oldCeilingHeight = CStr(CeilingHeight.value)
+	end if
+End Sub
+
+Sub HandleKeypressForNumeric(whichBox)
+
+	Dim trange
+
+	If ( window.event.keyCode = 45) Then
+		set trange = document.selection.createRange
+		If (InStr(window.event.srcElement.value, "-") AND Not InStr(trange.text, "-") ) Then
+			window.event.returnValue = false
+		End If
+	ElseIf ( window.event.keyCode = 46) Then
+		set trange = document.selection.createRange
+		If (InStr(window.event.srcElement.value, ".") AND Not InStr(trange.text, ".")) Then
+			window.event.returnValue = false
+		End If
+	ElseIf (window.event.keyCode < 48 OR window.event.keyCode > 57) Then
+		window.event.returnValue = false
+	End If
+
+End Sub
+
+Sub HandleTabAndEnter(whichBox)
+
+	Dim whichMode, obj, prop
+
+	If (IsObject(LastSelectedPickData) AND Not (LastSelectedPickData Is Nothing)) Then
+
+		if (whichBox = 0 Or whichBox = 2) Then
+			whichMode = GetCurrentToolName
+
+			If (window.event.keyCode = 9) OR (window.event.keyCode = 13) Then    'Tab key
+				window.event.returnValue = false
+
+				DoSetTransform whichMode
+
+			Elseif (window.event.keyCode = 27) Then    'Escape key
+				window.event.returnValue = false
+				DoResetTransform whichMode
+			End If
+
+		Elseif (whichBox = 3 Or whichBox = 4) Then
+			If (window.event.keyCode = 9) OR (window.event.keyCode = 13) Then    'Tab key
+				window.event.returnValue = false
+				DoSetFloorAndCeiling
+			Elseif (window.event.keyCode = 27) Then    'Escape key
+				window.event.returnValue = false
+				DoResetFloorAndCeiling
+			End If
+		End If
+
+	End If
+
+End Sub
+
+sub DoClickBoundaryBrowser
+	Dim obj
+	World.ShowURLEx "BoundaryBrowser", "Boundary Browser", "client/html/toolbar/BoundaryBrowser.htm", Self, 150,150, 290, 249
+End Sub
+
+sub DoMouseUpBoundaryBrowser
+	if (window.event.button = 1) Then
+		BoundaryBrowserButton.SRC = "Bowsup.bmp"
+	End if
+end sub
+
+sub DoMouseDownBoundaryBrowser
+	if (window.event.button = 1) Then
+		BoundaryBrowserButton.SRC = "Bowsdwn.bmp"
+	End if
+end sub
+
+
+sub DoMouseDownCenterOnSelected
+	Dim obj
+
+	if (window.event.button = 1) Then
+
+		CenterOnSelectedButton.SRC = "ctrdwn.bmp"
+	End if
+end sub
+
+sub DoMouseUpCenterOnSelected
+	if (window.event.button = 1) Then
+		CenterOnSelectedButton.SRC = "ctrup.bmp"
+	End If
+End Sub
+
+sub DoClickCenterOnSelected
+	Dim obj
+
+	If (IsObject(LastSelectedPickData) AND Not (LastSelectedPickData Is Nothing)) Then
+		parent.renderer.CenterViewOnObject LastSelectedPickData, false
+	ElseIf (ObjectsDropDown.selectedIndex >= 0) Then
+		set obj = GetSelectedObject()
+		parent.renderer.CenterViewOnObject obj, false
+	End If
+end sub
+
+sub DoDeleteVertex(obj)
+
+	Dim vcount, nprob, vcountstart, bsafe, i
+
+	vcountstart = obj.Boundary.VertexCount
+	nprob = 0
+
+	For i = (vcountstart - 1) To 0 Step -1
+		If ( obj.VertexPicked(i) ) Then
+			obj.VertexPicked(i) = false
+
+			vcount = obj.Boundary.VertexCount
+			bsafe = obj.Boundary.DeleteVertexSafe(i)
+
+			If (bsafe = 0) Then    'vcount = obj.Boundary.VertexCount) Then
+				nprob = nprob + 1
+			End If
+		End If
+	Next
+
+	if (nprob) Then
+		Msgbox "One of more vertices could not be deleted. Boundaries must be simple, closed polygons.", vbExclamation, szMsgboxTitle
+	End If
+End Sub
+
+sub DoMouseDownDelete
+	if ( (Not bDeleteIsDisabled) AND window.event.button = 1) Then
+		DeleteButton.SRC = "deldwn.bmp"
+	End If
+end sub
+
+sub DoMouseUpDelete
+	if ( (Not bDeleteIsDisabled) AND window.event.button = 1) Then
+		DeleteButton.SRC = "delup.bmp"
+	End If
+end sub
+
+sub DoClickDelete
+
+	Dim tmpo, sellist, bDeleted, xxx, obj
+
+	if ((Not bDeleteIsDisabled)) Then
+
+		set sellist = parent.renderer.ControlManager.SelectionList
+
+		bDeleted = FALSE
+
+		for each obj in sellist
+			if (IsObject(obj) AND (Not obj Is Nothing) AND (StrComp(obj.Type, "PickData", 1) = 0) ) Then
+				DoDelete obj
+				bDeleted = TRUE
+			End If
+		Next
+
+		if (bDeleted = FALSE) Then
+			Msgbox "No boundary selected.", vbExclamation, szMsgboxTitle
+		End IF
+	End If
+
+End Sub
+
+sub DoDelete(obj)
+
+	if (Not obj.thing.CheckPropertySecurity("BoundaryList", 2)) Then
+		Msgbox "Insufficient permission to delete " & obj.thing.name & "'s boundaries.", vbExclamation, szMsgboxTitle
+		Exit Sub
+	End If
+
+	If ( obj.IsAnyVertexPicked() ) Then
+		DoDeleteVertex obj
+		CauseBoundaryToRemote obj
+		Exit Sub
+	End If
+
+	if (obj.thing.issolid And obj.boundary.IsAutoSolidBoundary) Then
+		Msgbox "The IsSolid boundary can not be deleted. To remove the boundary, set the object's IsSolid property to false.", vbExclamation, szMsgboxTitle
+		Exit Sub
+	Else
+		parent.renderer.ControlManager.ClearSelections
+		obj.boundarylist.RemoveAt obj.BoundaryIndex
+		RefillRoomContentsDropDown
+	End If
+
+End Sub
+
+sub ZoomDropDownOnChange
+
+	'mutex
+	ZoomDropDownChanging = 1
+
+	Select Case ZoomDropDown.selectedIndex
+	Case 0
+		parent.renderer.ZoomLevel = 0.0625
+	Case 1
+		parent.renderer.ZoomLevel = 0.125
+	Case 2
+		parent.renderer.ZoomLevel = 0.25
+	Case 3
+		parent.renderer.ZoomLevel = 0.33
+	Case 4
+		parent.renderer.ZoomLevel = 0.5
+	Case 5
+		parent.renderer.ZoomLevel = 1.0
+	Case 6
+		parent.renderer.ZoomLevel = 2.0
+	Case 7
+		parent.renderer.ZoomLevel = 3.0
+	Case 8
+		parent.renderer.ZoomLevel = 4.0
+	Case 9
+		parent.renderer.ZoomLevel = 8.0
+	Case 10
+		parent.renderer.ZoomLevel = 16.0
+	End Select
+
+	'unmutex
+	ZoomDropDownChanging = 0
+End Sub
+
+
+sub DoMouseDownAutoBoundary
+
+	if (bSolidIsDisabled OR window.event.button <> 1) Then
+		Exit Sub
+	End If
+
+	SolidButton.SRC = "Soliddwn.bmp"
+
+end sub
+
+sub DoMouseUpAutoBoundary
+
+	if (bSolidIsDisabled OR window.event.button <> 1) Then
+		Exit Sub
+	End If
+
+	SolidButton.SRC = "Solidup.bmp"
+
+end sub
+
+Sub DoClickAutoBoundary
+
+	Dim newBoundary, obj
+
+	if (bSolidIsDisabled) Then
+		Exit Sub
+	End If
+
+	If (ObjectsDropDown.selectedIndex >= 0) Then
+		set obj = GetSelectedObject()
+
+		If (IsObject(obj) and Not obj is Nothing And obj.isoftype("thing") ) Then 'If it's not a boundary, is should be a thing
+			If (Not obj.CheckPropertySecurity("BoundaryList", 2)) Then
+				Msgbox "Insufficient permission to add boundaries to " & obj.name & ".", vbExclamation, szMsgboxTitle
+				Exit Sub
+			Else
+				set newBoundary = world.CreateBoundary()
+				newBoundary.AutoGenerate obj, 6
+				obj.boundarylist.add newBoundary
+				parent.renderer.CenterViewOnObject obj, false
+				Msgbox "Successfully added auto-boundary to " & obj.name & ".", vbInformation, szMsgboxTitle
+			End If
+		Else
+			Msgbox "Choose the object to which to add the auto-boundary.", vbExclamation, szMsgboxTitle
+			Exit Sub
+		End If
+	Else
+		Msgbox "Choose the object to which to add the auto-boundary.", vbExclamation, szMsgboxTitle
+		Exit Sub
+	End if
+
+end sub
+
+sub DoSinglePassable
+
+	Dim tmpo, sellist, bToggled, xxx, obj
+
+
+	if ( (Not bSinglePassableIsDisabled) ) Then
+
+		set sellist = parent.renderer.ControlManager.SelectionList
+
+		bToggled = FALSE
+
+		for each obj in sellist
+			if (IsObject(obj) AND (Not obj Is Nothing) AND (StrComp(obj.Type, "PickData", 1) = 0) ) Then
+				if (Not obj.thing.CheckPropertySecurity("BoundaryList", 2)) Then
+					Msgbox "Insufficient permission to modify " & obj.thing.name & "'s boundaries.", vbExclamation, szMsgboxTitle
+					Exit Sub
+				Elseif (obj.boundary.IsAutoSolidBoundary) Then
+					Msgbox "The boundary created by the IsSolid property can not be made passable.", vbExclamation, szMsgboxTitle
+					Exit Sub
+				End If
+
+				obj.boundary.IsPassable = Not obj.boundary.IsPassable
+				CauseBoundaryToRemote obj
+
+				bToggled = TRUE
+			End If
+		Next
+
+		if (bToggled = FALSE) Then
+			Msgbox "No boundary selected.", vbExclamation, szMsgboxTitle
+		End If
+
+
+		If (ObjectsDropDown.selectedIndex >= 0) Then
+			set obj = GetSelectedObject()
+
+			if obj.boundary.IsPassable then
+				SinglePassableButton.Src = "SPassDwn.bmp"
+			else
+				SinglePassableButton.Src = "SPassUp.bmp"
+			end if
+		End If
+	End If
+
+end sub
+
+
+sub DoSelectionLock
+
+	world.Global.SelectionLock = Not world.Global.SelectionLock
+
+	if world.global.SelectionLock then
+		SelectionLockButton.Src = "xlockdwn.bmp"
+		SelectionLockButton.Title="Lock Selection"
+		ObjectsDropDown.disabled = true
+	else
+		SelectionLockButton.Src = "xlockup.bmp"
+		SelectionLockButton.Title="Lock Selection"
+		ObjectsDropDown.disabled = false
+	end if
+
+end sub
+
+
+'Not used anymore... for now.
+sub DoSolid
+
+	if (bSolidIsDisabled) Then
+		Exit Sub
+	End If
+
+	If (ObjectsDropDown.selectedIndex >= 0) Then
+		set obj = GetSelectedObject( )
+
+		If (IsObject(obj) and Not obj is Nothing And obj.isoftype("thing") ) Then 'If it's not a boundary, is should be a thing
+			If (Not obj.CheckPropertySecurity("Solid", 2)) Then
+				Msgbox "Insufficient permission to change " & obj.name & "'s IsSolid property.", vbExclamation, szMsgboxTitle
+				Exit Sub
+			Else
+				obj.issolid = Not obj.issolid
+
+				if (obj.issolid) Then
+					SolidButton.SRC = "Soliddwn.bmp"
+					SolidButton.Title="Toggle Solid Property"
+				Else
+					SolidButton.SRC = "Solidup.bmp"
+					SolidButton.Title="Toggle Solid Property"
+				End If
+			End If
+		Else
+			Msgbox "Choose the object on which to toggle the IsSoild property.", vbExclamation, szMsgboxTitle
+			Exit Sub
+		End If
+	Else
+		Msgbox "Choose the object on which to toggle the IsSoild property.", vbExclamation, szMsgboxTitle
+		Exit Sub
+	End if
+
+end sub
+
+sub DoGetFocus
+
+	Dim tr
+
+	set tr = window.event.srcElement.CreateTextRange
+	tr.Expand "textedit"
+	tr.select
+
+End Sub
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+'----------------------------------------------
+</script>
+</head>
+
+<body bgcolor="#dcdacd" topmargin="0" leftmargin="0">
+<span class=vsmall
+style="HEIGHT: 26px; LEFT: 7px; POSITION: absolute; TOP: 8px; WIDTH: 99px; Z-INDEX: 113">Selected Object:</span>
+<SELECT class=vsmall NAME="ObjectsDropDown" OnChange=ObjectsDropDownUserPick SIZE="1" STYLE="HEIGHT: 22px; LEFT: 108px; POSITION: absolute; TOP: 5px; WIDTH: 200px">
+</SELECT>
+<IMG	 BORDER=0 SRC="ctrup.bmp" NAME="CenterOnSelectedButton" onclick=DoClickCenterOnSelected onmouseout=CenterOnSelectedButton.SRC="ctrup.bmp" onmousedown=DoMouseDownCenterOnSelected Title      ="Center View on Selection" OnMouseUp     =DoMouseUpCenterOnSelected STYLE="HEIGHT: 21px; LEFT: 341px; POSITION: absolute; TOP: 4px; WIDTH: 21px" height=21 width=21>
+<IMG	 BORDER=0 SRC="delup.bmp" NAME="DeleteButton" onclick=DoClickDelete onmouseout=DeleteButton.SRC="delup.bmp" onmousedown=DoMouseDownDelete Title      ="Delete Selection" OnMouseUp     =DoMouseUpDelete STYLE="FILTER: gray alpha(opacity=50); HEIGHT: 21px; LEFT: 363px; POSITION: absolute; TOP: 4px; WIDTH: 21px">
+<IMG	 BORDER=0 SRC="bowsup.bmp" NAME="BoundaryBrowserButton" onmouseout=BoundaryBrowserButton.SRC="bowsup.bmp" onmouseup=DoMouseUpBoundaryBrowser onmousedown=DoMouseDownBoundaryBrowser onclick=DoClickBoundaryBrowser Title ="Boundary Browser" STYLE       ="HEIGHT: 21px; LEFT: 392px; POSITION: absolute; TOP: 4px; WIDTH: 21px">
+
+<IMG	 BORDER=0 SRC="xlockup.bmp" NAME ="SelectionLockButton" OnClick        =DoSelectionLock Title="Lock Selection" style="HEIGHT: 21px; LEFT: 310px; POSITION: absolute; TOP: 4px; WIDTH: 21px">
+
+<span class=vsmall id=SpanX
+style="HEIGHT: 16px; LEFT: 424px; POSITION: absolute; TOP: 8px; WIDTH: 62px"><span id=XLabel>X:</span>
+<INPUT class=vsmall maxLength=20 name=PosX ID=PosX onblur="DoSetTransform GetCurrentToolName()" onfocus=DoGetFocus
+onkeydown=HandleTabAndEnter(0) onkeypress=HandleKeypressForNumeric(0) style="HEIGHT: 20px; LEFT: 14px; POSITION: absolute; TOP: -3px; WIDTH: 50px" Title = "X Value (Relative Coordinates)">&nbsp; </span>
+<span class=vsmall id=SpanZ
+style="HEIGHT: 16px; LEFT: 492px; POSITION: absolute; TOP: 8px; WIDTH: 62px"><span id=ZLabel>Z:</span>
+<INPUT class=vsmall maxLength=20 name=PosZ ID=PosZ onblur="DoSetTransform GetCurrentToolName()" onfocus=DoGetFocus
+onkeydown=HandleTabAndEnter(2) onkeypress=HandleKeypressForNumeric(2)
+style="HEIGHT: 20px; LEFT: 14px; POSITION: absolute; TOP: -3px; WIDTH: 50px" Title = "Z Value (Relative Coordinates)">&nbsp; </span>
+
+<hr style="HEIGHT: 1px; LEFT: 2px; POSITION: absolute; TOP: 30px">
+
+<!-- The Lower span !-->
+&nbsp;
+<IMG	 BORDER=0 SRC="Navup.bmp" NAME="navigateButton" OnClick    =DoNavigate Title="Pan View" style="HEIGHT: 25px; LEFT: 4px; POSITION: absolute; TOP: 34px; WIDTH: 23px">
+<IMG	 BORDER=0 SRC="moveup.bmp" NAME   ="translateButton" OnClick     =DoTranslate Title="Move Boundary or Vertex" style="HEIGHT: 25px; LEFT: 27px; POSITION: absolute; TOP: 34px; WIDTH: 23px">
+<IMG	 BORDER=0 SRC="rotup.bmp" NAME ="rotateButton" OnClick     =DoRotate Title="Rotate Boundary" style="HEIGHT: 25px; LEFT: 50px; POSITION: absolute; TOP: 34px; WIDTH: 23px">
+<IMG	 BORDER=0 SRC="scaleup.bmp" NAME ="scaleButton" OnClick     =DoScale Title="Scale Boundary" style="HEIGHT: 25px; LEFT: 73px; POSITION: absolute; TOP: 34px; WIDTH: 23px">
+<IMG	 BORDER=0 SRC="creabup.bmp" NAME     ="createBoundaryButton" OnClick     =DoCreateBoundary Title="Draw Boundary or Insert Vertex" style="HEIGHT: 25px; LEFT: 220px; POSITION: absolute; TOP: 34px; WIDTH: 23px">
+
+<IMG	 BORDER=0 SRC="Zoomup.bmp" NAME  ="ZoomInButton" OnClick     =DoZoomIn Title="Zoom In" style="HEIGHT: 25px; LEFT: 108px; POSITION: absolute; TOP: 34px; WIDTH: 23px">
+<IMG	 BORDER=0 SRC="ZoomOUp.bmp" NAME  ="ZoomOutButton" OnClick     =DoZoomOut Title="Zoom Out" style="HEIGHT: 25px; LEFT: 132px; POSITION: absolute; TOP: 34px; WIDTH: 23px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<SELECT NAME="ZoomDropDown" Title   = "Zoom Level" OnChange     =ZoomDropDownOnChange SIZE="1" STYLE="HEIGHT: 22px; LEFT: 157px; POSITION: absolute; TOP: 34px; WIDTH: 53px">
+<OPTION VALUE="0" selected>1:16
+<OPTION VALUE="1">1:8
+<OPTION VALUE="2">1:4
+<OPTION VALUE="3">1:3
+<OPTION VALUE="4">1:2
+<OPTION VALUE ="5">1:1
+<OPTION VALUE="6">2:1
+<OPTION VALUE="7">3:1
+<OPTION VALUE="8">4:1
+<OPTION VALUE="9">8:1
+<OPTION VALUE="10">16:1
+</SELECT>
+
+<IMG	 BORDER=0 SRC="SPassUp.bmp" NAME="SinglePassableButton" OnClick=DoSinglePassable Title="Toggle Boundary Passable" style="FILTER: gray alpha(opacity=50); HEIGHT: 25px; LEFT: 276px; POSITION: absolute; TOP: 34px; WIDTH: 23px">
+
+<IMG	 BORDER=0 SRC="Solidup.bmp" NAME   ="solidButton" onclick=DoClickAutoBoundary onmouseout=solidButton.SRC="solidup.bmp" onmousedown     =DoMouseDownAutoBoundary OnMouseUp="DoMouseUpAutoBoundary" Title="Add Automatic Boundary" style="FILTER: gray alpha(opacity=70); HEIGHT: 25px; LEFT: 252px; POSITION: absolute; TOP: 34px; WIDTH: 23px">
+
+<IMG	 BORDER=0 SRC="Buttup.bmp" NAME="lockXButton" Title="X Axis Lock (View Coordinates)"
+		 style="HEIGHT: 25px; LEFT: 309px; POSITION: absolute; TOP: 34px; WIDTH: 23px" OnClick=DoLockX>
+<span class=vlabel onclick=DoLockX
+style="CURSOR: default; HEIGHT: 16px; LEFT: 315px; POSITION: absolute; TOP: 38px; WIDTH: 16px">X</span>
+
+<IMG	 BORDER=0 SRC="buttup.bmp" NAME="lockZButton" Title="Z Axis Lock (View Coordinates)"
+		 style="HEIGHT: 25px; LEFT: 332px; POSITION: absolute; TOP: 34px; WIDTH: 23px" OnClick=DoLockZ>
+<span class=vlabel onclick=DoLockZ
+style="CURSOR: default; HEIGHT: 16px; LEFT: 338px; POSITION: absolute; TOP: 38px; WIDTH: 16px">Z</span>
+
+<span ID="SpanFloor" style="HEIGHT: 19px; LEFT: 424px; POSITION: absolute; TOP: 39px; VERTICAL-ALIGN: middle; WIDTH: 62px" class=vsmall>
+F:
+<INPUT  class=vsmall MAXLENGTH=20 NAME="FloorHeight" ID="FloorHeight" Title     = "Boundary Floor Height" style    ="HEIGHT: 20px; LEFT: 14px; POSITION: absolute; TOP: -3px; WIDTH: 50px" OnKeyDown="HandleTabAndEnter(3)" OnBlur="DoSetFloorAndCeiling" OnKeyPress="HandleKeypressForNumeric(3)" OnFocus="DoGetFocus">
+</span>&nbsp;
+<span ID="SpanCeiling" Title     = "Boundary Ceiling Height" style  ="HEIGHT: 18px; LEFT: 492px; POSITION: absolute; TOP: 39px; VERTICAL-ALIGN: middle; WIDTH: 62px" class=vsmall>
+C:
+<INPUT  class=vsmall MAXLENGTH=20 NAME="CeilingHeight" ID="CeilingHeight" style="HEIGHT: 20px; LEFT: 14px; POSITION: absolute; TOP: -3px; WIDTH: 50px"  OnKeyDown="HandleTabAndEnter(4)" OnBlur="DoSetFloorAndCeiling" OnKeyPress="HandleKeypressForNumeric(4)" OnFocus="DoGetFocus">
+</span>
+
+
+</body>
+</html>

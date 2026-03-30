@@ -1,0 +1,103 @@
+<html>
+<head>
+<title>Add Menu Item</title>
+<link rel=stylesheet href=../../../client/shared/global.css>
+<script language=vbs>
+
+sub OnOk
+	window.dialogArguments.menuName = MenuName.value
+	for each opt in document.all.tags("input")
+		if opt.type = "radio" then
+			if opt.checked then
+				window.dialogArguments.whichMenu = opt.value
+				exit for
+			end if
+		end if
+	next
+
+	window.dialogArguments.FinishMenu
+	window.close
+end sub
+
+sub OnHelp
+	dim world, helpstringsList
+	window.event.returnValue = false
+	on error resume next
+	set world = window.dialogArguments.world
+
+	set helpstringsList = world.global.CreatePropertyList
+	helpstringsList.add "Authoring"
+	helpstringsList.add "Object Explorer"
+	helpstringsList.add "Method Editor"
+	helpstringsList.add "Menu"
+	world.FireUIEvent world.user, "Help", helpstringsList
+end sub
+
+sub document_OnMouseOver
+	select case window.event.srcElement.className
+	case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	case "vHelp"
+		imgHelp.src="../../../client/shared/helpH.gif"
+	case else
+	end select
+end sub
+
+sub document_OnMouseOut
+	select case window.event.srcElement.className
+	case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	case "vHelp"
+		imgHelp.src="../../../client/shared/help.gif"
+	case else
+	end select
+end sub
+
+sub document_onkeypress
+	select case window.event.keyCode
+	case 27
+		window.close
+	case 13
+		if window.event.srcElement.tagName <> "BUTTON" and window.event.srcElement.tagName <> "A" then OnOK
+	case else
+	end select
+end sub
+
+</script>
+</head>
+<body class=vBody>
+	<div class=vLabel style=left:18;top:10;>Menu Item Name:</div>
+	<input id=MenuName class=vInput style=left:124;top:7;width:246;>
+	<fieldset style=position:absolute;left:18;top:30;height:113;width:352;padding-top:3;>
+		<input type=radio id=optMainMenu name=whichmenu value=Menu checked style=position:relative;left:6;>
+		<label class=vInputLbl for=optMainMenu>
+			&nbsp;Add item to the object's Menu&nbsp;
+		</label><br>
+		<input type=radio id=optPeerMenu name=whichmenu value=PeerMenu style=position:relative;left:6;>
+		<label class=vInputLbl for=optPeerMenu>
+			&nbsp;Add item to the object's PeerMenu&nbsp;
+		</label><br>
+		<input type=radio id=optContainerMenu name=whichmenu value=ContainerMenu style=position:relative;left:6;>
+		<label class=vInputLbl for=optContainerMenu>
+			&nbsp;Add item to the object's ContainerMenu&nbsp;
+		</label><br>
+		<input type=radio id=optContentMenu name=whichmenu value=ContentMenu style=position:relative;left:6;>
+		<label class=vInputLbl for=optContentMenu>
+			&nbsp;Add item to the object's ContentMenu&nbsp;
+		</label><br>
+		<input type=radio id=optSelfMenu name=whichmenu value=SelfMenu style=position:relative;left:6;>
+		<label class=vInputLbl for=optSelfMenu>
+			&nbsp;Add item to the object's SelfMenu&nbsp;
+		</label><br>
+	</fieldset>
+	<button class=bEnabled id=btnOK style=left:240;top:153; onclick=OnOK>
+		<span style=position:relative;top:-1;>OK</span>
+	</button>
+	<button class=bEnabled id=btnCancel style=left:310;top:153; onclick=window.close>
+		<span style=position:relative;top:-1;>Cancel</span>
+	</button>
+	<a id=lnkHelp onclick=OnHelp href="">
+		<img src=../../../client/shared/help.gif id=imgHelp class=vHelp style=top:153;>
+	</a>
+</body>
+</html>

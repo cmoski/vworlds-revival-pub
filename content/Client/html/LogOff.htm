@@ -1,0 +1,143 @@
+<html>
+<head>
+<title>Log Off Host Control</title>
+<link rel=stylesheet href=../shared/global.css>
+<script language=vbs>
+
+Public World, User, Target, TargetName
+Public sobjVWClient
+
+Private arrArgs
+arrArgs = Array()
+arrArgs = window.dialogArguments
+Set sobjVWClient = arrArgs(0).theclient.VWClient
+Set World = sobjVWClient.World
+Set User = World.User
+Set Target = arrArgs(1)
+TargetName = Target.Name
+
+Sub window_OnLoad
+	arrArgs(0).AddToEventList window
+	Document.All.Item("divDescription").innerText = "Reason for logging off " & TargetName & ":"
+	Document.All.Item("txtReason").focus
+End Sub
+
+sub window_OnUnload
+	If Not arrArgs(0).blnAppClosing Then
+		arrArgs(0).RemoveFromEventList window
+	end If
+end sub
+
+'======================================
+' Name: HandleUIEvent
+' Desc: Fires when the client gets a Handle UI event
+'--------------------------------------
+Sub HandleUIEvent(objFrom, strEventName, vntArgs)
+	Select Case strEventName
+	Case "vwCloseAllDialogs"
+			window.close
+	Case Else
+	End Select
+End Sub
+'======================================
+
+'Check if user has clicked return in the reason text box
+Sub DoLogOff
+	User.LogOff Target, txtReason.value
+	DoCancel
+end sub
+
+Sub DoCancel
+	window.close
+End Sub
+
+Sub OnHelp
+	Dim helpstringsList, client
+	window.event.returnValue = False
+	Set client = sobjVWClient
+	Set helpstringsList = World.global.CreatePropertyList
+	helpstringsList.add "host"
+	helpstringsList.add "logoff"
+	World.FireUIEvent Target, "Help", helpstringsList
+End Sub
+
+Sub document_onmouseover
+	Select Case window.event.srcElement.className
+	Case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	Case "vHelp"
+		imgHelp.src = "..\shared\helpH.gif"
+	Case Else
+	End Select
+End Sub
+
+Sub document_onmouseout
+	Select Case window.event.srcElement.className
+	Case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	Case "vHelp"
+		imgHelp.src = "..\shared\help.gif"
+	Case Else
+	End Select
+End Sub
+
+Sub document_onkeypress
+	Select Case window.event.keyCode
+	Case 27
+		DoCancel
+	Case 13
+		If window.event.srcElement.tagName <> "BUTTON" Then DoLogOff
+	Case 9
+		window.event.returnValue = False
+		Select Case window.event.srcElement.id
+		Case "txtReason"
+			If window.event.shiftKey Then
+				lnkHelp.focus
+			Else
+				btnOK.focus
+			End If
+		Case "btnOK"
+			If window.event.shiftKey Then
+				txtReason.focus
+				txtReason.select
+			Else
+				btnCancel.focus
+			End If
+		Case "btnCancel"
+			If window.event.shiftKey Then
+				btnOK.focus
+			Else
+				lnkHelp.focus
+			End If
+		Case "lnkHelp"
+			If window.event.shiftKey Then
+				btnCancel.focus
+			Else
+				txtReason.focus
+				txtReason.select
+			End If
+		case else
+			txtReason.focus
+			txtReason.select
+		end select
+	case else
+	end select
+end sub
+
+</SCRIPT>
+<SCRIPT LANGUAGE="JScript" SRC="common.htm"></SCRIPT>
+</head>
+<body>
+	<div id=divDescription class=vLabel style=left:18;top:7;></div>
+	<textarea id=txtReason class=vInput style=left:18;top:22;width:229;height:85;></textarea>
+	<button class=bEnabled id=btnCancel onclick=DoCancel style=left:186;top:120;>
+		<span style=position:relative;top:-1;>Cancel</span>
+	</button>
+	<button class=bEnabled id=btnOK onclick=DoLogOff style=left:116;top:120;>
+		<span style=position:relative;top:-1;>OK</span>
+	</button>
+	<a id=lnkHelp onclick=OnHelp href="">
+		<img src=../shared/help.gif id=imgHelp class=vHelp style=top:120;>
+	</a>
+</BODY>
+</HTML>

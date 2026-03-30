@@ -1,0 +1,90 @@
+<HTML>
+<head>
+<meta http-equiv="Expires" content="0">
+<title>V-Worlds Main Frameset</title></head>
+
+<SCRIPT LANGUAGE="VBScript">
+
+function OnConnectFromDS(vwsURL)
+	on error resume next
+	dim curAvatarName
+	dim didit
+	dim theWorld
+	set theWorld = top.theclient.vwclient.world
+	didit = false
+	If top.sstrWorldURL = vwsURL Then
+		MsgBox "You are already connected to " & vwsURL, vbOkOnly + vbInformation, "Microsoft Virtual Worlds"
+	Else
+		curAvatarName = theWorld.user.profile.keyValue("PreferredName")
+		window.status="Loading world..."
+		top.bIntentionalDisconnect = true
+		top.htmlpopup.closeall
+		err.clear
+		theWorld.reconnect vwsURL, curAvatarName, theWorld.user.password
+		if err.number < 0 then
+			msgbox "Directory Service connection failed:(" & err.description & ")", 0, "Microsoft Virtual Worlds"
+		else
+			top.sstrWorldURL = vwsURL
+			didIt = true
+		end if
+	End If
+	OnConnectFromDS = didit
+end function
+
+dim bInited
+bInited = false
+
+
+sub Initialize()
+	LeftPaneFrame.Initialize()
+	RightPaneFrame.Initialize()
+	bInited = true
+	DoPosition
+end sub
+
+
+dim iReadyCount
+iReadyCount = 0
+
+sub ChildReady(theWin)
+	if bInited = true then
+		theWin.Initialize()
+	else
+		iReadyCount = iReadyCount + 1
+		if iReadyCount >= 3 then
+			iReadyCount = 3
+			parent.ChildReady(window)
+		end if
+	end if
+end sub
+
+sub window_onload
+	DoPosition
+	window.name = "body"
+	ChildReady(window)
+end sub
+
+
+sub window_onresize
+	DoPosition
+end sub
+
+sub DoPosition
+	leftWidth = document.body.offsetWidth - 174
+	if leftWidth < 50 then
+		leftWidth = 50
+	end if
+	document.all("LeftPaneFrame").style.width=leftWidth
+	document.all("RightPaneFrame").style.left=leftWidth + 1
+end sub
+
+</SCRIPT>
+
+<BODY bgcolor="0" LEFTMARGIN=0 TOPMARGIN=0  RIGHTMARGIN=0  BOTTOMMARGIN=0 SCROLL=NO>
+<IFRAME NAME="LeftPaneFrame" style="position:absolute;top:0" ID="LeftPaneFrame" SRC="left.htm" HSPACE=0 BORDER=0 FRAMESPACING=0 VSPACE=0 MARGINHEIGHT=0 MARGINWIDTH=0 scrolling="no" noresize height=100% frameborder="no">
+</IFRAME>
+<IFRAME ID="RightPaneFrame" style="position:absolute;top:0" SRC="userview.htm" HSPACE=0 BORDER=0 FRAMESPACING=0 VSPACE=0 MARGINHEIGHT=0 MARGINWIDTH=0 scrolling="no" noresize height=100% width=174 frameborder="no">
+</IFRAME>
+</BODY>
+
+</HTML>

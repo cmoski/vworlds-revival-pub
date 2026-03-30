@@ -1,0 +1,4 @@
+style_name:STRING,description:STRING,previewGIF:STRING,gifInfo:STRING,geometry:STRING,quota:INTEGER
+'Valley','The valley world represents a large exterior field surrounded by mountains. The valley consists of  one room, an outdoor space.  The valley is designed as a ready-to-use environment and has an entry-point object (these move avatars to their original spot upon entering the world).','valley.gif','View of the Valley:','empty.3ds',15
+'Hill Top','The hill top world represents a large exterior meadow surrounded by trees and distant mountains.  It consists of  one room, an outdoor space.  The hilltop is designed as a ready-to-use environment and has an entry-point object (these move avatars to their original spot upon entering the world).
+.','hilltop.gif','View of the Hill Top:','empty.3ds',20

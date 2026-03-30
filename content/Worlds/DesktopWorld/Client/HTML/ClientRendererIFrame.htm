@@ -1,0 +1,271 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//  File:			ClientRendererIFrame.htm
+'//  Description:	This file contains the 3-D renderer control, showing the world
+'//					model to the user.	This file is the hosted in the client.htm file.
+'////////////////////////////////////////////////////////////////////////-->
+<html>
+<head>
+<meta http-equiv="Expires" content="0">
+<title>V-Worlds Renderer Pane</title>
+<link rel=stylesheet href=../shared/global.css>
+</head>
+
+<script language="VBScript">
+
+option explicit
+
+dim boundaryEditorOpen
+dim objectExplorerOpen
+dim authorTabOpen
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		window_onload
+'//  Purpose:	initialize the 3d renderer
+'////////////////////////////////////////////////////////////////////////
+sub window_onload
+	dim vwclient
+	if not top.isWorldLoaded then
+		window.setTimeout "window_onload", 500, "vbs"
+		exit sub
+	end if
+
+	set vwclient = top.theclient.vwclient
+	top.AddToEventList window
+
+	vwclient.world.global.EnableAutoDownload = CBool(top.bAutoDownloadAvatars)
+	Vwsound.vwclient = vwclient
+
+	set VWSound.RenderRoot = renderer
+	vwsound.enable = true
+
+	' Set necessary renderer options before renderer is fully initialized (via client set)
+	if CInt(top.iUseHWAcceleration) = 0 then
+		renderer.renderroot.UseHWAcceleration = false
+	elseif CInt(top.iUseHWAcceleration) = 1 then
+		renderer.renderroot.UseHWAcceleration = true
+	end if
+	if CInt(top.iDrawFastWhenMoving) = 0 then
+		renderer.renderroot.fastmodeenabled = false
+	end if
+	if CInt(top.iColorModel) > -1 then
+		renderer.renderroot.colormodel = CInt(top.iColorModel)
+	end if
+	
+	' hard-code forceBackBuffer to work around a video card problem that prevents clicking in 16-bit color
+	renderer.renderroot.ForceBackBuffer = True
+
+	' NOTE: It is essential that this happens here so we don't create the device multiple
+	' times as we set the renderer options.
+	renderer.vwclient = vwclient
+
+'	' Turn hardware acceleration on or off
+'	if renderer.renderroot.UseHWAcceleration then
+'		top.iUseHWAcceleration = 1
+'	else
+'		' Alert the user if we did not get HW acceleration even though we requested it
+'		if CInt(top.iUseHWAcceleration) = 1 then
+'			vwclient.world.user.Alert "Hardware Acceleration", "No hardware acceleration found, reverting to software."
+'		end if
+'		top.iUseHWAcceleration = 0
+'	end if
+
+	' force hardware acceleration on
+	renderer.renderroot.UseHWAcceleration = true
+	top.iUseHWAcceleration = 1
+
+
+	top.SetRenderControl renderer
+
+	objectExplorerOpen = 0
+	boundaryEditorOpen = 0
+	authorTabOpen = 0
+	
+	' Set the user's avatar scale really tiny so they can't move in overview mode;
+	' the avatar actually can move but the movement is insignificant at that scale.
+	' This is kind of a hack but it does the trick.
+	vwclient.world.user.getFrame.setScale vwclient.world.user.container.getFrame, 0.0001, 0.0001, 0.0001
+end sub
+
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		window_onUnload
+'//  Purpose:	removes this page from the event list, releases memory for the 
+'//				render object
+'////////////////////////////////////////////////////////////////////////
+sub window_OnUnload
+	top.RemoveFromEventList window
+	top.SetRenderControl Nothing
+end sub
+
+
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		UpdateFromPrefs
+'//  Purpose:	sets the render object to the preferences
+'//  Called by: vworlds client
+'////////////////////////////////////////////////////////////////////////
+Sub UpdateFromPrefs
+	top.ClientWorldPtr.global.EnableAutoDownload = CBool(top.bAutoDownloadAvatars)
+
+	' Have to be careful here. Each property set on the renderer can cause a
+	' device rebuild if the renderer is fully initialized.
+	if CInt(top.iUseHWAcceleration) = 0 and renderer.renderroot.UseHWAcceleration then
+		renderer.renderroot.UseHWAcceleration = false
+	elseif CInt(top.iUseHWAcceleration) = 1 and not renderer.renderroot.UseHWAcceleration then
+		renderer.renderroot.UseHWAcceleration = true
+		if not renderer.renderroot.UseHWAcceleration then
+			top.ClientUserPtr.Alert "Hardware Acceleration", "No hardware acceleration found, reverting to software."
+		end if
+	end if
+	if CInt(top.iDrawFastWhenMoving) = 1 and renderer.editmode <> 2 then
+		' Boundary edit mode always switches off fast mode.
+		renderer.renderroot.fastmodeenabled = true
+	else
+		renderer.renderroot.fastmodeenabled = false
+	end if
+	if CInt(top.iColorModel) > -1 then
+		if not(renderer.renderroot.vwrender3d is Nothing) then
+			if renderer.renderroot.vwrender3d.colormodel <> CInt(top.iColorModel) then
+				renderer.renderroot.colormodel = CInt(top.iColorModel)
+			end if
+		else
+			renderer.renderroot.colormodel = CInt(top.iColorModel)
+		end if
+	end if
+
+	' We may not have gotten HW acceleration even though we requested it.
+	if renderer.renderroot.UseHWAcceleration then
+		top.iUseHWAcceleration = 1
+	else
+		top.iUseHWAcceleration = 0
+	end if
+
+	vwsound.enable = true
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		EditModeHelper
+'//  Purpose:	
+'////////////////////////////////////////////////////////////////////////
+sub EditModeHelper
+	if authorTabOpen > 0 OR objectExplorerOpen > 0 OR boundaryEditorOpen > 0 then
+		renderer.ShowSelection = TRUE
+	else
+		renderer.ShowSelection = FALSE
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		SetAuthoringStatus(stat)
+'//  Purpose:	changes the editing mode for the world
+'//	 Param:
+'//		stat	- <> 
+'////////////////////////////////////////////////////////////////////////
+sub SetAuthoringStatus(stat)
+	Dim world
+
+	set world = top.ClientWorldPtr
+	authorTabOpen = stat
+	EditModeHelper
+
+	world.global.editingmode = CLng(stat)
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		SetObjectExplorerStatus(stat)
+'//  Purpose:	?	
+'//	 Param:
+'//		stat	- <> 
+'////////////////////////////////////////////////////////////////////////
+sub SetObjectExplorerStatus(stat)
+	objectExplorerOpen	 = stat
+	EditModeHelper
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		renderer_AlphaKeyPressed(theChar)
+'//  Purpose:	give the key to the chat	
+'//	 Param:
+'//		theChar		- <string> key code
+'////////////////////////////////////////////////////////////////////////
+sub renderer_AlphaKeyPressed(theChar)
+	if theChar <> 10 then
+		top.SendKeyToTextEntry theChar
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		HandleUIEvent(byval who, what, byval args)
+'//  Purpose:	gets events from the world
+'//	 Param:
+'//		who		- <user object> who the event is from
+'//		what	- <string> stream id of the event
+'//		args	- <array> list of arguments
+'////////////////////////////////////////////////////////////////////////
+sub HandleUIEvent(byval who, what, byval args)
+	dim hWnd, x, y
+	dim frameList, frame, obj
+	if what = "avatarLButtonUp" then
+		hWnd = args(0)
+		x = args(1)
+		y = args(2)
+		on error resume next
+		' undocumented magic to retrieve a propList of frames that lie behind the click point.
+		set frameList = renderer.renderroot.vwrender3d.hittest(CLng((65536 * y) + x),true)
+		if err.Number <> 0 then 
+			set frameList = Nothing
+			err.clear
+		end if
+		if not (frameList is Nothing) then
+			' find the frame of the first thing that is not part of an avatar and force a click on that object;
+			' Note: we have to avoid ALL avatars, not just the user, otherwise we would create a feedback loop.
+			for each frame in frameList
+				set obj = frame.thing
+				if (obj.container.type <> "Avatar") and (obj.container.type <> "SampleAvatar") then
+					if obj.IsValidMethod("onLButtonUp") then
+						obj.onLButtonUp hWnd, x, y
+						exit sub
+					end if
+				end if
+			next
+		end if
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		Renderer_ToolEvent(theChar)
+'//  Purpose:		
+'//	 Param:
+'//		eventNum
+'//		what
+'//		arg1
+'//		arg2
+'//		arg3
+'////////////////////////////////////////////////////////////////////////
+sub Renderer_ToolEvent(eventNum, what, arg1, arg2, arg3)
+	toolbar.ToolEvent eventNum, what, arg1, arg2, arg3
+end sub
+
+</script>
+
+<body bgcolor="#FFFFFF" class=ClientBackgroundDark>
+
+<object id=renderer style="position:absolute;top:0;left:0;
+		height:expression(document.body.offsetHeight);
+		width:expression(document.body.offsetWidth);"
+	classid="clsid:44FAC783-0CA4-11D0-89A9-00A0C9054129"
+	border=0
+	width=100%
+	height=100%>
+</object>
+
+<OBJECT classid="CLSID:05769B8C-A180-11D1-83E9-00C04FB6FA46" height=0 id=Vwsound style="LEFT: 0px; TOP: 0px" width=0></OBJECT>
+
+</body>
+</html>

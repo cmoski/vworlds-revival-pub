@@ -1,0 +1,485 @@
+<html>
+<head>
+<link rel=stylesheet href=..\..\..\client\shared\global.css>
+<script language=vbs>
+
+Option Explicit
+
+Public ctlBottom, ctlTop, fIsDirty, oWorld, target
+dim bLoaded
+bLoaded = false
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+Sub window_onload
+	Dim tVector, curTarget
+	Set target = parent.Helper.Arg
+	Set oWorld = parent.Helper.client.world
+	Set ctlTop = lstRoom
+	Set ctlBottom = txtRadius
+	If target.CheckPropertySecurity("Destinations", oWorld.PS_WRITE) = False Then
+		lstRoom.disabled = True
+		lstPortal.disabled = True
+		Set ctlTop = txtPosX
+	End If
+	' update the destinations field
+	PopulateRoomList
+	If target.destinations.count = 0 Then	' no portal set
+		lstRoom.value = -1
+		PopulatePortalList
+	Else
+		Set curTarget = target.destinations.property(0)
+		Err.Clear
+		On Error Resume Next
+		lstRoom.value = oWorld.global.GetContainerID(curTarget.id)
+		If Err.Number = -2147219961 Then
+			Err.Clear
+			MsgBox "The destination portal, """ & curTarget.name & """, can not be located.", vbExclamation, _
+				"Microsoft Virtual Worlds"
+			lstRoom.value = -1
+			PopulatePortalList
+		Else
+			Err.Clear
+			PopulatePortalList
+			lstPortal.value = curTarget.id
+		End If
+	End If
+	' update entry point
+	Set tVector = target.EntryPoint
+	txtPosX.value = tVector.x
+	txtPosY.value = tVector.y
+	txtPosZ.value = tVector.z
+	If target.CheckPropertySecurity("EntryPoint", oWorld.PS_WRITE) = False Then
+		txtPosX.readOnly = True
+		txtPosX.style.color = "gray"
+		txtPosY.readOnly = True
+		txtPosY.style.color = "gray"
+		txtPosZ.readOnly = True
+		txtPosZ.style.color = "gray"
+	End If
+	' update entry orientation
+	Set tVector = target.EntryOrientation
+	txtDirX.value = tVector.x
+	txtDirY.value = tVector.y
+	txtDirZ.value = tVector.z
+	If target.CheckPropertySecurity("EntryOrientation", oWorld.PS_WRITE) = False Then
+		txtDirX.readOnly = True
+		txtDirX.style.color = "gray"
+		txtDirY.readOnly = True
+		txtDirY.style.color = "gray"
+		txtDirZ.readOnly = True
+		txtDirZ.style.color = "gray"
+	End If
+	' update entryRadius
+	txtRadius.value = target.EntryRadius
+	If target.CheckPropertySecurity("EntryRadius", oWorld.PS_WRITE) = False Then
+		txtRadius.readOnly = True
+		txtRadius.style.color = "gray"
+	End If
+	InitFocus
+	fIsDirty = False
+	bLoaded = true
+End Sub
+
+Sub InitFocus
+	If parent.fraTabs.fMouseClicked Then
+		If Not lstRoom.disabled Then
+			lstRoom.focus
+		Else
+			txtPosX.focus
+			txtPosX.select
+		End If
+		parent.fraTabs.fMouseClicked = False
+	End If
+End Sub
+
+Sub lstRoom_onchange
+	PopulatePortalList
+	If Not fIsDirty Then
+		parent.PageDirty
+		fIsDirty = True
+	End If
+End Sub
+
+Sub lstPortal_onchange
+	If Not fIsDirty Then
+		parent.PageDirty
+		fIsDirty = True
+	End If
+End Sub
+
+Function PosInList(tagName, sItem)
+	Dim i
+	PosInList = tagName.length
+	For i = 0 To tagName.length - 1
+		If StrComp(sItem, tagName.options.item(i).text, vbTextCompare) = -1 Then
+			PosInList = i
+			Exit For
+		End If
+	Next
+End Function
+
+Sub PopulateRoomList
+	Dim rooms, room, el
+	dim i, roomnames, roomids, curID
+	i = 0
+	Do While lstRoom.length > 0
+		lstRoom.Remove(0)
+	Loop
+	If TypeName(oWorld) <> "IWorld" Then Exit Sub
+	Set rooms = oWorld.global.rooms
+	set roomids = oWorld.global.createpropertylist
+	for each room in rooms
+		roomids.add room.id
+	next
+	set roomnames = oWorld.global.GetNamesFromIDs(roomids)
+	'Enumerate rooms
+	Set el = document.createElement("OPTION")
+	el.value = -1
+	el.text = "<Not Set>"
+	lstRoom.add el
+
+	' Do not show current room as possible destination
+	' Nothing will happen in that case (reenak)
+	For Each curID In roomids
+		If curID <> oWorld.User.Container.ID then
+			Set el = document.createElement("OPTION")
+			el.value = curID
+			el.text = roomnames.property(i)
+			lstRoom.add el, PosInList(lstRoom, el.text)
+		End if
+		i = i + 1
+	Next
+'this is causing a flicker in the listbox, it may be redundant, Stephen
+'	lstRoom.selectedIndex = 0
+End Sub
+
+Sub PopulatePortalList
+	Dim curRoomID, portalIDList, portalNameList, i, el
+	Do While lstPortal.length > 0
+		lstPortal.Remove(0)
+	Loop
+	curRoomID = CLng(lstRoom.value)
+	If curRoomID > 0 Then
+		Set portalIDList = oWorld.global.GetPortalIDs(curRoomID)
+		Set portalNameList = oWorld.global.GetNamesFromIDs(portalIDList)
+		If portalIDList.count <> 0 Then
+			For i = 0 To portalIDList.count - 1
+				Set el = document.createElement("OPTION")
+				el.value = portalIDList.property(i)
+				el.text = portalNameList.property(i)
+				lstPortal.add el, PosInList(lstPortal, el.text)
+				lstPortal.value = el.value
+			Next
+			EnablePortalUI True
+		Else
+			EnablePortalUI False
+		End If
+	Else
+		EnablePortalUI False
+	End If
+'this is causing a flicker in the listbox, it may be redundant, Stephen
+'	lstPortal.selectedIndex = 0
+End Sub
+
+Sub EnablePortalUI(fEnabled)
+	Dim ctl
+	If fEnabled Then
+		lblNoPortal.style.display = "none"
+		divPosition.style.top = 79
+		lblPortal.style.color = ""
+		For Each ctl In divPosition.all
+			ctl.style.color = ""
+		Next
+	Else
+		If CInt(lstRoom.value) <> -1 Then
+			divPosition.style.top = 144
+			lblNoPortal.style.display = ""
+		End If
+		lblPortal.style.color = "gray"
+		For Each ctl In divPosition.all
+			ctl.style.color = "gray"
+		Next
+	End If
+	If Not lstRoom.disabled Then lstPortal.disabled = Not fEnabled
+	txtPosX.readOnly = Not fEnabled
+	txtPosY.readOnly = Not fEnabled
+	txtPosZ.readOnly = Not fEnabled
+	txtDirX.readOnly = Not fEnabled
+	txtDirY.readOnly = Not fEnabled
+	txtDirZ.readOnly = Not fEnabled
+	txtRadius.readOnly = Not fEnabled
+End Sub
+
+Sub window_onunload
+End Sub
+
+Sub Reset
+	window_onload
+End Sub
+
+Sub Apply
+	' destination
+	if bLoaded = false or fIsDirty = false then
+		exit sub
+	end if
+	'If the portal list is enabled or the dest has been reset to nothing, update
+	If (Not(lstPortal.disabled)) Or (lstPortal.value = "") Then
+		If CLng(lstRoom.value) = -1 Then
+			If target.Destinations.Count > 0 Then
+				target.Destinations.RemoveAt(0)
+			End If
+		ElseIf lstPortal.options.length > 0 Then
+			target.SetDestinationByID CLng(lstPortal.value)
+		End If
+	End If
+	' entryPoint
+	If Not txtPosX.readOnly And Not txtPosY.readOnly And Not txtPosZ.readOnly Then
+		target.EntryPoint.set CSng(txtPosX.value), CSng(txtPosY.value), CSng(txtPosZ.value)
+	End If
+	' entryOrientation
+	If Not txtDirX.readOnly And Not txtDirY.readOnly And Not txtDirZ.readOnly Then
+		target.EntryOrientation.set CSng(txtDirX.value), CSng(txtDirY.value), CSng(txtDirZ.value)
+	End If
+	' entryRadius
+	If Not txtRadius.readOnly Then target.EntryRadius = CSng(txtRadius.value)
+	fIsDirty = false
+End Sub
+
+Function GetHelpURL
+	GetHelpURL = "vworlds.chm::/uiref/proppage/portal.htm>sdkall"
+End Function
+
+Function verify
+	verify = True
+	If document.readyState = "complete" Then
+		If Not ValidVectorVal(txtPosX, "Entry point X", 1000) Then
+			verify = False
+		ElseIf Not ValidVectorVal(txtPosY, "Entry point Y", 1000) Then
+			verify = False
+		ElseIf Not ValidVectorVal(txtPosZ, "Entry point Z", 1000) Then
+			verify = False
+		ElseIf Not ValidVectorVal(txtDirX, "Facing vector X", 1000) Then
+			verify = False
+		ElseIf Not ValidVectorVal(txtDirY, "Facing vector Y", 1000) Then
+			verify = False
+		ElseIf Not ValidVectorVal(txtDirZ, "Facing vector Z", 1000) Then
+			verify = False
+		ElseIf Not ValidVectorVal(txtRadius, "Scatter distance", 1000) Then
+			verify = False
+		End if
+	End If
+End Function
+
+Function ValidVectorVal(control, sDesc, iMaxVal)
+	ValidVectorVal = True
+	If Len(control.value) = 0 Then
+		MsgBox "The " & sDesc & " value is missing. Re-enter the value.", vbInformation, "Microsoft Virutal Worlds"
+		control.focus
+		ValidVectorVal = False
+	ElseIf Not IsNumeric(control.value) Or Right(control.value, 1) = "-" Then
+		control.select
+		MsgBox "Not a valid " & sDesc & " value. Re-enter the value.", vbExclamation, "Microsoft Virtual Worlds"
+		control.focus
+		ValidVectorVal = False
+	ElseIf CDbl(control.value) >= iMaxVal Then
+		control.select
+		MsgBox "The " & sDesc & " value must be less than " & iMaxVal & ". Re-enter the value.", vbExclamation, _
+			"Microsoft Virtual Worlds"
+		control.focus
+		ValidVectorVal = False
+	ElseIf CDbl(control.value) <= -(iMaxVal) Then
+		control.select
+		MsgBox "The " & sDesc & " value must be greater than -" & iMaxVal & ". Re-enter the value.", vbExclamation, _
+			"Microsoft Virtual Worlds"
+		control.focus
+		ValidVectorVal = False
+	End if
+End Function
+
+Sub document_onkeypress
+	Select Case window.event.keyCode
+	Case 27
+		parent.btnCancel.click
+	Case 13
+		parent.btnOK.click
+	Case 9
+		window.event.returnValue = False
+		Select Case window.event.srcElement.id
+		Case "lstRoom"
+			If window.event.shiftKey Then
+				parent.Tabs.ctlBottom.focus
+			Else
+				If Not lstPortal.disabled Then
+					lstPortal.focus
+				Else
+					txtPosX.focus
+					txtPosX.select
+				End If
+			End If
+		Case "lstPortal"
+			If window.event.shiftKey Then
+				lstRoom.focus
+			Else
+				txtPosX.focus
+				txtPosX.select
+			End If
+		Case "txtPosX"
+			If window.event.shiftKey Then
+				If Not lstPortal.disabled Then
+					lstPortal.focus
+				ElseIf Not lstRoom.disabled Then
+					lstRoom.focus
+				Else
+					parent.Tabs.ctlBottom.focus
+				End If
+			Else
+				txtPosY.focus
+				txtPosY.select
+			End If
+		Case "txtPosY"
+			If window.event.shiftKey Then
+				txtPosX.focus
+				txtPosX.select
+			Else
+				txtPosZ.focus
+				txtPosZ.select
+			End If
+		Case "txtPosZ"
+			If window.event.shiftKey Then
+				txtPosY.focus
+				txtPosY.select
+			Else
+				txtDirX.focus
+				txtDirX.select
+			End If
+		Case "txtDirX"
+			If window.event.shiftKey Then
+				txtPosZ.focus
+				txtPosZ.select
+			Else
+				txtDirY.focus
+				txtDirY.select
+			End If
+		Case "txtDirY"
+			If window.event.shiftKey Then
+				txtDirX.focus
+				txtDirX.select
+			Else
+				txtDirZ.focus
+				txtDirZ.select
+			End If
+		Case "txtDirZ"
+			If window.event.shiftKey Then
+				txtDirY.focus
+				txtDirY.select
+			Else
+				txtRadius.focus
+				txtRadius.select
+			End If
+		Case "txtRadius"
+			If window.event.shiftKey Then
+				txtDirZ.focus
+				txtDirZ.select
+			Else
+				parent.ctlTop.focus
+			End If
+		Case Else
+			If Not lstRoom.disabled Then
+				lstRoom.focus
+			Else
+				txtPosX.focus
+				txtPosX.select
+			End If
+		End Select
+	Case Else
+		Select Case window.event.srcElement.id
+		Case "txtPosX", "txtPosY", "txtPosZ"
+			Select Case window.event.keyCode
+			Case 8, 45, 46	'backspace, minus, period
+			Case 48, 49, 50, 51, 52, 53, 54, 55, 56, 57 'number
+			Case Else
+				window.event.returnValue = False
+			End Select
+			If window.event.returnValue = "" And Not txtPosX.readOnly Then
+				If Not fIsDirty Then
+					parent.PageDirty
+					fIsDirty = True
+				End If
+			End If
+		Case "txtDirX", "txtDirY", "txtDirZ"
+			Select Case window.event.keyCode
+			Case 8, 45, 46	'backspace, minus, period
+			Case 48, 49, 50, 51, 52, 53, 54, 55, 56, 57 'number
+			Case Else
+				window.event.returnValue = False
+			End Select
+			If window.event.returnValue = "" And Not txtDirX.readOnly Then
+				If Not fIsDirty Then
+					parent.PageDirty
+					fIsDirty = True
+				End If
+			End If
+		Case "txtRadius"
+			Select Case window.event.keyCode
+			Case 8, 46	'backspace, period
+			Case 48, 49, 50, 51, 52, 53, 54, 55, 56, 57 'number
+			Case Else
+				window.event.returnValue = False
+			End Select
+			If window.event.returnValue = "" And Not txtRadius.readOnly Then
+				If Not fIsDirty Then
+					parent.PageDirty
+					fIsDirty = True
+				End If
+			End If
+		Case else
+		End Select
+	End Select
+End Sub
+
+</script>
+</head>
+<body>
+	<div id=lblDesc1 class=vLabel style=left:13;top:7;>Portal connects to:</div>
+	<div id=lblRoom class=vLabel style=left:76;top:30;>Room:</div>
+	<select id=lstRoom class=vInput style=left:120;top:27;width:216;></select>
+	<div id=lblPortal class=vLabel style=left:76;top:53;>Portal:</div>
+	<select id=lstPortal class=vInput style=left:120;top:50;width:216;></select>
+	<div id=lblNoPortal class=vLabel style=left:13;top:79;width:340;display:none;>
+		The room selected does not have any portals.<br>
+		Portals can only link to other portals. You can teleport to the selected room and create a portal, teleport back to the original room, then link your portals.
+	</div>
+	<div id=divPosition style=position:absolute;left:0;top:79;>
+		<div id=lblDesc2 class=vLabel style=left:13;top:0;>If an avatar enters the room through this portal:</div>
+		<div id=lblEntryPoint class=vLabel style=left:19;top:23;>Entry point:</div>
+		<div id=lblPosX class=vLabel style=left:107;top:23;>X:</div>
+		<input id=txtPosX class=vInput style=left:120;top:20;width:60; maxlength=8>
+		<div id=lblPosY class=vLabel style=left:186;top:23;>Y:</div>
+		<input id=txtPosY class=vInput style=left:198;top:20;width:60; maxlength=8>
+		<div id=lblPosZ class=vLabel style=left:263;top:23;>Z:</div>
+		<input id=txtPosZ class=vInput style=left:276;top:20;width:60; maxlength=8>
+		<div id=lbl2 class=vLabel style=left:19;top:46;>Facing vector:</div>
+		<div id=lblDirX class=vLabel style=left:107;top:46;>X:</div>
+		<input id=txtDirX class=vInput style=left:120;top:43;width:60; maxlength=8>
+		<div id=lblDirY class=vLabel style=left:186;top:46;>Y:</div>
+		<input id=txtDirY class=vInput style=left:198;top:43;width:60; maxlength=8>
+		<div id=lblDirZ class=vLabel style=left:263;top:46;>Z:</div>
+		<input id=txtDirZ class=vInput style=left:276;top:43;width:60; maxlength=8>
+		<div id=lblRadiusA class=vLabel style=left:26;top:69;>Scatter around entry point by</div>
+		<input id=txtRadius class=vInput style=left:198;top:66;width:60; maxlength=7>
+		<div id=lblRadiusB class=vLabel style=left:261;top:69;>units.</div>
+	</div>
+</body>
+</html>

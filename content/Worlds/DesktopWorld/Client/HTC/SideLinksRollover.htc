@@ -1,0 +1,151 @@
+'////////////////////////////////////////////////////////////////////////
+'//  File:		SideLinksRollover.htc
+'//  Purpose:	Rollover functionality for legend/sidelink "buttons" 
+'////////////////////////////////////////////////////////////////////////
+
+<public:attach event=onmouseover onevent=DoOnMouseOver() />
+<public:attach event=onmouseout onevent=DoOnMouseOut() />
+<public:attach event=onclick onevent=DoOnClick() />
+
+<script language="vbscript">
+option explicit
+
+'////////////////////////////////////////////////////////////////////////
+'//  Set the element as the btnSpan object
+'////////////////////////////////////////////////////////////////////////
+
+SetElement
+
+sub SetElement
+	' on error resume next is used here because in some cases element is undefined;
+	' this problem was not fully investigated.
+	On Error Resume Next
+	' element is a given to the behavior script
+	dim btnSpan
+	set btnSpan = element
+	' when the btnSpan is of type MenuII we have to dig down until we find
+	' the MenuII_Title element
+	if btnSpan.className = "MenuII" then
+		dim child
+		for each child in btnSpan.children
+			if child.getAttribute("origClass") = "MenuII_Title" then
+				set btnSpan = child			
+			end if
+		next
+	end if
+	set btnSpan = nothing		
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  DoOnMouseOver()
+'//  Purpose:  When the mouse is over the span, change the button Class to
+'//             its hoverClass (if there is one).
+'////////////////////////////////////////////////////////////////////////
+sub DoOnMouseOver()
+	' element is a given to the behavior script
+	dim btnSpan
+	set btnSpan = element
+	dim HoverClass
+	HoverClass = btnSpan.getAttribute ("hoverClass")
+	' if HoverClass is not specified do nothing
+	if HoverClass <> "" then
+		' if the btnSpan is of type clickClass ignore
+		if btnSpan.className <> btnSpan.getAttribute("clickClass") then
+			btnSpan.className = HoverClass
+		end if
+    end if
+	set btnSpan = nothing	
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  DoOnMouseOut()
+'//  Purpose:  When the mouse moves off the button, change back to original button class.
+'////////////////////////////////////////////////////////////////////////
+sub DoOnMouseOut()
+	' element is a given to the behavior script
+	dim btnSpan
+	set btnSpan = element
+	dim OrigClass
+	OrigClass = btnSpan.getAttribute ("origClass")
+	' if OrigClass is not specified do nothing
+	if OrigClass <> "" then
+		' if the btnSpan is of type clickClass ignore
+		if btnSpan.className <> btnSpan.getAttribute("clickClass") then
+			btnSpan.ClassName = OrigClass
+		end if
+    end if
+	set btnSpan = nothing
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		DoOnClick()
+'//  Purpose:	When the button is clicked, set the Class to the pressedClass
+'//				button (if specified).
+'////////////////////////////////////////////////////////////////////////
+sub DoOnClick()
+	' element is a given to the behavior script
+	dim btnSpan
+	set btnSpan = element
+	dim ClickClass
+	dim btnFunc
+	' if the avatar is not auto-navigating from one area to another
+	if top.NavigationEnabled then
+		ClickClass = btnSpan.getAttribute ("clickClass")
+		' if there is no ClickClass attribute, ignore
+		if ClickClass <> "" then
+			dim elem			
+			for each elem in window.document.all
+				' if we are dealing with arrow bullets, change all to reg arrow
+				if InStr(elem.className,"bltArrow") > 0 and _
+				InStr(btnSpan.getAttribute("origClass"),"MenuI") > 0 then
+					dim bltOrig
+					bltOrig = elem.getAttribute ("bltOrig")
+					if bltOrig <> "" then
+						if btnSpan.getAttribute("origClass") = elem.parentElement.getAttribute("origClass") then
+							elem.innerText = bltOrig
+						end if
+					end if
+					' change the arrow for the btnSpan that was clicked to bltClick	
+					if elem.parentElement.id = btnSpan.id then
+						dim bltClick
+						bltClick = elem.getAttribute ("bltClick")
+						if bltClick <> "" then
+			 				elem.innerText = bltClick
+						end if
+					end if					
+				end if
+				' for all elems of the same origClass as btnSpan (peers), change back to norm	
+				if elem.getAttribute("origClass") = btnSpan.getAttribute("origClass") then
+					if elem.className = elem.getAttribute ("clickClass") then
+						elem.className = elem.getAttribute ("origClass")
+						elem.style.behavior = ""							
+					end if
+				end if
+			next
+			set elem = nothing
+
+			' exec the onClick "func" attribute for the btnSpan	
+			btnFunc = btnSpan.getAttribute ("func")
+			if btnFunc <> "" _
+			and (btnSpan.getAttribute("clickClass") <> btnSpan.className _
+			or btnSpan.getAttribute("clickClass") = "") then
+				execScript btnFunc, "vbscript"
+			end if
+			
+			' change the look of the btnSpan to the ClickClass
+			btnSpan.className = ClickClass
+			
+    	elseif btnSpan.getAttribute ("func") <> "" _
+		and btnSpan.className = "MenuIII_Help" then
+			execScript btnSpan.getAttribute ("func"), "vbscript"
+		end if
+	end if
+	set btnSpan = nothing
+end sub
+
+</script>
+
+
+  

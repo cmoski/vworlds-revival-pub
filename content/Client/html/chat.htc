@@ -1,0 +1,55 @@
+<public:attach event=onmouseover onevent=DoMouseOver() />
+<public:attach event=onmouseout onevent=DoMouseOut() />
+<public:attach event=onclick onevent=DoClick() />
+
+<script language=vbs>
+Option Explicit
+
+'======================================
+' Name: DoMouseOver
+' Desc:
+'--------------------------------------
+Sub DoMouseOver
+	If element.enabled Then
+		element.src = element.mOver
+		window.status = window.event.srcElement.alt & " text to others"
+	Else
+		element.style.cursor = "default"
+	End If
+End Sub
+'======================================
+
+
+'======================================
+' Name: DoMouseOut
+' Desc:
+'--------------------------------------
+Sub DoMouseOut
+	If element.enabled Then
+		element.src = element.mOut
+		window.status = ""
+	End If
+End Sub
+'======================================
+
+
+'======================================
+' Name: DoClick
+' Desc:
+'--------------------------------------
+Sub DoClick
+	If element.enabled Then
+		Select Case element.id
+		Case "btnSay"
+			DoSay
+		Case "btnEmote"
+			DoEmote
+		Case "btnWhisper"
+			DoWhisper
+		Case Else
+		End Select
+	End If
+End Sub
+'======================================
+
+</script>

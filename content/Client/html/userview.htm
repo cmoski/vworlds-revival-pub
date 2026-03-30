@@ -1,0 +1,72 @@
+<HTML>
+<HEAD>
+<META NAME="GENERATOR" Content="Microsoft Developer Studio">
+<META HTTP-EQUIV="Content-Type" content="text/html; charset=iso-8859-1">
+<TITLE>User View</TITLE>
+</HEAD>
+
+
+<SCRIPT LANGUAGE="VBScript">
+
+dim bInited
+bInited = false
+
+
+sub Initialize()
+	ViewPaneFrame.Initialize()
+	UserListPaneFrame.Initialize()
+	SelfViewPaneFrame.Initialize()
+	GestBtnPaneFrame.Initialize()
+	bInited = true
+	DoPosition
+end sub
+
+dim iReadyCount
+iReadyCount = 0
+
+sub ChildReady(theWin)
+	if bInited = true then
+		theWin.Initialize()
+	else
+		iReadyCount = iReadyCount + 1
+		if iReadyCount >= 5 then
+			iReadyCount = 5
+			parent.ChildReady(window)
+		end if
+	end if
+end sub
+
+sub window_onload
+	DoPosition
+	ChildReady(window)
+end sub
+
+sub window_onresize
+	DoPosition
+end sub
+
+sub DoPosition
+	dim curElement
+	offsetAmount = 25 + 128 + 52
+	listSize = document.body.offsetHeight - offsetAmount
+	set curElement = document.all("UserListPaneFrame")
+	if listSize < 20 then
+		listSize = 20
+	end if
+	curElement.style.height = listSize
+end sub
+
+</SCRIPT>
+
+<BODY LEFTMARGIN=0 TOPMARGIN=0  RIGHTMARGIN=0  BOTTOMMARGIN=0 SCROLL=NO>
+<IFRAME ID="ViewPaneFrame" SRC="usertab.htm" HSPACE=0 BORDER=0 FRAMESPACING=0 VSPACE=0 MARGINHEIGHT=0 MARGINWIDTH=0 scrolling="no" noresize height=25 width=100% frameborder="no">
+</IFRAME>
+<IFRAME ID="UserListPaneFrame" NAME="UserListPaneFrame" SRC="userlist.htm" HSPACE=0 BORDER=0 FRAMESPACING=0 VSPACE=0 MARGINHEIGHT=0 MARGINWIDTH=0 scrolling="no" noresize  width=100% frameborder="no">
+</IFRAME>
+<IFRAME ID="SelfViewPaneFrame" SRC="selfview.htm" HSPACE=0 BORDER=0 FRAMESPACING=0 VSPACE=0 MARGINHEIGHT=0 MARGINWIDTH=0 scrolling="no" noresize height=128 width=100% frameborder="no">
+</IFRAME>
+<IFRAME ID="GestBtnPaneFrame" SRC="gestbtn.htm" HSPACE=0 BORDER=0 FRAMESPACING=0 VSPACE=0 MARGINHEIGHT=0 MARGINWIDTH=0 scrolling="no" noresize height=52 width=100% frameborder="no">
+</IFRAME>
+</BODY>
+</HTML>
+

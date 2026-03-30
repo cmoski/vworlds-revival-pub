@@ -1,0 +1,555 @@
+<html>
+<HEAD>
+<meta http-equiv="Expires" content="0">
+<title>V-Worlds Text History Pane</title>
+<STYLE ID=SpeakingStyles>
+.TextGesture {display: "none"}
+.TextMessage {display: "none"}
+.TextEvent {display: "none"}
+.MyName {color: blue; font-weight: bold; font-size: 9pt; font-family:Arial}
+.SpeakerName {color: black; font-weight: bold; font-size: 9pt; font-family:Arial}
+.SpokenText {color: black; font-size: 9pt; font-family: Arial}
+.EmoteText {color: dark-blue; font-weight: bold; font-size: 9pt; font-family: Arial}
+.WhisperText {color: blue; font-weight: bold; font-size: 9pt; font-family: Arial}
+.ReportText {color: gray; font-weight: bold; font-size: 9pt; font-family: Arial}
+.ErrorText {color: red; font-weight: bold; font-size: 9pt; font-family: Arial}
+.TraceText {color: gray; font-size: 9pt; font-family: Arial}
+.MsgText {color: red; font-weight: bold; font-size: 9pt; font-family: Arial}
+.ActionText {color: blue; font-weight: bold; font-size: 9pt; font-family: Arial}
+.ThumbNailImage {margin-left: 4; margin-right: 4; border: 0; width: 16; height: 16}
+</STYLE>
+<SCRIPT LANGUAGE="VBScript">
+
+Dim CurUser
+Dim CurWorld
+Dim bShowTraces
+Dim bEnableImages
+Dim bEnableHTML
+Dim bEnableURLParse
+Dim bEnableEmoticonParse
+dim bShowConnectEvents
+
+sub HandleUIEvent(byval who, what, byval args)
+	if what = "OnTell" then
+		HandleTell args.property(0), args.property(1), args.property(2), args.property(3)
+	elseif what="OnLogOff" then
+		HandleTell args.property(0), args.property(1), args.property(2), 9
+	elseif what = "IgnoredUser" then
+		curWorld.Report "You are ignoring " & args.name, 6
+	elseif what = "UnignoredUser" then
+		curWorld.Report "You are no longer ignoring " & args.name, 6
+	elseif what = "IgnoredByUser" then
+		curWorld.Report args.name & " is ignoring you.", 6
+	elseif what = "UnignoredByUser" then
+		curWorld.Report args.name & " is no longer ignoring you.", 6
+	elseif what = "OnEnterWorld" then
+		' Note: this page will get this UI event for all avatars except yourself (page not loaded)
+		HandleOnEnterWorld who
+	elseif what = "OnLeaveWorld" then
+		' Note: this page will get this UI event for all avatars except yourself (page not loaded)
+		HandleOnLeaveWorld who
+	elseif what = "PortalDestinationNotSet" then
+		if  Not (who Is Nothing) then
+			if (who.isStub = false) then
+				curWorld.Report "The Portal '" & who.name & "' has no destination set.", 6
+			end if
+		end if
+	elseif what = "PortalDestinationInvalid" then
+		if  Not (who Is Nothing) then
+			if (who.isStub = false) then
+				curWorld.Report "The Portal '" & who.name & "' has an invalid destination.", 6
+			end if
+		end if
+	elseif what = "ReconnectFailed" then
+		curWorld.Report "'" & CStr(args) & "' is not valid.", 6
+	end if
+end sub
+
+
+sub Initialize()
+	top.AddToEventList window
+	set top.historyPage = window
+	bShowTraces = false
+	bShowConnectEvents = true
+	bEnableImages = true
+	bEnableHTML = false	        '' true = allow user-entered HTML
+	bEnableURLParse = true      '' true = allow detection and formating of URLs
+	bEnableEmoticonParse = true '' true = allow detection and replacement of emoticons (:-))
+	' attempt to regain the world
+	set curWorld = top.theclient.vwclient.world
+	if typename(curWorld) <> "empty" then
+		set curUser = curWorld.user
+		dim	worldName
+		worldName = curWorld.worldName
+		curWorld.Report "Welcome to " & worldName, 7
+		curWorld.Report "To move around the space, drag your mouse in the 3-D view above, or click in the view and use the arrow keys.", 7
+		curWorld.Report "You enter " & curWorld.Global.WorldName & ".", 6
+	end if
+	UpdateFromPrefs
+end sub
+
+sub window_onload
+	parent.ChildReady(window)
+end sub
+
+
+Sub window_onUnLoad()
+	set top.historyPage = Nothing
+	top.RemoveFromEventList window
+end sub
+
+Sub UpdateFromPrefs
+	setStyleVisible 0, top.bShowGestures
+	setStyleVisible 1, top.bShowSysMsgs
+	setStyleVisible 2, top.bShowEvents
+end sub
+
+
+sub HandleOnConnect(world)
+	set CurWorld = world
+end sub
+
+sub HandleTrace(theStr)
+	if bShowTraces = true then
+		msg = "TRACE:  " + theStr
+		newHTML = Spanify(msg, "TraceText")
+		AppendHTML newHTML, "", ""
+	end if
+end sub
+
+sub HandleReport(theStr, reportType)
+	msg = ""
+	overStyle = ""
+	insertText = ""
+	select case reportType
+		case -1
+			if top.bShowSysMsgs = true then
+				msg = "*** " + theStr
+				msgStyle = "ErrorText"
+				overStyle = "TextMessage"
+				newHTML = Spanify(msg, msgstyle)
+			end if
+		case 0  ' return value
+		case 1	' echo
+		case 2  ' result (if any)
+		case 3  ' prompt
+		case 5	' whisper
+			' lets try to perform name extraction...
+			curUserName = ExtractUserName(theStr)
+			whisperedText = ExtractWhisperedText(theStr)
+			wrapperText = ExtractWrapperText(theStr)
+			whisperSpan = Spanify("", "WhisperText")
+			newHTML = ObjectImageHTML(curUserName) + wrapperText + whisperSpan
+			insertText = whisperedText
+		case 6
+			newHTML = newHTML + Spanify(theStr, "WhisperText")
+			wrapStyle = "TextGesture"
+		case 7 ' welcome message
+			newHTML = newHTML + Spanify(theStr, "WhisperText")
+			wrapStyle = "TextGesture"
+		case else
+			msg = "REPORT(" + cstr(reportType) + "):  " + theStr
+			msgStyle = "ReportText"
+			newHTML = Spanify(msg, msgstyle)
+	end select
+
+	if newHTML <> "" then
+		AppendHTML newHTML, overStyle, insertText
+	end if
+end sub
+
+function ExtractWhisperedText(theStr)
+	newText = ""
+	firstLoc = instr(theStr, chr(34))
+	lastLoc = instrrev(theStr, chr(34)) + 1
+	newText = mid(theStr, firstLoc, lastLoc-firstLoc)
+	ExtractWhisperedText = newText
+end function
+
+function ExtractWrapperText(theStr)
+	newText = ""
+	firstLoc = instr(theStr, chr(34))
+	newText = left(theStr, firstLoc-1)
+	newText = Spanify(newText, "WhisperText")
+	ExtractWrapperText = newText
+end function
+
+function Spanify(theText, theClass)
+	theHTML = "<" + "SPAN"
+	if theClass <> "" then
+		theHTML = theHTML + " class=" + theClass
+	end if
+	theHTML = theHTML + ">"
+	theHTML = theHTML + theText + "</SPAN>"
+	Spanify = theHTML
+end function
+
+
+function SpanQuote(theText, theClass)
+	quote = chr(34)
+	theHTML = "<" + "SPAN class="
+	theHTML = theHTML + theClass + ">"
+	theHTML = theHTML + quote + theText + quote + "</SPAN>"
+	SpanQuote = theHTML
+end function
+
+sub ApproachTarget
+	on error resume next
+	dim targetObj
+	set targetObj = Nothing
+	objname = ""
+	objName = window.event.srcElement.linkedUser
+	if objName <> "" then
+		set targetObj = curuser.container.findwithin(objName, True)
+		if targetObj is Nothing then
+			msgbox "This avatar has left the room.", vbInformation, "Microsoft Virtual Worlds"
+		elseif targetObj is curUser then
+			curuser.editprofile
+		else
+			targetObj.lookat
+		end if
+	end if
+end sub
+
+sub document_onClick
+	on error resume next
+	if typename(window.event.srcElement) = "HTMLImg" then
+		if window.event.srcElement.name = "Thumbnail" then
+			ApproachTarget
+		end if
+	end if
+end sub
+
+
+function ExtractUserName(theStr)
+	on error resume next
+	spaceLoc = instr(theStr, "whispers")
+	theName = left(theStr, spaceLoc-2)
+	ExtractUserName = theName
+end function
+
+function objectImageName(theName)
+	dim curPerson
+	set curPerson = Nothing
+	set curPerson = CurUser.container.findwithin(theName, True)
+
+	If curWorld.IsAvatar(curPerson) Then
+		err.clear
+		on error resume next
+		imgFile = curPerson.geometry.thumbnailname
+		imgFile = CurWorld.Tool("INetFile").GetFile(imgFile, true)
+		If Err.Number <> 0 Then imgFile = "../shared/tdefault.gif"
+	Else
+		if curPerson.isOfType("Portal") then
+			imgFile = "icondoor.gif"
+		elseif curPerson.isOfType("Artifact") then
+			imgFile = "iconthng.gif"
+			if curPerson.IsValidProperty("IsAccessory") then
+				if curPerson.IsAccessory then imgFile = "iconunwr.gif"
+			end if
+		else
+			imgFile = "tdefault.gif"
+		end if
+	End If
+	objectImageName = imgFile
+end function
+
+function HostImageHTML(byVal theHost)
+	on error resume next
+	newHTML = ""
+	imgFile = "host.gif"
+	quote = chr(34)
+	imgHTML = "<IMG class=" + quote + "ThumbNailImage" + quote + " linkedUser = " + quote + theHost.name + quote + " name=" + quote + "Thumbnail" + quote + " SRC=" + quote + imgFile + quote + "></IMG>"
+	newHTML = imgHTML
+	HostImageHTML = newHTML
+end function
+
+function ObjectImageHTML(theObjName)
+	on error resume next
+	newHTML = ""
+	imgFile = objectImageName(theObjName)
+	quote = chr(34)
+	imgHTML = "<IMG class=" + quote + "ThumbNailImage" + quote + " linkedUser = " + quote + theObjName + quote + " name=" + quote + "Thumbnail" + quote + " SRC=" + quote + imgFile + quote + "></IMG>"
+	newHTML = imgHTML
+	ObjectImageHTML = newHTML
+end function
+
+sub HandleTell(saidfrom, saidto, msg, msgtype)
+	on error resume next
+	if CurUser.IsInUserProfileList(saidFrom, "Ignoring") = true then
+		exit sub
+	end if
+	newHTML = ""
+	wrapStyle = ""
+	bImageLine = false
+	insertText = ""
+	select case msgType
+		case 0	' tcSay
+			' speaker name
+			if saidfrom is CurUser then
+				newHTML = Spanify(saidFrom.name + " says, ", "MyName")
+			else
+				newHTML = Spanify(saidFrom.name + " says, ", "SpeakerName")
+			end if
+			bImageLine = true
+			newHTML = newHTML + Spanify("", "SpokenText")
+			insertText = chr(34) + msg + chr(34)
+		case 1	' tcEmote
+			' speaker name
+			if saidfrom is CurUser then
+				newHTML = Spanify(saidFrom.name + " ", "MyName")
+			else
+				newHTML = Spanify(saidFrom.name + " ", "SpeakerName")
+			end if
+			bImageLine = true
+			newHTML = newHTML + Spanify("", "EmoteText")
+			wrapStyle = "TextGesture"
+			insertText = msg
+
+		case 2	' tcThink
+		case 3	' tcWhisper
+			SpeakText = saidFrom.name + " whispers to "
+			SpeakText = SpeakText + UserNameList(saidto)
+
+			' speaker name
+			if saidfrom is CurUser then
+				newHTML = Spanify(SpeakText, "MyName")
+			else
+				newHTML = Spanify(SpeakText, "SpeakerName")
+			end if
+
+			bImageLine = true
+			newHTML = newHTML + SpanQuote(msg, "SpokenText")
+
+		case 4  ' tcAnnounce
+		case 5  ' tcGesture
+		case 6  ' tcShout
+		case 7  ' tcReport
+			' speaker name
+			if saidfrom is CurUser then
+				newHTML = Spanify(saidFrom.name + " reports, ", "MyName")
+			else
+				newHTML = Spanify(saidFrom.name + " reports, ", "SpeakerName")
+			end if
+			bImageLine = true
+			newHTML = newHTML + SpanQuote(msg, "SpokenText")
+		case 8  ' tcAction
+			bImageLine = true
+			newHTML = newHTML + Spanify(msg, "ActionText")
+			wrapStyle = "TextEvent"
+		case 9 'tcLogOff
+			hostText = newHTML + HostImageHTML(saidFrom) + " Host " + saidfrom.Name + " logs off " + saidto.name + ".  Reason: "
+			newHTML = Spanify(hostText + msg + ".", "MsgText")
+			wrapStyle = "TextEvent"
+	end select
+
+	if bEnableImages = true and bImageLine = true then
+		newHTML = ObjectImageHTML(saidFrom.name) + newHTML
+	end if
+
+	if newHTML <> "" then
+		if wrapStyle <> "" then
+		end if
+		AppendHTML newHTML, wrapStyle, insertText
+	end if
+end sub
+
+function ReplaceURLWithHREF(srcText, textOffset, textLen)
+	urlPart = mid(srcText, textOffset, textLen)
+	fullUrl = urlPart
+	if ucase(left(fullUrl, 1)) = "W" then
+		fullUrl = "http://" + fullUrl
+	end if
+
+	firstPart = left(srcText, textOffset-1)
+	midPart = "<A TARGET=" + chr(34) + "_blank" + chr(34) + " HREF=" + chr(34) + fullUrl + chr(34) + ">" + urlPart + "</A>"
+	lastPart = right(srcText, len(srcText)-(textOffset+textLen-1))
+	newText = firstPart + midPart + lastPart
+	ReplaceURLWithHREF = newText
+end function
+
+function FindAnyURL(someText, startLoc)
+	bestOffset = 0
+	bFoundOne = false
+
+	bestOffset = inStrRev(someText, "http://", startLoc, 1)
+	offset = inStrRev(someText, "www.", startLoc, 1)
+	if offset > bestOffset then
+		' check to make sure we didn't find "http://www."
+		if bestOffset = 0 or offset <> bestOffset + 7 then
+			bestOffset = offset
+		end if
+	end if
+
+	FindAnyURL = bestOffset
+end function
+
+function ParseURLs(someText)
+	newText = someText
+	' for now, just do the simple ones
+	lastOffset = -1
+	do
+		offset = findAnyUrl(newText, lastOffset)
+		if offset > 0 then
+			spaceLoc = instr(offset, newText, " ", 1)
+			if spaceLoc = 0 then spaceLoc = len(newText) + 1
+			urlLen = spaceLoc - offset
+			lastChar = mid(newText, spaceLoc-1, 1)
+			if instr(".!,?""", lastChar) > 0 then urlLen = urlLen - 1
+			newText = ReplaceURLWithHREF(newText, offset, urlLen)
+		end if
+		lastOffset = offset
+	loop until offset = 0
+	ParseURLs = newText
+end function
+
+function ReplaceRangeWithImg(srcText, textOffset, textLen, imgName)
+	firstPart = left(srcText, textOffset-1)
+	midPart = "<IMG class=" + chr(34) + "ThumbNailImage" + chr(34) + " SRC=" + chr(34) + imgName + chr(34) + "></IMG>"
+	lastPart = right(srcText, len(srcText)-(textOffset+textLen-1))
+	newText = firstPart + midPart + lastPart
+	ReplaceRangeWithImg = newText
+end function
+
+function ParseSingleEmoticon(srcText, emoText, emoImgFile)
+	newText = srcText
+	' for now, just do the simple ones
+	lastOffset = -1
+	emoLen = len(emoText)
+	do
+		offset = instrrev(newText, emoText, lastOffset, 1)
+		if offset > 0 then
+			newText = ReplaceRangeWithImg(newText, offset, emoLen, emoImgFile)
+		end if
+		lastOffset = offset
+	loop until offset = 0
+	ParseSingleEmoticon = newText
+end function
+
+function ParseEmoticons(someText)
+	newText = someText
+	newText = ParseSingleEmoticon(newText, ":-)", "emosmile.gif")
+	newText = ParseSingleEmoticon(newText, ":)", "emosmile.gif")
+	newText = ParseSingleEmoticon(newText, ":-(", "emofrown.gif")
+	newText = ParseSingleEmoticon(newText, ":(", "emofrown.gif")
+	newText = ParseSingleEmoticon(newText, ";-)", "emosilly.gif")
+	newText = ParseSingleEmoticon(newText, ";)", "emosilly.gif")
+	ParseEmoticons = newText
+end function
+
+sub AppendHTML(newHTML, overSpanStyle, insertText)
+
+	Dim nOldScrollHeight
+
+	if document.selection.type = "None" then
+		document.body.scrollTop = document.body.scrollHeight - document.body.clientHeight
+	else
+		' do not scroll!
+	end if
+
+	newHTML = Spanify(newHTML, overSpanStyle)
+	newHTML = "<table cellpadding=0 cellspacing=0><tr><td>" & newHTML & "</td></tr></table>"
+	document.body.insertAdjacentHTML "BeforeEnd", newHTML
+	if insertText <> "" then
+		dim newSpan
+		' now, parse that and insert the final text
+		set newSpan = document.body.lastChild.cells(0).firstchild
+		set newSpan = newSpan.children(newSpan.children.length-1) ' 2 = allow for <BR>
+		if bEnableHTML = true then
+			newSpan.innerHTML = insertText
+		else
+			bUseHTML = false
+			if bEnableURLParse = true then
+				newText = ParseURLs(insertText)
+				if newText <> insertText then
+					insertText = newText
+					bUseHTML = true
+				end if
+			end if
+			if bEnableEmoticonParse = true then
+				newText = ParseEmoticons(insertText)
+				if newText <> insertText then
+					insertText = newText
+					bUseHTML = true
+				end if
+			end if
+			if bUseHTML = true then
+				newSpan.innerHTML = insertText
+			else
+				newSpan.innerText = insertText
+			end if
+		end if
+	end if
+	' add a new-line
+	' document.body.insertAdjacentHTML "BeforeEnd", "<BR>"
+	' scroll to the end, unless there is a selection
+	if document.selection.type = "None" then
+		'document.body.scrollTop = document.body.scrollHeight - document.body.offsetHeight
+		document.body.scrollTop = document.body.scrollHeight - document.body.clientHeight
+	else
+		' do not scroll!
+	end if
+	intMaxLines = 500
+	if document.body.children.length > intMaxLines + 9 then
+		do while document.body.children.length > intMaxLines
+				document.body.removechild document.body.children(0)
+		loop
+	end if
+end sub
+
+sub HandleOnEnterWorld(byVal theUser)
+	dim overStyle
+	overStyle = "TextEvent"
+	if theUser is CurWorld.user then
+		set CurUser = CurWorld.user
+	end if
+	if bShowConnectEvents = true then
+		if  Not (theUser Is Nothing) and theUser.isStub = false then
+			msg = theUser.name + " has connected."
+			newHTML = Spanify(msg, "MsgText")
+			'Don't print out trace if user has disconnected, unless the user wants to see system messages
+			if theUser.id = top.theclient.vwclient.world.user.id then
+				overStyle = "TextMessage"
+			end if
+			AppendHTML newHTML, overStyle, ""
+		end if
+	end if
+end sub
+
+sub HandleOnLeaveWorld(byVal who)
+	dim overStyle
+	overStyle = "TextEvent"
+
+	if bShowConnectEvents = true then
+		if Not (who Is Nothing) then
+			if (who.isStub = false) then
+				msg = who.name + " has disconnected."
+				newHTML = Spanify(msg, "MsgText")
+
+				'Don't print out trace if user has disconnected, unless the user wants to see system messages
+				if who.id = top.theclient.vwclient.world.user.id then
+					overStyle = "TextMessage"
+				end if
+
+				AppendHTML newHTML, overStyle, ""
+			end if
+		end if
+	end if
+end sub
+
+
+sub SetStyleVisible(styleIndex, bVisible)
+	on error resume next
+	visstring = ucase(cstr(bvisible))
+	if visstring = "TRUE" then
+		SpeakingStyles.stylesheet.rules.item(styleIndex).style.display = ""
+	else
+		SpeakingStyles.stylesheet.rules.item(styleIndex).style.display = "none"
+	end if
+end sub
+
+</SCRIPT>
+</HEAD>
+<BODY SCROLL="YES" BGCOLOR="F4F4E8">
+</body>
+</html>

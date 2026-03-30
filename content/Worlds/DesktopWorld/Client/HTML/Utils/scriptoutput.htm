@@ -1,0 +1,25 @@
+<html>
+<head>
+<link rel=stylesheet href=..\..\shared\global.css>
+<script language=vbs>
+
+sub document_onkeypress
+	select case window.event.keycode
+	case 27
+		parent.Helper.closeWindow
+	case 9
+		if window.event.shiftkey = true then
+			parent.closebtn.focus
+		else
+			parent.txtCommand.focus
+			parent.txtCommand.select
+		end if
+	case else
+	end select
+end sub
+
+</script>
+</head>
+<body bgcolor=white #F4F4E8 style=margin:0;padding:0;>
+</body>
+</html>

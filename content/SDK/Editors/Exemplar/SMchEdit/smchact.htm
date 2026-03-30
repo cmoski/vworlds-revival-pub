@@ -1,0 +1,43 @@
+<HTML>
+<STYLE> BODY {font: 10pt Arial} </STYLE>
+<BODY LEFTMARGIN=7 TOPMARGIN=7 ONLOAD="ShowIt" LANGUAGE="VBScript">
+<P ALIGN="RIGHT">
+<FORM NAME="ExForm">
+<B>do VBScript </B>
+<TEXTAREA NAME="TheScript" COLS=80 ROWS=5></TEXTAREA><br>
+Run on: <INPUT TYPE="RADIO" NAME="ClientServer" VALUE="Client">Client
+<INPUT TYPE="RADIO" NAME="ClientServer" VALUE="Server">Server
+</FORM></P>
+<SCRIPT LANGUAGE="VBScript">
+Dim oldValue
+Dim oldServer
+
+sub ShowIt
+	oldValue = parent.parent.GetCodeBody()
+	ExForm.TheScript.Value = oldValue
+	oldServer = parent.parent.GetCodeServer()
+	if oldServer then
+		ExForm.Elements(1).Checked = 0
+		ExForm.Elements(2).Checked = 1
+	else
+		ExForm.Elements(2).Checked = 0
+		ExForm.Elements(1).Checked = 1
+	end if
+	parent.ReloadDone
+end sub
+
+function SaveIt
+	dim newServer
+
+	newServer = ExForm.Elements(1).Checked <> 1
+	if (newServer <> oldServer) or (ExForm.TheScript.Value <> oldValue) then
+		parent.parent.PutCodeBody newServer, ExForm.TheScript.Value
+		SaveIt = True
+	else
+		SaveIt = False
+	end if
+end function
+
+</SCRIPT>
+</BODY>
+</HTML>

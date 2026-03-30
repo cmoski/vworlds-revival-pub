@@ -1,0 +1,22 @@
+<html>
+<head>
+<link rel=stylesheet href=..\..\..\client\shared\global.css>
+<script language=vbs>
+
+Option Explicit
+
+Sub document_onkeypress
+	Select Case window.event.keyCode
+	Case 27
+		parent.OnCancel
+	Case 13
+		If Not parent.btnImport.disabled Then parent.OnImport
+	Case Else
+	End Select
+End Sub
+
+</script>
+</head>
+<body style=padding-left:3;padding-right:3;>
+</body>
+</html>

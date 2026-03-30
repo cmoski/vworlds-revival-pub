@@ -1,0 +1,227 @@
+<html>
+<head>
+<title>New Property Map Item</title>
+<link Rel=Stylesheet href=../../../client/shared/global.css>
+<script language=vbs>
+
+dim editMap
+dim world
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+sub Window_OnLoad
+	set editMap = window.dialogArguments.editMap
+	divObject.innerText = window.dialogArguments.divObject.innerText
+	divPropertyList.innerText = window.dialogArguments.divProperty.innerText
+	On error resume next
+	set world = window.dialogArguments.client.world
+end sub
+
+sub Window_OnUnload
+end sub
+
+sub OnHelp
+	Dim helpstringsList
+	window.event.returnValue = false
+	on error resume next
+	set helpstringsList = world.global.CreatePropertyList
+	helpstringsList.add "Authoring"
+	helpstringsList.add "Object Explorer"
+	helpstringsList.add "Property Map Editor"
+	helpstringsList.add "Add New Property"
+	world.FireUIEvent world.user, "Help", helpstringsList
+end sub
+
+sub OnOk
+	if propName.value = "" then
+		msgbox "Enter a name for the new property.", vbInformation, "Microsoft Virtual Worlds"
+		propName.focus
+		exit sub
+	else
+		if not World.ValidatePropertyName(propName.value) then
+			msgbox "The property name entered is not valid. A valid name must begin with a letter and can contain numbers, letters, and the underscore character.", vbExclamation, "Microsoft Virtual Worlds"
+			propName.focus
+			propName.select
+			exit sub
+		end if
+	end if
+	dim name
+	dim tempValue
+	'on error resume next
+	name = propName.value
+	if Len(propValue.value) = 0 then
+		if typeList.SelectedIndex < 6 and typeList.SelectedIndex > 1 then
+			propValue.value = "0"
+		end if
+	end if
+	select case typelist.SelectedIndex
+		case 0
+			'String
+			editMap.Property(name) = propValue.value
+		case 1
+			'Boolean
+			if boolList.SelectedIndex = 0 then
+				tempValue = true
+			else
+				tempValue = false
+			end if
+			editMap.Property(name) = tempValue
+		case 2
+			'Double
+			editMap.Property(name) = CDbl(propValue.value)
+		case 3
+			'Float
+			editMap.Property(name) = Csng(propValue.value)
+		case 4
+			'Long
+			editMap.Property(name) = CLng(propValue.value)
+		case 5
+			'integer
+			editMap.Property(name) = CInt(propValue.value)
+		case 6
+			'Vector
+			set tempValue = world.global.CreateVector(0.0, 0.0, 0.0)
+			editMap.Property(name) = tempValue
+		case 7
+			'Thing
+			editMap.Property(name) = Nothing
+		case else
+		'nothing
+	end select
+	dim selectionList
+	set selectionList = world.CreatePropertyList
+	selectionList.Add name
+	window.dialogArguments.listprop.selectionList = selectionList
+	window.dialogArguments.listprop.DoFocus
+	window.close
+end sub
+
+sub OnTypeSelect
+	if typelist.SelectedIndex = 1 then
+		propValue.disabled = false
+		propValue.style.backgroundcolor = ""
+		lblInitVal.style.color = ""
+		boolList.style.display= ""
+		propValue.style.display = "none"
+	else
+		if typelist.SelectedIndex < 6 then
+			if typelist.SelectedIndex > 1 then
+				if not isnumeric(propValue.value) then
+					propValue.value = 0
+				end if
+				if propValue.value = 0 then
+					select case typelist.SelectedIndex
+					case 2
+						'Double
+						propValue.value = "0.0"
+					case 3
+						'Float
+						propValue.value = "0.0"
+					case 4
+						'Long
+						propValue.value = "0"
+					case 5
+						'integer
+						propValue.value = "0"
+					case else
+					'nothing
+						propValue.value = ""
+					end select
+				end if
+			else
+				propValue.value = ""
+			end if
+			propValue.disabled = false
+			propValue.style.backgroundcolor = ""
+			lblInitVal.style.color = ""
+			boolList.style.display = "none"
+			propValue.style.display = ""
+		else
+			propValue.disabled = true
+			lblInitVal.style.color = "gray"
+			boolList.style.display = "none"
+			propValue.style.display = ""
+			propValue.style.backgroundcolor = "#D3D3D3"
+			propValue.value = ""
+		end if
+	end if
+end sub
+
+sub document_onkeypress
+	select case window.event.keyCode
+	case 27
+		window.close
+	case 13
+		if window.event.srcElement.tagName <> "BUTTON" and window.event.srcElement.tagName <> "A" then OnOK
+	case else
+	end select
+end sub
+
+sub document_OnMouseOver
+	select case window.event.srcElement.className
+	case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	case "vHelp"
+		imgHelp.src="../../../client/shared/helpH.gif"
+	case else
+	end select
+end sub
+
+sub document_OnMouseOut
+	select case window.event.srcElement.className
+	case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	case "vHelp"
+		imgHelp.src="../../../client/shared/help.gif"
+	case else
+	end select
+end sub
+
+</script>
+</head>
+<body class=vBody>
+	<div class=vLabel style=left:18;top:7;>Object:</div>
+	<div id=divObject class=vLabel style=left:140;top:7;></div>
+	<div class=vLabel style=left:18;top:28;>Property Map Name:</div>
+	<div id=divPropertyList class=vLabel style=left:140;top:28;></div>
+	<div class=vLabel style=left:18;top:49;>Property Name:</div>
+	<input id=propName class=vInput style=left:140;top:46;width:110; maxlength=50>
+	<div class=vLabel style=left:18;top:70;>Property Type:</div>
+	<select id=TypeList style=left:140;top:67;width:110; class=vInput onchange=OnTypeSelect>
+		<option>String</option>
+		<option>Boolean</option>
+		<option>Double</option>
+		<option>Float</option>
+		<option>Long</option>
+		<option>Integer</option>
+		<option>Vector</option>
+		<option>Thing</option>
+	</select>
+	<div id=lblInitVal class=vLabel style=left:18;top:91;>Initial Value:</div>
+	<input id=propValue class=vInput maxlength=50 style=left:140;top:88;width:110;>
+	<select id=BoolList class=vInput style=left:140;top:88;width:110;display:none;>
+		<option>True</option>
+		<option>False</option>
+	</select>
+	<button class=bEnabled id=btnOK style=left:120;top:124; onclick=OnOk>
+		<span style=position:relative;top:-1;>OK</span>
+	</button>
+	<button class=bEnabled id=btnCancel style=left:190;top:124; onclick=window.close>
+		<span style=position:relative;top:-1;>Cancel</span>
+	</button>
+	<a id=lnkHelp onclick=OnHelp href="">
+		<img src=../../../client/shared/help.gif id=imgHelp class=vHelp style=top:124;>
+	</a>
+</body>
+</html>

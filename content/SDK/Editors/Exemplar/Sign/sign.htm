@@ -1,0 +1,101 @@
+<HTML>
+<HEAD>
+<TITLE>Customize your sign</TITLE>
+
+<SCRIPT LANGUAGE=VBScript>
+sub window_OnLoad
+	parent.page=1
+	parent.buttons.UpdateButtons
+
+	TextField.Value = parent.TextSelection
+
+	PointSizeField.Value = parent.PointSizeSelection
+	PointSizeField.additem "16"
+	PointSizeField.additem "20"
+	PointSizeField.additem "24"
+	PointSizeField.additem "28"
+	PointSizeField.additem "32"
+	PointSizeField.additem "36"
+	PointSizeField.additem "40"
+	SampleStuff.style.fontsize = Cstr(parent.PointSizeSelection) + "pt"
+
+	if parent.ShadowSelection = True then
+		ShadowField.Checked = True
+		SampleStuff.style.filter = "dropshadow(Color=#000000, OffX=1, OffY=1, Positive=1, enabled=1)"
+	else
+		ShadowField.Checked = False
+		SampleStuff.style.filter = ""
+	end if
+
+	SampleStuff.style.color = parent.FontColorSelection
+	SampleTable.bgcolor = parent.BGColorSelection
+
+end sub
+
+sub window_OnUnload
+	parent.UpdateSign
+end sub
+</SCRIPT>
+
+</HEAD>
+
+<BODY>
+
+<CENTER>
+<H1>
+Customize your sign!
+</H1>
+</CENTER>
+
+<B>Step 1: Define your text:</B><BR><BR>
+<CENTER>
+<OBJECT ID="TextField" WIDTH=220 HEIGHT=112
+ CLASSID="CLSID:8BD21D10-EC42-11CE-9E0D-00AA006002F3">
+    <PARAM NAME="VariousPropertyBits" VALUE="2894088219">
+    <PARAM NAME="ScrollBars" VALUE="2">
+    <PARAM NAME="Size" VALUE="5821;2963">
+    <PARAM NAME="Value" VALUE="">
+    <PARAM NAME="FontCharSet" VALUE="0">
+    <PARAM NAME="FontPitchAndFamily" VALUE="2">
+    <PARAM NAME="FontWeight" VALUE="0">
+</OBJECT>
+
+<BR><BR>
+
+
+Font size:
+
+<OBJECT ID="PointSizeField" ALIGN= MIDDLE WIDTH=50 HEIGHT=24 CLASSID="CLSID:8BD21D30-EC42-11CE-9E0D-00AA006002F3">
+    <PARAM NAME="VariousPropertyBits" VALUE="746604571">
+    <PARAM NAME="MaxLength" VALUE="150">
+    <PARAM NAME="DisplayStyle" VALUE="3">
+    <PARAM NAME="Size" VALUE="6456;635">
+    <PARAM NAME="MatchEntry" VALUE="1">
+    <PARAM NAME="ShowDropButtonWhen" VALUE="2">
+    <PARAM NAME="Value" VALUE="">
+    <PARAM NAME="FontCharSet" VALUE="0">
+    <PARAM NAME="FontPitchAndFamily" VALUE="2">
+    <PARAM NAME="FontWeight" VALUE="0">
+</OBJECT>
+
+<BR>
+
+<INPUT NAME="ShadowField" TYPE=checkbox>
+Drop shadow
+<BR><BR>
+
+<INPUT TYPE=button NAME=BtnUpdateSample VALUE="Preview sample sign" onclick="parent.UpdateSign">
+<BR><BR>
+
+<TABLE ID="SampleTable" BORDER=0 BGCOLOR=000000><TR><TD ALIGN=CENTER VALIGN=MIDDLE>
+<DIV ID="SampleStuff" style="color:#FFFFFF; font-weight:bold; font-size:40pt; filter:dropshadow(Color=#000000, OffX=1, OffY=1, Positive=1, enabled=1); width:90; height:5">
+AaBbCcDd
+</DIV>
+</TD></TR></TABLE>
+<BR>
+<SPAN style="position: absolute; top:425; left:30">
+Choose "next" to customize text and background colors.
+
+</CENTER>
+</BODY>
+</HTML>

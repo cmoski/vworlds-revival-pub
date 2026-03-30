@@ -1,0 +1,162 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//
+'//  File:			NewAvatar.htm
+'//  Description:	Creates a new avatar before login to the world.
+'////////////////////////////////////////////////////////////////////////-->
+<html>
+<head>
+<title>New Username</title>
+<link rel=stylesheet href=../shared/global.css>
+<object id=Helper classid="clsid:7E3832CF-4F4E-11D0-89AB-00A0C9054129"></object>
+
+<!--include scripts-->
+<script language="vbscript" src="../vbs/document_OnSelectStart.vbs">
+</script>
+<!--end include scripts-->
+
+<script language="VBscript">
+
+Option Explicit
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		window_Onload
+'//  Purpose:	Initialize textbox to last name a user entered in case
+'//				of invalid name
+'////////////////////////////////////////////////////////////////////////
+sub window_onLoad
+	txtName.value = Helper.Arg.avatarName
+	txtName.focus
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		document_onmouseover and document_onmouseout
+'//  Purpose:	To create the legend links and load in the proper page
+'//				into the iframe
+'////////////////////////////////////////////////////////////////////////
+sub document_onmouseover
+	If window.event.srcElement.className = "bEnabled" Then
+		window.event.srcElement.className = "bHighlight"
+	End If
+end sub
+
+sub document_onmouseout
+	If window.event.srcElement.className = "bHighlight" Then
+		window.event.srcElement.className = "bEnabled"
+	End If
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		OnCancel
+'//  Purpose:	Close this window
+'////////////////////////////////////////////////////////////////////////
+Sub OnCancel
+	Helper.closeWindow
+End Sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		document_onkeypress
+'//  Purpose:	Make key presses emulate button presses.
+'////////////////////////////////////////////////////////////////////////
+Sub document_onkeypress
+	Select Case window.event.keycode
+	Case 27
+		OnCancel
+	Case 13
+		If window.event.srcElement.tagname <> "BUTTON" Then
+			If Not btnOK.disabled Then OnOK
+		End If
+	Case 9
+		Select Case window.event.srcElement.id
+		Case "txtName"
+			window.event.returnValue = False
+			If window.event.shiftKey Then
+				btnCancel.focus
+			ElseIf Not btnOK.disabled Then
+				btnOK.focus
+			Else
+				btnCancel.focus
+			End If
+		Case "btnOK"
+			If window.event.shiftKey Then
+				txtName.focus
+				txtName.select
+			Else
+				btnCancel.focus
+			End If
+		Case "btnCancel"
+			If window.event.shiftKey Then
+				If Not btnOK.disabled Then
+					btnOK.focus
+				Else
+					txtName.focus
+					txtName.select
+				End If
+			Else
+				txtName.focus
+				txtName.select
+			End If
+		Case Else
+			If window.event.shiftKey Then
+				btnCancel.focus
+			Else
+				txtName.focus
+				txtName.select
+			End If
+		End Select
+	Case Else
+		If window.event.srcElement.id = "txtName" Then
+			If Len(txtName.value) > 2 Then
+				btnOK.className = "bEnabled"
+				btnOK.disabled = False
+			Else
+				If (window.event.keycode > 31 And window.event.keycode < 127) And Len(txtName.value) > 1 Then
+					btnOK.className = "bEnabled"
+					btnOK.disabled = False
+				Else
+					btnOK.className = "bDisabled"
+					btnOK.disabled = True
+				End If
+			End If
+		End If
+	End Select
+End Sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		OnOK
+'//  Purpose:	To create the avatar and close the window
+'////////////////////////////////////////////////////////////////////////
+Sub OnOK
+	Helper.Arg.avatarName = txtName.value
+	If helper.arg.OnDoneCreatingAvatar Then
+		Helper.CloseWindow
+	Else
+		txtName.focus
+	End If
+End Sub
+
+</script>
+</head>
+<body style=background-color:white;>
+	<div class=vH2 style=left:18;top:7;>
+		Enter a new name for yourself.
+	</div>
+	<div class=vLabel style=left:18;top:25;color:gray;>
+		(Must be 3 to 12 alphanumeric characters.)
+	</div>
+	<div class=vLabel style=top:54;left:24;>
+		Your name:
+	</div>
+	<input class=vInput style=top:51;left:97;width:145; id=txtName maxlength=12>
+	<button class=bDisabled id=btnOK onclick=OnOK style=left:112;top:80; disabled>
+		<span style=position:relative;top:-1;>OK</span>
+	</button>
+	<button class=bEnabled id=btnCancel onclick=OnCancel style=left:182;top:80;>
+		<span style=position:relative;top:-1;>Cancel</span>
+	</button>
+</BODY>
+</HTML>

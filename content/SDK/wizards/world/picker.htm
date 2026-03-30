@@ -1,0 +1,134 @@
+<html>
+<head>
+<LINK Rel=Stylesheet href="..\..\..\client\shared\global.css">
+<object ID=lister CLASSID="CLSID:969AD685-5B00-11D1-88AE-00C04FC32EF3"></object>
+<script language=vbscript>
+
+dim curElement, fMouseClicked
+
+fMouseClicked = True
+curElement=null
+
+Sub window_onload
+	Dim posVert, curName, titleOffset, Name, Path, namelist
+	posVert = 20
+	lister.initialize
+	namelist = lister.typeNames
+	for each curName in namelist
+		titleOffset = InStr(curName, "|")
+		if titleOffset > 0 then
+			Name = Left(curName, titleOffset-1)
+			Path = Mid(curName, titleOffset+1)
+		else
+			Name = curName
+			Path = curName & ".htm"
+		end if
+		' Write out a tab
+		document.body.insertAdjacentHTML "beforeEnd", _
+			"<input type=radio name=tab id=""opt" & Name & _
+			""" style=position:absolute;left:-20;top:-20 tabURL=""" & Path & """>" & _
+			"<div style=position:absolute;top:" & posVert & ";width:94;padding-bottom:2;>" & _
+			"<label id=""lbl" & Name & """ class=vTab for=""opt" & Name & _
+			""" style=position:relative;left:9; title=""" & Name & """>" & Name & "</label></div>"
+		posVert = posVert + 20
+	next
+	'Once list is written out, set highlight if a selection has been previously chosen
+	if top.WorldType <> "None" then
+		SetHighlight document.all.item("lbl" & mid(top.WorldType, 4))
+		window.open document.all.item("opt" & mid(top.WorldType, 4)).tabURL, "kit"
+	else
+		'review: is there a better way of finding the first world type and highlighting it?
+		SetHighlight document.all.tags("label")(0)
+		window.open document.all.tags("input")(0).tabURL, "kit"
+	end if
+End Sub
+
+Sub document_onmouseup
+	fMouseClicked = True
+End Sub
+
+Sub document_onclick
+	Dim fVerified
+	If window.event.srcElement.tagName = "INPUT" Then
+		' Deselect the old
+		If Not document.all("lbl" & Mid(window.event.srcElement.id, 4)) Is curElement Then
+			If idLoadTimer <> 0 Then
+				window.clearTimeout idLoadTimer
+			End If
+			fVerified = True
+			If parent.kit.document.readyState = "complete" Then
+				fVerified = parent.kit.verify
+			End If
+			If fVerified Then
+				idLoadTimer = window.setTimeout("window.open """ & window.event.srcElement.tabURL & _
+					""", ""kit"" : idLoadTimer = 0", 150)
+				SetHighlight document.all("lbl" & Mid(window.event.srcElement.id, 4))
+				top.WorldType = window.event.srcElement.id
+				top.SelectedStyleIndex = 0
+			End If
+		Else
+			fMouseClicked = False
+		End If
+	End If
+End Sub
+
+Sub document_OnMouseOver
+	Select Case window.event.srcElement.className
+	Case "vTab"
+		window.event.srcElement.className = "vTabHightlight"
+	Case Else
+	End Select
+End Sub
+
+Sub document_onmouseout
+	Select Case window.event.srcElement.className
+	Case "vTabHightlight"
+		window.event.srcElement.className = "vTab"
+	Case Else
+	End Select
+End Sub
+
+Sub SetHighlight(byVal el)
+	el.className = "vTabSelect"
+	el.parentElement.className = "vTabSelect"
+	If IsObject(curElement) Then
+		If curElement.id <> el.id Then
+			curElement.className = "vTab"
+			curElement.parentElement.className = ""
+		End If
+	End If
+	Set curElement = el
+End Sub
+
+sub document_onKeyPress
+	select case window.event.keycode
+	case 27
+		top.frames(1).OnCancel
+	case 13
+		top.frames(1).OnFinish
+	case Else
+	end select
+end sub
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+</script>
+</head>
+<body>
+	<div style=position:absolute;left:0;top:-38;height:273;width:95;overflow:hidden;>
+		<img src=..\..\..\client\shared\menuclouds.gif>
+	</div>
+	<div class=vH2 style=left:5;top:0>World Types:</div>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<html>
+
+<head>
+<title>Sign Customizer</title>
+
+<OBJECT ID="Helper" CLASSID="clsid:7E3832CF-4F4E-11D0-89AB-00A0C9054129"
+        BORDER=0 WIDTH=0 HEIGHT=0>
+</OBJECT>
+
+<script language="VBSCRIPT">
+
+Dim page
+Dim PageArray
+Dim PageArraySize
+
+Dim world
+Dim room
+Dim SignObject
+
+Dim TextSelection
+Dim PointSizeSelection
+Dim ShadowSelection
+Dim FontColorSelection
+Dim BGColorSelection
+
+Dim FontRSelection
+Dim FontGSelection
+Dim FontBSelection
+Dim BGRSelection
+Dim BGGSelection
+Dim BGBSelection
+
+page = 0
+PageArray = Array("sign.htm", "colors.htm")
+PageArraySize = 2
+
+set room = Helper.Arg.container
+set world = Helper.Client.World
+set SignObject = Helper.Arg
+
+TextSelection = SignObject.Sign
+PointSizeSelection = SignObject.PointSize
+ShadowSelection = SignObject.Shadow
+
+Dim r, g, b
+Dim FirstHexR, FirstHexG, FirstHexB
+Dim FirstBGHexR, FirstBGHexG, FirstBGHexB
+
+GetColor False, r, g, b
+FirstHexR="0" & Hex(r)
+FirstHexG="0" & Hex(g)
+FirstHexB="0" & Hex(b)
+FirstHexR=Right(FirstHexR, 2)
+FirstHexG=Right(FirstHexG, 2)
+FirstHexB=Right(FirstHexB, 2)
+FontRSelection = r
+FontGSelection = g
+FontBSelection = b
+
+GetColor True, r, g, b
+FirstBGHexR="0" & Hex(r)
+FirstBGHexG="0" & Hex(g)
+FirstBGHexB="0" & Hex(b)
+FirstBGHexR=Right(FirstBGHexR, 2)
+FirstBGHexG=Right(FirstBGHexG, 2)
+FirstBGHexB=Right(FirstBGHexB, 2)
+BGRSelection = r
+BGGSelection = g
+BGBSelection = b
+
+FontColorSelection = FirstHexR & FirstHexG & FirstHexB
+BGColorSelection = FirstBGHexR & FirstBGHexG & FirstBGHexB
+
+
+sub GetColor(bBackground, byref r, byref g, byref b)
+	dim l
+
+	' get the desired color as a long
+	if bBackground then
+		l = SignObject.BackgroundColor
+	else
+		l = SignObject.TextColor
+	end if
+
+	' bust out the components
+	r = (l and &HFF0000&) \ 65536
+	g = (l and &H00FF00&) \ 256
+	b = (l and &H0000FF)
+
+end sub
+
+sub SetColor(bBackground, r, g, b)
+	dim l
+
+	' compose the long
+	l = (r and &HFF) * 65536
+	l = l + CLng(g and &HFF) * 256
+	l = l + (b and &HFF)
+
+	' set the desired color as a long
+	if bBackground then
+		SignObject.BackgroundColor = l
+	else
+		SignObject.TextColor = l
+	end if
+
+end sub
+
+'-------------------------------------
+' UpdateSign
+' Sets up sign preview
+
+sub UpdateSign
+	main.SampleStuff.style.fontsize = main.PointSizeField.value + "pt"
+	PointSizeSelection = main.PointSizeField.value
+
+	if main.ShadowField.Checked = True then
+		main.SampleStuff.style.filter = "dropshadow(Color=#000000, OffX=1, OffY=1, Positive=1, enabled=1)"
+		ShadowSelection = True
+	else
+		main.SampleStuff.style.filter = ""
+		ShadowSelection = False
+	end if
+
+	TextSelection = main.TextField.value
+end sub
+
+sub UpdateColors
+	Dim HexR, HexG, HexB
+	Dim BGHexR, BGHexG, BGHexB
+
+	HexR="0" & Hex(main.RedScroll.Value)
+	HexG="0" & Hex(main.GreenScroll.Value)
+	HexB="0" & Hex(main.BlueScroll.Value)
+	HexR=Right(HexR, 2)
+	HexG=Right(HexG, 2)
+	HexB=Right(HexB, 2)
+
+	BGHexR="0" & Hex(main.BGRedScroll.Value)
+	BGHexG="0" & Hex(main.BGGreenScroll.Value)
+	BGHexB="0" & Hex(main.BGBlueScroll.Value)
+	BGHexR=Right(BGHexR, 2)
+	BGHexG=Right(BGHexG, 2)
+	BGHexB=Right(BGHexB, 2)
+
+	main.SampleStuff.style.color = HexR & HexG & HexB
+	FontColorSelection = HexR & HexG & HexB
+
+	main.SampleTable.bgcolor = BGHexR & BGHexG & BGHexB
+	BGColorSelection = BGHexR & BGHexG & BGHexB
+
+	FontRSelection = main.RedScroll.Value
+	FontGSelection = main.GreenScroll.Value
+	FontBSelection = main.BlueScroll.Value
+	BGRSelection = main.BGRedScroll.Value
+	BGGSelection = main.BGGreenScroll.Value
+	BGBSelection = main.BGBlueScroll.Value
+end sub
+
+sub Finish
+
+	Dim nHeight, nWidth
+
+	' If on page 1, then we only need to updated the sign text & attributes
+	if page=1 then
+		UpdateSign
+		' review: should probably check this on Next button as well as Finish
+		' First, make sure the user has entered some text
+		if TextSelection = "" then
+			msgbox "Enter the text to be displayed in the sign.", vbInformation, "Microsoft Virtual Worlds"
+			main.TextField.Focus
+		else
+			SignObject.Sign = TextSelection
+			SignObject.SetTextAttributes CBool(ShadowSelection), SignObject.Height, SignObject.Width, CInt(PointSizeSelection)
+			helper.closewindow
+		end if
+	' If we're on page 2, then update colors associated with sign
+	else
+		UpdateColors
+		SetColor False, FontRSelection, FontGSelection, FontBSelection
+		SetColor True, BGRSelection, BGGSelection, BGBSelection
+		SignObject.Sign = TextSelection
+		helper.closewindow
+	end if
+
+end sub
+</script>
+</head>
+
+<frameset FRAMEBORDER="1" BORDER="YES" FRAMESPACING="0" rows="*,50">
+  <frame NAME="main" SRC="sign.htm" NORESIZE SCROLLING="no">
+  <frame NAME="buttons" SRC="signbutt.htm" NORESIZE SCROLLING="no">
+  <noframes>
+  <body>
+  </body>
+  </noframes>
+</frameset>
+</html>

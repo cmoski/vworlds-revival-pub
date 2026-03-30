@@ -1,0 +1,41 @@
+<html>
+<head>
+<title>Friendship Request</title>
+<link rel=stylesheet href=..\..\shared\global.css>
+<script language=vbs>
+option explicit
+dim oArgList
+dim oUser
+dim oFriend
+
+sub window_onload
+	set oArgList	= window.dialogArguments
+	set oUser		= oArgList.Property(0)
+	set oFriend		= oArgList.Property(1)
+	
+	spanName.innerText = oFriend.name
+end sub
+
+sub divYes_OnClick
+	oFriend.FinalizeFriend oUser, true
+	window.close
+end sub
+
+sub divNo_OnClick
+	oFriend.FinalizeFriend oUser, false
+	window.close
+end sub
+
+</script>
+</head>
+<body style=padding:5;>
+	<div class=vH2 id=divTitle style=position:relative;margin-bottom:10;></div>
+	<div class=vInput id=divYes style=position:relative;>
+		Allow
+		<span class=vInput id=spanName style=position:relative;></span>
+		to make you a friend?
+	</div>
+	<div class=vInput id=divYes style=position:relative;>Yes</div>
+	<div class=vInput id=divNo style=position:relative;>No</div>
+</body>
+</html>

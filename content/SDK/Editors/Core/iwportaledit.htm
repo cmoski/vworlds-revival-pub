@@ -1,0 +1,156 @@
+<html>
+<head>
+<link rel=stylesheet href=..\..\..\client\shared\global.css>
+<script language=vbs>
+
+Option Explicit
+
+Public ctlBottom, ctlTop, fIsDirty, oWorld, target
+dim bLoaded
+bLoaded = false
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+Sub window_onload
+	Dim oldDest, slashLoc
+	Set oWorld = parent.Helper.client.world
+	Set target = parent.Helper.Arg
+	Set ctlTop = txtServer
+	Set ctlBottom = txtWorld
+	' update the destinations field
+	If target.destinations.count > 0 Then
+		oldDest = target.destinations.property(0)
+		slashLoc = InStr(oldDest, "/")
+		If slashLoc <> 0 Then
+			txtServer.value = Left(oldDest, slashLoc - 1)
+			txtWorld.value = Right(oldDest, Len(oldDest) - slashLoc)
+		End If
+	End If
+	If target.CheckPropertySecurity("Destinations", oWorld.PS_WRITE) = False Then
+		lblServer.style.color = "gray"
+		txtServer.readOnly = True
+		txtServer.style.color = "gray"
+		lblWorld.style.color = "gray"
+		txtWorld.readOnly = True
+		txtWorld.style.color = "gray"
+	End If
+	InitFocus
+	fIsDirty = False
+	bLoaded = true
+End Sub
+
+Sub InitFocus
+	If parent.fraTabs.fMouseClicked Then
+		txtServer.focus
+		txtServer.select
+		parent.fraTabs.fMouseClicked = False
+	End If
+End Sub
+
+Sub window_onunload
+End Sub
+
+Sub Apply
+	Dim newDestString
+	' destination
+	if bLoaded = false or fIsDirty = false then
+		exit sub
+	end if
+	If Not txtServer.readOnly Then
+		If txtServer.value = "" Or txtWorld.value = "" Then
+			newDestString = ""
+		Else
+			newDestString = txtServer.value & "/" & txtWorld.value
+		End If
+		If target.destinations.count > 0 Then
+			target.destinations.property(0) = newDestString
+		Else
+			target.destinations.add newDestString
+		End If
+	End If
+	fIsDirty = false
+End Sub
+
+Sub Reset
+	window_onload
+End Sub
+
+Function GetHelpURL
+	GetHelpURL = "vworlds.chm::/uiref/proppage/iwportal.htm>sdkall"
+End Function
+
+Function verify
+	verify = True
+End Function
+
+Sub document_onkeypress
+	Select Case window.event.keyCode
+	Case 27
+		parent.btnCancel.click
+	Case 13
+		parent.btnOK.click
+	Case 9
+		window.event.returnValue = False
+		Select Case window.event.srcElement.id
+		Case "txtServer"
+			If window.event.shiftKey Then
+				parent.Tabs.ctlBottom.focus
+			Else
+				txtWorld.focus
+				txtWorld.select
+			End If
+		Case "txtWorld"
+			If window.event.shiftKey Then
+				txtServer.focus
+				txtServer.select
+			Else
+				parent.ctlTop.focus
+			End If
+		Case Else
+			txtServer.focus
+			txtServer.select
+		End Select
+	Case Else
+		Select Case window.event.srcElement.id
+		Case "txtWorld", "txtServer"
+			Select Case window.event.keyCode
+			Case 8, 45, 46	'backspace, minus, period
+			Case 48, 49, 50, 51, 52, 53, 54, 55, 56, 57 'number
+			Case Else
+'				window.event.returnValue = False
+			End Select
+			If window.event.returnValue = "" And Not txtWorld.readOnly Then
+				If Not fIsDirty Then
+					parent.PageDirty
+					fIsDirty = True
+				End If
+			End If
+		Case else
+		End Select
+	End Select
+End Sub
+
+</script>
+</head>
+<body>
+	<div id=lblDesc class=vLabel style=left:13;top:7;width:340;>
+		To set the destination of this portal, you must know the name of the destination world and the name of the server on which the world resides. You can often find this information in the Directory service feature of this client ("Directory" from the main menu).
+	</div>
+	<div id=lblDesc2 class=vLabel style=left:13;top:90;>Portal connects to:</div>
+	<div id=lblServer class=vLabel style=left:50;top:114;>Server:</div>
+	<input id=txtServer class=vInput style=left:100;top:111;width:216;></input>
+	<div id=lblWorld class=vLabel style=left:56;top:138;>World:</div>
+	<input id=txtWorld class=vInput style=left:100;top:135;width:216;></input>
+</body>
+</html>

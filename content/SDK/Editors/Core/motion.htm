@@ -1,0 +1,406 @@
+<html>
+<head>
+<link rel=stylesheet href=..\..\..\client\shared\global.css>
+<script language=vbs>
+
+Option Explicit
+
+Public ctlBottom, ctlTop, fIsDirty, obj, oWorld
+dim bLoaded
+bLoaded = false
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+Sub window_onload
+	Dim vec
+	On Error Resume Next
+	Set obj = parent.Helper.Arg
+	Set oWorld = parent.Helper.client.world
+	Set ctlTop = chkSpins
+	Set vec = obj.RotationAxis
+	fIsDirty = True
+	if obj.IsValidProperty("RotationRate") then
+		txtSpinSpeed.value = CStr(obj.RotationRate)
+	else
+		txtSpinSpeed.value = "0"
+	end if
+	txtX.value = vec.x
+	txtY.value = vec.y
+	txtZ.value = vec.z
+	If vec.x = 1.0 And vec.y = 0.0 And vec.z = 0.0 Then
+		optSpinOn.checked = True
+		lstAxis.SelectedIndex = 0
+	ElseIf vec.x = 0.0 And vec.y = 1.0 And vec.z = 0.0 Then
+		optSpinOn.checked = True
+		lstAxis.SelectedIndex = 1
+	ElseIf vec.x = 0.0 And vec.y = 0.0 And vec.z = 1.0 Then
+		optSpinOn.checked = True
+		lstAxis.SelectedIndex = 2
+	Else
+		optCustomSpin.checked = True
+	End If
+	If txtSpinSpeed.value <> 0 Then
+		chkSpins.checked = False
+		chkSpins.click
+	Else
+		chkSpins.checked = True
+		chkSpins.click
+		Set ctlBottom = chkSpins
+	End If
+	If optSpinOn.checked Then
+		If ChkSpins.checked Then
+			Set ctlBottom = lstAxis
+		Else
+			Set ctlBottom = txtZ
+		End If
+	End If
+	If obj.CheckPropertySecurity("RotationAxis", oWorld.PS_WRITE) = False Or _
+			obj.CheckPropertySecurity("RotationRate", oWorld.PS_WRITE) = False Then
+		chkSpins.disabled = True
+		lblSpins.style.color = "gray"
+		lblSpinSpeed.style.color = "gray"
+		txtSpinSpeed.disabled = True
+		EnableCustomUI False
+		lstAxis.disabled = True
+		optSpinOn.disabled = True
+		lblSpinOn.style.color = "gray"
+		optCustomSpin.disabled = True
+		lblCustomSpin.style.color = "gray"
+		Set ctlBottom = parent.fraTabs.ctlBottom
+		Set ctlTop = parent.ctlTop
+	Else
+		InitFocus
+	End If
+	fIsDirty = False
+	bLoaded = true
+End Sub
+
+Sub InitFocus
+	If parent.fraTabs.fMouseClicked Then
+		ctlTop.focus
+		parent.fraTabs.fMouseClicked = False
+	End If
+End Sub
+
+Sub lstAxis_OnChange
+	If lstAxis.SelectedIndex = 0 Then
+		txtX.value = 1.0
+		txtY.value = 0.0
+		txtZ.value = 0.0
+	ElseIf lstAxis.SelectedIndex = 1 Then
+		txtX.value = 0.0
+		txtY.value = 1.0
+		txtZ.value = 0.0
+	Else
+		txtX.value = 0.0
+		txtY.value = 0.0
+		txtZ.value = 1.0
+	End If
+	If Not fIsDirty Then
+		parent.PageDirty
+		fIsDirty = True
+	End If
+End Sub
+
+Sub document_onclick
+	Select Case window.event.srcElement.id
+	Case "optSpinOn"
+		EnableCustomUI False
+		lstAxis_OnChange
+		Set ctlBottom = lstAxis
+		If Not fIsDirty Then
+			parent.PageDirty
+			fIsDirty = True
+		End If
+	Case "optCustomSpin"
+		EnableCustomUI True
+		Set ctlBottom = txtZ
+		If Not fIsDirty Then
+			parent.PageDirty
+			fIsDirty = True
+		End If
+	Case "chkSpins"
+		If chkSpins.checked Then
+			Set obj = parent.Helper.Arg
+			if obj.IsValidProperty("RotationRate") then
+				if obj.RotationRate <> 0 then
+					txtSpinSpeed.value = CStr(obj.RotationRate)
+				else
+					txtSpinSpeed.value = "0.2"
+				end if
+			else
+				txtSpinSpeed.value = "0.2"
+			end if
+			lblSpinSpeed.style.color = ""
+			txtSpinSpeed.disabled = False
+			optSpinOn.disabled = False
+			lblSpinOn.style.color = ""
+			optCustomSpin.disabled = False
+			lblCustomSpin.style.color = ""
+			If optSpinOn.checked Then
+				EnableCustomUI False
+				Set ctlBottom = lstAxis
+			Else
+				EnableCustomUI True
+				Set ctlBottom = txtZ
+			End If
+		Else
+			txtSpinSpeed.value = "0.0"
+			lblSpinSpeed.style.color = "gray"
+			txtSpinSpeed.disabled = True
+			EnableCustomUI False
+			lstAxis.disabled = True
+			optSpinOn.disabled = True
+			lblSpinOn.style.color = "gray"
+			optCustomSpin.disabled = True
+			lblCustomSpin.style.color = "gray"
+			Set ctlBottom = chkSpins
+		End If
+		If Not fIsDirty Then
+			parent.PageDirty
+			fIsDirty = True
+		End If
+	Case Else
+	End Select
+End Sub
+
+Sub EnableCustomUI(fEnabled)
+	lstAxis.disabled = fEnabled
+	txtX.disabled = Not fEnabled
+	txtY.disabled = Not fEnabled
+	txtZ.disabled = Not fEnabled
+	If fEnabled Then
+		lblX.style.color = ""
+		lblY.style.color = ""
+		lblZ.style.color = ""
+	Else
+		lblX.style.color = "gray"
+		lblY.style.color = "gray"
+		lblZ.style.color = "gray"
+	End If
+End Sub
+
+Sub Reset
+	Window_OnLoad
+End Sub
+
+Sub Apply
+	Dim vec
+	On Error Resume Next
+	if bLoaded = false or fIsDirty = false then
+		exit sub
+	end if
+	If not chkSpins.disabled Then
+		If chkSpins.checked Then
+			Set vec = obj.RotationAxis
+			vec.set txtX.value, txtY.value, txtZ.value
+			obj.RotationRate = CSng(txtSpinSpeed.value)
+		Else
+			obj.RotationRate = 0.0
+		End If
+	End If
+	fIsDirty = false
+End Sub
+
+Sub Window_OnUnload
+End Sub
+
+Function GetHelpURL
+	GetHelpURL = ""
+End Function
+
+Function GetHelpTopic
+	GetHelpTopic = "motion"
+End Function
+
+Function verify
+	verify = True
+	If document.readyState = "complete" Then
+		If Not ValidVectorVal(txtSpinSpeed, "Spin speed", 10) Then
+			verify = False
+		ElseIf Not ValidVectorVal(txtX, "X", 10) Then
+			verify = False
+		ElseIf Not ValidVectorVal(txtY, "Y", 10) Then
+			verify = False
+		ElseIf Not ValidVectorVal(txtZ, "Z", 10) Then
+			verify = False
+		End if
+	End If
+End Function
+
+Function ValidVectorVal(control, sDesc, iMaxVal)
+	ValidVectorVal = True
+	If Len(control.value) = 0 Then
+		MsgBox "The " & sDesc & " value is missing. Re-enter the value.", vbInformation, "Microsoft Virtual Worlds"
+		control.focus
+		ValidVectorVal = False
+	ElseIf Not IsNumeric(control.value) Or Right(control.value, 1) = "-" Then
+		control.select
+		MsgBox "Not a valid " & sDesc & " value. Re-enter the value.", vbExclamation, "Microsoft Virtual Worlds"
+		control.focus
+		ValidVectorVal = False
+	ElseIf CDbl(control.value) >= iMaxVal Then
+		control.select
+		MsgBox "The " & sDesc & " value must be less than " & iMaxVal & ". Re-enter the value.", vbExclamation, _
+			"Microsoft Virtual Worlds"
+		control.focus
+		ValidVectorVal = False
+	ElseIf CDbl(control.value) <= -(iMaxVal) Then
+		control.select
+		MsgBox "The " & sDesc & " value must be greater than -" & iMaxVal & ". Re-enter the value.", vbExclamation, _
+			"Microsoft Virtual Worlds"
+		control.focus
+		ValidVectorVal = False
+	End if
+End Function
+
+Sub document_onkeypress
+	Select Case window.event.keyCode
+	Case 27
+		parent.btnCancel.click
+	Case 13
+		parent.btnOK.click
+	Case 9
+		window.event.returnValue = False
+		Select Case window.event.srcElement.id
+		Case "chkSpins"
+			If window.event.shiftKey Then
+				parent.Tabs.ctlBottom.focus
+			Else
+				If Not txtSpinSpeed.disabled Then
+					txtSpinSpeed.focus
+					txtSpinSpeed.select
+				Else
+					parent.ctlTop.focus
+				End if
+			End If
+		Case "txtSpinSpeed"
+			If window.event.shiftKey Then
+				chkSpins.focus
+			Else
+				If optSpinOn.checked Then
+					optSpinOn.focus
+				Else
+					optCustomSpin.focus
+				End If
+			End If
+		Case "optSpinOn"
+			If window.event.shiftKey Then
+				txtSpinSpeed.focus
+				txtSpinSpeed.select
+			Else
+				lstAxis.focus
+			End If
+		Case "lstAxis"
+			If window.event.shiftKey Then
+				optSpinOn.focus
+			Else
+				parent.ctlTop.focus
+			End If
+		Case "optCustomSpin"
+			If window.event.shiftKey Then
+				txtSpinSpeed.focus
+				txtSpinSpeed.select
+			Else
+				txtX.focus
+				txtX.select
+			End If
+		Case "txtX"
+			If window.event.shiftKey Then
+				optCustomSpin.focus
+			Else
+				txtY.focus
+				txtY.select
+			End If
+		Case "txtY"
+			If window.event.shiftKey Then
+				txtX.focus
+				txtX.select
+			Else
+				txtZ.focus
+				txtZ.select
+			End If
+		Case "txtZ"
+			If window.event.shiftKey Then
+				txtY.focus
+				txtY.select
+			Else
+				parent.ctlTop.focus
+			End If
+		Case Else
+			If Not chkSpins.disabled Then
+				chkSpins.focus
+			Else
+				parent.ctlTop.focus
+			End If
+		End Select
+	Case Else
+		Select Case window.event.srcElement.id
+		Case "txtSpinSpeed", "txtX", "txtY", "txtZ"
+			Select Case window.event.keyCode
+			Case 8, 45, 46	'backspace, minus, period
+			Case 48, 49, 50, 51, 52, 53, 54, 55, 56, 57 'number
+			Case Else
+				window.event.returnValue = False
+			End Select
+			If window.event.returnValue = "" Then
+				If Not fIsDirty Then
+					parent.PageDirty
+					fIsDirty = True
+				End If
+			End If
+		Case else
+		End Select
+	End Select
+End Sub
+
+</script>
+</head>
+<body>
+	<div style=position:absolute;left:4;top:7;>
+		<input type=checkbox id=chkSpins style=position:relative;left:6;>
+		<label id=lblSpins class=vInputLbl for=chkSpins>
+			&nbsp;Object spins&nbsp;
+		</label>
+	</div>
+	<div id=lblSpinSpeed class=vLabel style=left:32;top:38;color:gray;>Spin speed:</div>
+	<input id=txtSpinSpeed class=vInput style=left:114;top:35;width:45; maxlength=6 disabled>
+	<hr id=lntSpin color=#b5b564 style=position:absolute;left:30;top:62;height:1;width:207;>
+	<hr id=lnbSpin color=white style=position:absolute;left:30;top:63;height:1;width:207;>
+
+	<div style=position:absolute;top:68;left:22;>
+		<input type=radio name=oSpin id=optSpinOn style=position:relative;left:6; disabled>
+		<label id=lblSpinOn class=vInputLbl for=optSpinOn style=color:gray;>
+			&nbsp;Spin on&nbsp;
+		</label>
+	</div>
+	<select id=lstAxis class=vInput style=left:63;top:91;width:70; disabled>
+		<option value=1>X Axis</option>
+		<option value=2>Y Axis</option>
+		<option value=3>Z Axis</option>
+	</select>
+	<div style=position:absolute;top:112;left:22;>
+		<input type=radio name=oSpin id=optCustomSpin style=position:relative;left:6; disabled>
+		<label id=lblCustomSpin class=vInputLbl for=optCustomSpin style=color:gray;>
+			&nbsp;Custom&nbsp;
+		</label>
+	</div>
+	<div id=lblX class=vLabel style=left:50;top:137;color:gray;>X:</div>
+	<input id=txtX class=vInput style=left:63;top:134;width:45; maxlength=6 disabled>
+	<div id=lblY class=vLabel style=left:114;top:137;color:gray;>Y:</div>
+	<input id=txtY class=vInput style=left:126;top:134;width:45; maxlength=6 disabled>
+	<div id=lblZ class=vLabel style=left:176;top:137;color:gray;>Z:</div>
+	<input id=txtZ class=vInput style=left:189;top:134;width:45; maxlength=6 disabled>
+</body>
+</html>

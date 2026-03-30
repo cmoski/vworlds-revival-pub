@@ -1,0 +1,35 @@
+<HTML>
+<STYLE> BODY {font: 10pt Arial} </STYLE>
+<BODY LEFTMARGIN=7 TOPMARGIN=7 ONLOAD="ShowIt" LANGUAGE="VBScript">
+<FORM NAME="XTForm">
+<B>When <INPUT TYPE=TEXT SIZE=8 NAME="Dur"> seconds have passed, then
+</B>
+</FORM>
+<SCRIPT LANGUAGE="VBSCRIPT">
+
+Dim oldValue
+
+sub ShowIt
+	oldValue = parent.parent.GetStateMachine().GetClientStateValueProperty( _
+													parent.parent.GetStateProp(), _
+													parent.parent.GetValue(), "TimeOut") _
+					/ 1000
+	XTForm.Dur.Value = oldValue
+	parent.ReloadDone
+end sub
+
+function SaveIt
+	if XTForm.Dur.Value <> oldValue then
+		parent.parent.GetStateMachine().PutClientStateValueProperty _
+													parent.parent.GetStateProp(), _
+													parent.parent.GetValue(), "TimeOut", _
+													CLng(XTForm.Dur.Value * 1000)
+		SaveIt = True
+	else
+		SaveIt = False
+	end if
+end function
+
+</SCRIPT>
+</BODY>
+</HTML>

@@ -1,0 +1,1407 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//  File:			Client.htm
+'//  Description:	This file is the client application.  It hosts many
+'//					other files that take care of different parts of the
+'//					total client.  This file is considered 'top' to almost
+'//					all the other htm files in the client application.
+'//					the highest level parent in the system
+'////////////////////////////////////////////////////////////////////////-->
+<html>
+<head>
+<title>DesktopWorld Client</title>
+<LINK REL=StyleSheet HREF=../shared/global.css>
+
+<!-- VWorlds Client -->
+<object id="theclient"
+	classid="clsid:D4898803-20EF-11D0-8A96-00A0C9082583" border="0" tabindex=-1 width="0" height="0" VIEWASTEXT>
+</object>
+
+<object id="htmlpopup"
+	classid="clsid:7E3832CD-4F4E-11D0-89AB-00A0C9054129" border="0"	tabindex=-1 width="0" height="0">
+</object>
+<!--include scripts-->
+<script language="vbscript" src="../vbs/document_OnSelectStart.vbs">
+</script>
+<!--End include scripts-->
+
+<script language="vbscript">
+
+option explicit
+
+'////////////////////////////////////////////////////////////////////////
+'//  Global constants: Accessed by this file and by some child files		
+'////////////////////////////////////////////////////////////////////////
+const ignoredGray = "c0c0c0"	' thumbnail color for ignored avatars
+' resizing maneuvers
+const LeftTall = 1		' make ClientChatBoxIFrame full height, displacing the renderer
+const LeftShort = 2		' make ClientChatBoxIFrame normal height; the renderer fills the space above it
+const RightTall = 3		' make ClientBrowserIFrame full height, displacing the renderer
+const RightShort = 4	' make ClientBrowserIFrame normal height; the renderer fills the space above it
+const RightMax = 5		' make ClientBrowserIFrame full screen, hiding the renderer and chat
+
+const ClientMarginTop = 0		' pixel values for sizing
+const ClientMarginBottom = 5
+const ClientMarginLeft = 8
+const ClientMarginRight = 8
+const ClientHeaderHeight = 29
+const ClientStatusHeight = 20
+
+const ClientLeftPanePct = .40	' Pct of screen used by left panes; for edges 1, 2 and 5
+const ClientUpperPanePct = .60	' Pct of screen used by upper panes; for edges 3 and 4
+const VerticalGutterSize = 4	' Pixel spacing between left and right panes
+const HorizontalGutterSize = 0	' Pixel spacing between upper and lower panes
+const buttonBarHeight = 28		' height of button bar ("My Profile" etc)
+const addressBarHeight = 41		' height of URL text entry area
+const mouldingWidth = 16		' width of broad bands on either side of the right set of panes
+const strExit = "You will be logged out of the world if you leave."	' the exit string when someone logs out
+
+'////////////////////////////////////////////////////////////////////////
+'//  Global variables: Accessed by this page and some child pages
+'////////////////////////////////////////////////////////////////////////
+
+dim tmpConnected
+' These are public because they are displayed by DisplayClientInfo.htm;
+' these are NOT dev-only vars but they only need be public during dev.
+public Edge1Pct	
+public Edge1Size
+public Edge2Pct
+public Edge2Size
+public Edge3Pct
+public Edge3Size
+public Edge4Pct
+public Edge4Size
+public Edge5Pct
+public Edge5Size
+
+Edge1Pct = ClientLeftPanePct
+Edge1Size = VerticalGutterSize
+Edge2Pct = ClientLeftPanePct
+Edge2Size = VerticalGutterSize
+Edge3Pct = ClientUpperPanePct
+Edge3Size = HorizontalGutterSize
+Edge4Pct = 0.0
+Edge4Size = HorizontalGutterSize
+Edge5Pct = 0.0
+Edge5Size = 0
+
+' behavioral flags
+'dim bPlaySoundFX
+public bShowGestures
+dim bShowSysMsgs
+dim bAutoDownloadAvatars
+dim bForcedLogOffByHost
+dim bIntentionalDisconnect
+dim bReconnecting			' true if this window is being closed because we are going to reconnect
+dim bLoggedIn
+dim NavigationEnabled		' locks out navigation and camera buttons while nav is in progress
+dim ExternalWindow			' ptr to a browser window where external URLs are displayed
+
+dim AvatarGifPath			' path for multi-part avatar images and sprites
+dim ClientEMailLink			' url used by ClientEMailIFrame.htm to populate its internal iframe
+ClientEMailLink = "http://www.hotmail.com"
+
+dim strCurTab				' records tab section to be depressed
+dim strCurLegend			' records legend button to be depressed
+dim strCurBrowseURL			' records url to be displayed in the browse pane
+
+' renderer property settings, used by ClientRendererIFrame.htm
+dim iColorModel
+dim iDrawFastWhenMoving
+dim iUseHWAcceleration
+dim RenderControl			' ptr to the renderer object in ClientRendererIFrame.htm
+
+' values passed to client.htm in the Search parameter (text following "?" in the url)
+dim sLogonURL
+dim sUser
+dim sWorld
+
+' gift and note info, for displaying counts in MyThings and "!" on toolbar buttons
+dim intNoteCt
+dim intGiftCt
+dim strPage_MyProfile
+dim giftPending				' controls display of "gift in progress is being deleted" msg
+intGiftCt = -1				' number of gifts the user currently has
+intNoteCt = -1				' number of notes the user currently has
+
+public ClientUserPtr		' ptr to the user's avatar
+public ClientWorldPtr		' ptr to the current world
+
+dim isWorldLoaded			' various iframes need the world before they can load 
+isWorldLoaded = false
+
+dim wantsEventsList			' array of ptrs to windows that have UIEvent handlers;
+wantsEventsList = Array()	' we pass UIEvents to the windows on this list.
+
+' The following vars store client-global values used by pages within iframes. 
+' Since the client top page does not know which pages are visible at any given time,
+' it stores various values in these vars so any relevant pages can access them.
+dim ClientHelpPage			' iframe url for HelpLinks.htm
+dim ClientSamplePage			' iframe url for SampleLinks.htm
+dim CurrentPeoplePage		' iframe url for People.htm
+dim CurrentAvatarId			' tells People.htm which avatar to display
+dim CurrentVWObjectId		' tells MyThings.htm which in-world object to display
+dim CurrentArea				' area of the world where the user is; corresponds to destination names
+							' used in auto-navigation (see area_functions.vbs and area_module.vbs)
+CurrentPeoplePage = ""
+CurrentAvatarId = 0
+CurrentVWObjectId =	0
+CurrentArea = "Lobby"
+
+' vars for the loading progress indicator
+dim UIEventCount
+dim ClientIsLoading
+UIEventCount = 0
+ClientIsLoading = true
+
+bLoggedIn = false
+bForcedLogOffByHost = false
+NavigationEnabled = true	' enables various navigation buttons and links
+
+public const DC_NULL = -1
+public const DC_RIGHT_PANE = 0
+public const DC_CHAT_PANE = 1
+public const DC_3D_PANE = 2
+
+const vwSleepGesture = 12		' the internal VWorlds gesture number for SLEEP
+
+' Sleep stuff
+const sleepCheckInterval = 60000	' milliseconds between checking for activity
+dim sleepTimer						' timer id for sleep-checking timer
+dim lastActionTime					' timestamp of last action, i.e. when the avatar was last known to be awake
+sleepTimer = 0
+lastActionTime = Now
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		checkSleep
+'//  Purpose:	Put the client to sleep after a certain amount of inactivity time
+'//  Called by:	Window_onLoad; self-retriggering
+'////////////////////////////////////////////////////////////////////////
+sub checkSleep
+	' If the user is not not already asleep and the minutes since last action exceeds world.sleepIdleTime, fall asleep.
+	' Note: Normally the avatar.geometry.currentGesture property contains the internal VWorlds number of the
+	' gesture currently being performed. For most gestures this is until their sprite graphics finish performing
+	' the gesture, but sleep is a special case which VWorlds persists until another gesture is started.
+	' For multi-part avatars it is the bodyparts that do the actual gesturing, the avatar's currentGesture
+	' is always 0 (idle). So to check if an avatar is asleep we check the currentGesture of the hair bodypart.
+	if not ClientUserPtr.hair.geometry.currentGesture = vwSleepGesture then
+		if dateDiff("n", lastActionTime, Now) > ClientWorldPtr.sleepIdleTime then
+			ClientUserPtr.emote "SLEEP"
+			ClientWorldPtr.FireUIEvent ClientUserPtr, "FallAsleep"
+			if document.activeElement is ClientRendererIFrame then ClientChatBoxIFrame.focus
+		end if
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		wakeUp
+'//  Purpose:	Put the client to sleep after a certain amount of inactivity time
+'//  Called by:	theclient_OnUIEvent
+'//				ClientRendererIFrame_onFocus
+'//				chatbox.htm:DoSay
+'//				myProfile.htm:document_onClick
+'//				people.htm:document_onClick
+'//				whisperBox.htm:DoSay
+'////////////////////////////////////////////////////////////////////////
+sub wakeUp
+	' if sleep timer has not been started yet, start it;
+	' if asleep wake up
+	lastActionTime = Now
+	if ClientUserPtr.hair.geometry.currentGesture = vwSleepGesture then
+		ClientUserPtr.emote "IDLE", "...wakes up"
+	end if
+end sub
+
+public strLastLocation
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		window_onresize
+'//  Purpose:	OnResize event handler; adjust dimensions of iframes and other elements
+'//  Called by:	user clicking resize buttons or manually resizing the window
+'////////////////////////////////////////////////////////////////////////
+sub window_onresize
+
+	document.recalc true
+
+	with leftMoulding.style
+		.top = document.body.style.edge4Pos
+		.left = document.body.style.edge2Pos + Edge2Size
+		.height = document.body.clientHeight - document.body.style.edge4Pos - Edge4Size - ClientMarginBottom -15
+		.width = mouldingWidth
+	end with
+	
+	with rightMoulding.style
+		.top = document.body.style.edge4Pos
+		.left = document.body.clientWidth - ClientMarginRight - mouldingWidth
+		.height = document.body.clientHeight - document.body.style.edge4Pos - Edge4Size - ClientMarginBottom -15
+		.width = mouldingWidth
+	end with	
+	
+	with RightPanel.style
+		.top = document.body.style.edge4Pos
+		.left = document.body.style.edge2Pos + Edge2Size
+		.height = document.body.clientHeight - document.body.style.edge4Pos - Edge4Size - ClientMarginBottom
+		.width = document.body.clientWidth - document.body.style.edge2Pos - Edge2Size - ClientMarginRight
+	end with
+
+	with ClientMainToolsIFrame.document.body.style
+		.top = 0
+		.left = mouldingWidth
+		.height = buttonBarHeight
+		.width = document.body.clientWidth - document.body.style.edge2Pos - Edge2Size - ClientMarginRight - mouldingWidth * 2
+	end with
+	
+	with ClientAddressBarIFrame.document.body.style
+		.top = buttonBarHeight
+		.left = mouldingWidth
+		.height = addressBarHeight
+		.width = document.body.clientWidth - document.body.style.edge2Pos - Edge2Size - ClientMarginRight - mouldingWidth * 2
+		
+	end with
+	
+	' the document in the browser frame can change, so to avoid script errors
+	' make sure there is a document at the moment we do the resize
+	if isObject(ClientBrowserIFrame.document) then
+	  with ClientBrowserIFrame.document.body.style
+		.top = buttonBarHeight + addressBarHeight
+		.left = mouldingWidth
+		.height = document.body.clientHeight - document.body.style.edge4Pos - Edge4Size - ClientMarginBottom - buttonBarHeight - addressBarHeight - 15
+		.width = document.body.clientWidth - document.body.style.edge2Pos - Edge2Size - ClientMarginRight - mouldingWidth * 2
+	  end with
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		Window_OnLoad
+'//  Purpose:	Initialize the page
+'////////////////////////////////////////////////////////////////////////
+sub window_onLoad
+	' The login page that opens this page must pass the world location, username,
+	' and optionally the path back to the login page. If passed, the login page will be
+	' reinvoked in the case of unintentional disconnects, etc.
+	dim args
+	args = split(mid(document.location.search,2,255), "&")
+	sWorld = args(0)
+	sUser = args(1)
+	if uBound(args) > 1 then
+		sLogonURL = args(2)
+	else
+		sLogonURL = ""
+	end if
+	htmlpopup.Initialize window.theclient.vwclient
+
+	bIntentionalDisconnect = false
+
+	if (sUser = "" or sWorld = "") Then
+		logonAgain
+	end if
+
+	DoAutoLogin
+	window_onresize
+	sleepTimer = window.setInterval("checkSleep",sleepCheckInterval, "vbscript")
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		window_OnUnload
+'//  Purpose:	Disconnect from the world and clean up when the page unloads
+'////////////////////////////////////////////////////////////////////////
+sub window_OnUnload
+	htmlpopup.CloseAll
+	if Not window.theClient.VWClient.World Is Nothing then
+		bIntentionalDisconnect = true
+		window.theClient.VWClient.World.Disconnect
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		window_OnBeforeUnload
+'//  Purpose:	Inserts exit string into logoff dialog
+'////////////////////////////////////////////////////////////////////////
+sub window_OnBeforeUnload
+	if bLoggedIn and not bForcedLogOffByHost and not bReconnecting then
+		window.event.returnValue = strExit
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		CheckLoadProgress
+'//  Purpose:	Update the progress bar that shows the progress of the world loading
+'//	 Called by:	theClient_onConnect
+'//				theClient_onUserConnect
+'//				theclient_OnUIEvent
+'////////////////////////////////////////////////////////////////////////
+sub CheckLoadProgress
+	if ClientIsLoading then
+		UIEventCount = UIEventCount + 1
+		if UIEventCount >= 6 then ClientIsLoading = false
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Notes:	Partitioning of the client page	
+'////////////////////////////////////////////////////////////////////////
+' Excluding the narrow header, the client window is divided into 4 iframes:
+'	3D renderer
+'	status line
+'	chat
+'	main panel
+' Positioning and sizing are defined in the iframe styles, using IE5 expressions that
+' depend on 6 imaginary edges. Each edge is represented by an EdgePct value between 0 and 1,
+' representing a percentage of the client window, and an EdgeSize value in pixels. 
+' Changing EdgePct and EdgeSize values causes IE5 to recalc everything, rearranging
+' the iframes. There are 4 predefined arrangements:
+'
+'       LeftShort           LeftTall              LeftShort            RightMax
+'       RightTall           RightShort            RightShort
+'                           3                                           6      
+'    |      +-------     +------+      |       |             |      +--------------
+'    |      |   4               |      |       |             |      |   3      4
+'   5|   6  |1                 5|   6  |1     5|   6         |1    5|1
+'    +------+                   +------+       +------+------+      |
+'        3  |                   |   4  |           3  |   4         |
+'           |2                  |2     |              |2            |2
+'           |                   |      |              |             |'
+'
+' When an edge is in the interior of the app window, its Size defines the gutter between panes.
+' When an edge is at the outer edge of the app window, its Size is set to 0.
+
+' The default view is LeftShort/RightTall. The "main panel" is on the right; the left 
+' side from top to bottom contains the Renderer, status line and Chat pane, with edge 6
+' defining the bottom of the status line and edge 3 the top of the Chat. 
+
+' In RightMax view the main panel is expanded to take up the full window. 
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		ResizePane
+'//  Purpose:	Adjust the size and position of the sub-frames in the client
+'//  Args:		How - which configuration to change to
+'//	 Called by:	chatbox.htm:ResizeUpDown
+'//				clientMainToolsIFrame.htm:ResizeUp
+'//				clientMainToolsIFrame.htm:ResizeMax
+'////////////////////////////////////////////////////////////////////////
+sub ResizePane (how)
+'	Move the edges that divide the panes, causing their dependent styles to resize them.
+	select case how
+		case LeftTall
+			Edge3Pct = 0.0
+			Edge3Size = 0
+			Edge5Pct = ClientLeftPanePct
+			Edge5Size = VerticalGutterSize
+		case LeftShort
+			Edge3Pct = ClientUpperPanePct
+			Edge3Size = HorizontalGutterSize
+			Edge5Pct = 0.0
+			Edge5Size = 0
+		case RightTall
+			Edge1Pct = ClientLeftPanePct
+			Edge1Size = VerticalGutterSize
+			Edge2Pct = ClientLeftPanePct
+			Edge2Size = VerticalGutterSize
+			Edge4Pct = 0.0
+		case RightShort
+			Edge1Pct = 1.0
+			Edge1Size = 0
+			Edge2Pct = ClientLeftPanePct
+			Edge2Size = VerticalGutterSize
+			Edge4Pct = ClientUpperPanePct
+			Edge4Size = HorizontalGutterSize
+		case RightMax
+			Edge1Pct = 0.0
+			Edge1Size = 0
+			Edge2Pct = 0.0
+			Edge2Size = 0
+			Edge4Pct = 0.0
+			Edge4Size = 0
+	end select
+	if Edge1Pct <= Edge5Pct then
+		' the renderer and status panes are squeezed down to Zero width
+		document.all("ClientRendererIFrame").style.display = "none"
+		document.all("ClientStatusBarIFrame").style.display = "none"
+	else
+		document.all("ClientRendererIFrame").style.display = ""
+		document.all("ClientStatusBarIFrame").style.display = ""
+	end if
+	window_onresize
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		IsZero(n) and IsNonZero
+'//  Purpose:	Style expression workarounds; style expressions in IE5 cannot handle  
+'//				a boolean term like "expression(5 * (n=0))" or a NOT operator; these
+'//				functions return a numerical value that can be used as a multiplier 
+'//				to include or exclude another value in a resizing expression.
+'//	 Called by:	dynamic positioning expressions (see <BODY> below)
+'////////////////////////////////////////////////////////////////////////
+function IsZero(n)
+	if n = 0 then
+		IsZero = -1
+	else
+		IsZero = 0
+	end if
+end function
+
+function IsNonZero(n)
+	if n = 0 then
+		IsNonZero = 0
+	else
+		IsNonZero = -1
+	end if
+end function
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		getObjectById (vwObjectId, vwObject)
+'//  Purpose:	Retrieve an object by its world object id, or return Nothing if no such object.
+'//				This is a workaround -- world.objectById returns an error for a nonexistent id.
+'//  Args:		vwObjectId (input): object id of the VWorlds object to retrieve
+'//				vwObject (output): ptr to the object retrieved; = Nothing if not found
+'//	 Called by: MyProfile.htm:document_onClick
+'//				MyProfile.htm:makeObjectMenu
+'//				MyProfile.htm:makeAvatarMenuBlock
+'//				MyThings.htm:window_onload
+'//				MyThings.htm:document_onClick
+'//				MyThings.htm:makeObjectMenu
+'//				NoteSend.htm:window_onload
+'//				People.htm:document_onClick
+'//				People.htm:makeAvatarMenuBlock
+'//				ShowNote.htm:window_onload
+'//				
+'////////////////////////////////////////////////////////////////////////
+sub getObjectById (vwObjectId, vwObject)
+	dim temp
+	on error resume next
+	set vwObject = top.ClientWorldPtr.objectById(vwObjectId)
+	if err.number = 0 then exit sub
+	set vwObject = Nothing
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		GetHex(numVal,digits)
+'//  Purpose:	Convert a number to a hex color string,
+'//				left-padded with 0's to the specified # of digits.
+'//				if digits = 6 then assume the input is a numeric BGR value and
+'//				reverse the first and last pairs of hex digits to give an RGB string.
+'//  Called by:	WaitForObjects_Then_insertThumbnailElement
+'////////////////////////////////////////////////////////////////////////
+function GetHex(numVal,digits)
+	' this function is used by insertThumbnailElement (below).
+	GetHex = hex(numVal)
+	if len(GetHex) < digits then GetHex = string(digits-len(GetHex),"0") & GetHex
+	if digits = 6 then GetHex = mid(GetHex,5,2) & mid(GetHex,3,2) & mid(GetHex,1,2)
+end function
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		getAvatarModelName (avatar)
+'//  Purpose:	get the model name of an avatar based on its hair geometry file name;
+'//				for example, geometry name "worlds/DesktopWorld/models/betty5.gif"
+'//				means the avatar model is "betty".
+'//  Called by:	WaitForObjects_Then_insertThumbnailElement
+'//				MyAppearance.htm:Window_onLoad
+'////////////////////////////////////////////////////////////////////////
+function getAvatarModelName (avatar)
+	' Get the current model name from the person's hair geometry name;
+	' modelName starts after the last slash and ends 2 chars before the last dot,
+	' as in "...path...\modelName5.spr"
+	' Used by ColorPicker.htm and insertThumbnailElement (below).
+	dim objHair,iSlash,iDot
+	set objHair = avatar.hair
+	
+	if IsObject(objHair) then
+		iSlash = instrRev(objHair.GeometryName,"\")
+		iDot = instrRev(objHair.GeometryName,".")
+		getAvatarModelName = mid(objHair.GeometryName, iSlash+1, iDot - iSlash - 2)
+	else
+		getAvatarModelName = ""
+	end if
+	set objHair = nothing
+end function
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		isIgnoring (avName)
+'//  Purpose:	return true if avName is on the user's ignore list, false if not
+'//  Called by:	WaitForObjects_Then_insertThumbnailElement
+'////////////////////////////////////////////////////////////////////////
+function isIgnoring (avName)
+	dim ignoredList
+	on error resume next
+	set ignoredList = clientUserPtr.profile.keyValue("customIgnoreList")
+	if isObject(ignoredList) then
+		dim n
+		for n = 0 to ignoredList.count - 1
+			if avName = ignoredList.property(n).name then
+				isIgnoring = true
+				exit function
+			end if
+		next
+	end if
+	isIgnoring = false
+	set ignoredList = nothing
+end function
+
+' globals for timer-executed procedures
+public global_avatar, global_intoDocument, global_intoElement
+
+sub insertThumbnailElement (avatar, intoDocument, intoElement)
+	set global_avatar = avatar
+	set global_intoDocument = intoDocument
+	set global_intoElement = intoElement
+	WaitForObjects_Then_insertThumbnailElement()
+end sub 
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		insertThumbnailElement (avatar, intoDocument, intoElement)
+'//  Purpose:	generate a span element containing a avatar's thumbnail image and name,
+'//				and append it to the specified HTML element of the specified document object.
+'//	 Args:	avatar: an avatar object
+'//			intoDocument: a document object on a web page
+'//			intoElement: an HTML element object that is within intoDocument
+'//  Called by:	WaitForObjects_Then_insertThumbnailElement
+'////////////////////////////////////////////////////////////////////////
+sub WaitForObjects_Then_insertThumbnailElement()
+	' In order to colorize the thumbnail image, we must insert the span containing
+	' the image into an existing HTML document before applying color filters to it.
+	' Color filters cannot be applied to element objects that are not in documents.
+	' (In general, setting property values on elements before inserting them in documents
+	' is not guaranteed to work, and Filter is one property that definitely does not.)
+	' The thumbnail is composed of 2 images; the second one uses relative positioning
+	' because if it uses absolute positioning any element added after it with relative
+	' positioning will overlay it.
+	
+	' make sure objects have been remoted to the user's client before referencing them
+	on error resume next
+	dim avatar, intoDocument, intoElement
+	set avatar = global_avatar
+	set intoDocument = global_intoDocument
+	set intoElement = global_intoElement
+	dim test
+	test = avatar.skin.color
+	if Err.number <> 0 then
+		Err.Clear
+		window.setTimeout "WaitForObjects_Then_insertThumbnailElement", 500
+		exit sub
+	end if
+	
+	dim newElem, elem, thumb1, thumb2, thumbColor, model, ignore
+	model = getAvatarModelName(avatar)
+	set elem = intoDocument.createElement("SPAN")
+	elem.id = "thumb" & avatar.id
+	intoElement.insertAdjacentElement "BeforeEnd", elem
+	elem.style.position = "relative"
+	elem.style.cursor = "hand"
+	set thumb1 = intoDocument.createElement("SPAN")
+	thumb1.id = "thumb1"
+	' to create a stack of images followed by something else to the right, 
+	' use absolute positioning on all images except the last one; use relative for the last.
+	thumb1.className = "imgThumb1"
+	thumb1.innerHTML = "<IMG class=ThumbNailImage linkedUser =" & avatar.name & " name=Thumbnail height=16 width=16 SRC='" & AvatarGifPath & model & "1thumb.gif'></IMG>"
+	elem.insertAdjacentElement "BeforeEnd", thumb1
+	ignore = isIgnoring(avatar.name)
+	if ignore then
+		thumbColor = ignoredGray
+	else
+		thumbColor = GetHex(avatar.skin.color,6)
+	end if
+	thumb1.filters.light.addAmbient cint("&H" & mid(thumbColor,1,2)), cint("&H" & mid(thumbColor,3,2)), cint("&H" & mid(thumbColor,5,2)), 255
+
+	set thumb2 = intoDocument.createElement("SPAN")
+	thumb2.id = "thumb2"
+	thumb2.className = "imgThumb2"
+	dim strThumb2
+	strThumb2 = "<IMG class=ThumbNailImage linkedUser =" & avatar.name & " name=Thumbnail height=16 width=16 SRC='" & AvatarGifPath & model & "2thumb.gif'"
+	if InStr(Lcase(intoDocument.location),"chatbox.htm") then
+		strThumb2 = strThumb2 & " ALT='Your Avatar'></IMG>"
+	else
+		strThumb2 = strThumb2 & "></IMG>"
+	end if
+	thumb2.innerHTML = strThumb2
+	elem.insertAdjacentElement "BeforeEnd", thumb2
+	if ignore then
+		thumbColor = ignoredGray
+	else
+		thumbColor = GetHex(avatar.hair.color,6)
+	end if
+	thumb2.filters.light.addAmbient cint("&H" & mid(thumbColor,1,2)), cint("&H" & mid(thumbColor,3,2)), cint("&H" & mid(thumbColor,5,2)), 255
+	set elem = nothing
+	set Thumb1 = nothing
+	set Thumb2 = nothing
+	
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		LoadPrefs
+'//  Purpose:	Setup preference values for the 3d renderer; hard-coded in this client.
+'////////////////////////////////////////////////////////////////////////
+sub LoadPrefs
+	iUseHWAcceleration=		 1		' turn on hardware acceleration
+	iDrawFastWhenMoving=	-1
+	iColorModel=			-1
+	bAutoDownloadAvatars=	true
+	bShowGestures=			true
+	bShowSysMsgs=			false
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		SetRenderControl(rc)
+'//  Purpose:	called by ClientRendererIFrame to store a pointer to the 3d renderer control
+'//				in the RenderControl var, which is accessed by other frames using the 
+'//				GetRenderControl function.
+'//	 Args:		rc: ptr to the renderer control
+'//	 Called by:	ClientRenderIFrame:Window_onLoad, window_onUnload
+'////////////////////////////////////////////////////////////////////////
+sub SetRenderControl(rc)
+	set RenderControl = rc
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		GetRenderControl()
+'//  Purpose:	return a pointer to the renderer control
+'//	 Called by:	chatBox.htm:TextBox_OnKeyUp
+'//				chatBox.htm:EnableKeyboardNav
+'//				chatBox.htm:TextBox_onblur
+'//				whisperBox.htm:TextBox_OnKeyUp
+'//				whisperBox.htm:EnableKeyboardNav
+'//				whisperBox.htm:TextBox_onblur
+'////////////////////////////////////////////////////////////////////////
+function GetRenderControl()
+	if not IsEmpty(RenderControl) then
+		set GetRenderControl = RenderControl
+	else
+		set GetRenderControl = Nothing
+	end if
+end function
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		DoAutoLogin
+'//  Purpose:	Log the user into the world
+'//	 Called by:	window_onLoad
+'////////////////////////////////////////////////////////////////////////
+sub DoAutoLogin
+	Dim bLoginResult
+	bIntentionalDisconnect = true
+	window.theclient.vwclient.Disconnect
+	bLoginResult = Logon(sUser, sWorld)
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		AddToArray and RemoveFromArray
+'//  Purpose:	Do array maintenance for AddToEventList and RemoveFromEventList
+'////////////////////////////////////////////////////////////////////////
+sub RemoveFromArray(pArray, byval val)
+	Dim i, nUB, bFound
+	nUB = UBound(pArray)
+	bFound = false
+	if (nUB < 0) or Not IsObject(val) then exit sub	
+	for i = 0 to nUB
+		if (IsObject(pArray(i))) then
+			if (bFound) then
+				if (i < nUB) then set pArray(i) = pArray(i+1)
+			elseif pArray(i) Is val then
+				if (i < nUB) then set pArray(i) = pArray(i+1)
+				bFound = true
+			end if
+		end if
+	next
+	' sometimes windows collide with an "array locked" error; repeat until we get through
+	on error resume next
+	ReDim Preserve pArray(nUB - 1)
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		AddToEventList
+'//  Purpose:	Add a window ptr to the WantsEventsList array, which is a list  
+'//				sub-windows that want to have VWorlds events passed to them.
+'//  Called by:	cartBalloons.htm:window_onLoad
+'//				cartFlowers.htm:window_onLoad
+'//				chatBox.htm:window_onLoad
+'//				chatHistory.htm:window_onLoad
+'//				clientMainToolsIFrame.htm:window_onLoad
+'//				clientRenderIFrame.htm:window_onLoad
+'//				clientStatusBarIFrame.htm:window_onLoad
+'//				friendRequest.htm:window_onLoad
+'//				game_chess.htm:window_onLoad
+'//				myProfile.htm:window_onLoad
+'//				myThings.htm:window_onLoad
+'//				noteSend.htm:window_onLoad
+'//				people.htm:window_onLoad
+'//				sampleLinks.htm:window_onLoad
+'//				whisperBox.htm:window_onLoad
+'//				game_chess.htm:window_onLoad
+'////////////////////////////////////////////////////////////////////////
+sub AddToEventList(byVal newWindow)
+	on error resume next
+	dim intNewUBound
+	intNewUBound = UBound(wantsEventsList)+1
+	ReDim Preserve wantsEventsList(intNewUBound)
+	set wantsEventsList(intNewUBound) = newWindow
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		RemoveFromEventList
+'//  Purpose:	Remove a window ptr from the wantsEventsList array
+'//  Called by:	cartBalloons.htm:window_onLoad
+'//				cartFlowers.htm:window_onLoad
+'//				chatBox.htm:window_onLoad
+'//				chatHistory.htm:window_onLoad
+'//				clientMainToolsIFrame.htm:window_onLoad
+'//				clientRenderIFrame.htm:window_onLoad
+'//				clientStatusBarIFrame.htm:window_onLoad
+'//				friendRequest.htm:window_onLoad
+'//				game_chess.htm:window_onLoad
+'//				myProfile.htm:window_onLoad
+'//				myThings.htm:window_onLoad
+'//				noteSend.htm:window_onLoad
+'//				people.htm:window_onLoad
+'//				sampleLinks.htm:window_onLoad
+'//				whisperBox.htm:window_onLoad
+'//				game_chess.htm:window_onLoad
+'////////////////////////////////////////////////////////////////////////
+sub RemoveFromEventList(byVal oldWindow)
+	RemoveFromArray wantsEventsList, oldWindow
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		UpdateAvatarProfile(worldURL)
+'//  Purpose:	Add the URL of the current world to the list of visited worlds in the avatar profile
+'//  Called by:	logon
+'////////////////////////////////////////////////////////////////////////
+sub UpdateAvatarProfile(worldURL)
+	dim user, worldlist
+	set user = window.theClient.vwclient.world.user
+	user.profile.KeyValue("LastWorld") = worldURL
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+' Web frame navigation routines
+' These procedures load pages into ClientBrowserIFrame or into pages within that frame,
+' in response to UI and in-world user actions.
+'////////////////////////////////////////////////////////////////////////
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		LinkTo(toURL)
+'//  Purpose:	Load a page into the web frame
+'//  Called by:	linkToSample,
+'//				linkToHelp,
+'//				linkToObject,
+'//				linkToExternal,
+'//				theclient_OnUIEvent,
+'//				chatHistory.htm:document_onClick
+'//				clientAddressBarIFrame.htm:ChangeURL
+'//				clientMainToolsIFrame.htm:window_onLoad
+'//				clientMainToolsIFrame.htm:document_onClick
+'//				myThings.htm:onClick handler for the lnkMyEmail tag
+'//				myWebPage.htm:ViewWebPage
+'//				sampleLinks.htm:window_onLoad
+'//				showGift.htm:CloseGift
+'//				showNote.htm:CloseNote
+'//				whisperBox.htm:DoBtnClick
+'//				whisperBox.htm:onClick handler for the AvatarThumbNail div
+
+'////////////////////////////////////////////////////////////////////////
+sub LinkTo(toURL)
+	dim strWebContentPath
+	dim lngLeft, lngTop, lngWidth, lngHeight
+
+	strWebContentPath = top.ClientWorldPtr.WebContentPath
+	if len(toURL) > 0 then
+		if InStr(LCase(toURL), "http://") _
+		and UCase(Left(toURL,Len(strWebContentPath))) <> UCase((strWebContentPath)) then
+			if IsEmpty(ExternalWindow) then
+
+				lngWidth = window.screen.availWidth * .5
+				lngHeight = window.screen.availHeight * .7
+				lngLeft =  (window.screen.availWidth/2)-(lngWidth/2)-(lngWidth*.1)
+				lngTop = window.screen.availHeight * .1
+				set ExternalWindow = window.open(toURL, "_scurl", "width=" & lngWidth &_
+					", height=" & lngHeight & ", left=" & lngLeft & ", top=" & lngTop &_
+					", location=1, menubar=1, resizable=1, scrollbars=1, status=1, titlebar=1, toolbar=1")
+			else
+				ExternalWindow.navigate toURL
+			end if
+		else
+			ClientBrowserIFrame.location = toURL
+		end if
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		LinkToSample(toURL)
+'//  Purpose:	Store toURL as ClientSamplePage and open SampleLinks.htm in the web frame;
+'//				SampleLinks.htm will open ClientSamplePage in an iframe
+'//	 Called by:	theclient_OnUIEvent
+'////////////////////////////////////////////////////////////////////////
+sub LinkToSample(toURL)
+	if len(toURL) > 0 then ClientSamplePage = toURL
+	LinkTo "SampleLinks.htm"
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		LinkToHelp(toURL)
+'//  Purpose:	Store toURL as ClientHelpPage and open HelpLinks.htm in the web frame;
+'//				HelpLinks.htm will open ClientHelpPage in an iframe
+'//	 Called by:	helpRedirect.htm:window_onLoad
+'//				whisperBox.htm:DoBtnClick
+'////////////////////////////////////////////////////////////////////////
+sub LinkToHelp(toURL)
+	if len(toURL) > 0 then ClientHelpPage = toURL
+	LinkTo "Help.htm"
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		LinkToObject(vwObjectId)
+'//  Purpose:	Load MyThings.htm into the web frame and store vwObjectId as CurrentVWObjectId;
+'//				MyThings.htm will get the object and determine what to do with it
+'//	 Called by:	chatHistory.htm:document_onClick
+'//				showGift.htm:closeGift
+'//				showNote.htm:closeNote
+'////////////////////////////////////////////////////////////////////////
+sub LinkToObject(vwObjectId)
+	CurrentVWObjectId = CLng(vwObjectId)
+	LinkTo "MyThings.htm"
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		Logon(name, vws_url)
+'//  Purpose:	connect the client control to the VWorlds server and 
+'//				log the user into the world.
+'//	 Called by:	DoAutoLogin
+'////////////////////////////////////////////////////////////////////////
+function logon(name, vws_url)
+	dim world
+	dim user
+	dim errNum, errMsg
+
+	on error resume next
+	err.Clear
+	' connect the client to the VWorlds server
+	set world = window.theclient.VWClient.Connect(vws_url)
+	errNum = err.number
+	errMsg = err.description
+
+	if world is nothing then
+		select case errNum
+		case -2147220901
+			MsgBox "Failed to connect to " & vws_url & ".  The World Server and your client are running different versions of VWorlds.", vbCritical, "Sample World"
+		case else
+			MsgBox "Failed to connect to " & vws_url & ".  Please try again later. If the problem persists, contact the World administrator.", vbCritical, "Sample World"
+		end select
+		logon = FALSE
+		logonAgain
+	else
+		err.Clear
+		' log the user into the world
+		set user = world.Connect(name, "")		' password = ""
+		errNum = err.number
+		errMsg = err.description
+
+		if typename(user) <> "IThing" then
+			if err.number = -2147220949 then
+				MsgBox "Connection attempt failed.  This username is already connected to the World.", vbExclamation, "Sample World"
+			elseif err.number = -2147220917 then
+				MsgBox "Connection attempt canceled.", vbExclamation, "Sample World"
+			else
+				MsgBox "Connection attempt failed: " & errMsg & ".", vbCritical, "Sample World"
+			end if
+			bIntentionalDisconnect = true
+			' disconnect the client from the VWorlds server
+			window.theclient.VWClient.Disconnect
+			logon = FALSE
+			logonAgain
+		else
+			world.EnableTrace False
+			UpdateAvatarProfile vws_url
+
+			' Using the htmlpopup object as opposed to msgbox avoids having "VBScript:" added to the title bar
+			htmlpopup.Initialize window.theclient.vwclient
+
+			logon = TRUE
+			bIntentionalDisconnect = false
+			bLoggedIn = true
+		end if
+
+		set ClientWorldPtr = world
+		set ClientUserPtr = user
+		AvatarGifPath = world.ContentPath & "Worlds\DesktopWorld\Models\Lobby\"
+		ClientSamplePage = world.WebContentPath & "overview.htm"
+		isWorldLoaded = true
+	end if
+	set World = nothing
+	set user = nothing
+end function
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		logonAgain 
+'//  Purpose:	Open the login page to reconnect to the world; 
+'//				happens if the user gets disconnected and replies "yes" to reconnect query
+'//  Called by:	window_onLoad
+'//				logon
+'//				theclient_OnDisconnect
+'//				HandleLogOff
+'////////////////////////////////////////////////////////////////////////
+sub logonAgain
+	dim clientPath
+	clientPath = left(document.location.pathname, instrRev(document.location.pathname,"\"))
+	if sLogonURL > "" then window.open sLogonURL & "?clientPath=" & clientPath, "DesktopWorldStart", _
+		"toolbar=no,location=no,status=no,menubar=no,resizable=no,width=495,height=370,top=" & _
+		(screen.availHeight - 370) / 2 & ",left=" & (screen.availWidth - 495) / 2
+	window.close
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		theclient_OnConnect 
+'//  Purpose:	event handler for the Connect event, 
+'//				which fires when the user has logged into the world. 
+'////////////////////////////////////////////////////////////////////////
+sub theclient_OnConnect(theWorld)
+	CheckLoadProgress
+	on error resume next
+	dim wind
+	if bLoggedIn = false then
+		for each wind in wantsEventsList
+			wind.HandleOnConnect theWorld
+		next
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		theclient_OnDisconnect
+'//  Purpose:	event handler for the Disconnect event, 
+'//				which fires when the connection to the world has been closed or lost.
+'////////////////////////////////////////////////////////////////////////
+sub theclient_OnDisconnect(theworld)
+	' Note: this only executes if the client is disconnected by some external event,
+	' such as the server going down. If the user closes the window then it never handles
+	' the OnDisconnect event.
+	htmlpopup.CloseAll
+	if top.theclient.vwclient.isConnected = false then
+		if msgbox(now & " -- The connection to Sample World has been unexpectedly terminated.  Attempt to reconnect?", vbYesNo + vbQuestion, "Sample World") = vbYes then
+			top.navigate "client.htm" & document.location.search
+		else
+			bReconnecting = true	' prevent IE from displaying the "You are about to navigate away..." message
+			logonAgain
+		end if
+	else
+		bLoggedIn = false
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		theclient_OnUserConnect(theUser)
+'//  Purpose:	event handler for the UserConnect event, which fires when this client's
+'//				user or another user has logged into the world.
+'//				Note: this event does not seem to fire for new avatars,
+'//				so to trigger UI effects like adding people to lists we use
+'//				the UI event "OnEnterWorld" instead.
+'////////////////////////////////////////////////////////////////////////
+sub theclient_OnUserConnect(theUser)
+	CheckLoadProgress
+	'this fires before we even have our frame set...
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		theclient_OnTrace(theStr)
+'//  Purpose:	event handler for the Trace event, which fires when client-side
+'//				VWorlds code executes the world.trace method.
+'////////////////////////////////////////////////////////////////////////
+sub theclient_OnTrace(theStr)
+	on error resume next
+	dim wind
+	for each wind in wantsEventsList
+		wind.HandleTrace theStr
+	next
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		theclient_OnReport
+'//  Purpose:	event handler for the Report event, which occurs when the server or an
+'//				object in the same container as the user's avatar calls the Report method.
+'////////////////////////////////////////////////////////////////////////
+sub theclient_OnReport(strMsg, lType)
+	on error resume next
+	dim wind
+	for each wind in wantsEventsList
+		wind.HandleReport strMsg, lType
+	next
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		theclient_OnUIEvent
+'//  Purpose:	event handler for UI events, which are caused when a VWorlds object calls
+'//				the FireUIEvent method. This is the principal way for objects in the world
+'//				to communicate to the UI.
+'////////////////////////////////////////////////////////////////////////
+sub theclient_OnUIEvent(who, what, args)
+' The world passes information to the UI through UI events. Some UI events are fired 
+' automatically by VWorlds, others are fired explicitly by objects calling FireUIEvent.
+' This sub passes UI events to all windows on WantsEventsList. Windows individually
+' add themselves to WantsEventsList by calling AddToEventList in their window_OnLoad.
+
+	dim world, strWorld
+	if ClientIsLoading then CheckLoadProgress
+	if window.theClient.vwclient.world Is Nothing then exit sub
+	set world = window.theclient.vwclient.world
+	
+	
+	' wake the avatar up when the user performs any 3d-world action
+	select case what 
+		case "ClickToy", "avatarRButtonDown", "ShowProfile", "MakeFriendRequest", _
+			 "Unbefriended", "IgnoredUser", "UnignoredUser", "WhisperTo", "ViewUserWebPage", _
+			 "SendNote", "SurfToURL", "SurfToSampleURL" 
+			wakeUp
+	end select
+	
+	' handle individual events
+	select case what
+		case "Help"
+			HandleHelp who, what, args
+		case "OnProfileChanged" 
+			if who is world.user then HandleUserProfileChanged
+		case "SetCamera" 
+			DoSetCamera who, args
+		case "OnReconnect" 
+			bIntentionalDisconnect = True
+		case "OnFinishSceneComposite" 
+			window.status = ""
+			clientIsLoading = false
+			strWorld = theClient.vwclient.world.servername & "/" & theClient.vwclient.world.worldName
+
+			'if this is the persons first time into the world
+			if world.lastVisitDate.isValid(ClientUserPtr.name) = false then
+				'send them this little gretting from "admin", NOTE: this is hard coded. so there must be a user called admin
+				ClientUserPtr.receiveNote "Note", "VWorlds Dev Team", "Welcome to the World! We hope you enjoy the people, information and games available " & _
+				"here. If you would like to send others a note, go to People and click on another person's name. Then click Send Note and type " & _
+				"your message.<p>Have fun!", "Sun"
+			end if
+
+			logonMessage.style.display = "none"
+			document.all("divWholeClient").style.visibility = "visible"
+			if world.user.container.name = "Lobby Room" then world.user.container.findwithin("Phebe").greetUser(world.user)
+			' use a timeout because this errors if it happens before the 3d renderer is initialized
+			window.setTimeout "DoSetCamera top.ClientWorldPtr.global.overview_point, array(0)", 1000, "VBScript"
+		case "EventRequest" 
+			' fired by popups that want to handle UI events (for example, the command window)
+			AddToEventList args
+			exit sub
+		case "EventRequestCancel" 
+			RemoveFromEventList args
+			exit sub
+		case "OnLogOff" 
+			HandleLogOff args.property(0), args.property(1), args.property(2)
+		case "SurfToURL" 
+			LinkTo args(0)
+		case "SurfToSampleURL" 
+			LinkToSample args(0)
+		case "SendNote" 
+			currentAvatarId = args(0)
+			currentPeoplePage = "NoteSend.htm"
+			top.ClientMainToolsIFrame.btnPeople.click
+		case "ViewUserWebPage" 
+			LinkTo world.UserPagesServer & world.UserPagesPath & "webPageView.asp?user=" & who.name
+		case "ShowProfile" 
+			currentAvatarId = args(0)
+			top.ClientMainToolsIFrame.btnPeople.click
+		case "OnLeaveWorld"
+			if isobject(ClientUserPtr) and isobject(who) then
+				ClientUserPtr.clientCancelFriendPending who
+			else
+				stop		'bad stuff happend
+			end if
+	end select
+
+	dim wind, i, bDispatchEvent
+	if bLoggedIn then 
+		bDispatchEvent = true
+	else
+		select case theEvent
+			case "OnEnterRoom", "OnEnterWorld", "OnFinishSceneComposite"
+				bDispatchEvent = true
+			case else
+				bDispatchEvent = false
+		end select
+	end if
+
+	if bDispatchEvent then
+		on error resume next
+		for each wind in wantsEventsList
+			wind.HandleUIEvent who, what, args
+		next
+	end if
+	set world = nothing
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		HandleLogOff
+'//  Purpose:	Handler for the UI Event "OnLogOff"
+'//	 Called by:	theclient_OnUIEvent
+'////////////////////////////////////////////////////////////////////////
+sub HandleLogOff(Host, Target, Reason)
+	dim MsgString
+	dim User
+	set User = top.theclient.vwclient.world.user
+	if User is Target then
+		bForcedLogOffByHost = true
+		MsgString = "Host " & Host.Name & " is logging you off for the following reason:  " & Reason
+		MsgBox MsgString, vbInformation, "Sample World"
+		logonAgain
+	end if
+	set User = nothing
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		SendKeyToTextEntry
+'//  Purpose:	Write user keystrokes to the chat input textbox as if it had the focus.
+'//				Enables the user to type chat text while navigating in the 3d world.
+'//	 Called by:	clientRendererIFrame.htm:renderer_AlphaKeyPressed
+'////////////////////////////////////////////////////////////////////////
+sub SendKeyToTextEntry(theChar)
+	if theChar = 13 then
+		ClientChatBoxIFrame.DoSay
+	else
+		ClientChatBoxIFrame.InsertChar(theChar)
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		DoSetCamera(who,arg)
+'//  Purpose:	Change the camera view position in the 3d renderer.
+'//				Used by the camera control button in the chat page.
+'//  Called by:	theclient_OnUIEvent
+'////////////////////////////////////////////////////////////////////////
+sub DoSetCamera(who,arg)
+	dim rctrl
+	set rctrl = GetRenderControl()
+	rctrl.setcamera who
+	set rctrl = nothing
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		ClientRendererIFrame_onFocus
+'//  Purpose:	onFocus event handler for the 3d render iframe;
+'//				cancels sleep mode when the user clicks on the renderer
+'////////////////////////////////////////////////////////////////////////
+sub ClientRendererIFrame_onFocus
+	wakeUp
+end sub
+
+</SCRIPT>
+</head>
+<body id=docBody class=ClientBackgroundDark style="
+		edge1Pos:expression(ClientMarginLeft + Edge1Pct * 
+			(document.body.clientWidth - ClientMarginLeft - ClientMarginRight));
+		edge2Pos:expression(ClientMarginLeft + Edge2Pct * 
+			(document.body.clientWidth - ClientMarginLeft - ClientMarginRight));
+		edge3Pos:expression(ClientMarginTop + ClientHeaderHeight + Edge3Pct * 
+			(document.body.clientHeight - ClientMarginTop - ClientHeaderHeight - ClientMarginBottom));
+		edge4Pos:expression(ClientMarginTop + ClientHeaderHeight + Edge4Pct * 
+			(document.body.clientHeight - ClientMarginTop - ClientHeaderHeight - ClientMarginBottom));
+		edge5Pos:expression(ClientMarginLeft + Edge5Pct * 
+			(document.body.clientWidth - ClientMarginLeft - ClientMarginRight));
+		edge6Pos:expression(-IsZero(Edge4Pct) * (ClientMarginTop + ClientHeaderHeight + Edge3Pct * 
+			(document.body.clientHeight - ClientMarginTop - ClientHeaderHeight - ClientMarginBottom))
+			- IsNonZero(Edge4Pct) * (ClientMarginTop + ClientHeaderHeight + Edge4Pct * 
+			(document.body.clientHeight - ClientMarginTop - ClientHeaderHeight - ClientMarginBottom)));">
+
+<div id=logonMessage style="top:50;left:50;" class="vH1">
+Please wait while the world loads...
+<BR>
+<BR>
+<!-- some win98 systems have trouble with this ProgressBar object, so temporarily yanking it
+<OBJECT classid="clsid:0713E8D2-850A-101B-AFC0-4210102A8DA7" id=ProgressBar1 style="HEIGHT: 10px; LEFT: 0px; TOP: 100px; WIDTH: 200px" VIEWASTEXT>
+	<PARAM NAME="_ExtentX" VALUE="5292">
+	<PARAM NAME="_ExtentY" VALUE="265">
+	<PARAM NAME="_Version" VALUE="327682">
+	<PARAM NAME="BorderStyle" VALUE="0">
+	<PARAM NAME="Appearance" VALUE="1">
+	<PARAM NAME="MousePointer" VALUE="0">
+	<PARAM NAME="Enabled" VALUE="1">
+	<PARAM NAME="OLEDropMode" VALUE="0">
+	<PARAM NAME="Min" VALUE="0">
+	<PARAM NAME="Max" VALUE="20"></OBJECT>
+-->
+
+</div>
+
+<div id=divWholeClient
+	style="position:absolute;visibility:hidden;
+		top:0;left:0;height:100%;width:100%;">
+<iframe id=ClientRendererIFrame
+		name=ClientRendererIFrame
+		src=ClientRendererIFrame.htm
+		style="position:absolute;display:;
+			top:expression(ClientMarginTop + ClientHeaderHeight);
+			left:expression(document.body.style.edge5Pos + Edge5Size);
+			height:expression(document.body.style.edge6Pos - ClientMarginTop 
+				- ClientHeaderHeight - ClientStatusHeight);
+			width:expression(document.body.style.edge1Pos - document.body.style.edge5Pos - Edge5Size);
+			zIndex:-1;"
+		marginwidth=0
+		marginheight=0
+		frameborder=no
+		scrolling=no
+		></iframe>
+
+<iframe id=ClientStatusBarIFrame
+		name=ClientStatusBarIFrame
+		src=ClientStatusBarIFrame.htm
+		style="position:absolute;display:;
+			top:expression(document.body.style.edge6Pos - ClientStatusHeight);
+			left:expression(document.body.style.edge5Pos + Edge5Size);
+			height:expression(ClientStatusHeight);
+			width:expression(document.body.style.edge1Pos - document.body.style.edge5Pos - Edge5Size);"
+		marginwidth=0
+		marginheight=0
+		frameborder=no
+		scrolling=no
+		></iframe>
+
+<iframe id=ClientChatBoxIFrame
+		name=ClientChatBoxIFrame
+		src=ChatBox.htm
+		style="position:absolute;display:;
+			top:expression(document.body.style.edge3Pos + Edge3Size);
+			left:expression(ClientMarginLeft);
+			height:expression(document.body.clientHeight - document.body.style.edge3Pos - Edge3Size - ClientMarginBottom);
+			width:expression(document.body.style.edge2Pos - ClientMarginLeft);"
+		marginwidth=0 
+		marginheight=0 
+		frameborder=no
+		scrolling=no
+		></iframe>
+
+<div id=leftMoulding style="position:absolute;display:;
+			background:url(../images/Lstriptile.gif);"><img src="../Images/Lstrip.gif"></div>
+<div id=rightMoulding style="position:absolute;display:;
+			background:url(../Images/Rstriptile.gif);"><img src="../Images/Rstrip.gif"></div>
+
+<div id=RightPanel style="position:absolute;">
+
+<iframe id=ClientMainToolsIFrame
+		name=ClientMainToolsIFrame
+		src=ClientMainToolsIFrame.htm
+		style="position:absolute;display:;
+			top:0;
+			left:expression(mouldingWidth);
+			height:expression(buttonBarHeight);
+			width:expression(document.body.clientWidth - document.body.style.edge2Pos - Edge2Size - ClientMarginRight - mouldingWidth * 2);"
+		marginwidth=0
+		marginheight=0
+		frameborder=no
+		scrolling=no
+		></iframe>
+<iframe id=ClientAddressBarIFrame
+		name=ClientAddressBarIFrame
+		src=ClientAddressBarIFrame.htm
+		style="position:absolute;display:;
+			top:expression(buttonBarHeight);
+			left:expression(mouldingWidth);
+			height:expression(addressBarHeight);
+			width:expression(document.body.clientWidth - document.body.style.edge2Pos - Edge2Size - ClientMarginRight - mouldingWidth * 2);"
+		marginwidth=0
+		marginheight=0
+		frameborder=no
+		scrolling=no
+		></iframe>
+<iframe id=ClientBrowserIFrame
+		name=ClientBrowserIFrame
+		src=SampleLinks.htm
+		style="position:absolute;display:;
+			top:expression(buttonBarHeight + addressBarHeight);
+			left:expression(mouldingWidth);
+			height:expression(document.body.clientHeight - document.body.style.edge4Pos - Edge4Size - ClientMarginBottom - buttonBarHeight - addressBarHeight - 15);
+			width:expression(document.body.clientWidth - document.body.style.edge2Pos - Edge2Size - ClientMarginRight - mouldingWidth * 2);"
+		marginwidth=0
+		marginheight=0
+		frameborder=no
+		scrolling=no
+		></iframe>
+</div>
+<!-- The header is down here to make it last in Z-order to make up for a positioning glitch.
+	When both lower panes are enlarged to full height, the status pane is positioned above
+	the right pane, where it could obscure part of the header. 
+	Making the header last hides the status pane behind it when this happens.
+-->
+
+<div style="position:absolute;display:;
+			top:expression(document.body.style.edge4Pos);
+			left:expression(document.body.style.edge2Pos + Edge2Size);
+			height:expression(document.body.clientHeight - document.body.style.edge4Pos - Edge4Size - ClientMarginBottom +15);
+			width:expression(mouldingWidth);
+			background:url(Lstriptile.gif);"><img src="../Images/Lstrip.gif"></div>
+
+<div style="position:absolute;display:;
+			top:expression(document.body.style.edge4Pos);
+			left:expression(document.body.clientWidth - ClientMarginRight - mouldingWidth);
+			height:expression(document.body.clientHeight - document.body.style.edge4Pos - Edge4Size - ClientMarginBottom);
+			width:expression(mouldingWidth);
+			background:url(../Images/Rstriptile.gif);"><img src="../Images/Rstrip.gif"></div>
+
+<div id=BottomBorder
+	style="position:absolute;
+		display:block;
+		height:expression(mouldingWidth -1);
+		top:expression(document.body.clientHeight - ClientMarginBottom - mouldingWidth);
+		left:expression(document.body.style.edge2Pos + Edge2Size);
+		line-height:5px;
+		width:expression(document.body.clientWidth - document.body.style.edge2Pos - Edge2Size - ClientMarginRight + 1);
+		background:#84A2A5;
+		border-Left:1px solid #C4D2D2;
+		border-Right:1px solid #C4D2D2;
+		border-Bottom:1px solid #C4D2D2;">&nbsp;</div>
+
+<div id=BottomMargin
+	style="position:absolute;
+		display:block;
+		height:expression(ClientMarginBottom);
+		top:expression(document.body.clientHeight - ClientMarginBottom);
+		left:expression(document.body.style.edge2Pos + Edge2Size);
+		line-height:5px;
+		width:expression(document.body.clientWidth - document.body.style.edge2Pos - Edge2Size - ClientMarginRight);
+		background:#5A7B7D;">&nbsp;</div>
+
+<div id=ClientHeaderIFrame
+		style="position:absolute;display:;
+			top:expression(ClientMarginTop);
+			left:expression(ClientMarginLeft);
+			height:expression(ClientHeaderHeight);
+			width:expression(document.body.clientWidth
+				- ClientMarginLeft 
+				- ClientMarginRight);">
+
+	<table border=0 cellspacing=0 cellpadding=0 width=100%>
+	<tr>
+		<td valign=left class=vH1><span>Desktop World</span></td>
+	</tr>
+	</table>
+</div>
+
+</div>	<!-- divWholeClient -->
+
+</body>
+</html>

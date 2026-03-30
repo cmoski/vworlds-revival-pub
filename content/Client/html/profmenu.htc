@@ -1,0 +1,43 @@
+<public:attach event=onmouseover onevent=DoMouseOver() />
+<public:attach event=onmouseout onevent=DoMouseOut() />
+<public:attach event=onclick onevent=DoClick() />
+
+<script language=vbs>
+Option Explicit
+
+'======================================
+' Name: DoMouseOver
+' Desc:
+'--------------------------------------
+Sub DoMouseOver
+	If element.style.backgroundColor <> "#9c9b8b" Then
+		element.style.textDecoration = "underline"
+	End If
+End Sub
+'======================================
+
+
+'======================================
+' Name: DoMouseOut
+' Desc:
+'--------------------------------------
+Sub DoMouseOut
+	If element.style.backgroundColor <> "#9c9b8b" Then
+		element.style.textDecoration = ""
+	End If
+End Sub
+'======================================
+
+
+'======================================
+' Name: DoClick
+' Desc:
+'--------------------------------------
+Sub DoClick
+	If element.style.backgroundColor <> "#9c9b8b" Then
+		SetHighlight(element)
+	End If
+End sub
+'======================================
+
+</script>

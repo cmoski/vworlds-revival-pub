@@ -1,0 +1,178 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//
+'//  File:			Help.htm
+'//  Description:	Main help system page.
+'////////////////////////////////////////////////////////////////////////-->
+<html>
+<head>
+<link rel=stylesheet href=../shared/global.css>
+<meta http-equiv="Expires" content="0">
+<title>Help</title>
+<!--Include scripts-->
+<script language="vbscript" src="../vbs/WriteSideLink.vbs">
+</script>
+<script language="vbscript" src="../vbs/document_onSelectStart.vbs">
+</script>
+<script language="vbscript" src="../vbs/MenuOnMouseDown.vbs">
+</script>
+<!--End include scripts-->
+
+<script language="VBScript">
+option explicit
+
+const defaultPage = "HelpWelcome.htm"
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		Window_OnLoad
+'//  Purpose:	To build the help menu
+'////////////////////////////////////////////////////////////////////////
+sub window_onload
+ '	 'Function	ID	ClassName		Title		Func	ID		Page		Blt Type
+	WriteSideLink "lnk01","MenuI","Getting Started","LoadTopic 'lnk01', 'Help/GettingStarted.htm'",	1
+	WriteSideLink "lnk02","MenuI","Changing Your Appearance","LoadTopic 'lnk02', ''",	2
+	WriteSideLink "lnk02_1","MenuII_Help","Your Character","LoadTopic 'lnk02_1', 'Help/ChoosingACharacter.htm'",	3
+	WriteSideLink "lnk02_2","MenuII_Help","Your Details","LoadTopic 'lnk02_2', 'Help/ChangingYourDetails.htm'",	3
+	WriteSideLink "lnk02_3","MenuII_Help","Your Look","LoadTopic 'lnk02_3', 'Help/ChangingYourLook.htm'",	3
+	WriteSideLink "lnk02_4","MenuII_Help","Your Mood","LoadTopic 'lnk02_4', 'Help/ChangingYourMood.htm'",	3
+	WriteSideLink "lnk02_5","MenuII_Help","Your Nickname","LoadTopic 'lnk02_5', 'Help/SelectingYourNickname.htm'",	3
+	WriteSideLink "lnk02_Pad","MenuII_Help_Pad"," ","",					0
+	WriteSideLink "lnk03","MenuI","Communicating With Others","LoadTopic 'lnk03', ''",	2
+	WriteSideLink "lnk03_1","MenuII_Help","Discussion Area","LoadTopic 'lnk03_1', 'Help/DiscussionArea.htm'",	3
+	WriteSideLink "lnk03_2","MenuII_Help","E-mail","LoadTopic 'lnk03_2', 'Help/ReadingEmail.htm'",	3
+	WriteSideLink "lnk03_3","MenuII_Help","Gesturing","LoadTopic 'lnk03_3', 'Help/Gesturing.htm'",	3
+	WriteSideLink "lnk03_4","MenuII_Help","Going to Sleep","LoadTopic 'lnk03_4', 'Help/GoingToSleep.htm'",	3
+	WriteSideLink "lnk03_5","MenuII_Help","Ignoring People","LoadTopic 'lnk03_5', 'Help/IgnoringPeople.htm'",	3
+	WriteSideLink "lnk03_6","MenuII_Help","Making Friends","LoadTopic 'lnk03_6', 'Help/MakingFriends.htm'",	3
+	WriteSideLink "lnk03_7","MenuII_Help","Receiving Gifts","LoadTopic 'lnk03_7', 'Help/ReceivingGifts.htm'",	3
+	WriteSideLink "lnk03_8","MenuII_Help","Receiving Notes","LoadTopic 'lnk03_8', 'Help/ReceivingNotes.htm'",	3
+	WriteSideLink "lnk03_9","MenuII_Help","Sending Gifts","LoadTopic 'lnk03_9', 'Help/SendingGifts.htm'",	3
+	WriteSideLink "lnk03_10","MenuII_Help","Sending Notes","LoadTopic 'lnk03_10', 'Help/SendingNotes.htm'",	3
+	WriteSideLink "lnk03_11","MenuII_Help","Chatting","LoadTopic 'lnk03_11', 'Help/TalkingtoPeople.htm'",	3
+	WriteSideLink "lnk03_12","MenuII_Help","Whispering","LoadTopic 'lnk03_12', 'Help/WhisperingToPeople.htm'",	3
+	WriteSideLink "lnk03_Pad","MenuII_Help_Pad"," ","",	0
+	WriteSideLink "lnk06","MenuI","Exploring the World","LoadTopic 'lnk06', ''",	2
+	WriteSideLink "lnk06_1","MenuII_Help","Changing Your View","LoadTopic 'lnk06_1', 'Help/ChangingYourView.htm'",	3
+	WriteSideLink "lnk06_2","MenuII_Help","Getting Around","LoadTopic 'lnk06_2', 'Help/GettingAround.htm'",	3
+	WriteSideLink "lnk06_3","MenuII_Help","World Overview","LoadTopic 'lnk06_3', 'Help/Overview.htm'",	3
+	WriteSideLink "lnk06_4","MenuII_Help","Locating Others","LoadTopic 'lnk06_4', 'Help/LocatingOthers.htm'",	3
+	WriteSideLink "lnk06_5","MenuII_Help","Map View","LoadTopic 'lnk06_5', 'Help/MapView.htm'",	3
+	WriteSideLink "lnk06_6","MenuII_Help","Resizing Views","LoadTopic 'lnk06_6', 'Help/ResizingWorldViews.htm'",	3
+	WriteSideLink "lnk06_Pad","MenuII_Help_Pad"," ","",					0
+	WriteSideLink "lnk07","MenuI","Things to Do in the World","LoadTopic 'lnk07', ''",	2
+	WriteSideLink "lnk07_1","MenuII_Help","Creating a Web Page","LoadTopic 'lnk07_1', 'Help/MyWebPage.htm'",	3
+	WriteSideLink "lnk07_2","MenuII_Help","Music Garden","LoadTopic 'lnk07_2', 'Help/ExploringTheMusicGarden.htm'",	3
+	WriteSideLink "lnk07_3","MenuII_Help","Playing Games","LoadTopic 'lnk07_3', 'Help/PlayingGames.htm'",	3
+	WriteSideLink "lnk07_Pad","MenuII_Help_Pad"," ","",					0
+	WriteSideLink "lnk08","MenuI","Getting Information","LoadTopic 'lnk08', ''",	2
+	WriteSideLink "lnk08_2","MenuII_Help","About Seattle","LoadTopic 'lnk08_2', 'Help/FindingOutMoreSeattle.htm'",	3
+	WriteSideLink "lnk08_3","MenuII_Help","Finding People","LoadTopic 'lnk08_3', 'Help/LocatingOthers.htm'",	3
+	WriteSideLink "lnk08_4","MenuII_Help","World Overview","LoadTopic 'lnk08_4', 'Help/Overview.htm'",	3
+	WriteSideLink "lnk08_5","MenuII_Help","Surfing the Web","LoadTopic 'lnk08_5', 'Help/SurfingtheWeb.htm'",	3
+	WriteSideLink "lnk08_Pad","MenuII_Help_Pad"," ","",					0
+
+	if top.ClientHelpPage = "" then 
+		MenuOnMouseDown(window.document.all.item("lnk01"))
+	else
+		dim strPage
+		dim menuElem, strFunc, strElemId
+		
+		'fixes "display all" problem
+		strPage = top.ClientHelpPage
+		for each menuElem in document.all
+			strFunc = menuElem.getAttribute("func")
+			if instr(strFunc, strPage) then
+				MenuOnMouseDown(menuElem)
+				strElemId = menuElem.id
+				MenuOnMouseDown(window.document.all.item(left(strElemId,5)))
+				exit for
+			end if
+		next
+		InfoIFrame.navigate top.ClientHelpPage
+		top.ClientHelpPage = ""
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		LoadTopic
+'//  Purpose:	To build the help menu
+'//	 Params:
+'//		strId	- <string> id of the topic
+'//		strURL	- <string> url of the topic
+'//  Called by:	window_onLoad
+'////////////////////////////////////////////////////////////////////////
+sub LoadTopic(strID, strURL)
+	if strURL <> "" then
+		document.InfoIFrame.location = strURL
+	end if
+
+	dim srcElem
+	set srcElem = window.document.all.item(strID)
+	dim elem
+	for each elem in document.all
+		select case LCase(srcElem.getAttribute("origClass"))
+		case "menui"
+			if elem.getAttribute("origClass") = srcElem.getAttribute("origClass") or _
+			  (InStr(elem.id, strID) > 0 and _
+			  InStr(LCase(elem.className),"menuii_help") > 0) then
+				elem.style.display = "inline"				
+			elseif InStr(LCase(elem.className),"menui") > 0 then 
+				elem.style.display = "none"
+			end if
+
+		case LCase(srcElem.getAttribute("origClass")) = "menuii_help" 
+			if LCase(elem.getAttribute("origClass")) = "menui" then
+				elem.style.display = "inline"
+			elseif elem.getAttribute("origClass") = srcElem.getAttribute("origClass") and _ 
+			  Left(elem.id,InStr(elem.id,"_")) = Left(srcElem.id,InStr(elem.id,"_")) then
+				elem.style.display = "inline"		
+			elseif InStr(elem.id, strID) > 0 and _
+			  InStr(LCase(elem.className),"menuiii_help") > 0 then
+				elem.style.display = "inline"
+			elseif InStr(LCase(elem.id), "pad") > 0 and _
+			  Left(elem.id,InStr(elem.id,"_")) = Left(srcElem.id,InStr(elem.id,"_")) then
+				elem.style.display = "inline"
+			elseif InStr(LCase(elem.className),"menui") > 0 then
+				elem.style.display = "none"
+			end if
+		end select			
+	next
+	set srcElem = nothing
+end sub
+
+</script>
+</head>
+
+<body bgcolor=#ffffff>
+
+<span class=bkgMenu>
+</span>
+
+
+<span id=SideLinks
+	class=SideLinks>
+</span>
+
+<div id=TOCNote
+	style="position:absolute;
+		top:expression(document.body.clientHeight-36);
+		height:36;
+		left:0;
+		width:115;
+	    COLOR: #3b5d5c;
+	    FONT-FAMILY: Verdana;
+	    FONT-SIZE: 8pt;
+	    LINE-HEIGHT: 12px;
+		OVERFLOW-X: hidden;
+		Z-INDEX:0;">
+	To restore the table of contents, click <b>Getting Started.</b>
+</div>
+<iframe id=InfoIFrame
+	class=InfoIFrame
+	name=infoIFrame 
+	marginwidth=0
+	marginheight=0
+	frameborder=no></iframe>
+</body>
+</html>
+

@@ -1,0 +1,657 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//  File:			BBS.htm
+'//  Description:	Simple Message Board.
+'//					Messages are organized by topic. Users can create new topics and reply to 
+'//					existing topics, but there is no delete capability.
+'//					For anonymous postings the author's name is not displayed but is saved in the database.
+'//  Called by:		sampleLinks.htm
+'//
+'//	 NOTE:	Although class behaviors are used extensively elsewhere in this world client,
+'//			they are not used in the bbs page. Attaching mouse behaviors to rows or cells  
+'//			in the table increased the page loading time dramatically.
+'//			The bbs/discussion board makes use of IE client side data-binding.
+'//			See the Web Workshop section of msdn.microsoft.com for information about data binding.
+'////////////////////////////////////////////////////////////////////////-->
+<HTML>
+<HEAD>
+<META NAME="GENERATOR" Content="Microsoft Visual Studio 6.0">
+<TITLE>Discussion Area</TITLE>
+<LINK Rel="Stylesheet" href="../shared/global.css">
+<style>
+
+.TableHeading
+{
+	color: black;
+    background:#ECF5F5;
+    FONT-FAMILY:tahoma;
+    FONT-SIZE:8pt;
+	font-weight:bold;	
+}
+
+.tblCell
+{
+	color: black;
+    FONT-FAMILY:verdana;
+    FONT-SIZE:8pt;	
+	height:20;
+	vertical-align:top;
+}
+
+.TableMessageRow
+{
+	color: black;
+    background:#ECF5F5;
+    FONT-FAMILY:verdana;
+    FONT-SIZE:8pt;
+	font-weight:normal;	
+}
+
+</style>
+
+<!--Data source objects for data binding 
+	"getTopics" is the name of a database query that returns a list of topics in the BBS. 
+	This and the "expandTopic" query used to get messages for a topic are stored in 
+	c:/winnt/msdfmap_desktopWorld.ini on the BBS webserver.
+-->
+<OBJECT classid="clsid:BD96C556-65A3-11D0-983A-00C04FC29E33"
+    ID=dsoAllTopics HEIGHT=0 WIDTH=0>
+    <PARAM NAME="ExecuteOptions" VALUE="1">
+    <PARAM NAME="Handler" VALUE="MSDFMAP.Handler,msdfmap_desktopWorld.ini">
+    <PARAM NAME="Server" VALUE="">
+    <PARAM NAME="Connect" VALUE="Data Source=DesktopWorldBBS">
+    <PARAM NAME="SQL" VALUE="getTopics">
+</OBJECT>
+
+<OBJECT classid="clsid:BD96C556-65A3-11D0-983A-00C04FC29E33"
+    ID=dsoSingleTopic HEIGHT=0 WIDTH=0>
+    <PARAM NAME="ExecuteOptions" VALUE="1">
+    <PARAM NAME="Handler" VALUE="MSDFMAP.Handler,msdfmap_desktopWorld.ini">
+    <PARAM NAME="Server" VALUE="">
+    <PARAM NAME="Connect" VALUE="Data Source=DesktopWorldBBS">
+    <PARAM NAME="SQL" VALUE="">
+</OBJECT>
+
+<!--include scripts-->
+<script language="vbscript" src="../vbs/document_OnSelectStart.vbs">
+</script>
+<script language="vbscript" src="../vbs/ShowDialog.vbs">
+</script>
+<script language="vbscript" src="../vbs/WordBreak.vbs">
+</script>
+<script language="vbscript" src="../vbs/HTMLFilter.vbs">
+</script>
+<!--end include scripts-->
+
+<SCRIPT language="VBScript">
+Option Explicit
+
+const intTop = 80
+const intNewMsgHt = 160 
+const adcFetchUpFront = 1
+const adcFetchBackground = 2
+const adcFetchAsync = 3
+
+const maxMsgSize = 5000
+const adcReadyStateLoaded = 2
+const adcReadyStateInteractive = 3
+const adcReadyStateComplete = 4
+
+const hiColor = "lemonChiffon"
+const selectedTopicColor = "#bad2ce"
+const topicBlockColor = "#ECF5F5"
+const selectedMsgColor = "#bad2ce"
+const normalColor = "#FFFFFF"
+
+const strReTitle = "Re:"
+const strRowClass1 = "TableRow_Even"
+const strRowClass2 = "TableRow_Odd"
+const strInitText = "Type your message here."
+
+const arrowRight = "4"	' webding characters
+const arrowDown = "6"
+
+dim strRowClass
+dim strRowColor
+dim BBSServer
+dim topicRow
+dim msgRow
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		window_onLoad
+'//  Purpose:	Initialize the page
+'////////////////////////////////////////////////////////////////////////
+Sub window_onLoad
+	set topicRow = Nothing
+	set msgRow = Nothing
+	BBSServer = top.ClientWorldPtr.bbsServer
+	tblAllTopics.dataSrc = ""
+	tblAllTopics.dataSrc = "#dsoAllTopics"
+	dsoAllTopics.server = BBSServer
+	dsoSingleTopic.server = BBSServer
+
+	BBSSave.location = "BBSSave.htm"
+	btnAll.Click
+	Author.innerHTML = top.ClientUserPtr.Name
+end sub
+
+sub window_onresize
+	btnAll.Click
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		document_onClick
+'//  Purpose:	Handle clicks on elements in the page
+'////////////////////////////////////////////////////////////////////////
+sub document_onClick
+	dim objElem
+ 	set objElem = window.event.srcElement
+	select case objElem.id
+	case "topicAuthor", "msgAuthor"
+		ShowProfile (objElem.innerText)
+	case "topicTitle"
+		ButtonClick
+	case "msgBrief"
+		dsoSingleTopic.recordset.AbsolutePosition = objElem.recordNumber
+		ButtonClick
+	end select
+	set objElem = nothing	
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		DoOnMouseOver()
+'//  Purpose:  	Highlight a row when the mouse is over it.
+'////////////////////////////////////////////////////////////////////////
+sub document_OnMouseOver()
+	dim objElem, rowElem
+	set objElem = window.event.srcElement
+	if objElem.className = "tblCell" then 
+		set rowElem = objElem.ParentElement
+	elseif objElem.ParentElement.className = "tblCell" then
+		set rowElem = objElem.ParentElement.ParentElement
+	else
+		set objElem = nothing
+		exit sub
+	end if
+	if rowElem.style.backgroundColor <> hiColor then					
+		rowElem.style.backgroundColor = hiColor
+	end if
+	set rowElem = nothing
+	set objElem = nothing
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		DoOnMouseOut()
+'//  Purpose:  	Unhighlight a row when the mouse leaves it.
+'////////////////////////////////////////////////////////////////////////
+sub Document_OnMouseOut()
+	dim objElem, rowElem, saveColor
+	set objElem = window.event.srcElement
+	if objElem.className = "tblCell" then 
+		set rowElem = objElem.ParentElement
+	elseif objElem.ParentElement.className = "tblCell" then
+		set rowElem = objElem.ParentElement.ParentElement
+	else
+		set objElem = nothing
+		exit sub
+	end if
+	if rowElem.style.backgroundColor <> normalColor then					
+		saveColor = rowElem.getAttribute("saveColor")
+		if saveColor <> "" then
+			rowElem.style.backgroundColor = saveColor
+		else
+			rowElem.style.backgroundColor = normalColor
+		end if
+	end if
+	set rowElem = nothing
+	set objElem = nothing
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		ShowProfile
+'//  Purpose:	Show the message author's profile
+'//  Arguments:	strAv - the avatar   
+'//  Called by:	document_onClick
+'////////////////////////////////////////////////////////////////////////
+sub ShowProfile (strAv)
+	dim strMsg
+	if strAv = "Anon." then
+		strMsg = "The contributor for this message was anonymous.  The profile cannot be retrieved."
+		ShowDialog strMsg, ""	
+	else
+		dim theAvatar
+		'set theAvatar = Nothing
+		if strAv <> "" then
+			set theAvatar = top.ClientUserPtr.container.findwithin(strAv)
+			if theAvatar is Nothing then
+				strMsg = strAv & " is no longer an avatar in this world.  The profile cannot be retrieved."
+				ShowDialog strMsg, ""	
+			else
+				' Click the People button, setting CurrentAvatarId so people.htm will know who to display
+				top.CurrentAvatarId = theAvatar.id
+				top.ClientMainToolsIFrame.btnPeople.click
+			end if			
+		end if
+		set theAvatar = nothing
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		DoRefresh
+'//  Purpose:	Refresh the topics list from the database
+'//  Called by:	bbsSave.htm:Window_OnLoad
+'//  Notes: bbsSave.htm is loaded into a hidden iframe initially. Its window_onLoad
+'//			calls DoRefresh which refreshes the topics list. Each time a topic is saved
+'//			bbsSave.htm is reloaded, which refreshes the topic list again.
+'////////////////////////////////////////////////////////////////////////
+sub DoRefresh
+	if tblAllTopics.readyState = "complete" then
+	    on error resume next
+		divAllTopics.style.display = "none"
+		divLoading.style.top = intTop
+		divLoading.style.display = "block"
+		dsoAllTopics.Refresh
+	else
+		Window.SetTimeout "DoRefresh", 100
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		ShowElem and HideElem
+'//  Purpose:	Display or hide an element
+'//  Arguments:	objElem: HTML element object  
+'//	 Called by:	ButtonClick, SaveMessage
+'////////////////////////////////////////////////////////////////////////
+sub ShowElem (objElem)
+	objElem.style.display = ""
+end sub
+
+sub HideElem (objElem)
+	objElem.style.display = "none"
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		max
+'//  Purpose:	return the larger of two values
+'//  Arguments:	val1, val2: variants of compatible types
+'//	 Called by:	ButtonClick
+'////////////////////////////////////////////////////////////////////////
+function max (val1, val2)
+	if val1 >= val2 then 
+		max = val1
+	else
+		max = val2
+	end if
+end function
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		ButtonClick
+'//  Purpose:	OnClick event handler for buttons, messages and topics
+'////////////////////////////////////////////////////////////////////////
+sub ButtonClick()
+	Select Case Window.Event.srcElement.id
+	Case "btnAll"
+		ViewTitle.InnerText = "All Messages"
+		if divMessage.style.display = "" then HideElem divMessage
+		if divNewMessage.style.display = "" then HideElem divNewMessage
+		HideElem btnAll
+		HideElem btnReply
+		ShowElem btnNew
+		divAllTopics.style.display = "none"
+		divAllTopics.style.height = MsgHt
+		divAllTopics.style.top = intTop
+		divAllTopics.style.display = "block"
+	Case "btnSave"
+		ViewTitle.InnerText = "All Messages"
+		isAnon.checked = false
+		if divMessage.style.display = "" then HideElem divMessage
+		if divNewMessage.style.display = "" then HideElem divNewMessage
+
+		HideElem btnAll
+		HideElem btnReply
+		ShowElem btnNew
+		divAllTopics.style.display = "none"
+	Case "btnReply"
+		ViewTitle.InnerText = "Reply"
+		isAnon.checked = false
+		if divMessage.style.display = "" then HideElem divMessage
+		if divNewMessage.style.display = "" then HideElem divNewMessage
+		ShowElem btnAll
+		HideElem btnReply
+		ShowElem btnNew
+		divNewMessage.style.top = intTop
+		divNewMessage.style.height = intNewMsgHt
+		ShowElem divNewMessage
+		divAllTopics.style.height = max(MsgHt - intNewMsgHt - 10, 100)
+		divAllTopics.style.top = intTop + intNewMsgHt + 10
+		ShowElem divAllTopics
+		newIsTopic.value = "false"
+		newTopicId.value = CInt(topicRow.firstChild.firstChild.innerText)
+		if isAnon.checked then isAnon.click		' default to non-anonymous
+		Title.readonly = true
+		Title.value = topictopic.innerText
+		Content.Value = strInitText
+		Content.select
+		Content.focus
+	Case "btnNew"
+		ViewTitle.InnerText = "New Message"
+		isAnon.checked = false
+		if divMessage.style.display = "" then HideElem divMessage
+		ShowElem btnAll
+		HideElem btnReply
+		HideElem btnNew
+		divNewMessage.style.top = intTop
+		divNewMessage.style.height = intNewMsgHt
+		ShowElem divNewMessage
+		divAllTopics.style.display = "none"
+		divAllTopics.style.height = max(MsgHt - intNewMsgHt - 10, 100)
+		divAllTopics.style.top = intTop + intNewMsgHt + 10
+		divAllTopics.style.display = "block"
+		ShowElem divAllTopics
+		newIsTopic.value = "true"
+		newTopicId.value = "0"
+		Title.readonly = false
+		Title.value = ""
+		Title.focus
+	Case "topicTitle"
+		' collapse the current topic; if it is not the clicked topic then expand the clicked topic
+		unExpandTopic
+		if window.event.srcElement.parentElement.parentElement is topicRow then
+			' we clicked on the current topic, so just collapse it
+			set topicRow = Nothing
+		else
+			' get the TR that contains the clicked element
+			set topicRow = window.event.srcElement.parentElement.parentElement
+			expandTopic
+		end if
+	Case "msgBrief"
+		' unhighlight the current message row, if any
+		if not (msgRow is nothing) then
+			msgRow.setAttribute "saveColor",topicBlockColor
+			msgRow.style.backgroundColor = topicBlockColor
+		end if
+		' display the selected message
+		ViewTitle.InnerText = "Message"
+		divMessage.style.height = max(MsgHt/2 - 10, 100)
+		divMessage.style.top = intTop
+		ShowElem divMessage
+		if divNewMessage.style.display = "" then HideElem divNewMessage
+		ShowElem btnAll
+		ShowElem btnReply
+		ShowElem btnNew
+		divAllTopics.style.display = "none"
+		divAlltopics.style.height = max(MsgHt/2,100)
+		divAllTopics.style.top = intTop + MsgHt/2
+		divAllTopics.style.display = "block"
+		window.event.srcElement.parentElement.parentElement.setAttribute "saveColor",selectedMsgColor
+		set msgRow = window.event.srcElement.parentElement.parentElement
+		msgRow.setAttribute "saveColor",selectedMsgColor
+		msgRow.style.backgroundColor = selectedMsgColor
+		ShowElem divAllTopics
+		window.event.srcElement.parentElement.parentElement.scrollIntoView false
+	end select
+	Content.Value = strInitText
+	
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		ExpandTopic
+'//  Purpose:	displays a list of messages within a topic
+'//	 Called by:	ButtonClick
+'////////////////////////////////////////////////////////////////////////
+sub ExpandTopic
+	dim eventElement
+	dim newTable, newRow, newCell, newSpan, findTopicId
+	set eventElement = window.event.srcElement
+	' the TopicId element is the first SPAN in the first TD in the TR containing the topic
+	topicRow.nextSibling.firstChild.firstChild.dataSrc = ""
+	topicRow.setAttribute "saveColor",selectedTopicColor
+	findTopicId = topicRow.firstChild.firstChild.innerText
+	' requery the database to get all messages within this topic;
+	' "expandTopic" is the name of a stored query that takes topicID as both of its 2 args. 
+	' The queries are stored in c:\winnt\msdfmap_desktopWorld.ini on the BBS webserver.
+	dsoSingleTopic.SQL = "expandTopic(" & findTopicId & "," & findTopicId & ")"
+	topicRow.nextSibling.firstChild.firstChild.dataSrc = "#dsoSingleTopic"
+	dsoSingleTopic.Refresh
+	topicRow.firstChild.firstChild.nextSibling.innerText = arrowDown
+	topicRow.nextSibling.style.display = ""
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		unExpandTopic
+'//  Purpose:	hides the list of messages for the topic
+'//	 Called by:	ButtonClick
+'////////////////////////////////////////////////////////////////////////
+sub unExpandTopic
+	' collapse the currently expanded topic, if any
+	if not (topicRow is Nothing) then
+		topicRow.setAttribute "saveColor",normalColor
+		topicRow.style.backgroundColor = normalColor
+		topicRow.nextSibling.firstChild.firstChild.dataSrc = ""
+		topicRow.nextSibling.style.display = "none"
+		topicRow.firstChild.firstChild.nextSibling.innerText = arrowRight
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		tblAllTopics_onreadystatechange
+'//  Purpose:	event handler to display the table when it has finished rendering
+'////////////////////////////////////////////////////////////////////////
+sub tblAllTopics_onreadystatechange
+	dim row
+	if tblAllTopics.readyState = "complete" then
+		divLoading.style.display = "none"
+		divAllTopics.style.display = ""
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		MsgHt
+'//  Purpose:	Return the vertical space available for the topic list area
+'//	 Called by:	ButtonClick, SaveMessage
+'////////////////////////////////////////////////////////////////////////
+function MsgHt()
+	MsgHt = document.body.offsetHeight - 90
+end function
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		isAnon_onPropertyChange
+'//  Purpose:	Event handler to toggle the author input between author's name and Anonymous
+'//	 Called by:	user checking or unchecking the isAnon box
+'////////////////////////////////////////////////////////////////////////
+sub isAnon_onPropertyChange
+	if isAnon.checked then 
+		Author.innerHTML = "Anon."		
+	else
+		Author.innerHTML = top.ClientUserPtr.Name
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		SaveMessage
+'//  Purpose:	onclick event handler for btnSave button; save a message to the db
+'//	 Called by:	user clicking on the btnSave button
+'////////////////////////////////////////////////////////////////////////
+sub SaveMessage
+	if Trim(Title.value) = "" or Trim(Content.value) = "" or Trim(Content.value) = strInitText then
+		dim strMsg
+		strMsg = "You must fill in all fields to submit a message."
+		ShowDialog strMsg, ""
+		exit sub
+	end if
+ 	dim objSaveFrm
+	set objSaveFrm = document.frames(0).Form1
+	objSaveFrm.Title.value = Trim(WordBreak(Title.value,16))
+	objSaveFrm.Content.value = replace(Trim(WordBreak(ParseURLs(Content.value),30)), vbCrLf, "<br>")
+	objSaveFrm.Author.value = Author.innerHTML
+	objSaveFrm.IsTopic.value = newIsTopic.value
+	objSaveFrm.TopicId.value = newTopicId.value
+	objSaveFrm.submit()
+	Content.value = ""
+	Title.value = ""
+ 	btnAll.click
+
+	ViewTitle.InnerText = "All Messages"
+	HideElem divNewMessage
+	HideElem btnAll
+	HideElem btnReply
+	ShowElem btnNew
+	divAllTopics.style.height = MsgHt
+	divAllTopics.style.top = intTop
+	divAllTopics.style.display = "none"
+
+	set topicRow = nothing
+	set objSaveFrm = nothing
+end sub 
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		Content_OnFocus
+'//  Purpose:	Select the entire content text when focused
+'//	 Called by:	user clicking on or tabbing to the Content field
+'////////////////////////////////////////////////////////////////////////
+sub Content_OnFocus
+	if Trim(Content.value) = strInitText then
+		Content.select
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		checkContentLength
+'//  Purpose:	onChange event handler for the Content field; validates the content length
+'//	 Called by:	user changing data in the Content field and exiting the field
+'////////////////////////////////////////////////////////////////////////
+sub checkContentLength
+	if len(Content.value) >= maxMsgSize then
+		msgbox "Your message cannot exceed " & maxMsgSize & " characters."
+		Content.value = left(Content.value,maxMsgSize)
+	end if
+end sub
+
+</script>
+</head>
+<body bgcolor=#ffffff style="OVERFLOW-Y: auto"><!--Start HiddenIFrame-->
+<iframe id=BBSSave
+	 src=""
+	 style="display:none; HEIGHT: 30%; LEFT: 0px; POSITION:
+	 absolute; TOP: 50%; WIDTH: 60%" marginwidth=0 marginheight=0 frameborder=no>
+</iframe><!--End HiddenIFrame--><!--Start Heading Section-->
+
+<!--
+<div id=divStatus style="position:absolute;top:0;left:200;height:20;width:100;"></div>
+-->
+
+<div id=PageHeading class=PageHeading>Discussion Area</div>
+<div id=PageHeadingRt class=PageHeadingRt></div>
+<hr class=PageHeadingHR>
+<!--End Heading Section--><!--MenuBar-->
+<div id=MenuBar	align=right
+    style="BACKGROUND-COLOR: #bad2ce; BORDER-BOTTOM: #3b5d5c 1px solid; 
+		BORDER-LEFT:#3b5d5c 1px solid; BORDER-RIGHT: #3b5d5c 1px solid; 
+		BORDER-TOP: #3b5d5c 1px solid; 
+		COLOR: #3b5d5c; FONT-FAMILY: Verdana; FONT-SIZE: 9pt; HEIGHT: 30px; 
+		PADDING-BOTTOM: 5px; PADDING-LEFT: 5px; PADDING-RIGHT: 5px; PADDING-TOP: 5px; 
+		POSITION: absolute; TOP: 40px; ; WIDTH: expression(document.body.clientWidth-16)">
+	<span id=ViewTitle
+		 style="CURSOR: default; FONT-WEIGHT: bold; LEFT: 5px; POSITION: absolute; TOP: 7px">All Messages</span>
+	<button ID=btnReply		
+		 class=btnTeal 
+		 onclick=ButtonClick
+		 style="DISPLAY: none">Reply</button>
+	<button ID=btnNew		
+		 class=btnTeal 
+		 style="DISPLAY:none; WIDTH:75px" onclick=ButtonClick>New Topic</button>
+	<button ID=btnAll	
+		 class=btnTeal 
+		 onclick=ButtonClick
+		 style="DISPLAY: none">Close</button>
+</div><!--id=MenuBar-->
+
+<div id=divLoading class=ParaText2 
+	 style="DISPLAY: none; HEIGHT: 100px; POSITION: absolute; WIDTH: 90%">	
+Loading messages, please wait...
+</div><!-- All Topics -->
+<div id=divAllTopics 
+	style="BORDER-BOTTOM: #a5a284 1px solid; BORDER-LEFT: #a5a284 1px solid; 
+		BORDER-RIGHT: #a5a284 1px solid; BORDER-TOP: #a5a284 1px solid;
+		DISPLAY: none; ; HEIGHT: expression(document.body.offsetHeight -100); 
+		OVERFLOW-Y: scroll; POSITION: absolute; WIDTH: expression(document.body.clientWidth-16)">
+	<table id=tblAllTopics width="100%" cellspacing=0 cellpadding=1 border=0>
+		<thead>
+		<tr style="BACKGROUND: #ecf5f5">
+			<td class=TableHeading width="62%" colspan=2>TOPIC</td>
+			<td class=TableHeading width="22%">AUTHOR</td>
+			<td class=TableHeading width="16%" align=center>DATE</td>
+		</tr>
+		</thead>	
+		<tbody>
+			<tr id=tblAllTopicsRow style="cursor:hand">
+				<td class=tblCell width=5%><span ID=TopicId datafld=MessageId style="display:none;">
+					</span><span ID=bltArrow class=bltArrow style="display:inline;">4</span></td>
+				<!-- note: span style=width:100% makes the whole cell respond to mouse events -->
+				<td class=tblCell width=57%><span ID=topicTitle style="width:100%" datafld=DisplayTitle></span></td>
+				<td class=tblCell width=22%><span ID=topicAuthor style="width:100%" datafld=Author></span></td>
+				<td class=tblCell width=16% align=right><span datafld=DisplayDate></span></td>
+			</tr>
+			<tr id=tblSingleTopicRow dataSrc="" style="cursor:hand;display=none;">
+				<td colspan=4 width=100%>
+					<table width=100% cellspacing=0 cellpadding=1 border=0>
+						<tbody>
+							<tr class=TableMessageRow saveColor="#ECF5F5">
+								<td class=tblCell style="width:12%" align=right><div style="top:5"><img src="../images/icnBBSDoc.gif">&nbsp;</div><div
+									ID=MessageId dataFld=MessageId style="display:none;"></div></td>
+								<td class=tblCell style="width:49%"><div ID=msgBrief style="width:100%" dataformatas="html" datafld=Brief></div></td>
+								<td class=tblCell style="width:22%"><div ID=msgAuthor style="width:100%" datafld=Author></div></td>
+								<td class=tblCell style="width:16%" align=right><div datafld=MsgDate></div></td>
+							</tr>
+						</tbody>
+					</table>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+
+<div id=divMessage
+	class=ParaText2 style="BACKGROUND: #ffffdf; BORDER-BOTTOM: #a5a284 1px solid; 
+		BORDER-LEFT: #a5a284 1px solid; BORDER-RIGHT: #a5a284 1px solid; 
+		BORDER-TOP: #a5a284 1px solid; DISPLAY: none; OVERFLOW-Y: auto; POSITION: absolute; ; 
+		WIDTH: expression(document.body.clientWidth-16)" Copyable="true">
+	<div style="MARGIN-LEFT: 7px; MARGIN-TOP: 7px">
+		Title: <span ID=topicTopic class=bbsTopic DATASRC=#dsoSingleTopic DATAFLD=Title></span>
+	</div>
+	<div style="MARGIN-LEFT: 7px">
+		Author: <span DATASRC=#dsoSingleTopic DATAFLD=Author></span>
+	</div>
+	<div ID=msgContent
+		 DATASRC=#dsoSingleTopic
+		 DATAFLD=Content dataformatas="html" style="MARGIN-LEFT: 7px; MARGIN-TOP: 7px; ; 
+		 WIDTH: expression(document.body.clientWidth-45)">
+	</div>
+	<br>
+</div>
+
+<div id=divNewMessage class=ParaText2 
+		style="BACKGROUND: #ffffdf; BORDER-BOTTOM: #a5a284 1px solid; BORDER-LEFT: #a5a284 1px solid; 
+			BORDER-RIGHT: #a5a284 1px solid; BORDER-TOP: #a5a284 1px solid; DISPLAY: none; 
+			POSITION: absolute; WIDTH: expression(document.body.clientWidth-22)">
+	<div style="MARGIN-LEFT:
+		 10px; MARGIN-TOP: 7px">
+		Subject: <input name=Title id=Title maxlength=35>
+	</div>
+	<div style="MARGIN-LEFT: 10px">Author:&nbsp;&nbsp;
+		<span name="Author" id=Author style="FONT-WEIGHT: bold"></span><br>
+		<input id=isAnon type=checkbox value=1>&nbsp;Send Anonymously
+	</div><TEXTAREA cols=10 id=Content rows=3 style="CURSOR: text; MARGIN-LEFT: 10px; ; 
+		WIDTH: expression(document.body.clientWidth-45)"
+		onChange=checkContentLength onKeyPress=checkContentLength></TEXTAREA>
+	<input type=hidden id=newTopicId>
+	<input type=hidden id=newIsTopic>
+	<button ID=btnSave
+		 class=btnTeal
+		 onClick=SaveMessage 
+		 style="LEFT: 10px; POSITION: relative">Save</button>
+</div><!--DivNewMessage-->
+
+</body>
+</html>
+

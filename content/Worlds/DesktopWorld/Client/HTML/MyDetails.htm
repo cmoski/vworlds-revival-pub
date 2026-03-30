@@ -1,0 +1,377 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//
+'//  File:			MyDetails.htm
+'//  Description:	Records a personal profile on the user
+'////////////////////////////////////////////////////////////////////////-->
+<html>
+<head>
+<title>My Details</title>
+<OBJECT ID=AvatarAccessControl CLASSID="clsid:AF0AD5CC-418B-11D1-BB2B-00C04FC2CAB1"></OBJECT>
+
+<link rel=stylesheet href=../shared/global.css>
+
+<!--include scripts-->
+<script language="vbscript" src="../vbs/document_OnSelectStart.vbs">
+</script>
+<script language="vbscript" src="../vbs/ShowDialog.vbs">
+</script>
+<!--end include scripts-->
+
+<script language="vbscript">
+option explicit
+
+'//////////////////////////////////////////////////////////////////////////
+'////  Global constants and variables (to this file)
+'//////////////////////////////////////////////////////////////////////////
+const strOrigClr = "000000"
+const strChangeClr = "FF0000"
+dim world
+dim user
+dim objAvatar
+dim profile
+dim strAvModel
+dim strAvGifPath
+dim blnChanges
+dim arrParts
+dim arrProfile(5,2)
+
+set objAvatar = top.ClientUserPtr
+set profile = objAvatar.profile
+set world = top.ClientWorldPtr
+set user = top.ClientUserPtr
+arrProfile(0,0) = "RealName"
+arrProfile(0,1) = "Real name"
+arrProfile(1,0) = "WhereFrom"
+arrProfile(1,1) = "Where from"
+arrProfile(2,0) = "Email"
+arrProfile(2,1) = "E-mail Alias"
+arrProfile(3,0) = "Comment"
+arrProfile(3,1) = "Quote"
+arrProfile(4,0) = "Hobbies"
+arrProfile(4,1) = "Hobbies"
+arrProfile(5,0) = "Birthday"
+arrProfile(5,1) = "Birthday"
+arrParts = Array("Shoes","Pants","Shirt","Skin","Hair")
+blnChanges = false
+strAvGifPath = top.ClientWorldPtr.ContentPath & "Worlds\DesktopWorld\Models\Lobby\"
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		window_onLoad
+'//  Purpose:   To start the page up after initializing all the objects
+'////////////////////////////////////////////////////////////////////////
+sub window_onLoad
+	LoadProfile
+	LoadAvGifs
+	txtRealName.select
+	txtRealName.focus
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		LoadProfile
+'//  Purpose:   To load in all existing values for the text inputs and checkboxes
+'//  Called by:	window_onLoad
+'////////////////////////////////////////////////////////////////////////
+sub LoadProfile ()
+	dim i
+	dim strValue
+	for i = 0 to UBound(arrProfile)
+		if user.profile.IsValid(arrProfile(i,1)) then
+			strValue = user.profile.keyvalue(arrProfile(i,1))
+		else
+			strValue = ""
+		end if
+		document.all("txt" & arrProfile(i,0)).value = strValue
+		if user.profile.IsValid(arrProfile(i,1)) then
+			if user.profile.KeyAccess(arrProfile(i,1)) = 1 then
+				document.all("chk" & arrProfile(i,0)).status = true
+			end if
+		end if
+	next
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		SaveProfile
+'//  Purpose:   To save all existing values for the text inputs and checkboxes
+'//  Called by:	sendButton onClick
+'////////////////////////////////////////////////////////////////////////
+sub SaveProfile 
+	dim objPro
+	set objPro = user.profile
+	dim i
+	for i = 0 to UBound(arrProfile)
+		dim KeyName
+		dim itemName
+		ItemName = arrProfile(i,0)
+		KeyName = arrProfile(i,1) 
+		if objPro.IsValid(keyName) then 
+			if objPro.keyValue(keyName) <> document.all("txt" & itemName).value then
+				blnChanges = true
+				' save the text input value
+				objPro.keyValue(keyName) = document.all("txt" & itemName).value
+			end if
+			' save the checked checkbox value
+			if Abs(objPro.keyAccess(keyName)) <> Abs(document.all("chk" & itemName).status) then
+				blnChanges = true
+				if document.all("chk" & itemName).status then 
+					objPro.keyAccess(keyName) = 1	' Private
+				else
+					objPro.keyAccess(keyName) = 0	' Public
+				end if
+			end if
+		end if
+	next
+	dim strMsg
+	if blnChanges then	
+		strMsg = "Your details have been saved."
+	else
+		strMsg = "You have not made any changes to your details."
+	end if
+	blnChanges = false
+	ShowDialog strMsg, ""
+	dim objElem
+	for each objElem in document.all
+		if mid(objElem.id,1,3) = "txt" then
+			objElem.style.color = strOrigClr
+		elseif mid(objElem.id,1,3) = "chk" then
+			objElem.style.color = strOrigClr
+		end if
+	next
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Function:	SplitColor
+'//  Purpose:   To split a 6 digit hex number into the 2 digits requested
+'//	 Args:		numHex - the 6 digit hex number for the color
+'//				intColor - r=1 g=2 b=3
+'//  Called by:	LoadAvGifs
+'////////////////////////////////////////////////////////////////////////
+function SplitColor(numColor, intColor)
+	if intColor = 1 then 
+		SplitColor = CInt("&H" & mid(numColor,1,2))
+	elseif intColor = 2 then
+		SplitColor = CInt("&H" & mid(numColor,3,2))
+	else
+		SplitColor = CInt("&H" & mid(numColor,5,2))
+	end if
+end function
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Function:	GetHex
+'//  Purpose:   To convert a dec number into a 6 digit hex format
+'//	 Args:		numColor - the color in dec form
+'//  Called by:	LoadAvGifs
+'////////////////////////////////////////////////////////////////////////
+function GetHex(numColor)
+	GetHex = Hex(numColor)
+	' add leading 0's if too few digits
+	if len(GetHex) < 6 then GetHex = string(6-len(GetHex),"0") & GetHex
+	' swap first and last pairs of hex chars for a color value
+	GetHex = mid(GetHex,5,2) & mid(GetHex,3,2) & mid(GetHex,1,2)
+end function
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		LoadAvGifs
+'//  Purpose:   To display the avatar to the right of the screen
+'//  Called by:	window_onLoad
+'////////////////////////////////////////////////////////////////////////
+sub LoadAvGifs 
+	dim objHair
+	dim intSlash
+	dim intDot
+	dim objGif
+	dim intPart
+	dim strGif
+	dim intRed
+	dim intGreen
+	dim intBlue
+	set objHair = objAvatar.hair
+	dim i
+	for i = 0 to UBound(arrParts)
+		dim vwBodyPart
+		set vwBodyPart = objAvatar.Property(arrParts(i))	
+		intSlash = InStrRev(objHair.GeometryName,"\")
+		intDot = InStrRev(objHair.GeometryName,".")
+		strAvModel = mid(objHair.GeometryName, intSlash + 1, intDot - intSlash - 2)
+		intPart = i + 1
+		strGif = strAvGifPath & strAvModel & intPart & "static.gif"
+		document.all.item("model" & intPart).src = strGif
+		intRed = splitColor(GetHex(vwBodyPart.Color),1)
+		intGreen = splitColor(GetHex(vwBodyPart.Color),2)
+		intBlue = splitColor(GetHex(vwBodyPart.Color),3)
+
+		set objGif = document.all.item(vwBodyPart.partName & "Sampler")
+		objGif.filters.Light.addAmbient 255, 255, 255, 255
+		objGif.filters.Light.changeColor 0, intRed, intGreen, intBlue, true
+	next
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		DoTextChanged
+'//  Purpose:   Make sure all the checked checkboxes are for valid field vals.
+'//  Called By:	All checkboxes and textboxes on change
+'////////////////////////////////////////////////////////////////////////
+sub DoTextChanged
+	dim blnUncheckIt	' was a checkbox forcibly unchecked
+	dim objCheck
+	dim objText
+	blnUncheckIt = false
+	if InStr(window.event.srcElement.id,"chk") then
+		set objCheck = window.event.srcElement
+		set objText = document.all.item(Replace(window.event.srcElement.id,"chk","txt"))
+		blnUncheckIt = true
+	elseif window.event.srcElement.value = "" then
+		set objText = window.event.srcElement
+		set objCheck = document.all.item(Replace(window.event.srcElement.id,"txt","chk"))
+		blnUncheckIt = true
+	else
+		window.event.srcElement.style.color = strChangeClr
+	end if
+	if blnUncheckIt then
+		if objCheck.status = true _
+		and (Trim(objText.value) = "" _
+		or IsNull(objText.value)) then
+			dim strMsg
+			strMsg = "An empty field cannot be listed as private.  The checkbox is now unchecked."
+			ShowDialog strMsg, ""
+			objCheck.Status = false
+		end if		
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		CircularTab
+'//  Purpose:   Capture the tab keystroke to keep focus on this page
+'//	 Called by:	key click while the Apply button has focus;
+'//	 Notes: SendButton is the last control in the tab order;
+'//		when the user presses the Tab key while SendButton has focus
+'//		we focus on txtRealName, the first control in the tab order.
+'////////////////////////////////////////////////////////////////////////
+sub CircularTab
+	if (window.event.keyCode = 9) then		' tab key
+		window.event.returnValue = false
+		txtRealName.focus
+	end if
+end sub
+
+</script>
+</head>
+
+<body bgcolor=#FFFFFF>
+
+<!--Start Heading Section-->
+<div id=bkgPageHeadingPatch
+	class=bkgPageHeadingPatch
+	style=background:#E7E7E7>
+</div>
+<div id=bkgPageHeading
+	class=bkgPageHeading
+	style=background-image:url(../images/bkgMyProfile.gif);>
+</div>
+
+<span id=groupName class=PageHeading>My Details</span>
+<span class=PageHeadingRt></span>
+<hr class=PageHeadingHR>
+<!--End Heading Section-->
+
+<div id=ProfileValues style="position:absolute;top:41;left:0;width:170;background:white;">
+	<br>
+	<div class="ParaHeading">
+		<b>Personal Information<br> (optional)</b> 
+	</div>
+	<div class="ParaHeading" style="position:absolute;top:0;width:170;text-align:right;">
+		<br>
+		<br><b>Private</b>
+	</div>		
+	<div class="ParaHeading">
+		Real Name:
+	</div>
+	<div class="ParaText2" style="margin-right:0;">
+		<input type=text id=txtRealName maxlength=50 onchange=doTextChanged style="width:140;">
+		<input type=checkbox id=chkRealName name=chkRealName onchange=doTextChanged>
+	</div>
+	
+	<div class="ParaHeading">
+		Where you're from:
+	</div>
+	<div class="ParaText2" style="margin-right:0;">
+		<input type=text id=txtWhereFrom maxlength=50 class=vtext onchange=doTextChanged style="width:140;">
+		<input type=checkbox id=chkWhereFrom name=chkWhereFrom onchange=doTextChanged>
+	</div>
+	<div class="ParaHeading">
+		E-Mail alias:
+	</div>
+	<div class="ParaText2" style="margin-right:0;">
+		<input type=text id=txtEMail width=30 maxlength=50 class=vtext onchange=doTextChanged style="width:140;">
+		<input type=checkbox id=chkEMail name=chkEMail onchange=doTextChanged>
+	</div>
+	<div class="ParaHeading">
+		Comment:
+	</div>
+	<div class="ParaText2" style="margin-right:0;">
+		<textArea id=txtComment cols=40 rows=4 onchange=doTextChanged class=vtext style="width:140;overflow-y:auto;"></textarea>
+		<input type=checkbox id=chkComment name=chkComment onchange=doTextChanged style="vertical-align:top">
+	</div>
+	<br>
+	<div class="ParaHeading">
+		<b>Additional Information</b>
+	</div>
+	<div class="ParaHeading">
+		Hobbies/Interests:
+	</div>
+	<div class="ParaText2" style="margin-right:0;">
+		<textArea id=txtHobbies cols=40 rows=4 onchange=doTextChanged class=vtext style="width:140;overflow-y:auto;"></textarea>
+		<input type=checkbox id=chkHobbies name=chkHobbies onchange=doTextChanged style="vertical-align:top">
+	</div>	
+	<div class="ParaHeading">
+		Birthday:
+	</div>
+	<div class="ParaText2" style="margin-right:0;">
+		<input type=text id=txtBirthday width=30 maxlength=50 onchange=doTextChanged class=vtext style="width:140">
+		<input type=checkbox id=chkBirthday name=chkBirthday onchange=doTextChanged>
+	</div>	
+</div>
+
+
+<div id=avatarSampler
+	style="position:absolute;
+	top:85;
+	left:expression(document.body.clientWidth - 130);
+	width:130;
+	height:260;
+	overflow-x:hidden;">
+<div id=HairSampler style="position:absolute;left:-40;width:100%;filter:light;clip:rect(2,150,192,70);">
+	<img id=model5 border=0>
+</div>		
+<div id=SkinSampler style="position:absolute;left:-40;width:100%;filter:light;clip:rect(2,150,192,70);">
+	<img id=model4 border=0>
+</div>		
+<div id=ShirtSampler style="position:absolute;left:-40;width:100%;filter:light;clip:rect(2,150,192,70);">
+	<img id=model3 border=0>
+</div>	
+<div id=PantsSampler style="position:absolute;left:-40;width:100%;filter:light;clip:rect(2,150,192,70);">
+	<img id=model2 border=0>
+</div>		
+<div id=ShoesSampler style="position:absolute;left:-40;width:100%;filter:light;clip:rect(2,150,192,70);">
+	<img id=model1 border=0>
+</div>
+<button id=SendButton
+	class=btnTeal
+	style="position:absolute;
+		top:240;
+		left:0;"
+	onClick="SaveProfile"
+	onKeyDown=CircularTab>Apply</button>
+</div>
+
+
+</body>
+</html>

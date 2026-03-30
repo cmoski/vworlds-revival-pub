@@ -1,0 +1,497 @@
+<html>
+<head>
+<LINK Rel=Stylesheet href=../../../../client/shared/global.css>
+<style>
+	.note {font-family:Webdings;color:#cc6600;font-size:14pt;}
+	.task {font-family:Webdings;color:#009900;font-size:14pt;}
+	.alert {font-family:Webdings;color:#cc0000;font-size:14pt;}
+	.helplink {font-family:Verdana;color:#3300cc;cursor:hand;font-size:8pt;font-weight:bold;}
+	.scriptlink {font-family:Verdana;color:#3300cc;cursor:hand;font-size:9pt;font-weight:bold;}
+</style>
+<title>Welcome to External Web Pages Script Tutorial!</title>
+<script language=vbs src=ComVBScript.htm></script>
+<script LANGUAGE="VBSCRIPT">
+
+dim world
+
+sub Window_OnLoad
+	window.settimeout "top.frames(""Btns"").BuildButtons(theBody.MaxSteps)", 0, "vbs"
+	window.settimeout "top.frames(""Tabs"").HighlightItem mid(window.location, instrRev(window.location, ""/"") + 1, len(window.location) - instrRev(window.location, ""/"") - 4)", 0, "vbs"
+	set world = top.goWorld
+	world.tutorial.start_lesson 5
+	world.fireUIEvent world.user, "EventRequest", window
+end sub
+
+Sub window_onunload
+    world.fireUIEvent world.user, "EventRequestCancel", window
+End sub
+
+</script>
+</head>
+<body id=theBody class=vBody CurrentStep=1 MaxSteps=5>
+	<div class=vh1 Style=position:absolute;left:0;top:10; id=heading>
+		External Web Pages
+	</div>
+	<div class=vweb style=position:absolute;left:340;top:1; id=circle>=</div>
+
+<!-- Step 1 -->
+<div id=Step1 style=position:absolute;width:99%;left:0;top:44;>
+	<nobr>
+		<div class=vstep Style=position:absolute;left:351;top:-35; id=divSteps>
+			Step 1 of 5
+		</div>
+	</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step One: Web Interfaces
+		</div>
+	<div class=vtext id=body style=position:absolute;left:0;top:30;width:99%;height:100%;>
+		<p>One of the most useful ways that world builders can provide user control for objects in Virtual Worlds is through the use of <span class=helplink HelpString="vworlds.chm::/API Reference/Exemplars/WebPage/WebPage.htm" TITLE="Help">external HTML pages</span> with custom scripts embedded in them. A virtual world can display any web page that is located at a valid URL, including local files on a user's machine. To make those web pages act as an interface with Virtual Worlds, special script code must be included in them that enables the page and the virtual world to interact with each other.
+		<p>Any Virtual Worlds object can call up web pages in a floating window via script.
+		<table class=vtext cellspacing=3>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>To see an example of this behavior, click on the ant in the Virtual Worlds window and try out the controls provided on the page. When you are comfortable, move on to <b>Step 2</b>.</td></tr>
+		<table class=vtext cellspacing=3>
+			<tr><td valign=top><span class=alert>~</span></td>
+			<td>It is important to understand that a web page with Virtual Worlds scripting in it can only be effective while a world is up and running in the browser. Since it is specifically designed to accompany a virtual world, its scripts will usually fail to function properly when the page is loaded by itself in the main browser window.</td></tr>
+		</table>
+	</div>
+</div>
+
+<!-- Step 2 -->
+<div id=Step2 style=position:absolute;left:0;top:44;width:99%;display:none;>
+	<nobr>
+		<div class=vstep Style=position:absolute;left:351;top:-35; id=divSteps>
+			Step 2 of 5
+		</div>
+	</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step Two: Loading a Web Page
+		</div>
+	<div class=vtext id=body2 style=position:relative;left:0;top:30;width:99%;>
+		<p>Below you can see the first of the two short methods in the module <b>lesson_5_web_objects.vbs</b>. The first method, <b>ant_click</b>, overrides the <span class=helplink HelpString="vworlds.chm::/API Reference/Events/OnLButtonUp.htm" TITLE="Help">OnLButtonUp</span> method of a virtual world object, as you have seen in previous examples. It is called when you click on the ant, and contains just a very simple method with one script call, to open, position, and size a floating HTML window with a given URL. Move on to the next step to see the second custom method for the ant object.
+<p>&nbsp;
+	</div><br>
+		<table style=background-color:white;vertical-align:top;padding-left:7;padding-right:5;padding-top:5;width:610;height:100;>
+			<tr>
+				<td valign=top colspan=2><font face=verdana size=2>sub ant_click (hwnd, x, y)<br>
+					<img src="Images/spacer.gif" width=32 height=4>world.trace "sub ant-click called on object "&this.name&"..."<br>
+					<img src="Images/spacer.gif" width=32 height=4>world.<span class=scriptlink HelpString="vworlds.chm::/API Reference/World/ShowURLEx.htm" TITLE="Help">ShowURLEx</span> "Ant Control", "Ant Control", "_<br>
+					<img src="Images/spacer.gif" width=48 height=4>sdk\library\html\_ScriptTutorial\tutexample.htm", world.user, 80,80, 300,350<br><br>
+	<img src="Images/spacer.gif" width=32 height=4>dim result<br>
+	<img src="Images/spacer.gif" width=32 height=4>result = this.invokesupermethod(Array(hwnd,x,y))<br>
+					end sub</font></td>
+			</tr>
+		</table>
+</div>
+
+<!-- Step 3 -->
+<div id=Step3 style=position:absolute;left:0;top:44;width:99%;display:none;>
+	<nobr>
+		<div class=vstep Style=position:absolute;left:351;top:-35; id=divSteps>
+			Step 3 of 5
+		</div>
+	</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step Three: Talking to a Web Page
+		</div>
+	<div class=vtext id=body2 style=position:relative;left:0;top:30;width:99%;>
+		<p> The other method in the file, <b>ant_done_moving</b>, overrides the <span class=helplink HelpString="vworlds.chm::/API Reference/Events/OnPositionDone.htm" TITLE="Help">OnPositionDone</span> method, which is called on any object only when it has finished moving from one position to another, or, in other words, any time that you set an object's position.
+	<P>When this subroutine actually gets executed depends on how long you have determined an object's position changes should take, which can be customized via its <span class=helplink HelpString="vworlds.chm::/API Reference/Exemplars/Thing/PositionDuration.htm" TITLE="Help">PositionDuration</span> property. The longer the object takes to complete a position change, the longer the duration between setting the position and executing this subroutine.
+		<table class=vtext cellspacing=3>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>To verify this, try changing the <b>PositionDuration</b> property of the <b>Lesson_5</b> object (the ant) with the <span class=helplink HelpString="vworlds.chm::/UIREF/objexpl/intrface.htm" TITLE="Help">Object Explorer</span>, and use the web page to move the ant again.</td></tr>
+			<tr><td valign=top><span class=note>$</span></td>
+			<td>The fireUIEvent call inside the <b>ant_done_moving</b> subroutine is the conduit for the object to talk back to the web page that is controlling it.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>You should be able to control the ant's movement from the web page buttons, and when the movement is completed, this <b>fireUIEvent</b> passes some data back to the web page in a special <b>UIEvent</b> event, containing the name of your custom event as a string.</td></tr>
+		</table>
+		<p>&nbsp;</p>
+		</div><br>
+			<table style=background-color:white;vertical-align:top;padding-left:7;padding-right:5;padding-top:5;width:610;>
+				<tr>
+   			 		<td valign=top colspan=2><font face=verdana size=2>sub ant_done_moving ()<br>
+					</font></td>
+  				</tr>
+				<tr>
+   					<td colspan=2 valign=top><font face=verdana size=2><img src="Images/spacer.gif" width=32 height=4>world.trace "I'm done moving"</font></td>
+
+				</tr>
+				<tr>
+   					<td colspan=2><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>world.fireUIevent this, "ant_control_showposition"</font></td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+					<td width=50% valign=top>
+						<span CLASS="Outline" ID="Out1" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+						<DIV ID="Out1d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>'this is the command<br>
+						'that notifies any external<br>
+						'web pages listening in on a <br>
+						'v-world. We can't know<br>
+						'if there are any, but<br>
+						'if there are the scripts<br>
+						'inside them will<br>
+						'get our custom message<br>
+						'and decide what to do with it<br>
+						</div></td>
+  				</tr>
+				<tr>
+   			 		<td valign=top colspan=2><font face=verdana size=2>end sub</font></td>
+		</table><br>
+</div>
+
+<!-- Step 4 -->
+<div id=Step4 style=position:absolute;left:0;top:44;width:99%;display:none;>
+	<nobr>
+		<div class=vstep Style=position:absolute;left:351;top:-35; id=divSteps>
+			Step 4 of 5
+		</div>
+	</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step Four: Designing Pages for Virtual Worlds
+		</div>
+	<div class=vtext id=body2 style=position:absolute;left:0;top:30;width:99%;height:100%;>
+		<p>We have seen code that responds when an object is done moving, but where is the code that actually sets the ant's new position to move it? In the next step, you will see that we have moved much of the functionality of the ant object into the scripts of the web page <b>Ant Control</b>.
+		<table class=vtext cellspacing=3>
+			<tr><td valign=top><span class=alert>~</span></td>
+			<td>It is important to note from the last step that the data being passed back to the web page is arbitrarily determined by the <b>ant_done_moving</b> script in the last step, and could be anything that might be used by the web page.</td></tr>
+		</table>
+		<p> Combining these web-to-virtual world and virtual world-to-web communication techniques with dynamic HTML (DHTML) can provide very interesting graphical interfaces, displays and animations in the web page that can also be used in conjunction with a virtual world. In future lessons, we will describe how to carry the actual HTML source for a web page inside the properties of a Virtual Worlds object. Also, we will look at ways to create an object that can write its own HTML page actively from its scripts, even one that has a custom interface with which a user can control it.
+		<table class=vtext cellspacing=3>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Right-click inside the 'ant control'  web page window (which you should have already opened by clicking the ant in the 3-d view) and select <b>view source</b> to see the HTML and script for the page.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Move on to the next step to see our commented version of that html source code.</td></tr>
+		</table>
+	</div>
+</div>
+
+<!-- Step 5 -->
+<div id=Step5 style=position:absolute;left:0;top:44;width:99%;display:none;>
+	<nobr>
+		<div class=vstep Style=position:absolute;left:351;top:-35; id=divSteps>
+			Step 5 of 5
+		</div>
+	</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step Five: Coding Web Pages for Virtual Worlds
+		</div>
+	<div class=vtext id=body2 style=position:relative;left:0;top:30;width:99%;>
+		<p>In the layout below, you will see the entire HTML source of the <b>Ant Contol</b> web page. Although it may look a bit complicated, most of the techniques in the page are well known to web designers and scripters.
+		<p>In this page, we have integrated VBScript code and JavaScript code to show how the two can interoperate, although the page and all of its scripts could have been written completely in either script technology. The VBScript area of the HTML source provides the script functionality for Virtual Worlds, while the JavaScript creates the graphical interface, buttons, and so forth.
+		<P><span class=note>$</span>Pay close attention to the comments in the VBScript as most of these scripts or their JavaScript equivalents (except for the subroutine <b>ant_mover</b>) need to be included in any web page that wants to support interaction with a running virtual world.
+		<p>&nbsp;
+		</div>
+			<table style=background-color:white;vertical-align:top;padding-left:7;padding-right:5;padding-top:5;width:610;>
+			<tr>
+				<td colspan=2><font face=verdana size=2>
+				<p>&lt;html&gt;<br>
+				&lt;head&gt;<br>
+				&lt;title&gt;Ant Control Center&lt;/title&gt;<br>
+				&lt;script language=&quot;JavaScript&quot;&gt;<br>
+				&lt;!--<br>
+				function MM_preloadImages() { //v1.2<br>
+				&nbsp;&nbsp;&nbsp; if (document.images) {<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; var 	imgFiles = 			MM_preloadImages.arguments;<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; var 		preloadArray = 	new 	Array();<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (var 	i=0; 			i&lt;imgFiles.length; i++) {<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 				preloadArray[i] = new
+				Image;<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 				preloadArray[i].src =
+				imgFiles[i];<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+				&nbsp;&nbsp;&nbsp; }<br>
+				}<br>
+				<br>
+				function MM_swapImage() { //v1.2<br>
+				&nbsp;&nbsp;&nbsp; var i,j=0,objStr,obj,swapArray=new
+				Array,oldArray=document.MM_swapImgData;<br>
+				&nbsp;&nbsp;&nbsp; for (i=0; i &lt; 			(MM_swapImage.arguments.length-	2); i+=3) {<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; objStr =
+				MM_swapImage.arguments[(navigator.appName == 				'Netscape')?i:i+1];<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if 				((objStr.indexOf('document.layers[')==0
+				&amp;&amp; document.layers==null) ||<br>
+								&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs				p;&nbsp;&nbsp;&nbsp; (objStr.indexOf('document.all[')
+				==0 &amp;&amp; document.all ==null))<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 				objStr =
+								'document'+objStr.substring(objStr.lastIndexOf('.'),objStr.length);<br				>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; obj = 			eval(objStr);<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (obj != 		null) 	{<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 				swapArray[j++] = obj;<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 				swapArray[j++] =
+				(oldArray==null || oldArray[j-			1]!=obj)?obj.src:oldArray[j];<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 				obj.src =
+				MM_swapImage.arguments[i+2];<br>
+				&nbsp;&nbsp;&nbsp; } }<br>
+				&nbsp;&nbsp;&nbsp; document.MM_swapImgData = 	swapArray; 	//used 	for 	restore<br>
+				}<br>
+				//--&gt;<br>
+				&lt;/script&gt;<br>
+				&lt;script language=&quot;JavaScript&quot;&gt;<br>
+				&lt;!--<br>
+				function MM_swapImgRestore() { //v1.2<br>
+				&nbsp;&nbsp;&nbsp; if (document.MM_swapImgData != 		null)<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (var 	i=0;
+				i&lt;(document.MM_swapImgData.length-1); i+=2)<br>
+						&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 		document.MM_swapImgData[i].src
+	= document.MM_swapImgData[i+1];<br>
+	}<br>
+	//--&gt;<br>
+	&lt;/script&gt;<br>
+	&lt;/head&gt;<br>
+	&lt;body bgcolor=#660000 text=&quot;#CC9900&quot; 	link=&quot;#CC6600&quot;
+	vlink=&quot;#669900&quot; alink=&quot;#CC6600&quot;&gt;</p>
+
+	<p>&lt;OBJECT ID=&quot;Helper&quot;
+CLASSID=&quot;clsid:7E3832CF-4F4E-11D0-89AB-00A0C9054129&quot;&gt;<br>
+&lt;/OBJECT&gt;<br>
+&lt;script LANGUAGE=&quot;VBSCRIPT&quot;&gt;<br></font>
+				</td>
+			</tr>
+				<tr>
+   			 		<td valign=top colspan=2><font face=verdana size=2>dim our_world
+					</font></td>
+  				</tr>
+				<tr>
+   					<td width=50% valign=top><font face=verdana size=2>&nbsp;</font></td>
+   					<td width=50% valign=top>
+						<span CLASS="Outline" ID="Out2" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+						<DIV ID="Out2d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>  'the variable to hold the world should be<br>
+						'declared out here so it is global to all<br>
+						'the subs in the file. Now, once this<br>
+						'variable  is initialized (when the window<br>
+						'loads--- see 'window_onload'), all our subs<br>
+						'can get to it to do things in the world...<br>
+						'note that to have any web page talk to<br>
+						'the world it always needs to have a<br>
+						'reference to the world; the helper object,<br>
+						'declared above in the '&lt;OBJECT&gt;' tag,<br>
+						'exposes the world object for this web page.<br>
+						</div></td><br>
+  				</tr>
+				<tr>
+   			 		<td valign=top colspan=2><font face=verdana size=2>
+						sub Ant_Mover (Instruction_Number)<br>
+						<img src="Images/spacer.gif" width=32 height=4>dim ant<br>
+						<img src="Images/spacer.gif" width=32 height=4>set ant = 								our_world.user.container.<span class=scriptlink HelpString="vworlds.chm::/API Reference/Thing/FindWithin.htm" TITLE="Help">FindWithin</span>("lesson_6")<br>
+						<img src="Images/spacer.gif" width=32 height=4>select case Instruction_Number<br>
+						<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>case 1:  'positive x<br>
+						<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>ant.direction.set 1,0,0<br>
+						<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>ant.position.x = ant.position.<span class=scriptlink HelpString="vworlds.chm::/API Reference/Vector/X.htm" TITLE="Help">x</span> + 10<br>
+					<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>case 2:   'negative x<br>
+						<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>ant.direction.set -1,0,0<br>
+						<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>ant.position.x = ant.position.x - 10<br>
+		<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>case 3:   'positive z<br>
+					<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>ant.direction.set 0,0,1<br>
+					<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>ant.position.<span class=scriptlink HelpString="vworlds.chm::/API Reference/Vector/Z.htm" TITLE="Help">z</span> = ant.position.z + 10<br>
+					<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>case 4:    'negative z<br>
+					<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>ant.direction.set 0,0,-1<br>
+					<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>ant.position.z = ant.position.z - 10<br>
+					<img src="Images/spacer.gif" width=32 height=4>end select<br>
+					end sub<br>
+					</font></td>
+  				</tr>
+				<tr>
+					<td valign=top colspan=2><font face=verdana size=2>sub Window_OnLoad
+					</font></td>
+  				</tr>
+				<tr>
+   					<td width=50% valign=top><font face=verdana size=2><img src="Images/spacer.gif" width=32 height=4>set our_world = helper.client.world</font></td>
+   					<td width=50% valign=top>
+						<span CLASS="Outline" ID="Out3" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+						<DIV ID="Out3d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>'this line gets the world via the helper, so we<br>
+						'can talk to it as we would from<br>
+						'any other script.<br>
+						</div></td><br>
+  				</tr>
+				<tr>
+					<td valign=top colspan=2><font face=verdana size=2><img src="Images/spacer.gif" width=32 height=4>our_world.fireUIEvent helper.client.world.user, "EventRequest", window</font></td>
+  				</tr>
+				<tr>
+   					<td width=50% valign=top>&nbsp;</td>
+   					<td width=50% valign=top>
+						<span CLASS="Outline" ID="Out4" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+						<DIV ID="Out4d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>'this line tells the world that a page<br>
+						'is ready to get messages from it.<br>
+						'these messages will get passed into<br>
+						'the 'Handle' subroutines below.<br><br>
+						</div></td>
+  				</tr>
+				<tr>
+					<td valign=top colspan=2><font face=verdana size=2>end sub</font></td>
+				</tr>
+				<tr>
+					<td valign=top colspan=2><font face=verdana size=2>Sub window_onunload<br>
+					<img src="Images/spacer.gif" width=32 height=4>our_world.fireUIEvent helper.client.world.user, "EventRequestCancel", window<br>
+					End sub</font></td>
+				</tr>
+				<tr>
+   					<td width=50% valign=top>&nbsp;</td>
+   					<td width=50% valign=top>
+						<span CLASS="Outline" ID="Out5" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+						<DIV ID="Out5d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>'here are the methods that respond to<br>
+						'things the world is doing-<br>
+						'tracing, reporting, or doing a custom <br>
+						'UImethod (the most common<br>
+						'thing to handle)<br>
+						'The subroutine names need to be named<br>
+						'exactly as they appear here (although the<br>
+						'arguments inside the parentheses can be<br>
+						'named anything you like). You don't have<br>
+						'to put any of them here, they are all<br>
+						'optional and will work if placed in<br>
+						'the script tag for this web page<br>
+						'(as long as the 'event request'<br>
+						'is sent in the window_onLoad subroutine,<br>
+						'as above...)<br><br>
+						</div></td>
+  				</tr>
+				<tr>
+					<td valign=top colspan=2><font face=verdana size=2>Sub HandleTrace(theStr)</font></td>
+				</tr>
+				<tr>
+   					<td width=50% valign=top>&nbsp;</td>
+   					<td width=50% valign=top>
+						<span CLASS="Outline" ID="Out6" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+						<DIV ID="Out6d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>'anything that is said in the<br>
+						'world.trace command from any <br>
+						'script will execute this subroutine<br>
+						'in the web page and the string that was <br>
+						'traced will show up in the variable 'theStr'<br><br>
+						</div></td>
+  				</tr>
+				<tr>
+					<td valign=top colspan=2><font face=verdana size=2>end sub</font><br></td>
+				</tr>
+					<td valign=top colspan=2><font face=verdana size=2>
+Sub HandleReport(theStr, reportTypeNum)</font></td>
+				</tr>
+				<tr>
+   					<td width=50% valign=top>&nbsp;</td>
+   					<td width=50% valign=top>
+						<span CLASS="Outline" ID="Out7" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+						<DIV ID="Out7d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>'anything that is said in the<br>
+						'world.report command from any script will<br>
+						'execute this subroutine in the web page<br>
+						'and the string and report type will<br>
+						'be passed into the variables 'theStr'<br>
+						'and 'reportTypeNum'<br><br>
+						</div></td>
+  				</tr>
+				<tr>
+					<td valign=top colspan=2><font face=verdana size=2>end sub</font><br><br></td>
+				</tr>
+				<tr>
+					<td valign=top colspan=2><font face=verdana size=2>
+sub handleUIEvent (byVal who, what, byVal args)</font></td>
+				</tr>
+    			<tr>
+   					<td width=50% valign=top>&nbsp;</td>
+   					<td width=50% valign=top>
+						<span CLASS="Outline" ID="Out8" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+						<DIV ID="Out8d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>'any time a world.fireUIEvent is called<br>
+						'in a script, this subroutine will<br>
+    					'be executed in the web page. we only<br>
+						'want it to look for our special events,<br>
+						'so we put in an if statement to filter<br>
+						'other stuff. the variable who is the <br>
+						'v-worlds object that executed the UIEvent<br>
+						'the variable what is the name of the<br>
+						'event (a string we passed)<br>
+						'the variable args is a vbscript array<br>
+						'for other information you<br>
+						'might want to send along<br><br>
+					</div></td>
+  				</tr>
+				<tr>
+					<td valign=top colspan=2><font face=verdana size=2>
+					<img src="Images/spacer.gif" width=32 height=4>if what = "ant_control_showposition" then<br>
+					<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>dim crlf<br>
+					<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>crlf = chr(13) + chr(10) ' this is to make return characters be</font></td>
+				</tr>
+				<tr>
+   					<td width=50% valign=top>&nbsp;</td>
+   					<td width=50% valign=top>
+						<span CLASS="Outline" ID="Out9" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+						<DIV ID="Out9d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>' added into the form box to have<br>
+						'reports appear right...<br><br>
+					</div></td>
+  				</tr>
+				<tr>
+					<td valign=top colspan=2><font face=verdana size=2>
+					<img src="Images/spacer.gif" width=32 height=4>MyForm.MytextArea.Value = 		MyForm.MytextArea.Value + _<br>
+					<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 		height=4>crlf + who.name + " reporting in from coords " + _<br>
+					<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 		height=4>cstr(cint(who.position.x))+","+ _<br>
+					<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 		height=4>cstr(cint(who.position.y))+","+ _<br>
+					<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 		height=4>cstr(cint(who.position.z))+"..." <br>
+		 			<img src="Images/spacer.gif" width=32 height=4>end if<br>
+					end sub<br></font></td>
+				</tr>
+				<tr>
+					<td colspan=2><font face=verdana size=2>
+					<p>&lt;/script&gt;<br><br>
+					&lt;!-- ARROW BUTTONS --&gt; <br>
+					&lt;div id=&quot;body&quot; 		style=&quot;position:absolute; 			left:14px; top:5px;
+					width:295px; height:217px; z-index:1&quot;&gt; 	<br>
+					&nbsp;&nbsp;&nbsp; &lt;div 	id=&quot;leftarrow&quot; 				style=&quot;position:absolute;
+					left:110px; top:124px; width:25px; height:24px; z-				index:5&quot; 	onClick=Ant_Mover(1)&gt; <br>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;img 					src=&quot;left_arrow.gif&quot;
+					width=&quot;25&quot; height=&quot;25&quot; 					name=&quot;leftarrow&quot;
+										onMouseOver=&quot;MM_swapImage('document.layers[\'body\'].document.lay					ers[\'leftarrow\'].document.leftarrow','document.leftarrow','left_arro					w_hi.gif')&quot;
+								onMouseOut=&quot;MM_swapImgRestore()&quot;&gt;&lt;/div&gt;<br>
+					&nbsp;&nbsp;&nbsp; &lt;div id=&quot;uparrow&quot; 					style=&quot;position:absolute;
+					left:135px; top:99px; width:23px; height:25px; z-			index:4&quot; 		onClick=Ant_Mover(4)&gt; <br>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;img 					src=&quot;up_arrow.gif&quot;
+					width=&quot;25&quot; height=&quot;25&quot; 					name=&quot;uparrow&quot;
+										onMouseOver=&quot;MM_swapImage('document.layers[\'body\'].document.lay					ers[\'uparrow\'].document.uparrow','document.uparrow','up_arrow_hi.gif					')&quot;
+								onMouseOut=&quot;MM_swapImgRestore()&quot;&gt;&lt;/div&gt;<br>
+					&nbsp;&nbsp;&nbsp; &lt;div 	id=&quot;rightarrow&quot; 				style=&quot;position:absolute;
+					left:160px; top:124px; width:24px; height:24px; z-				index:3&quot; 	onClick=Ant_Mover(2)&gt; <br>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;img 					src=&quot;right_arrow.gif&quot;
+					width=&quot;25&quot; height=&quot;25&quot; 					name=&quot;rightarrow&quot;
+										onMouseOver=&quot;MM_swapImage('document.layers[\'body\'].document.lay					ers[\'rightarrow\'].document.rightarrow','document.rightarrow','right_					arrow_hi.gif')&quot;
+								onMouseOut=&quot;MM_swapImgRestore()&quot;&gt;&lt;/div&gt;<br>
+					&nbsp;&nbsp;&nbsp; &lt;div 	id=&quot;downarrow&quot; 				style=&quot;position:absolute;
+					left:135px; top:149px; width:24px; height:25px; z-				index:2&quot; 	onClick=Ant_Mover(3)&gt; <br>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;img 					src=&quot;down_arrow.gif&quot;
+					width=&quot;25&quot; height=&quot;25&quot; 					name=&quot;downarrow&quot;
+										onMouseOver=&quot;MM_swapImage('document.layers[\'body\'].document.lay					ers[\'downarrow\'].document.downarrow','document.downarrow','down_arro					w_hi.gif')&quot;
+								onMouseOut=&quot;MM_swapImgRestore()&quot;&gt;&lt;/div&gt;<br>
+					&nbsp;&nbsp;&nbsp; &lt;div id=&quot;ant&quot; 					style=&quot;position:absolute; left:135px;
+					top:124px; width:25px; height:27px; z-			index:1&quot;&gt;<br>
+								&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 					&lt;img
+					src=&quot;ant.gif&quot; width=&quot;25&quot; 					height=&quot;25&quot;&gt;&lt;/div&gt;<br>
+					<br>
+					&lt;!-- BODY COPY --&gt;<br>
+					&nbsp;&nbsp;&nbsp; &lt;p 			align=&quot;center&quot;&gt;&lt;font 		face=&quot;Verdana, Arial,
+					Helvetica, sans-serif&quot; 				size=&quot;3&quot;&gt;&lt;b&gt;This is the ant control center. 				&lt;/b&gt;&lt;/font&gt;&lt;/p&gt;<br>
+					&nbsp;&nbsp;&nbsp; <br>
+					&nbsp;&nbsp;&nbsp; &lt;p 			align=&quot;center&quot;&gt;&lt;font 		face=&quot;Courier New,
+					Courier, mono&quot; size=&quot;2&quot;&gt;Click on these buttons to tell the ant what to do. 					&lt;/font&gt;&lt;/p&gt;<br>
+					&nbsp;&nbsp;&nbsp; 	&lt;p&gt;&amp;nbsp;&lt;/p&gt;<br>
+					&nbsp;&nbsp;&nbsp; 	&lt;p&gt;&amp;nbsp;&lt;/p&gt;<br>
+					&nbsp;&nbsp;&nbsp; 	&lt;p&gt;&amp;nbsp;&lt;/p&gt;<br>
+				&nbsp;&nbsp;&nbsp; &lt;p 		align=&quot;center&quot;&gt;&lt;font 		face=&quot;Courier New,
+				Courier, mono&quot; 			size=&quot;2&quot;&gt;W&lt;/font&gt;&lt;font 	face=&quot;Courier 		New,
+		Courier, mono&quot; size=&quot;2&quot;&gt;hen <br>
+		the ant is finished it will tell you. 	&lt;/font&gt;&lt;/p&gt;<br>
+		&lt;/div&gt;<br>
+		<br>
+		&lt;!-- TEXT/MESSAGE BOX --&gt;<br>
+	&lt;div id=&quot;message&quot; style=&quot;position:absolute; 	left:8px; top:255px;
+	width:295px; height:107px; z-index:2&quot;&gt; <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;form name=&quot;MyForm&quot;
+method=&quot;POST&quot; action=&quot;&quot;&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;textarea name=&quot;MytextArea&quot; rows=4
+cols=54
+style=font-family:Verdana;font-size:9;text-indent:4;vertical-align:middle;padding-left:5;&gt;&lt;/textarea&gt;&lt;/form&gt;<br>
+&nbsp;&nbsp;&nbsp; &lt;/div&gt;<br>
+&lt;/body&gt;<br>
+&lt;/html&gt;</p>
+					</font>
+					</td>
+				</tr>
+			</table><br>
+		</div>
+	</div>
+	</body>
+</html>

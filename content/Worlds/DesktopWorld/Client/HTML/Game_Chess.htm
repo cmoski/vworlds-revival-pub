@@ -1,0 +1,821 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//
+'//  File:			Game_Chess.htm
+'//  Description:	This file allows the user to manipulate the chess pieces in the
+'//					game room.  It takes care of all func except for the movable
+'//					behavior is taken care of by Movable.htc.  
+'//					No game rules are enforced, and anyone can move any piece at any time.
+'////////////////////////////////////////////////////////////////////////-->
+<HTML>
+<HEAD>
+	<TITLE>Chess</TITLE>
+<link rel=stylesheet href=../shared/global.css>
+<style>
+.Square1
+{
+	background:#85643A;
+	width:32;
+	height:32;
+	z-Index:-1000;
+}
+
+.Square2
+{
+	background:#533111;
+	width:32;
+	height:32;
+	z-Index:-1000;
+}
+
+.Square3
+{
+	width:32;
+	height:0;
+	z-Index:-1001;
+}
+
+.Square4
+{
+	height:64;
+	z-Index:-1002;
+}
+
+.PieceWht
+{
+	behavior:url(../HTC/Movable.htc);
+	mv--boundary:0 256 384 0;
+	width:32;
+	height:32;
+	cursor: move;
+	position:relative;
+	z-Index:1;
+}
+
+.PieceBlk
+{
+	behavior:url(../HTC/Movable.htc);
+	mv--boundary:0 256 384 0;
+	width:32;
+	height:32;
+	cursor: move;
+	position:relative;
+	z-Index:2;
+}
+
+</style>
+
+<!--include scripts-->
+<script language="vbscript" src="../vbs/document_OnSelectStart.vbs">
+</script>
+<!--end include scripts-->
+
+<script language="vbscript">
+option explicit
+
+'//////////////////////////////////////////////////////////////////////////
+'////  Global constants (to this file)
+'//////////////////////////////////////////////////////////////////////////
+const numVWRow1Z = .6		' the worlds z position value for row 1
+const numVWColAX = -19.8	' the worlds X position value for col A
+const numVWRow8Z = 11.05	' the worlds z position value for row 8
+const numVWColHX = -9.8		' the worlds x position value for col H
+const intAscA = 65			' the ascii val for the char "A"
+const numPieceFloat = 3		' the level at which pieces will float once discarded
+const intRowsCt = 12		' the number of rows including discard
+const intColsCt = 8			' the columns on the board
+const intMoveDiv = 8 		' the divisor for breaking a piece move into several moves
+
+'//////////////////////////////////////////////////////////////////////////
+'////  Global Variables (to this file)
+'//////////////////////////////////////////////////////////////////////////
+dim World			' the client control's "World" object
+dim User			' the client control's "User" object
+dim strStatus		' the login status message
+dim intZind		 	' the current max zindex 
+dim intSquareWd		' the current size of a side of a board square
+dim blnSwapped		' has the board been turned 180 degrees
+dim numLastX		' the last object clicked down on x cood
+dim numLastY 		' the last object clicked down on y cood
+dim objEventElem	' the window.event.srcElement
+dim numVWSquareX	' the width of a vwchess square
+dim numVWSquareZ	' the height of a vwchess square
+
+intZInd = 0
+intSquareWd = 32
+blnSwapped = false
+numVWSquareX = (numVWColHX-numVWColAX)/7
+numVWSquareZ = (numVWRow1Z-numVWRow8Z)/7
+
+dim m_bGameOn
+m_bGameOn = false
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:	 	Window_OnLoad
+'//  Purpose:	Initialize the version of the chessboard and add this
+'//				page to the list of windows that want to receive UI events
+'////////////////////////////////////////////////////////////////////////
+sub Window_OnLoad
+	set User = top.ClientUserPtr
+	SyncPieces
+	divPieces.style.display = "block"
+	top.AddToEventList window
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		window_OnUnload
+'//  Purpose:	Remove this window from the list of windows that want to receive UI events
+'////////////////////////////////////////////////////////////////////////
+sub window_OnUnload
+	top.RemoveFromEventList window
+	set user = nothing
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:	 	document_OnClick()
+'//  Purpose:  	Push a clicked img to the back of the pieces zorder
+'////////////////////////////////////////////////////////////////////////
+sub document_OnClick
+
+	dim objEventElem
+	set objEventElem = window.Event.srcElement
+	' reset the zindex to the next negative
+	if IsPiece(objEventElem) then
+		objEventElem.style.zIndex = intZInd
+	    intZInd = intZInd - 1 
+	end if
+	set objEventElem = nothing
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		document_OnMouseDown
+'//  Purpose:  	Record the former coordinates for future use, to test to 
+'//             see if the img actually moved.
+'////////////////////////////////////////////////////////////////////////
+sub document_OnMouseDown
+	
+	set objEventElem = window.Event.srcElement
+	' just set the current position of the piece for eval when mouse is up
+	if IsPiece(objEventElem) then
+		numLastX = objEventElem.style.pixelLeft
+		numLastY = objEventElem.style.pixelTop
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		document_OnMouseUp
+'//  Purpose:  	Move the inworld piece to match the web page piece
+'////////////////////////////////////////////////////////////////////////
+sub document_OnMouseUp
+	dim numX
+	dim numY
+	dim numZ
+	dim strEndPos
+	dim objVWPiece
+	dim numLeft
+	dim numTop
+
+
+	if not IsPiece(objEventElem)then exit sub
+	
+	m_bGameOn = true
+	
+	numX = objEventElem.style.pixelLeft
+	numY = objEventElem.style.pixelTop
+
+	' do nothing if the touched piece was not moved
+	if (numX = numLastX) and (numY = numLastY) then exit sub
+
+	' find the in-world chess piece corresponding to the one clicked in the web page
+	set objVWPiece = top.ClientUserPtr.container.findwithin(objEventElem.id)
+
+	' if a piece is moved off the board, move it to it's discard home
+	if numY < intSquareWd or numY > (10*intSquareWd) then
+			
+		dim intTopOff	 ' offset caused by being on different ends of the board
+
+		intTopOff = intRowsCt
+		if objEventElem.className <> "PieceBlk" then 
+			intTopOff = intColsCt
+		end if
+
+		' find the coord that corresponds to the home given, based on col and rows
+		numX = (asc(Left(objEventElem.home,1))-intAscA)*intSquareWd
+		numY = (intTopOff-Right(objEventElem.home,1))*intSquareWd			
+		
+		' if the board has been reversed, swap these new coordinates to send to the world
+		if blnSwapped then
+			numX = SwapX(numX) 
+			numY = SwapY(numY)
+		end if
+
+		numZ = objVWPiece.OrigY + numPieceFloat
+		
+		objEventElem.style.pixelLeft = numX
+		objEventElem.style.pixelTop	= numY	
+	else
+		' if the piece was brought back from the discard area, make it not float anymore
+		if objVWPiece.position.Y = (numPieceFloat + objVWPiece.OrigY) then
+			numZ = objVWPiece.OrigY
+		else
+			'non discarded, regular move
+			numZ = objVWPiece.position.Y
+		end if
+	end if		
+		
+	' convert the coords to world coords
+	numX = ToVWCoordX(numX)
+	numY = ToVWCoordY(numY)
+
+	
+	' tell the in-world piece to move, and to remember who moved it
+	objVWPiece.setPosition numX, numZ, numY, top.ClientUserPtr, true
+
+	set objEventElem = nothing
+	set objVWPiece = nothing
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Function:	IsPiece(objElement)
+'//  Purpose:  	To see if the object is a chess piece
+'//  Arguments:	objElement - the object in question
+'//  Returns:	true or false
+'//  Called by:	SyncPieces
+'//				ChangeGameSize
+'//				SwapSides
+'//				ResetBoard
+'//				document_OnClick
+'//				document_OnMouseUp
+'//				document_OnMouseDown
+'////////////////////////////////////////////////////////////////////////
+function IsPiece(objElement)
+	
+	if objElement is nothing then
+		IsPiece = false
+		exit function
+	end if
+	
+	if objElement.ClassName = "PieceBlk" _
+	or objElement.ClassName = "PieceWht" then
+		IsPiece = true
+	else
+		IsPiece = false
+	end if
+end function
+
+
+'//////////////////////////////////////////////////////////////////////////
+'//  Function:	ToVWCoordX and ToVWCoordY
+'//  Purpose:  	To convert the web coords to World coords
+'//  Args:		numCoord - web coordinate in numeric form
+'//  Returns:	The world equivalent 
+'//  Called by:	ResetBoard, document_OnMouseUp
+'//////////////////////////////////////////////////////////////////////////
+function ToVWCoordX(numCoord)
+	if blnSwapped then numCoord = SwapX(numCoord)
+	ToVWCoordX = numVWColAX + (((numCoord)/intSquareWd)*numVWSquareX)	
+end function
+
+function ToVWCoordY(numCoord)
+	if blnSwapped then numCoord = SwapY(numCoord)
+	ToVWCoordY = numVWRow8Z - 2*numVWSquareZ + (((numCoord)/intSquareWd)*numVWSquareZ)		
+end function
+
+
+'//////////////////////////////////////////////////////////////////////////
+'//  Functions:	ToWebX and ToWebY
+'//  Purpose:  	To convert the World coords to web coords
+'//  Args:		numCoord - World coordinate in numeric form
+'//  Returns:	The web X or Y coord 
+'//  Called by:	SyncPieces
+'//				HandleUIEvent, for ChessPieceMoved event
+'//////////////////////////////////////////////////////////////////////////
+function ToWebX(numCoord)
+	ToWebX = Cint(intSquareWd*((CInt(10*numCoord)/10 - numVWColAX)/numVWSquareX))
+	' if this board is swapped then unswap before sending
+	if blnSwapped then ToWebX = SwapX(ToWebX)
+end function
+
+function ToWebY(numCoord)
+	ToWebY = Cint(((((CInt(10*numCoord)/10) - numVWRow8Z + 2*numVWSquareZ)/numVWSquareZ)*intSquareWd))
+	if blnSwapped then ToWebY = SwapY(ToWebY)
+end function
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		SyncPieces()
+'//  Purpose:  	Set all the pieces up on the client as they are in the world
+'//  Called by: 
+'////////////////////////////////////////////////////////////////////////
+sub SyncPieces()
+	dim objPiece, objVWPiece, roomFrame, pieceFrame, pos
+	' for each web piece, find it's corresponding world piece, and relocate the web piece to match 
+	set roomFrame = top.ClientUserPtr.container.getFrame
+	for each objPiece in document.all
+		if IsPiece(objPiece) then
+			set objVWPiece = user.container.findwithin(objPiece.id)
+			objPiece.style.pixelLeft = ToWebX(objVWPiece.Position.X)
+			objPiece.style.pixelTop = ToWebY(objVWPiece.Position.Z)
+			
+			set pieceFrame = objVWPiece.getFrame
+			set pos = objVWPiece.position
+			pieceFrame.setPosition roomFrame, pos.x, pos.y, pos.z
+		end if			
+	next
+	set objPiece = nothing
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		ChangeGameSize()
+'//  Purpose:  	Size the game according to the size of the right pane.  
+'//	 Called by:	NOT USED IN CURRENT VERSION.
+'//	 Notes:		Would be called in OnLoad and OnResize.
+'////////////////////////////////////////////////////////////////////////
+sub ChangeGameSize()
+
+	Pieces.style.display = "none"
+	dim intOldWd
+	intOldWd = intSquareWd
+	dim objElem
+
+	' figure out whether the pane is wider or taller, and set the
+	' board square's widths to the next lowest multiple of 10, that will fit
+	if document.body.clientWidth <= document.body.clientHeight then
+		intSquareWd = CInt(document.body.clientWidth/100)*10
+	else
+		intSquareWd = CInt(document.body.clientHeight/100)*10
+	end if
+
+	' if the size of the pane creates a board that is too small, override it
+	if intSquareWd < intMinWd then intSquareWd = intMinWd
+	
+	' for each piece recalc all properties
+	for each objElem in document.all
+		if IsPiece(objElem) then
+			dim intElemX
+			dim intElemY
+			intElemX = objElem.style.pixelLeft
+			intElemY = objElem.style.pixelTop
+			objElem.style.mvBoundary = "0 " & 8*intSquareWd & " " & 12*intSquareWd & " 0"
+			objElem.style.pixelTop = intElemY/intOldWd*intSquareWd
+			objElem.style.pixelLeft = intElemX/intOldWd*intSquareWd
+			objElem.style.width = intSquareWd
+			objElem.style.height = intSquareWd
+			objElem.style.zIndex = 1
+		' recalc the invisible gifs that help hold the width of each
+		' square, when the pane is extremely small 	
+		elseif objElem.ClassName = "Square3" then
+			objElem.style.width = intSquareWd	
+		' recalc the discard areas
+		elseif objElem.ClassName = "Square4" then
+			objElem.style.height = intSquareWd*2
+		end if
+	next
+	Pieces.style.display = "block"
+end sub
+
+
+'//////////////////////////////////////////////////////////////////////////
+'//  Functions: SwapX and SwapY
+'//  Purpose:  	To convert coords to mirror across both axis
+'//  Args:		numCoord - the x or y coordinate
+'//  Returns:	The swapped x or y coord
+'//  Called by:	SwapSides
+'//				document_onMouseUp
+'//				ToVWCoordX
+'//				ToWebX
+'//				ToVWCoordY
+'//				ToWebY
+'//////////////////////////////////////////////////////////////////////////
+function SwapX(numCoord)
+	' intColsCt or intRowsCt measures the number of rows or cols on the board,
+	' including the discard area
+	SwapX = intSquareWd*intColsCt - intSquareWd * (numCoord/intSquareWd) - intSquareWd
+end function
+
+function SwapY(numCoord)
+	SwapY = intSquareWd*intRowsCt - intSquareWd * (numCoord/intSquareWd) - intSquareWd
+end function
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		SwapSides
+'//  Purpose:  	Turn the board and pieces 180 degrees
+'//  Called by:	onClick handler for btnSwapSides
+'////////////////////////////////////////////////////////////////////////
+sub SwapSides
+	' bln to record the current swapped state
+	if blnSwapped = 1 then
+		blnSwapped = 0
+	else 
+		blnSwapped = 1
+	end if
+	dim objElem
+	' for every piece, swap the coords to simulate moving the board 180 degrees
+	for each objElem in document.all
+		if IsPiece(objElem) then
+			objElem.style.pixelLeft = SwapX(objElem.style.pixelLeft)
+			objElem.style.pixelTop = SwapY(objElem.style.pixelTop)
+		end if
+	next
+	set objElem = nothing
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		ResetBoard
+'//  Purpose:  	Restore all pieces to their original positions
+'//  Called by:	
+'////////////////////////////////////////////////////////////////////////
+sub ResetBoard
+	dim objVWPiece, objElem, numX, numZ, numY
+	
+	if m_bGameOn then
+		if msgbox("Are you sure you want to reset the board?", vbYesNo+vbQuestion, "Chess") <> vbYes then
+			exit sub
+		end if
+	end if
+	
+	blnSwapped = false
+	for each objElem in document.all
+		if IsPiece(objElem) then
+		
+			numX = (asc(Left(objElem.home,1))-intAscA)*intSquareWd
+			numY = (Right(objElem.home,1)+1)*intSquareWd	
+
+			set objVWPiece = top.ClientUserPtr.container.findwithin(objElem.id)
+
+			objElem.style.pixelLeft = numX
+			objElem.style.pixelTop = numY
+
+			numX = ToVWCoordX(numX)
+			numZ = ToVWCoordY(numY)
+			
+			objVWPiece.setPosition numX, objVWPiece.OrigY, numZ, top.ClientUserPtr, false
+		end if
+	next
+	
+	m_bGameOn = false
+	SyncPieces
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:	 	HandleUIEvent
+'//  Purpose:  	To handle the movement of pieces from other clients
+'//	 Args:		who  - which piece
+'//				what - "ChessPieceMoved" is what we are looking for here
+'//				args - args(0): new world x coord
+'//					args(1): new world y coord
+'//					args(2): new world z coord
+'//					args(3): the mover
+'//  Called by:	client.htm:theclient_OnUIEvent
+'////////////////////////////////////////////////////////////////////////
+sub HandleUIEvent(byVal who, what, byVal arrXtras)
+	if what = "ChessPieceMoved" then
+		dim objMover		' the mover's user/avatar object 
+		dim strMover		' the mover's name
+		set objMover = arrXtras(3)	
+		strMover = objMover.Name
+		' if the mover is not the user
+		if strMover <> user.name then
+			dim objPiece	' the web piece to move
+			dim objVWPiece	' the world piece that already moved
+			dim intX		' the current X coord
+			dim intY		' " " " Y
+			dim intDiffX	' the difference between current X and new X
+			dim intDiffY	' " " " Y
+			set objPiece = document.all.item(who.name)
+			set objVWPiece = user.container.findwithin(objPiece.id)
+	
+			intX = objPiece.style.pixelLeft
+			intY = objPiece.style.pixelTop
+			intDiffX = ToWebX(arrXtras(0))
+			' arrXtras(1) contains the z value
+			intDiffY = ToWebY(arrXtras(2))			
+			' this adjusts for negative moves
+			
+			if intX >= intDiffX then 
+			 	intDiffX = -(intX - intDiffX)/intMoveDiv
+			else			
+				intDiffX = (intDiffX - intX)/intMoveDiv
+			end if
+			if intY >= intDiffY then 
+				intDiffY = -(intY - intDiffY)/intMoveDiv
+			else
+				intDiffY = (intDiffY - intY)/intMoveDiv
+			end if
+			dim i
+			
+			'do this multiple times, and increment the move by total move/moves 
+			for i = 1 to intMoveDiv
+				window.setTimeout "MovePiece " & objPiece.id & "," & (intX+i*intDiffX) & _
+				"," & (intY+i*intDiffY), 100*i
+			next			
+
+			for i = 1 to intMoveDiv
+				MovePiece objPiece, intDiffX, intDiffY
+			next			
+
+		else
+			strMover = "You"
+		end if
+		' record the move in the display box
+'		divFeedback.innerHTML = strMover & " moved the " & who.name & "."			
+	end if
+	set objMover = nothing
+	set objVWPiece = nothing
+	set objPiece = nothing
+end sub
+
+
+'//////////////////////////////////////////////////////////////////////////
+'//  Sub:		MovePiece
+'//  Purpose:  	Move the piece from where it is to the new coords
+'//  Arguments:	objPiece - the piece to move
+'//		intNewX - the new X coord
+'//		intNewY - the new Y coord
+'//  Called by:	HandleUIEvent, for the ChessPieceMoved event
+'//////////////////////////////////////////////////////////////////////////
+sub MovePiece(objPiece,intX,intY)
+	objPiece.style.pixelLeft = intX
+	objPiece.style.pixelTop = intY
+end sub	
+
+
+</script>
+</head>
+
+<body bgcolor=#FFFFFF>
+
+<!--Start Heading Section-->
+
+<div id=bkgPageHeading
+	class=bkgPageHeading
+	style="background-image:url(../images/bkgGameRoom.gif);z-index:-1003;">
+</div>
+
+<span id=groupName
+	class=PageHeading
+	style="z-index:-1002;">Chess</span>
+<button id=btnResetBoard class=btnTeal
+	style="position:absolute;
+		width:50;
+		height:32;
+		top:2;
+		left:70"
+	onclick=ResetBoard>Reset<br>Board		
+</button>
+
+<button id=btnSwapSides class=btnTeal
+	style="position:absolute;
+		width:50;
+		height:32;
+		top:2;
+		left:130"
+	onclick=SwapSides>Turn<br>Board		
+</button>
+
+
+
+<hr class=PageHeadingHR>
+<!--End Heading Section-->
+<!--Black Pieces-->
+<div id=divPieces
+	style="position:absolute;
+		top:38;
+		z-index:1;
+		display:none;">
+<img id=BQRook class=PieceBlk src="../Images/imgChRook2.gif" home=A1>
+<img id=BQKnight class=PieceBlk src="../Images/imgChKnight2.gif" home=B1>
+<img id=BQBishop class=PieceBlk src="../Images/imgChBishop2.gif" home=C1>
+<img id=BQueen class=PieceBlk src="../Images/imgChQueen2.gif" home=D1>
+<img id=BKing class=PieceBlk src="../Images/imgChKing2.gif" home=E1>
+<img id=BKBishop class=PieceBlk src="../Images/imgChBishop2.gif" home=F1>
+<img id=BKKnight class=PieceBlk src="../Images/imgChKnight2.gif" home=G1>
+<img id=BKRook class=PieceBlk src="../Images/imgChRook2.gif" home=H1>
+
+<img id=BQRPawn class=PieceBlk src="../Images/imgChPawn2.gif" home=A2>
+<img id=BQNPawn class=PieceBlk src="../Images/imgChPawn2.gif" home=B2>
+<img id=BQBPawn class=PieceBlk src="../Images/imgChPawn2.gif" home=C2>
+<img id=BQPawn class=PieceBlk src="../Images/imgChPawn2.gif" home=D2>
+<img id=BKPawn class=PieceBlk src="../Images/imgChPawn2.gif" home=E2>
+<img id=BKBPawn class=PieceBlk src="../Images/imgChPawn2.gif" home=F2>
+<img id=BKNPawn class=PieceBlk src="../Images/imgChPawn2.gif" home=G2>
+<img id=BKRPawn class=PieceBlk src="../Images/imgChPawn2.gif" home=H2>
+
+<img id=WQRPawn class=PieceWht src="../Images/imgChPawn.gif" home=A7>
+<img id=WQNPawn class=PieceWht src="../Images/imgChPawn.gif" home=B7>
+<img id=WQBPawn class=PieceWht src="../Images/imgChPawn.gif" home=C7>	
+<img id=WQPawn class=PieceWht src="../Images/imgChPawn.gif" home=D7>
+<img id=WKPawn class=PieceWht src="../Images/imgChPawn.gif" home=E7>
+<img id=WKBPawn class=PieceWht src="../Images/imgChPawn.gif" home=F7>
+<img id=WKNPawn class=PieceWht src="../Images/imgChPawn.gif" home=G7>
+<img id=WKRPawn class=PieceWht src="../Images/imgChPawn.gif" home=H7>
+
+<img id=WQRook class=PieceWht src="../Images/imgChRook.gif" home=A8>
+<img id=WQKnight class=PieceWht src="../Images/imgChKnight.gif" home=B8>
+<img id=WQBishop class=PieceWht src="../Images/imgChBishop.gif" home=C8>
+<img id=WQueen class=PieceWht src="../Images/imgChQueen.gif" home=D8>
+<img id=WKing class=PieceWht src="../Images/imgChKing.gif" home=E8>
+<img id=WKBishop class=PieceWht src="../Images/imgChBishop.gif" home=F8>
+<img id=WKKnight class=PieceWht src="../Images/imgChKnight.gif" home=G8>
+<img id=WKRook class=PieceWht src="../Images/imgChRook.gif" home=H8>
+</div>
+<table id=tblChessBd
+	cellspacing=0
+	cellpadding=0
+	style="position:absolute;
+		top:38;
+		z-index:-1000;">
+<tr id=Row9 style="z-index:-1000;"><td colspan=8 bgcolor=#6B8684><img class=Square4 src="../Images/spacer.gif"></td></tr>
+<tr id=Row8 style="z-index:-1000;">
+	<td id=A8 class=Square1>
+		<img class=Square3 src="../Images/spacer.gif">
+	</td>
+	<td id=B8 class=Square2>
+		<img class=Square3 src="../Images/spacer.gif">
+	</td>
+	<td id=C8 class=Square1>
+		<img class=Square3 src="../Images/spacer.gif">
+	</td>
+	<td id=D8 class=Square2>
+		<img class=Square3 src="../Images/spacer.gif">
+	</td>
+	<td id=E8 class=Square1>
+		<img class=Square3 src="../Images/spacer.gif">
+	</td>
+	<td id=F8 class=Square2>
+		<img class=Square3 src="../Images/spacer.gif">
+	</td>
+	<td id=G8 class=Square1>
+		<img class=Square3 src="../Images/spacer.gif">
+	</td>
+	<td id=H8 class=Square2>
+		<img class=Square3 src="../Images/spacer.gif">	
+	</td>	
+</tr>
+<tr id=Row7 style="z-index:-1000;">
+	<td id=A7 class=Square2>
+	</td>
+	<td id=B7 class=Square1>			
+	</td>
+	<td id=C7 class=Square2>	
+	</td>
+	<td id=D7 class=Square1>			
+	</td>
+	<td id=E7 class=Square2>		
+	</td>
+	<td id=F7 class=Square1>		
+	</td>
+	<td id=G7 class=Square2>		
+	</td>	
+	<td id=H7 class=Square1>		
+	</td>
+</tr>
+<tr id=Row6 style="z-index:-1000;">
+	<td id=A6 class=Square1>		
+	</td>
+	<td id=B6 class=Square2>
+	</td>
+	<td id=C6 class=Square1>		
+	</td>
+	<td id=D6 class=Square2>		
+	</td>
+	<td id=E6 class=Square1>		
+	</td>
+	<td id=F6 class=Square2>		
+	</td>
+	<td id=G6 class=Square1>		
+	</td>
+	<td id=H6 class=Square2>		
+	</td>
+</tr>
+<tr id=Row5 style="z-index:-1000;">
+	<td id=A5 class=Square2>
+	</td>
+	<td id=B5 class=Square1>
+	</td>
+	<td id=C5 class=Square2>
+	</td>
+	<td id=D5 class=Square1>
+	</td>
+	<td id=E5 class=Square2>
+	</td>
+	<td id=F5 class=Square1>
+	</td>
+	<td id=G5 class=Square2>
+	</td>
+	<td id=H5 class=Square1>
+	</td>	
+</tr>
+<tr id=Row4 style="z-index:-1000;">
+	<td id=A4 class=Square1>
+	</td>
+	<td id=B4 class=Square2>
+	</td>
+	<td id=C4 class=Square1>
+	</td>
+	<td id=D4 class=Square2>
+	</td>
+	<td id=E4 class=Square1>
+	</td>
+	<td id=F4 class=Square2>
+	</td>
+	<td id=G4 class=Square1>
+	</td>
+	<td id=H4 class=Square2>
+	</td>	
+</tr>
+<tr id=Row3 style="z-index:-1000;">
+	<td id=A3 class=Square2>
+	</td>
+	<td id=B3 class=Square1>
+	</td>
+	<td id=C3 class=Square2>
+	</td>
+	<td id=D3 class=Square1>
+	</td>
+	<td id=E3 class=Square2>
+	</td>
+	<td id=F3 class=Square1>
+	</td>
+	<td id=G3 class=Square2>
+	</td>
+	<td id=H3 class=Square1>
+	</td>	
+</tr>
+<tr id=Row2 style="z-index:-1000;">
+	<td id=A2 class=Square1>		
+	</td>
+	<td id=B2 class=Square2>		
+	</td>
+	<td id=C2 class=Square1>		
+	</td>
+	<td id=D2 class=Square2>		
+	</td>
+	<td id=E2 class=Square1>				
+	</td>
+	<td id=F2 class=Square2>		
+	</td>
+	<td id=G2 class=Square1>		
+	</td>
+	<td id=H2 class=Square2>		
+	</td>	
+</tr>
+<tr id=Row1 style="z-index:-1000;">
+	<td id=A1 class=Square2>		
+	</td>
+	<td id=B1 class=Square1>
+	</td>
+	<td id=C1 class=Square2>		
+	</td>
+	<td id=D1 class=Square1>		
+	</td>
+	<td id=E1 class=Square2>		
+	</td>
+	<td id=F1 class=Square1>		
+	</td>
+	<td id=G1 class=Square2>		
+	</td>
+	<td id=H1 class=Square1>		
+	</td>	
+</tr>
+<tr id=Row9 style="z-index:-1000;"><td colspan=8 bgcolor=#6B8684><img class=Square4 src="../Images/spacer.gif"></td></tr>
+</table>
+<!--
+<div style="position:absolute;
+		top:expression(intSquareWd*12+50+2);
+		width:expression(intSquareWd*8);
+		font-family:verdana;
+		font-size:8pt;">
+<div id=divBar
+	style="position:absolute;
+		width:expression(intSquareWd*8);
+		height:36;
+		background:#85643A;
+		z-index:-1003;">
+</div>
+<div id=divFeedback
+	align=center
+	style="position:absolute;
+		background:white;
+		border:2 solid #533111;
+		left:5;
+		top:3;	
+		height:30;
+		width:expression((intSquareWd*8)-120);
+		visibility:hidden
+		">
+</div>
+</div>
+-->
+</body>
+</html>
+
+
+

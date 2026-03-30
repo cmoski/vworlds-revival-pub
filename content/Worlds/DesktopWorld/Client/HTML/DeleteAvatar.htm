@@ -1,0 +1,79 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//
+'//  File:			DeleteAvatar.htm
+'//  Description:	This file helps delete a new avatar before entering the world
+'//					This file is popped up in a new window.
+'////////////////////////////////////////////////////////////////////////-->
+<html>
+<head>
+<title>Delete Avatar</title>
+<link rel=stylesheet href=../shared/global.css>
+<script language=vbs>
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		window_onLoad
+'//  Purpose:	ask the user if they want to delete the avatar
+'////////////////////////////////////////////////////////////////////////
+sub window_onload
+	divQuestion.innerText = "Do you want to permanently delete the avatar '" & _
+		window.dialogArguments.AvatarList.value & "'?"
+	divQuestion.style.top = (document.body.clientHeight - divQuestion.offsetHeight) / 2
+	divQuestion.style.visibility = ""
+	btnOk.focus
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		document_OnMouseOver and document_OnMouseOut
+'//  Purpose:	does pretty highlighting
+'////////////////////////////////////////////////////////////////////////
+sub document_OnMouseOver
+	if window.event.srcElement.className = "bEnabled" then	window.event.srcElement.className = "bHighlight"
+end sub
+sub document_OnMouseOut
+	if window.event.srcElement.className = "bHighlight" then window.event.srcElement.className = "bEnabled"
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		OnOK
+'//  Purpose:	tell the parent window to delete the avatar, then close
+'////////////////////////////////////////////////////////////////////////
+sub OnOK
+	window.dialogArguments.OnConfirmDelete
+	window.close
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		OnCancel
+'//  Purpose:	close the window
+'////////////////////////////////////////////////////////////////////////
+sub OnCancel
+	window.close
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		document_onkeypress
+'//  Purpose:	confirm delete on enter, cancel on escape
+'////////////////////////////////////////////////////////////////////////
+sub document_onkeypress
+	select case window.event.keycode
+	case 27			'ESC
+		OnCancel
+	case 13			'ENTER
+		OnOK
+	case else
+	end select
+end sub
+
+</script>
+</head>
+<body bgcolor="#FFFFFF" style=background-color:white;>
+	<div id=divQuestion class=vH2 style=left:18;top:18;width:215;visibility:hidden;></div>
+	<button class=bEnabled id=btnOK onclick=OnOK style=left:240;top:14;>OK</button>
+	<button class=bEnabled id=Cancel onclick=OnCancel style=left:240;top:40;>Cancel</button>
+</body>
+</html>

@@ -1,0 +1,190 @@
+<html>
+<head>
+<title>New Module</title>
+<link Rel=Stylesheet href=../../../client/shared/global.css>
+<script language=vbs>
+
+option explicit
+dim world
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+sub Window_OnLoad
+	On error resume next
+	set world = window.dialogArguments.goWorld
+	modName.select
+	err.clear
+end sub
+
+sub Window_OnUnload
+end sub
+
+sub OnOk
+	On error resume next
+	dim flags, currentValue
+	flags = 0
+
+	' verify the name of the module
+	if not World.ValidatePropertyName(modName.value) then
+		msgbox "The module name entered is not valid. A valid name must begin with a letter and can contain numbers, letters, and the underscore character.", vbExclamation, "Microsoft Virtual Worlds"
+		modName.focus
+		modName.select
+		exit sub
+	end if
+
+	currentValue = ExecuteList.SelectedIndex
+	if currentValue = 0 then
+		flags = world.MODULE_CLIENT
+	else
+		if currentValue = 1 then
+			flags = world.MODULE_SERVER
+		else
+			if currentValue = 2 then
+				flags = World.MODULE_SERVER or World.MODULE_CLIENT
+			end if
+		end if
+	end if
+	err.clear
+	world.CreateScriptModule modName.value, modURL.value, flags
+	if err.number <> &H00000000 then
+		if Len(err.description) > 0 then
+			msgbox "An error occurred loading the module: (" & err.description & ").", vbExclamation, "Microsoft Virtual Worlds"
+		else
+			msgbox "An error occurred loading the module.", vbExclamation, "Microsoft Virtual Worlds"
+		end if
+	else
+		window.close
+	end if
+end sub
+
+sub OnHelp
+	Dim helpstringsList
+	window.event.returnValue = false
+	on error resume next
+	set helpstringsList = world.global.CreatePropertyList
+	helpstringsList.add "Authoring"
+	helpstringsList.add "Object Explorer"
+	helpstringsList.add "New Module"
+	world.FireUIEvent world.user, "Help", helpstringsList
+end sub
+
+sub document_onkeypress
+	select case window.event.keyCode
+	case 27
+		window.close
+	case 13
+		if window.event.srcElement.tagName <> "BUTTON" and window.event.srcElement.tagName <> "A" then OnOK
+	case else
+		if window.event.srcElement.tagName = "INPUT" then
+			if len(modName.value) > 0 and len(modURL.value) > 0 then
+				EnableButton btnOK
+			else
+				if window.event.keycode > 31 and window.event.keycode < 127 then
+					if window.event.srcElement.id = "modName" then
+						if len(modURL.value) > 0 then
+							EnableButton btnOK
+						else
+							DisableButton btnOK
+						end if
+					else
+						if len(modName.value) > 0 then
+							EnableButton btnOK
+						else
+							DisableButton btnOK
+						end if
+					end if
+				else
+					DisableButton btnOK
+				end if
+			end if
+		end if
+	end select
+end sub
+
+sub modURL_onblur
+	if len(modName.value) > 0 and len(modURL.value) > 0 then
+		EnableButton btnOK
+	else
+		DisableButton btnOK
+	end if
+end sub
+
+sub modName_onblur
+	if len(modName.value) > 0 and len(modURL.value) > 0 then
+		EnableButton btnOK
+	else
+		DisableButton btnOK
+	end if
+end sub
+
+sub DisableButton(btn)
+	btn.disabled=true
+	btn.className = "bDisabled"
+end sub
+
+sub EnableButton(btn)
+	btn.disabled=false
+	btn.className = "bEnabled"
+end sub
+
+sub document_OnMouseOver
+	select case window.event.srcElement.className
+	case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	case "vHelp"
+		imgHelp.src="../../../client/shared/helpH.gif"
+	case else
+	end select
+end sub
+
+sub document_OnMouseOut
+	select case window.event.srcElement.className
+	case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	case "vHelp"
+		imgHelp.src="../../../client/shared/help.gif"
+	case "vInput"
+		if len(modName.value) > 0 and len(modURL.value) > 0 then
+			EnableButton btnOK
+		else
+			DisableButton btnOK
+		end if
+	case else
+	end select
+end sub
+
+</script>
+</head>
+<body>
+	<div class=vLabel style=left:18;top:7;>Module Name:</div>
+	<input id=modName class=vInput style=left:18;top:21;width:250; maxlength=50>
+	<div class=vLabel style=left:18;top:45;>Module URL:</div>
+	<input id=modURL class=vInput style=left:18;top:59;width:250; maxlength=300>
+	<div class=vLabel style=left:18;top:89;>Execute on:</div>
+	<select id=ExecuteList style=left:100;top:86;width:125; class=vInput>
+		<option>Client</option>
+		<option>Server</option>
+		<option>Client and Server</option>
+	</select>
+	<button class=bDisabled id=btnOK style=left:138;top:115; onclick=OnOk disabled>
+		<span style=position:relative;top:-1;>OK</span>
+	</button>
+	<button class=bEnabled id=btnCancel style=left:208;top:115; onclick=window.close>
+		<span style=position:relative;top:-1;>Cancel</span>
+	</button>
+	<a id=lnkHelp onclick=OnHelp href="">
+		<img src=../../../client/shared/help.gif id=imgHelp class=vHelp style=top:115;>
+	</a>
+</body>
+</html>

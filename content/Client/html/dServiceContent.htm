@@ -1,0 +1,196 @@
+<HTML>
+<HEAD>
+<LINK REL=StyleSheet HREF=../shared/global.css>
+<script language=vbs>
+
+Option Explicit
+
+Public nWorlds()
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+Sub window_onLoad
+	Dim splitWorlds, splitWorld, i, sWorld
+	If parent.oWnd.name = "VirtualWorldsStart" Then
+		document.body.style.backgroundcolor = "white"
+	End If
+	splitWorlds = Split(parent.oWnd.webhelper.fetchUrlText("http://vworldsint/ds.asp"), vbCrLf)
+	i = 0
+	For Each sWorld In splitWorlds
+		If len(sWorld) <> 0 Then
+			splitWorld = Split(sWorld, "	")
+			If UBound(splitWorld) = 3 Then
+				ReDim Preserve nWorlds(3, i)
+				If StrComp(Left(Trim(splitWorld(0)), 2), vbcrlf, vbTextCompare) = 0 Then
+					nWorlds(0, i) = Mid(Trim(splitWorld(0)), 3)
+				Else
+					nWorlds(0, i) = Trim(splitWorld(0))
+				End If
+				nWorlds(1, i) = Trim(splitWorld(1))
+				nWorlds(2, i) = Trim(splitWorld(2))
+				nWorlds(3, i) = Trim(splitWorld(3))
+				i = i + 1
+			End If
+		End If
+	Next
+	if i > 0 then
+		SortList
+	else
+		NoWorlds
+	end if
+	parent.TimeStamp.innerHTML = "As of " & FormatDateTime(Now())
+End Sub
+
+Function AddToList(tagName, sItem)
+	Dim i
+	AddToList = tagName.length
+	For i = 0 To tagName.length - 1
+		If parent.fAscending Then
+			If LCase(sItem) < LCase(tagName.options.item(i).text) Then
+				AddToList = i
+				Exit For
+			End If
+		Else
+			If LCase(sItem) > LCase(tagName.options.item(i).text) Then
+				AddToList = i
+				Exit For
+			End If
+		End If
+	Next
+End Function
+
+Public Sub SortList
+	Dim sItem, el, i, sText, iTop
+	iTop = 0
+	For Each el In Sort1
+		Sort1.remove(0)
+	Next
+	Select Case parent.curSort.SortID
+	Case "1"	'World
+		For i = 0 To UBound(nWorlds, 2)
+			Set el = document.CreateElement("OPTION")
+			el.text = nWorlds(1, i)
+			Sort1.add el, AddToList(Sort1, el.text)
+		Next
+		For Each sItem In Sort1.options
+			For i = 0 To UBound(nWorlds, 2)
+				If sItem.text = nWorlds(1, i) Then
+					AddItem nWorlds(0, i), nWorlds(1, i), nWorlds(2, i), nWorlds(3, i), iTop
+					Exit For
+				End If
+			Next
+		Next
+	Case "2"	'Num connected
+		For i = 0 To UBound(nWorlds, 2)
+			Set el = document.CreateElement("OPTION")
+			el.text = nWorlds(2, i) & "," & nWorlds(1, i)
+			Sort1.add el, AddToList(Sort1, el.text)
+		Next
+		For Each sItem In Sort1.options
+			sText = Right(CStr(sItem.text), Len(CStr(sItem.text)) - InStr(1, CStr(sItem.text), ",", vbTextCompare))
+			For i = 0 To UBound(nWorlds, 2)
+				If StrComp(sText, nWorlds(1, i), vbTextCompare) = 0 Then
+					AddItem nWorlds(0, i), nWorlds(1, i), nWorlds(2, i), nWorlds(3, i), iTop
+					Exit For
+				End If
+			Next
+		Next
+	Case "3"	'Web page
+		For i = 0 To UBound(nWorlds, 2)
+			Set el = document.CreateElement("OPTION")
+			el.text = nWorlds(3, i) & "," & nWorlds(1, i)
+			Sort1.add el, AddToList(Sort1, el.text)
+		Next
+		For Each sItem In Sort1.options
+			sText = Right(CStr(sItem.text), Len(CStr(sItem.text)) - InStr(1, CStr(sItem.text), ",", vbTextCompare))
+			For i = 0 To UBound(nWorlds, 2)
+				If StrComp(sText, nWorlds(1, i), vbTextCompare) = 0 Then
+					AddItem nWorlds(0, i), nWorlds(1, i), nWorlds(2, i), nWorlds(3, i), iTop
+					Exit For
+				End If
+			Next
+		Next
+	Case Else
+	End Select
+	parent.TimeStamp.innerHTML = parent.sSavedDate
+	select case ubound(nWorlds, 2)
+	Case 0
+	case -1
+		NoWorlds
+	case else
+	end select
+End Sub
+
+
+sub NoWorlds
+	divWorldList.innerHTML = "<div class=vLabel style=left:5;top:5;>Either the Worlds Directory Service is not available or there are no worlds available.<p>Check with a world server administrator to make sure the Worlds Directory Service is running.</div>"
+end sub
+
+Sub AddItem(WorldURL, WorldDisplay, NumConnected, WebURL, ByRef iTop)
+	divWorldList.insertAdjacentHTML "beforeEnd", _
+		"<div class=vLabel style=left:0;top:" & iTop & ";width:160;overflow:hidden;padding:2;>" & _
+			"<nobr>" & _
+				"<a name=world style=color:#002f5f; href="""" worldUrl=""" & WorldURL & """ title=""" & WorldDisplay & """>" & WorldDisplay & "</a>" & _
+			"</nobr>" & _
+		"</div>" & _
+		"<div class=vLabel style=left:162;top:" & iTop & ";width:67;padding:2; align=center>" & _
+			NumConnected & _
+		"</div>" & _
+		"<div class=vLabel id=Col3 style=left:242;top:" & iTop & ";width:205;overflow:hidden;padding:2;>" & _
+			"<nobr>" & _
+				"<a target=""_blank"" style=color:#002f5f; href=""" & WebURL & """ title=""" & WebURL & """>" & WebURL & "</a>" & _
+			"</nobr>" & _
+		"</div>"
+	iTop = iTop + 20
+End Sub
+
+Sub document_onclick
+	If window.event.srcElement.tagName = "A" Then
+		If window.event.srcElement.name = "world" Then
+			window.event.returnValue = False
+			If window.event.srcElement.worldURL <> "" Then
+				parent.close
+				parent.oWnd.LogonFromDS window.event.srcElement.worldURL
+			End If
+		End If
+	End If
+End Sub
+
+Sub document_onkeypress
+	Select Case window.event.keycode
+	Case 27
+		parent.Closebtn.click
+	Case Else
+	End Select
+End Sub
+
+Sub document_onmouseover
+	If window.event.srcElement.tagName = "A" Then
+		window.event.srcElement.style.color = "mediumvioletred"
+	End If
+End Sub
+
+Sub document_onmouseout
+	If window.event.srcElement.tagName = "A" Then
+		window.event.srcElement.style.color = "#002f5f"
+	End If
+End Sub
+
+</script>
+</HEAD>
+<body>
+<select id=Sort1 style=display:none;></select>
+<div id=divWorldList></div>
+</BODY>
+</HTML>

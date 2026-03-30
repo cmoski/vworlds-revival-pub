@@ -1,0 +1,389 @@
+<html>
+<head>
+<LINK Rel=Stylesheet href="..\..\..\..\client\shared\global.css">
+<object id="elements" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
+  <param name="DataURL" value="LandScape.csv">
+  <param name="UseHeader" value="True">
+  <param name="TextQualifier" value="'">
+</object>
+<script language="VBSCRIPT">
+
+option explicit
+
+dim rs
+dim ready
+Dim world
+Dim Landscape
+Dim StyleName
+Dim selected
+Dim p_Entry
+
+ready = False
+
+sub window_onload
+	if top.SelectedStyleIndex <> -1 then
+		lstStyle.selectedIndex = top.SelectedStyleIndex
+	else
+		lstStyle.selectedIndex = 0
+	end if
+	choseName
+end sub
+
+sub elements_ondatasetcomplete
+	set rs = elements.recordset
+	fillin_select
+	if top.SelectedStyleIndex <> -1 then
+		lstStyle.selectedIndex = top.SelectedStyleIndex
+	end if
+end sub
+
+function verify()
+	verify = ready
+end function
+
+sub fillin_select()
+	dim el
+
+	rs.MoveFirst
+	' iterate on world templates
+	Do Until rs.EOF
+			set el = document.CreateElement("OPTION")
+			el.value = rs.Fields(0).value
+			el.text = rs.Fields(0).value
+			lstStyle.add el
+			rs.MoveNext
+	Loop
+end sub
+
+sub choseName()
+	selected = lstStyle.selectedIndex
+	rs.MoveFirst
+	rs.Move selected
+	StyleName = rs.fields(0)
+	top.SelectedStyleIndex = selected
+	ready = true
+end sub
+
+sub finish
+	buildworld
+end sub
+
+sub buildworld
+	if top.buildworld then
+		set world = top.client.world
+
+		parent.StatusMsg "creating Landscape"
+		CreateLandscape
+
+		' Call sub to create entry portal if in Hill Top landscape
+		' Set the DefaultPortal to be the entry within this sub
+		CreatePortals
+
+		' set default room to Landscape
+		world.Global.DefaultRoom = Landscape
+
+		world.user.MoveInto Landscape
+
+		world.SaveDatabase
+		world.Trace "All done with SaveDatabase"
+		world.disconnect
+	end if
+end sub
+
+sub CreateLandscape
+	'stop
+	set Landscape = world.CreateInstance("Landscape", "Room")
+
+	Select Case StyleName
+		case "Valley"
+			Landscape.InitializeGraphics "", 0.0, 0.03, 0.0, 1.0, 0.0, 0.0
+			Landscape.BackgroundColor = &HBDD5E8
+		case "Hill Top"
+			Landscape.InitializeGraphics "", 0.0, 0.0, 0.0, 1.0, 0.0, 0.0
+			Landscape.BackgroundColor = &HBDD5E8
+	End Select
+
+	World.Trace "done creating Landscape"
+
+	'Now add objects to the Landscape
+	Select Case StyleName
+		case "Valley"
+			Dim groundv
+			set groundv= World.CreateInstance("ground", "Artifact",Landscape)
+			groundv.Description = ""
+			groundv.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\ground.x", 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+			groundv.IsUIVisible = False
+			groundv.IsMoveable = false
+
+			Dim sound
+			set sound= World.CreateInstance("sound", "Artifact", Landscape)
+			sound.Description = ""
+			sound.InitializeGraphics "", 0.0, 2.0, 0.0, 1.0, 0.0, 0.0
+			sound.IsUIVisible = False
+			sound.SetSound "SDK\library\sounds\cricket2.wav", True, -1200,0,0
+
+			Dim Entry2
+			set Entry2= World.CreateInstance("entry point", "artifact", Landscape)
+			Entry2.Description = " Moves you to the spot where you entered this room."
+			Entry2.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\entrypoint.x", 0.0, 1.05, 0.0, -1.0, 0.0, -0.0
+			Entry2.IsMoveable = False
+
+			Dim overview1
+			set overview1= World.CreateInstance("overview","artifact", Landscape)
+			overview1.InitializeSpriteGraphics "",-21.27,6.1,7.65,0.93,0.0,-0.36
+			overview1.IsUIVisible = False
+			overview1.IsCameraAnchor = True
+
+
+			Dim skyv
+			set skyv= World.CreateInstance("sky", "Artifact",Landscape)
+			skyv.Description = ""
+			skyv.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\sky.x", 0.0, -10.0, 0.0, 0.0, 0.0, 0.0
+			skyv.IsUIVisible = False
+			skyv.IsMoveable= false
+
+			Dim hills
+			set hills= World.CreateInstance("hills", "Artifact",Landscape)
+			hills.Description = ""
+			hills.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\hills.x", 0.0, 0.13, 0.0, 0.0, 0.0, 0.0
+			hills.IsUIVisible = False
+			hills.IsMoveable= false
+			CreatehillsBoundaries(hills)
+
+			Dim cloud
+			set cloud= World.CreateInstance("cloud", "Artifact",Landscape)
+			cloud.Description = ""
+			cloud.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\cloud.x", 0.0, 10.0, 0.0, 0.0, 0.0, 0.0
+			cloud.RotationAxis.set 0,1,0
+			cloud.RotationRate = 0.002
+			cloud.Scale.Set 0.3, 0.3, 0.3
+			cloud.IsUIVisible = False
+
+			Dim lighta
+			set lighta= World.CreateInstance("ambient light", "Artifact",Landscape)
+			lighta.Description = ""
+			lighta.InitializeGraphics "SDK\Library\Models\lights\lightdown-transparent.3ds", 16.0, 16.0, 16.0, 1.0, 0.0, 0.0
+			lighta.IsUIVisible = False
+
+		case "Hill Top"
+
+			Dim plants1
+			set plants1 = World.CreateInstance("plants","artifact",Landscape)
+			plants1.InitializeSpriteGraphics "SDK\Library\Models\_EmptyLandscape\hilltop\plants1.gif",-8.34,1.45,19.8,0.0,0.0,-1.0
+			plants1.scale.set 0.5,0.9,0.5
+			plants1.IsUIVisible = False
+			plants1.IsMoveable= false
+			'plants1.Set3DSound "sdk\library\fountain.wav", true
+
+			Dim sound1
+			set sound1= World.CreateInstance("sound", "Artifact", Landscape)
+			sound1.Description = ""
+			sound1.InitializeGraphics "", 0.0, 2.0, 0.0, 1.0, 0.0, 0.0
+			sound1.IsUIVisible = False
+			sound1.SetSound "SDK\library\sounds\cricket2.wav", True, -1200,0,0
+
+			Dim lightc
+			set lightc= World.CreateInstance("ambient light", "Artifact",Landscape)
+			lightc.Description = ""
+			lightc.InitializeGraphics "SDK\Library\Models\lights\lightdown-transparent.3ds", 16.0, 16.0, 16.0, 1.0, 0.0, 0.0
+			lightc.IsUIVisible = False
+
+			Dim Entry1
+			set Entry1 = World.CreateInstance("entry point", "artifact", Landscape)
+			Entry1.Description = " Moves you to the spot where you entered this room."
+			Entry1.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\entrypoint.x", -3.39, 1.8, 35.55, -0.88, 0.0, -0.471
+			Entry1.IsMoveable = False
+
+			Dim overview
+			set overview= World.CreateInstance("overview","artifact", Landscape)
+			overview.InitializeSpriteGraphics "",-31.31,1.8,33.71,0.92,0.0,-0.4
+			overview.IsUIVisible = False
+			overview.IsCameraAnchor = True
+
+
+
+			Dim Ground2
+			set Ground2 = World.CreateInstance("ground", "artifact",Landscape)
+			Ground2.Description = ""
+			Ground2.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\groundh.x", 22, -1.0, 35, -1.0, 0.0, 0.0
+			Ground2.IsUIVisible = False
+			Ground2.IsMoveable= false
+			CreateGround2Boundaries(ground2)
+
+			Dim birds
+			set birds= World.CreateInstance("birds", "Artifact",Landscape)
+			birds.Description = ""
+			birds.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\birds.x", 0.0, 20.0, 0.0, 0.0, 0.0, 0.0
+			birds.RotationAxis.set 0,1,0
+			birds.RotationRate = 0.002
+			birds.scale.set 0.3, 0.3, 0.3
+			birds.IsUIVisible = False
+
+
+			Dim sky
+			set sky = World.CreateInstance("sky", "artifact",Landscape)
+			sky.Description = ""
+			sky.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\sky1.x", 27.5, 95.0, -22.4, 0.0, 0.0, 0.0
+			sky.IsUIVisible = False
+			sky.IsMoveable= false
+
+			Dim Tree1
+			set Tree1 = World.CreateInstance("tree1", "Artifact",Landscape)
+			Tree1.Description = ""
+			Tree1.ApproachDistance = 20
+			Tree1.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\Tree1.x", 105, 13, -35, -1.0, 0.0, 0.0
+			Tree1.IsUIVisible = False
+			Tree1.IsMoveable= false
+
+			Dim Forest
+			set Forest = World.CreateInstance("forest", "Artifact",Landscape)
+			Forest.Description = ""
+			Forest.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\Foresth.x", -3.89, 9, 28.72, 0.933, 0.0, 0.358
+			Forest.IsUIVisible = False
+			Forest.IsMoveable = false
+
+
+			Dim tree2
+			set tree2= World.CreateInstance("tree2", "Artifact",Landscape)
+			tree2.Description = ""
+			Tree2.ApproachDistance = 20
+			tree2.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\Tree2.x", 53.53, 10.07, 3.16, -0.5, 0.0, 0.866
+			tree2.IsUIVisible = False
+			tree2.IsMoveable= false
+
+			Dim tree3
+			set tree3= World.CreateInstance("tree3", "Artifact",Landscape)
+			tree3.Description = ""
+			tree3.ApproachDistance = 20
+			tree3.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\Tree3.x", 19.6, 10.07, 75.82, 0.0, 0.0, -1
+			tree3.IsUIVisible = False
+			tree3.IsMoveable= false
+
+			Dim tree4
+			set tree4= World.CreateInstance("tree4", "Artifact",Landscape)
+			tree4.Description = ""
+			tree4.ApproachDistance = 20
+			tree4.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\Tree4.x", -25.82, 10.07, 5.56, 1.0, 0.0, 0.0
+			tree4.IsUIVisible = False
+			tree4.IsMoveable= false
+
+			Dim tree5
+			set tree5= World.CreateInstance("tree5", "Artifact",Landscape)
+			tree5.Description = ""
+			tree5.ApproachDistance = 20
+			tree5.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\Tree5.x", -12.02, 10.07, -10.0, -0.398, 0.0, 0.917
+			tree5.IsUIVisible = False
+			tree5.IsMoveable= false
+
+			Dim tree6
+			set tree6= World.CreateInstance("tree6", "Artifact",Landscape)
+			tree6.Description = ""
+			tree6.ApproachDistance = 20
+			tree6.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\Tree6.x", -18.5, 10.07, 37.0, 0.422, 0.0, -0.91
+			tree6.IsUIVisible = False
+			tree6.IsMoveable= false
+
+			Dim View
+			set View = World.CreateInstance("view", "Artifact",Landscape)
+			View.Description = ""
+			View.ApproachDistance = 40
+			View.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\Viewh.x", 76, 13, 125, -1, 0.0, -1
+			View.IsUIVisible = False
+			View.IsMoveable = false
+
+	End Select
+end sub
+
+Sub CreateGround2Boundaries(thething)
+	Dim theBoundaryList_t
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+		-37.837, 52.7031, -36.9292, -2.21893, 14.3615, -3.12673, 35.6949, -0.857229, _
+		34.7871, 31.8236, 13.9076, 53.6109))
+	theBoundaryList_t.HeightUpper = 10.88011
+	theBoundaryList_t.HeightLower = 1.88011
+	thething.BoundaryList.Add theBoundaryList_t
+End Sub
+
+Sub CreateHillsBoundaries(thething)
+	Dim theBoundaryList_t
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+		13.844, -20.539, -12.4823, -21.4468, -24.7376, -6.46809, -23.3759, 16.6808, _
+		-10.2128, 22.5816, 12.0284, 23.0355, 25.6454, 13.0496, 24.2837, -9.19149_
+		))
+	theBoundaryList_t.HeightUpper = 6.02975
+	theBoundaryList_t.HeightLower = 0.0
+	thething.BoundaryList.Add theBoundaryList_t
+End Sub
+
+sub CreateCellFromArray( theCell, ptsBoundary(), numPts , upper, lower )
+	Dim i
+	Dim boundary
+	Dim succ
+
+	set boundary = World.CreateBoundary()
+
+	for i = 0 To numPts - 1
+'		World.Trace "CreateAFloor vertex " + cstr(i) +": " + cstr(ptsBoundary(i*2)) + ", " + cstr(ptsBoundary(i*2+1))
+		succ = boundary.InsertVertexSafe(-1, ptsBoundary(i*2),ptsBoundary(i*2 +1))
+'		World.Trace "InsVertSafe succ=" + cstr(succ)
+	next
+	boundary.IsClosed = True
+	boundary.HeightUpper = upper
+	boundary.HeightLower = lower
+	theCell.Add(boundary)
+
+end sub
+
+
+' Note: if you later add an entry portal to the Valley Landscape, you will need to redo this sub
+' to look more like the other kits and place the DefaultPortal statement in the BuildWorld sub
+sub CreatePortals
+	Select Case StyleName
+		case "Hill Top"
+			'Default world entry
+			Set p_Entry = World.CreateInstance("world entry", "Portal", Landscape)
+			p_Entry.Description = ""
+			p_Entry.IsUIVisible = False
+			p_Entry.InitializeGraphics "", -3.39, 0.0, 35.55, -0.5, 0.0, 0.87
+			p_Entry.EntryPoint.Set -3.39, 1.8, 35.55
+			p_Entry.EntryOrientation.set 0.88, 0.0, 0.471
+			p_Entry.EntryRadius = 0.5
+
+			' Now set default Portal to Landscape just for the Hilltop world
+			World.Global.DefaultPortal = p_Entry
+	End Select
+end sub
+
+sub document_onKeyPress
+	select case window.event.keycode
+	case 27
+		top.frames(1).OnCancel
+	case 13
+		top.frames(1).OnFinish
+	case Else
+	end select
+end sub
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+</script>
+</head>
+<body>
+	<div class=vLabel style=top:0;left:10;>Styles:</div>
+	<select id=lstStyle class=vInput style=left:10;top:15;width:120; size=7 onchange=choseName></select>
+	<div class=vLabel style=top:0;left:150;>Preview:</div>
+	<img datafld=previewGIF datasrc="#elements" id=imgPreview style=position:absolute;left:150;top:15;></img>
+	<div id=lblDesc class=vInput datafld="description" datasrc="#elements" style=left:10;top:130;width:400;>
+</body>
+</html>

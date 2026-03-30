@@ -1,0 +1,336 @@
+<html>
+<head>
+<LINK Rel=Stylesheet href=../../../../client/shared/global.css>
+<style>
+	.note {font-family:Webdings;color:#cc6600;font-size:14pt;}
+	.task {font-family:Webdings;color:#009900;font-size:14pt;}
+	.alert {font-family:Webdings;color:#cc0000;font-size:14pt;}
+	.helplink {font-family:Verdana;color:#3300cc;cursor:hand;font-size:8pt;font-weight:bold;}
+	.scriptlink {font-family:Verdana;color:#3300cc;cursor:hand;font-size:9pt;font-weight:bold;}
+</style>
+<title>Welcome to Objects and Chat Script Tutorial!</title>
+<script language=vbs src=ComVBScript.htm></script>
+<script LANGUAGE="VBSCRIPT">
+
+dim world
+
+sub Window_OnLoad
+	window.settimeout "top.frames(""Btns"").BuildButtons(theBody.MaxSteps)", 0, "vbs"
+	window.settimeout "top.frames(""Tabs"").HighlightItem mid(window.location, instrRev(window.location, ""/"") + 1, len(window.location) - instrRev(window.location, ""/"") - 4)", 0, "vbs"
+	set world = top.goWorld
+	world.tutorial.start_lesson 4
+	world.fireUIEvent world.user, "EventRequest", window
+end sub
+
+Sub window_onunload
+    world.fireUIEvent world.user, "EventRequestCancel", window
+End sub
+
+</script>
+</head>
+<body id=theBody class=vBody CurrentStep=1 MaxSteps=4>
+	<div class=vh1 Style=position:absolute;left:0;top:10; id=heading>
+		Objects and Chat
+	</div>
+	<div class=vweb style=position:absolute;left:340;top:1; id=circle>=</div>
+
+<!--Step 1 -->
+<div id=Step1 style=position:absolute;width:99%;left:0;top:44;>
+		<nobr>
+			<div class=vstep Style=position:absolute;left:351;top:-35; id=divNumSteps>
+				Step 1 of 4
+			</div>
+		</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step One: Detecting Chat
+		</div>
+	<div class=vtext id=body style=position:absolute;left:0;top:30;width:99%;>
+		<p>Virtual Worlds objects can be programmed to react in response to chat text that users are typing. The <b>Lesson_4</b> object
+		has a custom <span class=helplink HelpString="vworlds.chm::/Programmer's Guide/property/Adding a Property.htm" TITLE="Help">property</span> called <b>secret word</b>.
+		<table class=vtext cellspacing=3>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Look at the property in the <span class=helplink HelpString="vworlds.chm::/UIREF/objexpl/intrface.htm" TITLE="Help">Object Explorer</span> to find the word and figure out a sentence that uses it.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Type the sentence into the chat frame's text-input area, then hit <b>Return</b>.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>See if the object responds predictably to the secret word, and wait until it stops.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Try it again with a different sentence, and go on to <b>Step 2</b>.</td></tr>
+		</table>
+	</div>
+</div>
+
+<!-- Step 2 -->
+<div id=Step2 style=position:absolute;left:0;top:44;width:99%;display:none;>
+		<nobr>
+			<div class=vstep Style=position:absolute;left:351;top:-35; id=divNumSteps>
+				Step 2 of 4
+			</div>
+		</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step Two: OnPeerTell, Timers and Text Parsing
+		</div>
+		<br>
+		<table class=vtext cellspacing=3>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Notice that the object goes silent and returns to its original position, but only after a while. This is because it
+		is using a <span class=helplink HelpString="vworlds.chm::/API Reference/World/CreateTimer.htm" TITLE="Help">timer</span> like the one shown previously in <b>Lesson 3</b>. The timer started when the object detected the word contained in the <b>secret word</b> property.
+			<tr><td valign=top><span class=note>$</span></td>
+			<td>Look at the script subroutine below, which is used by the method, <span class=helplink HelpString="vworlds.chm::/API Reference/Events/OnTell.htm" TITLE="Help">
+OnPeerTell</span>, that was added to the object <b>Lesson_4</b>. <b>OnPeerTell</b> is an overridable Virtual Worlds <span class=helplink HelpString="vworlds.chm::/API Reference/Events/Event Handlers.htm" TITLE="Help">event handling method</span> that intercepts text from the chat frame. There is script code within the method that parses a single word from a group of words; this allows the object to "hear" its word in any context. Similar parsing techniques can be used to make the object respond to complex multi-word commands, or even to make the object appear to understand language to a certain extent. When part of the input text matches the custom property you saw in the <b>Object Explorer</b>, the subroutine activates the object's behavior, as well as the timer that will eventually deactivate it.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Go to the next step to see the custom method that is being called by the timer.</td></tr>
+		</table>
+	<table style=background-color:white;vertical-align:top;padding-left:7;padding-right:5;padding-top:5;width:610;>
+		<tr>
+   		 <td width="45%" valign=top><font face=verdana size=2>option explicit</font></td>
+   		 <td>&nbsp;</td>
+  		</tr>
+  		<tr>
+   		 <td width="45%" valign=top><font face=verdana size=2>dim my_timer</font></td>
+   		 <td width="45%" valign=top>
+			<span CLASS="Outline" ID="Out1" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out1d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>'a global for a timer<br>
+				</div></td>
+  		</tr>
+  		<tr>
+  		  <td valign=top><font face=verdana size=2>dim counter</font></td>
+			<td valign=top><span CLASS="Outline" ID="Out2" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out2d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>'another global so the timer can track<br>
+					'how many times it is called<br>
+				</div></td>
+		</tr>
+		<tr>
+ 		   <td>&nbsp;</td>
+ 		   <td>&nbsp;</td>
+		</tr>
+		<tr>
+  			<td width="100%" colspan=2>
+  			  <font face=verdana size=2>sub avatar_spoke (who, hearers, text, mode)</font></td>
+		</tr>
+		<tr>
+    		<td width="45%" valign=top><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>text = ucase(text)</font></td>
+			<td width="55%"><span CLASS="Outline" ID="Out3" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out3d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>'this puts a string to all upper-case...<br>
+			      'in this way, we can be sure we don't miss <br>
+			      'comparing it to our secret word because of<br>
+				  'case sensitivity<br>
+				</div></td>
+  		</tr>
+		<tr>
+			<td width="45%" valign=top><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>if this.listening then</font></td>
+			<td width="55%"><span CLASS="Outline" ID="Out4" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out4d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+				' "listening" is a property of the object<br>
+				'that is a boolean<br>
+				'try changing its value in the object explorer<br>
+				'(the tutorial will also reset it automatically)<br>
+				</div></td>
+  		</tr>
+		<tr>
+			<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=16 height=4><font face=verdana size=2>world.trace "sub avatar_spoke called on object "&this.name</font></td>
+		</tr>
+		<tr>
+			<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=16 height=4><font face=verdana size=2>if instr(1, text, ucase(this.secret_word),1) > 0 then</font></td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td width="55%"><span CLASS="Outline" ID="Out5" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out5d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+				'finds if the secret word is inside any<br>
+				'text being chatted<br>
+				</div></td>
+  		</tr>
+		<tr>
+			<td width="100%" colspan=2>
+			<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>if isObject(my_timer) = false then<br>
+				<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=48 height=4>this.start_surprise<br>
+				<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=48 height=4>set my_timer = world.<span class=scriptlink HelpString="vworlds.chm::/API Reference/World/CreateTimer.htm" TITLE="Help">CreateTimer</span> (this.timer_interval, this, "timer_method")<br>
+			<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>end if</font></td>
+		</tr>
+		<tr>
+		<td width="45%">&nbsp;</td>
+		<td width="55%"><span CLASS="Outline" ID="Out6" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out6d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+				'putting this here resets the timer's count,<br>
+				'so if the secret word is said<br>
+				'while the timer is already running,<br>
+				'it will run another<br>
+				'full count of calls...<br>
+				</div></td>
+  		</tr>
+		<tr>
+			<td width="100%" colspan=2>
+			<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>counter = 1<br>
+		<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=16 height=4>end if<br>
+	<img src="Images/spacer.gif" width=32 height=4>else</font><br>
+			</td>
+		</tr>
+		<tr>
+		<td width="45%">&nbsp;</td>
+		<td width="55%"><span CLASS="Outline" ID="Out7" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out7d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+				'if the listening property = false then the object<br>
+				'should not currently be listening for text,<br>
+				'so ignore things said...<br>
+				</div></td>
+  		</tr>
+		<tr>
+			<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>end if<br><br>
+	<img src="Images/spacer.gif" width=32 height=4>dim result<br>
+	<img src="Images/spacer.gif" width=32 height=4>result = this.invokesupermethod(Array(who, hearers, text, mode))<br><br>
+
+			end sub<br>
+			</font></td>
+		</tr>
+	</table><br>
+</div>
+
+<!-- Step 3 -->
+<div id=Step3 style=position:absolute;left:0;top:44;width:99%;display:none;>
+		<nobr>
+			<div class=vstep Style=position:absolute;left:351;top:-35; id=divNumSteps>
+				Step 3 of 4
+			</div>
+		</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step Three: More on Timers
+		</div>
+	<div class=vtext id=body2 style=position:relative;left:0;top:30;>
+		<p>This method looks similar to the timer method in <b>Lesson 3</b>. It is used to move an object around, however, and it calls a custom method, <b>end_Surprise</b>, which deactivates sound and returns the object to its original position. When making scripts that control an object's movement and behavior, include script methods that reset the object to its initial state, even if it is only used for testing purposes.
+
+	<P>It is possible to make this object fly without stopping (at least while a user is logged into the world), by removing the ability of the timer script to check for conditions that will eventually signal the object to stop itself. In such a case, the timer simply runs as long as the world is loaded in the browser. It is unclear where the bird object would end up; it might take several minutes just to get to it!
+	<p>&nbsp;</p>
+	</div>
+	<table style=background-color:white;vertical-align:top;padding-left:7;padding-right:5;padding-top:5;width:610;>
+	<tr>
+		<td width="100%" colspan=2><font face=verdana size=2>sub timer_method (the_timer)</font></td>
+	</tr>
+	<tr>
+		<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>dim x_change<br>
+		<img src="Images/spacer.gif" width=32 height=4>dim y_change<br>
+		<img src="Images/spacer.gif" width=32 height=4>dim z_change<br>
+		</font></td>
+	</tr>
+	<tr>
+		<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>world.trace "sub timer_method called on object "&this.name<br>
+	<img src="Images/spacer.gif" width=32 height=4>world.trace "global variable counter has a value of "&cstr(counter)&"..."<br>
+		</font></td>
+	</tr>
+	<tr>
+		<td width="45%">&nbsp;</td>
+		<td width="55%" valign=top><span CLASS="Outline" ID="Out8" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+			<DIV ID="Out8d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+			'the next lines will make the object move a<br>
+			'random amount from wherever<br>
+			'it last was when the timer_method is called...<br>
+			'try changing the positionduration on the object to<br>
+			'change the object's speed<br>
+			</div></td>
+	</tr>
+	<tr>
+		<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>x_change =  (2-(rnd*4.0))<br>
+		<img src="Images/spacer.gif" width=32 height=4>y_change =  ( 2.0-(rnd*4.0))<br>
+		<img src="Images/spacer.gif" width=32 height=4>z_change =  (2-(rnd*4.0))<br>
+		</font></td>
+	</tr>
+	<tr>
+		<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>this.<span class=scriptlink HelpString="vworlds.chm::/API Reference/Exemplars/Thing/Position.htm" TITLE="Help">Position</span>.set this.position.x + x_change, this.position.y + y_change, _<br>
+		<img src="Images/spacer.gif" width=32 height=4>this.position.z + z_change</font></td>
+	</tr>
+	<tr>
+		<td width="45%">&nbsp;</td>
+		<td width="55%" valign=top><span CLASS="Outline" ID="Out9" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+			<DIV ID="Out9d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+			'we also want to make the object turn towards its movement,<br>
+			'for a more life-like behavior...<br>
+			</div></td>
+	</tr>
+	<tr>
+		<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>this.direction.<span class=scriptlink HelpString="vworlds.chm::/API Reference/Vector/Set.htm" TITLE="Help">set</span>  x_change, y_change,  z_change</font></td>
+	</tr>
+	<tr>
+		<td width="45%">&nbsp;</td>
+		<td width="55%" valign=top><span CLASS="Outline" ID="Out10" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+			<DIV ID="Out10d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+			'try changing the direction duration of the object<br>
+			'to make its turns smoother or sharper<br>
+			</div></td>
+	</tr>
+
+	<tr>
+		<td  valign=top><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>this.up.set 0,1,0</font></td>
+		<td width="55%"  valign=top><span CLASS="Outline" ID="Out11" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+			<DIV ID="Out11d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+			'try changing the upduration of the object to make<br>
+			'its flipping forwards or backwards<br>
+			'as it turns smoother<br>
+	</div></td>
+	</tr>
+
+	<tr>
+		<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>if counter > this.timer_maximum then<br>
+		<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>this.end_surprise<br>
+		<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>world.destroytimer the_timer<br>
+		<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>my_timer = NULL
+	<img src="Images/spacer.gif" width=32 height=4>end if<br>
+end sub</font></td>
+	</tr>
+	<tr>
+	<tr>
+		<td width="100%" colspan=2><font face=verdana size=2>sub start_surprise<br>
+		<img src="Images/spacer.gif" width=32 height=4>this.<span class=helplink HelpString="vworlds.chm::/API Reference/Exemplars/Thing/Sound.htm" TITLE="Help">Sound</span> = world.<span class=helplink HelpString="vworlds.chm::/API Reference/World/CreateSound.htm" TITLE="Help">CreateSound</span> _<br>
+		<img src="Images/spacer.gif" width=64 height=4>("SDK\library\sounds\_ScriptTutorial\eagle2.wav", true, true)<br>
+		<img src="Images/spacer.gif" width=32 height=4>world.trace "sub start_surprise called on object "&this.name<br>
+end sub</font></td>
+	</tr>
+	<tr>
+		<td width="100%" colspan=2><font face=verdana size=2>sub end_surprise<br>
+	<img src="Images/spacer.gif" width=32 height=4>world.trace "sub end_surprise called on object "&this.name</font></td>
+	</tr>
+	<tr>
+		<td width="45%">&nbsp;</td>
+		<td width="55%"><span CLASS="Outline" ID="Out12" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+			<DIV ID="Out12d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+			'these calls will return the object to its<br>
+			'original position and stop it rotating...<br>
+			</div></td>
+	</tr>
+	<tr>
+	<td width="100%" colspan=2><font face=verdana size=2>
+			<img src="Images/spacer.gif" width=32 height=4>this.sound = nothing<br>
+			<img src="Images/spacer.gif" width=32 height=4>this.position.set 10,2,-10<br>
+			<img src="Images/spacer.gif" width=32 height=4>this.<span class=scriptlink HelpString="vworlds.chm::/API Reference/Exemplars/Thing/Direction.htm" TITLE="Help">Direction</span>.set 0,0,1<br>
+			<img src="Images/spacer.gif" width=32 height=4>this.up.set 0,1,0<br><br>
+end sub</font></td>
+	</tr>
+	</table><br>
+</div>
+<!--Step 4 -->
+
+<div id=Step4 style=position:absolute;width:99%;left:0;top:44;display:none;>
+	<div class=vweb style=position:absolute;left:340;top:-43; id=circle>=</div>
+		<nobr>
+			<div class=vstep Style=position:absolute;left:351;top:-35; id=divNumSteps>
+				Step 4 of 4
+			</div>
+		</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step Four: Virtual Worlds Events, Event Handlers, and Sub Arguments
+		</div>
+	<div class=vtext id=body style=position:absolute;left:0;top:30;width:99%;>
+		<p>At this point, you have used two vworlds event handling methods, <span class=helplink HelpString="vworlds.chm::/API Reference/Events/OnLButtonUp.htm" TITLE="Help">OnLButtonUp</span> and <span class=helplink HelpString="vworlds.chm::/API Reference/Events/OnTell.htm" TITLE="Help">OnPeerTell</span> to get useful input from a Virtual Worlds user to objects in your world. Virtual Worlds uses many different events, sending them to the objects that can use them to direct their behavior. There are literally dozens of events that are sent in different contexts while a world is running (for example, from objects to their containers, from containers to the objects that make up their contents, and even from room to room).
+		<table class=vtext cellspacing=3>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Take a close look at the <span class=helplink HelpString="vworlds.chm::/Programmer's Guide/Virtual Worlds Programmers Guide Start Page.htm" TITLE="Help">Programmer's Guide</span> to learn about many more useful events that your objects can detect! By this point, you should be able to override the pre-defined event-handlings methods that handle events we haven't discussed, and use them in your own worlds.</td></tr>
+			<tr><td valign=top><span class=alert>~</span></td>
+			<td>It is very important to understand from the previous lessons that these event handling methods, which we have overridden, have specific data that they need to use, and the data must be received correctly by the method's script subroutine.</td></tr>
+			<tr><td valign=top><span class=alert>~</span></td>
+			<td>You MUST include the correct number of variables used by the predefined method included within your subroutine in the parentheses next to the declaration "sub". These variables are known as "arguments" &#151; the most common reason your scripts may fail to function correctly is that they omit the arguments that are required for the method, or do not use them correctly. It is not necessary to use the arguments, although they provide useful data for your objects in almost every case; you must, however, include an argument list in the subroutine that receives them.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Study the arguments provided for the <span class=helplink HelpString="vworlds.chm::/API Reference/Events/Event Handlers.htm" TITLE="Help">event handlers</span> in the Programming Guide carefully.</td></tr>
+		</table>
+	</div>
+</div>
+</body>
+</html>

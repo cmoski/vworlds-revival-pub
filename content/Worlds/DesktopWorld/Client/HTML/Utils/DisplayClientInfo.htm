@@ -1,0 +1,304 @@
+<html>
+<head>
+<title>DisplayClientInfo</title>
+<LINK REL=StyleSheet HREF=../../shared/global.css>
+<style type=text/css>
+</style>
+<script language=vbs>
+
+option explicit
+
+sub window_onload
+	InfoDisplayIFrame.document.body.style.backgroundColor = "ffffff"
+	updateShowFrameRate
+end sub
+
+sub updateShowFrameRate
+	if top.ClientRendererIFrame.renderer.renderroot.fpsecond then
+		lnkShowFrameRate.innerText = "Hide Frame Rate"
+	else
+		lnkShowFrameRate.innerText = "Show Frame Rate"
+	end if
+end sub
+
+function GetKeys(TheObj)
+	on error resume next
+	
+	dim i, Key, Report
+	
+	select case typename(TheObj)
+		case "IPropertyList"
+			Report = "[Object]<br>"
+			if TheObj.count > 0 then
+				for each Key in TheObj
+					Report = Report & GetKeys(Key)
+				next
+				Report = left(Report, len(Report) - 2)
+			else
+				Report = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[no values]"
+			end if
+		case "IThing"
+			Report = TheObj.name
+		case else
+			Report = cstr(TheObj)
+	end select
+	
+	GetKeys = Report
+end function
+
+function GetProfile(Who)
+	dim Key, Report
+	
+	for each Key in Who.Profile.Keys
+		Report = Report & "<li><nobr>" & GetKeys(Key) & ": " & GetKeys(Who.Profile.KeyValue(Key)) & "&nbsp;</nobr>"
+	next
+	
+	GetProfile = "<ul>" & Report & "</ul>"
+end function
+
+function HTML2Text(What)
+	What = replace(What, chr(13) & chr(10), "[~~~]")
+	What = replace(What, "<", "&lt;")
+	What = replace(What, ">", "&gt;")
+	What = replace(What, "[~~~]", "<p>")
+	HTML2Text = What
+end function
+
+function GetBoundaryInfo(Thing, i, j)
+	dim Report
+	
+	if Thing.IsValidProperty("AreaName") then
+		Report = Report & "<li><nobr>" & typename(i) & " " & j _
+			& "<ul>" _
+			& "<li>Name: " & Thing.AreaName.Property(j) _
+			& "<li>Status: " & Thing.AreaStatus.Property(j) _
+			& "<li>Destination: " & Thing.AreaDestination.Property(j) _
+			& "<li>Upper: " & i.HeightUpper _
+			& "<li>Lower: " & i.HeightLower _
+			& "<li>IsPassable: " & i.IsPassable _
+			& "<li>IsInverse: " & i.IsInverse _
+			& "</ul>" _
+			& "</nobr>"
+	else
+		Report = Report & "<li><nobr>" & typename(i) & " " & j _
+			& "<ul>" _
+			& "<li>Upper: " & i.HeightUpper _
+			& "<li>Lower: " & i.HeightLower _
+			& "<li>IsPassable: " & i.IsPassable _
+			& "<li>IsInverse: " & i.IsInverse _
+			& "</ul>" _
+			& "</nobr>"
+	end if
+	
+	GetBoundaryInfo = Report
+end function
+
+sub ShowResizingValues
+
+end sub
+
+sub DoIt(DoWhat)
+	'on error resume next
+	window.event.returnValue = false
+	
+	dim Key, Report, KeyValue, Thing, DefaultReport, InfoContents, i, j, Room
+
+	DefaultReport = "<b>No information is available for " & DoWhat & "...</b>"
+	
+	select case DoWhat
+		case "Contents"
+			set Key = top.ClientUserPtr.Container
+			Report = Report & "<li>" & Key.Name & " [" & typename(Key) & "]"
+			j = 0
+			Report = Report & "<ul>"
+			for each i in Key.BoundaryList
+				Report = Report & GetBoundaryInfo(Key, i, j)
+				j = j + 1
+			next
+			Report = Report & "</ul>"
+			
+			for each Thing in Key.Contents
+				Report = Report & "<li>" & Thing.Name & " [" & typename(Thing) & "]"
+				if isobject(Thing) then
+					j = 0
+					Report = Report & "<ul>"
+					for each i in Thing.BoundaryList
+						Report = Report & GetBoundaryInfo(Thing, i, j)
+						j = j + 1
+					next
+					Report = Report & "</ul>"
+				end if
+			next
+			
+			if len(Report) > 0 then
+				Report = "<ul>" & Report & "</ul>"
+			end if
+			
+			set Key = nothing
+		case "Avatars"
+			set Room = top.ClientUserPtr.Container.Avatars
+			
+			for each Thing in Room
+			Report = HTML2Text(top.ClientChatBoxIFrame.ChatHistory.ContentContainer.innerHTML)
+				Report = Report & "<li>IsConnected: " & Thing.IsValidProperty("IsConnected")
+				Report = Report & "<li>IsWizard: " & Thing.IsWizard
+				Report = Report & "<li>ObjectQuota: " & Thing.ObjectQuota
+				Report = Report & "<li>QueryOK: " & Thing.QueryOK
+				Report = Report & "<li>QueryParam: " & Thing.QueryParam
+				Report = Report & "<li>QueryResult: " & Thing.QueryResult
+				Report = Report & "<li>Profile: " & GetProfile(Thing)
+				Report = Report & "</ul>"
+			next
+			
+			if len(Report) > 0 then
+				Report = "<ul>" & Report & "</ul>"
+			end if
+			
+			set Room = nothing
+		case "WorldProperties"
+			for each Key in top.WorldPropertyMap
+				KeyValue = top.WorldPropertyMap.Property(Key)
+				if isarray(KeyValue) then
+					Thing = "["
+					for i = 0 to ubound(KeyValue)
+						Thing = Thing & KeyValue(i) & ", "
+					next
+					Thing = Thing & "]"
+				else
+					KeyValue = HTML2Text(KeyValue)
+				end if
+				Report = Report & "<li><nobr>" & Key & ": " & KeyValue & "&nbsp;</nobr>"
+			next
+		case "ChatBoxHTML"
+			Report = HTML2Text(top.ClientChatBoxIFrame.ChatHistory.ContentContainer.innerHTML)
+		case "ShowMembers"
+			dim Avatar, Output, Connected, Thumbnail, LIStyle
+	
+			Output = ""
+			LIStyle = "style=position:relative;left:27;list-style-type:none;cursor:hand;"
+
+			for each Avatar in top.ClientUserPtr.Container.Avatars
+				Connected = "<div class=ClientTextBlack style=position:relative;left:44;><b>[not here]</b></div>"
+				if Avatar.IsValidProperty("IsConnected") then
+					Connected = ""
+				end if
+				
+				Thumbnail = "t" & Avatar.Profile.KeyValue("SpriteGeometry")
+				Thumbnail = left(Thumbnail, instr(1, Thumbnail, ".spr", 1)) & "gif"
+				Thumbnail = "..\..\..\..\../AvGraphs\" & Thumbnail
+				
+				Output=	Output _
+					&	"<div id=" & Avatar.Name & "DIV align=bottom>" _
+					&	"<img id=" & Avatar.Name & "IMG src=""../../Images/plus.gif"" width=11 height=11 border=0 align=middle>&nbsp;" _
+					&	"<img id=" & Avatar.Name & "DIV src=""" & Thumbnail & """ width=24 height=24 border=0>&nbsp;" _
+					&	"<b id=" & Avatar.Name & "DIV>" & Avatar.Name & "</b>" _
+					&	"</div>" _
+					&	"<div id=" & Avatar.Name & "Info class=ClientTextBlack>" _
+					&	Connected _
+					&	"<li " & LIStyle & ">" & PossessiveForm(Avatar.Name) & " Profile" _
+					&	"<li " & LIStyle & ">My Things" _
+					&	"<li " & LIStyle & ">My History" _
+					&	"<li " & LIStyle & ">My Friends List" _
+					&	"<li " & LIStyle & ">Ignored List" _
+					&	"</div>"
+			next
+			Report = Output
+		case "ShowEventReceivers"
+			dim wind,url
+			Report = "(" & UBound(top.wantsEventsList)+1 & " windows)<BR>"
+			for i = 0 to UBound(top.wantsEventsList)
+				set wind = top.wantsEventsList(i)
+				url = wind.document.url
+				if url = "" then 
+					url = "unknown"
+				else
+					url = mid(url,instrRev(url,"\")+1,255)
+				end if
+				Report = Report & "<li>" & url
+				Report = Report & "</ul>"
+			next
+		case "ShowResizingValues"
+			Report = "Edge1Pct: " & top.Edge1Pct & ", Edge1Size: " & top.Edge1Size & "<BR>" &_
+				"Edge2Pct: " & top.Edge2Pct & ", Edge2Size: " & top.Edge2Size & "<BR>" &_
+				"Edge3Pct: " & top.Edge3Pct & ", Edge3Size: " & top.Edge3Size & "<BR>" &_
+				"Edge4Pct: " & top.Edge4Pct & ", Edge4Size: " & top.Edge4Size & "<BR>" &_
+				"Edge5Pct: " & top.Edge5Pct & ", Edge5Size: " & top.Edge5Size & "<BR>"
+			Report = Report &_
+				"Edge1Pos: " & top.document.body.style.Edge1Pos & "<BR>" &_
+				"Edge2Pos: " & top.document.body.style.Edge2Pos & "<BR>" &_
+				"Edge3Pos: " & top.document.body.style.Edge3Pos & "<BR>" &_
+				"Edge4Pos: " & top.document.body.style.Edge4Pos & "<BR>" &_
+				"Edge5Pos: " & top.document.body.style.Edge5Pos & "<BR>"
+			Report = Report &_
+				"Renderer top: " & top.document.all("ClientRendererIFrame").style.top &_
+				", left: " & top.document.all("ClientRendererIFrame").style.left &_
+				", height: " & top.document.all("ClientRendererIFrame").style.height &_
+				", width: " & top.document.all("ClientRendererIFrame").style.width & "<BR>"
+		case "ShowFrameRate"
+			top.ClientRendererIFrame.renderer.renderroot.fpsecond = not top.ClientRendererIFrame.renderer.renderroot.fpsecond
+			if top.ClientRendererIFrame.renderer.renderroot.fpsecond then
+				Report = "Frame Rate Display ON"
+			else
+				Report = "Frame Rate Display OFF"
+			end if
+			updateShowFrameRate
+		case else
+	end select
+	
+	if len(Report) = 0 then Report = DefaultReport
+
+	Report = "<div class=ClientHeader>" & DoWhat & "</div>" & Report
+	InfoDisplayIFrame.ContentContainer.innerHTML = Report
+end sub
+
+function PossessiveForm(What)
+	dim LastChar
+	
+	What = trim(What)
+	LastChar = lcase(right(What, 1))
+	
+	if LastChar = "s" or LastChar = "x" or LastChar = "z" then
+		What = What & "'"
+	else
+		What = What & "'s"
+	end if
+	
+	PossessiveForm = What
+end function
+
+</script>
+</head>
+
+<body class=ClientBackgroundLight>
+
+<table border=0 cellspacing=0 cellpadding=0 width=100% height=100%>
+<tr>
+	<td valign=top width=30%><div class=ClientTextBlack>
+		<a href="" onclick=DoIt("Contents")>Contents</a><br>
+		<a href="" onclick=DoIt("Avatars")>Avatars</a><br>
+		<a href="" onclick=DoIt("ChatBoxHTML")>ChatBox HTML</a><br>
+		<a href="" onclick=DoIt("ShowMembers")>Show Members</a><br>
+		<a href="" onclick=DoIt("ShowEventReceivers")>Show Event Receivers</a><br>
+		<a href="" onclick=DoIt("ShowResizingValues")>Show Resizing Values</a><br>
+		<a href="" onclick=DoIt("ShowFrameRate") id=lnkShowFrameRate>Show Frame Rate</a><br>
+<!--
+		<a href="chessTest.htm">Chess Tester</a><br>
+-->
+	</div></td>
+	<td valign=top width=70%><div>
+		<iframe id=InfoDisplayIFrame
+				name=InfoDisplayIFrame
+				src=ClientEmptyIFrame.htm
+				marginwidth=0
+				marginheight=0
+				frameborder=no
+				scrolling=auto
+				width=100%
+				height=100%
+				></iframe><br>
+	</div></td>
+</tr>
+</table>
+
+</body>
+</html>

@@ -1,0 +1,480 @@
+<html>
+<head>
+<LINK Rel=Stylesheet href="..\..\..\..\client\shared\global.css">
+<object id="elements" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
+  <param name="DataURL" value="gallery.csv">
+  <param name="UseHeader" value="True">
+  <param name="TextQualifier" value="'">
+</object>
+<script language="VBSCRIPT">
+
+option explicit
+
+dim rs
+dim ready
+Dim world
+Dim DisplayRm
+Dim FeatureRm
+Dim StyleName
+Dim selected
+
+ready = False
+
+sub window_onload
+	if top.SelectedStyleIndex <> -1 then
+		lstStyle.selectedIndex = top.SelectedStyleIndex
+	else
+		lstStyle.selectedIndex = 0
+	end if
+	choseName 'since we are selcting first element it will have same effect
+end sub
+
+sub elements_ondatasetcomplete
+	set rs = elements.recordset
+	fillin_select
+	if top.SelectedStyleIndex <> -1 then
+		lstStyle.selectedIndex = top.SelectedStyleIndex
+	end if
+end sub
+
+function verify()
+	verify = ready
+end function
+
+sub fillin_select()
+	dim el
+
+	rs.MoveFirst
+	' interate on world templates
+	Do Until rs.EOF
+			set el = document.CreateElement("OPTION")
+			el.value = rs.Fields(0).value
+			el.text = rs.Fields(0).value
+			lstStyle.add el
+			rs.MoveNext
+	Loop
+end sub
+
+sub choseName()
+	selected = lstStyle.selectedIndex
+	rs.MoveFirst
+	rs.Move selected
+	StyleName = rs.fields(0)
+	top.SelectedStyleIndex = selected
+	ready = true
+end sub
+
+sub buildworld
+	if top.buildworld then
+		set world = top.client.world
+
+		parent.StatusMsg "creating Display Room"
+		CreateDisplayRm
+
+		parent.StatusMsg "creating Display Room cells"
+
+
+		parent.StatusMsg "creating portals"
+		'CreatePortals
+
+		' set default room to DisplayRm
+		world.Global.DefaultRoom = DisplayRm
+
+		world.user.MoveInto DisplayRm
+
+		world.SaveDatabase
+		world.Trace "All done with SaveDatabase"
+		world.disconnect
+	end if
+end sub
+
+sub CreateDisplayRm
+	set DisplayRm = world.CreateInstance("Display Room", "Room")
+
+	Select Case StyleName
+		case "Urban gallery"
+			DisplayRm.InitializeGraphics "", 0.0, 0.0, 0.0, 1.0, 0.0, 0.0
+			DisplayRm.BackgroundColor = &H000000
+		case "Boutique"
+
+	End Select
+
+	world.trace "done creating Display Room"
+
+	'Now add objects to the Display Room
+	Select Case StyleName
+		case "Urban gallery"
+			' add room objects
+			parent.StatusMsg "adding objects to Display Room"
+			Dim ceilingl
+			set ceilingl = World.CreateInstance("ceiling", "artifact", DisplayRm)
+			ceilingl.Description = ""
+			ceilingl.InitializeGraphics "SDK\Library\Models\_Gallery\ceilingl.x", 0.0,3.95,0.0,0.0,0.0,1.0
+			ceilingl.IsUIVisible = False
+			ceilingl.IsMoveable = false
+
+			Dim sound
+			set sound= World.CreateInstance("sound", "Artifact", DisplayRm)
+			sound.Description = ""
+			sound.InitializeGraphics "", 0.0, 2.0, 0.0, 1.0, 0.0, 0.0
+			sound.IsUIVisible = False
+			sound.SetSound "SDK\library\sounds\crowds2.wav", True, -1800,0,0
+
+			Dim overview
+			set overview= World.CreateInstance("overview","artifact", DisplayRm)
+			overview.InitializeSpriteGraphics "",5.0,2.5,5.0,-1.0,0.0,-0.0
+			overview.IsUIVisible = False
+			overview.IsCameraAnchor = True
+
+
+			Dim Entry1
+			set Entry1 = World.CreateInstance("entry point", "artifact", DisplayRm)
+			Entry1.Description = "Moves you to the spot where you entered this world."
+			Entry1.InitializeGraphics "SDK\Library\Models\_Gallery\entrypoint.x", -6.0,1.0,1.5,-0.85,0.0,-0.150
+			'Entry1.ApproachDistance = 0.5
+			Entry1.IsMoveable = false
+			Entry1.IsUIVisible = true
+
+
+
+			Dim lighta
+			set lighta= World.CreateInstance("ambient light", "Artifact", DisplayRm)
+			lighta.Description = ""
+			lighta.InitializeGraphics "SDK\Library\Models\lights\lightdown-transparent.3ds", 16.0, 16.0, 16.0, 1.0, 0.0, 0.0
+			lighta.IsUIVisible = False
+
+			Dim deskgl
+			set deskgl = World.CreateInstance("desk", "artifact", DisplayRm)
+			deskgl.Description = ""
+			deskgl.InitializeGraphics "SDK\Library\Models\_Gallery\deskgl.x", -8.7,0.5,-1.3,0.0,0.0,1.0
+			deskgl.IsUIVisible = False
+
+			Dim dispgl1
+			set dispgl1 = World.CreateInstance("monitor2", "artifact", DisplayRm)
+			dispgl1.Description = ""
+			dispgl1.InitializeGraphics "SDK\Library\Models\_Gallery\dispgl.x", 9.95,2.06,-11.6,0.0,0.0,1.0
+			dispgl1.IsUIVisible = False
+
+
+			Dim dispgl2
+			set dispgl2 = World.CreateInstance("monitor1", "artifact", DisplayRm)
+			dispgl2.Description = ""
+			dispgl2.InitializeGraphics "SDK\Library\Models\_Gallery\dispgl.x", -2.2,2.06,-11.6,0.0,0.0,1.0
+			dispgl2.IsUIVisible = False
+
+
+			Dim view1
+			set view1 = World.CreateInstance("view1", "artifact", DisplayRm)
+			view1.Description = ""
+			view1.InitializeGraphics "SDK\Library\Models\_Gallery\view2gl.x", -12.6,1.8,2.8,1.0,0.0,0.0
+			view1.scale.set .75,1,1
+			view1.IsUIVisible = False
+			view1.IsMoveable = False
+
+			Dim view2
+			set view2 = World.CreateInstance("view2", "artifact", DisplayRm)
+			view2.Description = ""
+			view2.InitializeGraphics "sdk\library\models\_gallery\viewgl.x", 19.3,1.9,2.6, -1.0,0,0
+			view2.scale.set .5,1,1
+			view2.IsUIVisible = False
+			view2.IsMoveable = False
+
+			Dim floorgl
+			set floorgl= World.CreateInstance("floor", "artifact", DisplayRm)
+			floorgl.Description = ""
+			floorgl.InitializeGraphics "SDK\Library\Models\_Gallery\floorgl.x", 0.0,0.0,0.0,0.0,0.0,1.0
+			floorgl.IsUIVisible = False
+			floorgl.IsMoveable = false
+			CreateFloorBoundaries Floorgl
+
+			Dim nook1gl
+			set nook1gl = World.CreateInstance("nook1", "artifact", DisplayRm)
+			nook1gl.Description = ""
+			nook1gl.InitializeGraphics "SDK\Library\Models\_Gallery\nook1gl.x", -2.19,2.0,-11.5,0.0,0.0,1.0
+			nook1gl.IsUIVisible = False
+			nook1gl.IsMoveable = false
+
+			Dim nook2gl
+			set nook2gl = World.CreateInstance("nook2", "artifact", DisplayRm)
+			nook2gl.Description = ""
+			nook2gl.InitializeGraphics "SDK\Library\Models\_Gallery\nook2gl.x", 9.93,2.0,-11.5,0.0,0.0,1.0
+			nook2gl.IsUIVisible = False
+			nook2gl.IsMoveable = false
+
+			Dim nook3gl
+			set nook3gl = World.CreateInstance("nook3", "artifact", DisplayRm)
+			nook3gl.Description = ""
+			nook3gl.InitializeGraphics "SDK\Library\Models\_Gallery\nook3gl.x", -11.82,2.0,-7.9,1.0,0.0,0.0
+			nook3gl.IsUIVisible = False
+			nook3gl.IsMoveable = false
+
+			Dim wall1gl
+			set wall1gl = World.CreateInstance("wall1", "artifact", DisplayRm)
+			wall1gl.Description = ""
+			wall1gl.InitializeGraphics "SDK\Library\Models\_Gallery\wall1gl.x", 3.34,1.97,2.73,0.0,0.0,-1.0
+			wall1gl.IsUIVisible = False
+			wall1gl.IsMoveable = false
+
+			Dim wall2gl
+			set wall2gl = World.CreateInstance("wall2", "artifact", DisplayRm)
+			wall2gl.Description = ""
+			wall2gl.InitializeGraphics "SDK\Library\Models\_Gallery\wall2gl.x", 2.83,2.0,-3.34,0.0,0.0,1.0
+			wall2gl.IsUIVisible = False
+			wall2gl.IsMoveable = false
+			CreateWall2glBoundaries wall2gl
+
+			Dim wall3gl
+			set wall3gl = World.CreateInstance("wall3", "artifact", DisplayRm)
+			wall3gl.Description = ""
+			wall3gl.InitializeGraphics "SDK\Library\Models\_Gallery\wall3gl.x", 15.92,2.0,-7.93,0.0,0.0,1.0
+			wall3gl.IsUIVisible = False
+			wall3gl.IsMoveable = false
+
+			Dim wall4gl
+			set wall4gl = World.CreateInstance("wall4", "artifact", DisplayRm)
+			wall4gl.Description = ""
+			wall4gl.InitializeGraphics "SDK\Library\Models\_Gallery\wall4gl.x", -8.2,2.0,-10.43,0.0,0.0,1.0
+			wall4gl.IsUIVisible = False
+			wall4gl.IsMoveable = false
+
+			Dim ped1
+			set ped1 = World.CreateInstance("pedestal1", "artifact", DisplayRm)
+			ped1.Description = ""
+			ped1.InitializeGraphics "SDK\Library\Models\_Gallery\lightgl.x", -6.335,1.2,5.83,0.0,0.0,-1.0
+			ped1.IsUIVisible = False
+
+			Dim ped2
+			set ped2 = World.CreateInstance("pedestal2", "artifact", DisplayRm)
+			ped2.Description = ""
+			ped2.InitializeGraphics "SDK\Library\Models\_Gallery\lightgl.x", -2.309,1.2,5.83,0.0,0.0,-1.0
+			ped2.IsUIVisible = False
+
+			Dim ped3
+			set ped3 = World.CreateInstance("pedestal3", "artifact", DisplayRm)
+			ped3.Description = ""
+			ped3.InitializeGraphics "SDK\Library\Models\_Gallery\lightgl.x", 1.736,1.2,5.83,0.0,0.0,-1.0
+			ped3.IsUIVisible = False
+
+			Dim ped4
+			set ped4 = World.CreateInstance("pedestal4", "artifact", DisplayRm)
+			ped4.Description = ""
+			ped4.InitializeGraphics "SDK\Library\Models\_Gallery\lightgl.x", 5.674,1.2,5.83,0.0,0.0,-1.0
+			ped4.IsUIVisible = False
+
+			Dim ped5
+			set ped5 = World.CreateInstance("pedestal5", "artifact", DisplayRm)
+			ped5.Description = ""
+			ped5.InitializeGraphics "SDK\Library\Models\_Gallery\lightgl.x", 9.713,1.2,5.83,0.0,0.0,-1.0
+			ped5.IsUIVisible = False
+
+			Dim ped6
+			set ped6 = World.CreateInstance("pedestal6", "artifact", DisplayRm)
+			ped6.Description = ""
+			ped6.InitializeGraphics "SDK\Library\Models\_Gallery\lightgl.x", 13.693,1.2,5.83,0.0,0.0,-1.0
+			ped6.IsUIVisible = False
+
+			Dim wall5
+			set wall5 = World.CreateInstance("wall5", "artifact", DisplayRm)
+			wall5.Description = ""
+			wall5.InitializeGraphics "SDK\Library\Models\_Gallery\wall5gl.x", 20.64,1.96,2.76,-1.0,0.0,0.0
+			wall5.IsUIVisible = False
+			wall5.IsMoveable = false
+
+			Dim Painting1
+			set Painting1 = World.CreateInstance("painting1", "artifact", DisplayRm)
+			Painting1.Description = " This is modern art, a painting of a car."
+			Painting1.InitializeGraphics "SDK\Library\Models\_Gallery\pictgl1.x", 3.945, 1.53, -1.184, 0.0, 0.0, 1.0
+			Painting1.Scale.Set .5, 1.0, .5
+
+			Dim Painting2
+			set Painting2 = World.CreateInstance("painting2", "artifact", DisplayRm)
+			Painting2.Description = "This is primitive art, a painting of a mask."
+			Painting2.InitializeGraphics "SDK\Library\Models\_Gallery\pictgl2.x", 19.391, 1.95, -8.0, -1.0, 0.0, 0.0
+			Painting2.Scale.Set .8, .8, .8
+
+			Dim Logo
+			set Logo = World.CreateInstance("logo", "WebPage", DisplayRm)
+			Logo.Description = " This is a corporate logo. You can display your company's logo here."
+			Logo.InitializeGraphics "SDK\Library\Models\_Gallery\logogl.x", -8.722, 2.2, -1.068, 0.0, 0.0, 1.0
+			Logo.Scale.Set 0.7, 0.7, 0.7
+			Logo.HTMLURL = "http://research.microsoft.com/vwg/temp/welcome.htm"
+
+			Dim Animation1
+			set Animation1 = World.CreateInstance("animation1", "artifact", DisplayRm)
+			Animation1.Description = "This is a movie of a man running."
+			Animation1.InitializeGraphics "SDK\Library\Models\_Gallery\anim1gl.x", -2.13, 1.8, -11.2, 0.0, 0.0, 1.0
+			Animation1.Scale.Set 0.3, 0.3, 0.3
+
+			Dim Animation2
+			set Animation2 = World.CreateInstance("animation2", "artifact", DisplayRm)
+			Animation2.Description = "This is a movie of a bird flying."
+			Animation2.InitializeGraphics "SDK\Library\Models\_Gallery\anim2gl.x", 9.9, 1.8, -11.2, 0.0, 0.0, 1.0
+			Animation2.Scale.Set 0.3, 0.3, 0.3
+
+
+			' add room sprites
+	parent.StatusMsg "adding sprites to Display Room"
+			Dim light1
+			set light1 = World.CreateInstance("light1", "artifact", DisplayRm)
+			light1.Description = ""
+			light1.InitializeSpriteGraphics "SDK\Library\Models\_Gallery\lamp.gif", -6.335, 2.8, 5.816, 0.0, 0.0, -1.0
+			light1.Scale.Set 0.1, 0.75, 0.1
+			light1.IsUIVisible = False
+
+			Dim light2
+			set light2 = World.CreateInstance("light2", "artifact", DisplayRm)
+			light2.Description = ""
+			light2.InitializeSpriteGraphics "SDK\Library\Models\_Gallery\lamp.gif", -2.309, 2.8, 5.816, 0.0, 0.0, -1.0
+			light2.Scale.Set 0.1,0.75, 0.1
+			light2.IsUIVisible = False
+
+			Dim light3
+			set light3 = World.CreateInstance("light3", "artifact", DisplayRm)
+			light3.Description = ""
+			light3.InitializeSpriteGraphics "SDK\Library\Models\_Gallery\lamp.gif", 1.736,2.8, 5.816, 0.0, 0.0, -1.0
+			light3.Scale.Set 0.1, 0.75, 0.1
+			light3.IsUIVisible = False
+
+			Dim light4
+			set light4 = World.CreateInstance("light4", "artifact", DisplayRm)
+			light4.Description = ""
+			light4.InitializeSpriteGraphics "SDK\Library\Models\_Gallery\lamp.gif", 5.674, 2.8, 5.816, 0.0, 0.0, -1.0
+			light4.Scale.Set 0.1, 0.75, 0.1
+			light4.IsUIVisible = False
+
+			Dim light5
+			set light5 = World.CreateInstance("light5", "artifact", DisplayRm)
+			light5.Description = ""
+			light5.InitializeSpriteGraphics "SDK\Library\Models\_Gallery\lamp.gif", 9.713, 2.8, 5.816, 0.0, 0.0, -1.0
+			light5.Scale.Set 0.1, 0.75, 0.1
+			light5.IsUIVisible = False
+
+			Dim light6
+			set light6 = World.CreateInstance("light6", "artifact", DisplayRm)
+			light6.Description = ""
+			light6.InitializeSpriteGraphics "SDK\Library\Models\_Gallery\lamp.gif", 13.693, 2.8, 5.816, 0.0, 0.0, -1.0
+			light6.Scale.Set 0.1, 0.75, 0.1
+			light6.IsUIVisible = False
+
+			Dim display1
+			set display1 = World.CreateInstance("display1", "artifact", DisplayRm)
+			display1.Description = " This is a display. You can show an item you sell floating above the pedestal."
+			display1.InitializeSpriteGraphics "SDK\Library\Models\_Gallery\display1.gif", -6.335, 1.3, 5.816, 0.0, 0.0, -1.0
+			display1.Scale.Set 0.2, 0.2, 0.2
+			display1.RotationAxis.Set  0,0,1
+			display1.RotationRate = -0.2
+
+
+			Dim display2
+			set display2 = World.CreateInstance("display2", "artifact", DisplayRm)
+			display2.Description = " This is a display. You can show an item you sell floating above the pedestal."
+			display2.InitializeSpriteGraphics "SDK\Library\Models\_Gallery\display2.gif", -2.309, 1.3, 5.816, 0.0, 0.0, -1.0
+			display2.Scale.Set 0.2, 0.2, 0.2
+			display2.RotationAxis.Set  0,0,1
+			display2.RotationRate = .2
+
+			Dim display3
+			set display3 = World.CreateInstance("display3", "artifact", DisplayRm)
+			display3.Description = " This is a display. You can show an item you sell floating above the pedestal."
+			display3.InitializeSpriteGraphics "SDK\Library\Models\_Gallery\display3.gif", 1.736, 1.3, 5.816, 0.0, 0.0, -1.0
+			display3.Scale.Set 0.2, 0.2, 0.2
+			display3.RotationAxis.Set  0,0,1
+			display3.RotationRate = -0.2
+
+
+			Dim display4
+			set display4 = World.CreateInstance("display4", "artifact", DisplayRm)
+			display4.Description = " This is a display. You can show an item you sell floating above the pedestal."
+			display4.InitializeSpriteGraphics "SDK\Library\Models\_Gallery\display4.gif", 5.674, 1.3, 5.816, 0.0, 0.0, -1.0
+			display4.Scale.Set 0.2, 0.2, 0.2
+			display4.RotationAxis.Set  0,0,1
+			display4.RotationRate = .2
+
+
+			Dim display5
+			set display5 = World.CreateInstance("display5", "artifact", DisplayRm)
+			display5.Description = " This is a display. You can show an item you sell floating above the pedestal."
+			display5.InitializeSpriteGraphics "SDK\Library\Models\_Gallery\display5.gif", 9.713, 1.3, 5.816, 0.0, 0.0, -1.0
+			display5.Scale.Set 0.2, 0.2, 0.2
+			display5.RotationAxis.Set  0,0,1
+			display5.RotationRate = -0.2
+
+
+			Dim display6
+			set display6 = World.CreateInstance("display6", "artifact", DisplayRm)
+			display6.Description = " This is a display. You can show an item you sell floating above the pedestal."
+			display6.InitializeSpriteGraphics "SDK\Library\Models\_Gallery\display6.gif", 13.693, 1.3, 5.816, 0.0, 0.0, -1.0
+			display6.Scale.Set 0.2, 0.2, 0.2
+			display6.RotationAxis.Set  0,0,1
+			display6.RotationRate = .2
+
+
+			Dim sculpture
+			set sculpture = World.CreateInstance("sculpture", "Artifact", DisplayRm)
+			sculpture.Description = "This is modern art, a pale blue sculpture made of glass."
+			sculpture.InitializeSpriteGraphics "SDK\Library\Models\_Gallery\sculpture.gif", -11.828, 1.44, -7.88, 1.0, 0.0, 0.0
+			sculpture.Scale.Set 0.2, 0.22, 0.2
+
+		case "boutique"
+
+	End Select
+end sub
+Sub CreateFloorBoundaries(thething)
+
+	Dim theBoundaryList_t
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+		-11.6626, 5.68734, 16.6131, 5.79797, 16.3931, -0.157782, 12.9828, -1.25434, _
+		12.1333, -5.67034, 19.1646, -5.6805, 19.1144, -10.0054, 12.5597, -9.90193, _
+		11.7191, -10.4127, 8.52499, -10.4632, 7.29003, -10.1159, -0.122912, -10.1225, _
+		-0.679997, -10.4462, -3.44101, -10.4351, -4.1984, -9.99888, -11.0678, -9.99988, _
+		-11.062, -5.7903, -4.17874, -5.67954, -5.28001, -0.860997, -6.57016, -0.864763, _
+		-11.1008, -0.140297, -11.5808, 2.20087))
+	theBoundaryList_t.HeightUpper = 20
+	theBoundaryList_t.HeightLower = 0
+	thething.BoundaryList.Add theBoundaryList_t
+End Sub
+
+Sub CreateWall2glBoundaries(thething)
+
+	Dim theBoundaryList_t
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+		-1.69444, 2.46931, -3.00733, -2.25395, 4.87977, -2.25395, 3.9534, 2.46603_
+		))
+	theBoundaryList_t.HeightUpper = 8.02
+	theBoundaryList_t.HeightLower = -2.02
+	thething.BoundaryList.Add theBoundaryList_t
+End Sub
+
+sub document_onKeyPress
+	select case window.event.keycode
+	case 27
+		top.frames(1).OnCancel
+	case 13
+		top.frames(1).OnFinish
+	case Else
+	end select
+end sub
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+</script>
+</head>
+<body>
+	<div class=vLabel style=top:0;left:10;>Styles:</div>
+	<select id=lstStyle class=vInput style=left:10;top:15;width:120; size=7 onchange=choseName></select>
+	<div class=vLabel style=top:0;left:150;>Preview:</div>
+	<img datafld=previewGIF datasrc="#elements" id=imgPreview style=position:absolute;left:150;top:15;></img>
+	<div id=lblDesc class=vInput datafld="description" datasrc="#elements" style=left:10;top:130;width:400;>
+</body>
+</html>

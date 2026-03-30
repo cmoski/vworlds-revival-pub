@@ -1,0 +1,530 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//  File:			MyWebPage.htm
+'//  Description:	Data maintenance page for the user webpage generator.
+'//					Lets the user edit various data-bound text fields and upload image files.
+'//  Called by:		MyThings.htm
+'////////////////////////////////////////////////////////////////////////-->
+<HTML>
+<HEAD>
+<META NAME="GENERATOR" Content="Microsoft Visual Studio 6.0">
+<link rel=stylesheet href=../shared/global.css>
+<style>
+	.linkName	{ width:40% }
+	.linkURL	{ width:50% }
+	.caption	{ width:68% }
+	INPUT { font-family:Tahoma;font-size:8pt }
+
+	.ColorCell
+	{
+		line-height:1;
+		font-size:1;
+		width:10px;
+		height:15px;
+		border:2px ridge white;
+		cursor:default;
+	}
+	
+</style>
+<TITLE>My Web Page Editor</TITLE>
+<!--Data binding  data source object -->
+<OBJECT classid="clsid:BD96C556-65A3-11D0-983A-00C04FC29E33"
+    ID=dsoUserPage HEIGHT=0 WIDTH=0>
+    <PARAM NAME="ExecuteOptions" VALUE="1">
+    <PARAM NAME="Handler" VALUE="MSDFMAP.Handler,msdfmap_desktopWorld.ini">
+    <PARAM NAME="Connect" VALUE="Data Source=desktopWorldPages">
+    <PARAM NAME="Server" VALUE="">
+    <PARAM NAME="SQL" VALUE="">
+</OBJECT>
+
+<script language=VBScript>
+option explicit
+
+dim webPageRecordExists
+dim avName
+dim bDataBusy
+
+const MAX_IMAGE_HEIGHT = 100
+const MAX_IMAGE_WIDTH = 100
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		window_Onload
+'//  Purpose:	When the page loads we setup data binding and refresh the data source,
+'//				which queries the database loads the results into the data-bound elements.
+'////////////////////////////////////////////////////////////////////////
+sub window_onLoad
+	avName = top.ClientUserPtr.name
+	' load the iframe with deleteImage.asp with no parameters; it doesn't do anything initially
+	aspFrame.location = top.ClientWorldPtr.userPagesServer & top.ClientWorldPtr.userPagesPath & "deleteImage.asp"
+	dsoUserPage.Server = top.ClientWorldPtr.userPagesServer
+	dsoUserPage.SQL = "GetUserPage('" & avName & "')"
+	dsoUserPage.ExecuteOptions = 0	' synchronous execution; do not return control until the refresh finishes
+	dsoUserPage.refresh
+	
+	'enable/disable the check box if we have an e-mail address
+	dim profile
+	set profile = top.clientUserPtr.profile
+	showHotmail.disabled = profile.keyvalue("E-mail Alias") = ""
+	
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		dsoUserPage_onReadyStateChange
+'//  Purpose:	When the data source has loaded the data-bound elements, we setup the images.
+'//				This step is necessary because data should be available immediately upon 
+'//				reaching readyState 4 but it doesn't really work that way, so we wait 1/2 second
+'//				then determine which images exist and which are not
+'////////////////////////////////////////////////////////////////////////
+sub dsoUserPage_onReadyStateChange
+	if dsoUserPage.ReadyState = 4 then 
+		window.setTimeout "showOrHideImages", 100, "VBScript"
+		window.setTimeout "UpdateBackgroundColor", 100, "VBScript"
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		UpdateBackgroundColor
+'//  Purpose:	select the correct background color cell
+'//  Called by:	dsoUserPage_onReadyStateChange
+'////////////////////////////////////////////////////////////////////////
+sub UpdateBackgroundColor
+	dim elem
+	for each elem in ColorTable.cells
+		if lcase(elem.style.backgroundColor) = lcase(BackGroundColor.value) then
+			elem.style.border = "2px ridge black"
+			exit for
+		end if
+	next
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		showOrHideImages
+'//  Purpose:	show or hide image tags depending on whether src exists.
+'//  Called by: dsoUserPage_onReadyStateChange
+'//				onDeleteImage
+'//	 Note: 
+'//  if an image name has never been stored in the database,
+'//  then the bound data in the IMG tag will contain null, so the src will = "".
+'//  However, if an image name has been stored and then deleted,
+'//  then the database will send a zero-length string to the bound field
+'//  which will set the img tag src = the current href path plus nothing.
+'//  Therefore to detect an empty image we check for either src = "" or src ending with "/".
+'////////////////////////////////////////////////////////////////////////
+sub showOrHideImages
+	document.all("showHotmail").checked = (document.all("hotmailName").value <> "")
+	dim n, imgName
+	for n = 0 to 4
+		imgName = document.all("image" & n).src
+		if (len(imgName) = 0) or (right(imgName,1) = "/") then
+			' hide the image and related elements
+			document.all("image" & n).style.display = "none"
+			document.all("btnDelete" & n).style.display = "none"
+			document.all("pCaption" & n).style.display = "none"
+		else
+			' display the image and related elements
+			document.all("image" & n).style.display = ""
+			document.all("btnDelete" & n).style.display = ""
+			document.all("pCaption" & n).style.display = ""
+		end if
+	next 
+	
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		setImage(imgNum, filename)
+'//  Purpose:	set and img "filename" to the imgnum'th IMG elem
+'//	 Params:
+'//		imgNum	- <int> index of the image
+'//		filename - <str> src for the image
+'//  Called by:	uploadFile.htm (the image-uploader popup) when an image file is uploaded
+'////////////////////////////////////////////////////////////////////////
+function setImage (imgNum, filename)
+	dim img
+	if (right(filename,4) = ".gif") or (right(filename,4) = ".jpg") then
+		set img = document.all("image" & imgNum)
+		img.style.height = ""
+		img.style.width = ""
+		img.src = filename
+		
+		' img.src is set twice because it does not always take the value the first time;
+		' there is probably an unsolved timing issue here.
+		img.src = filename
+		setImage = true
+	else
+		setImage = false
+	end if
+end function
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		confineImage (imgNum)
+'//  Purpose:	restrict the image tag to max dimensions
+'//	 Params:
+'//		imgNum	- <int> index of the image
+'//  Called by:	imgReadyStateChange
+'////////////////////////////////////////////////////////////////////////
+sub confineImage (imgNum)
+	dim img, w, h
+	set img = document.all("image" & imgnum)
+	w = img.width
+	h = img.height
+	if img.height > MAX_IMAGE_HEIGHT then 
+		img.style.width = w * (MAX_IMAGE_HEIGHT / h)
+		img.style.height = MAX_IMAGE_HEIGHT
+	end if
+	if img.width > MAX_IMAGE_WIDTH then 
+		img.style.height = h * (MAX_IMAGE_WIDTH / w)
+		img.style.width = MAX_IMAGE_WIDTH
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		imgReadyStateChange
+'//  Purpose:	update images and buttons to reflect db changes
+'//  Called by:	IE data binding, when the state of user-uploaded images changes
+'////////////////////////////////////////////////////////////////////////
+sub imgReadyStateChange
+	dim img, imgNum
+	dim sty
+	set img = window.event.srcElement
+	if img.readyState = "complete" then
+		imgNum = right(img.id,1)
+		if (len(img.src) = 0) or (right(img.src,10) = "/space.gif") then
+			' we do not have an image, so hide the delete button and caption
+			document.all("btnDelete" & imgNum).style.display = "none"
+			document.all("pCaption" & imgNum).style.display = "none"
+		else
+			' we have an image, so resize as needed and display the delete button and caption
+			img.style.height = "auto"
+			img.style.width = "auto"
+			' Undisplaying and redisplaying the image puts the "auto" height/width settings into effect;
+			' otherwise the image retains the dimensions of the previous image.
+			img.style.display = "none"
+			img.style.display = ""
+			confineImage imgNum
+			document.all("btnDelete" & imgNum).style.display = ""
+			document.all("pCaption" & imgNum).style.display = ""
+		end if
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		btnView_onClick
+'//  Purpose:	save's changes and displays the web page in the external window
+'////////////////////////////////////////////////////////////////////////
+sub btnView_onClick
+	saveChanges
+	window.setTimeout "ViewWebPage", 400
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		ViewWebPage
+'//  Purpose:	invoke the web page viewer in the external window
+'//  Called by:	btnView_onClick
+'////////////////////////////////////////////////////////////////////////
+sub ViewWebPage
+	dim strURL
+	strURL = top.ClientWorldPtr.userPagesServer & top.ClientWorldPtr.userPagesPath & "webPageView.asp?user=" & mid(document.location.search,2,255)
+	top.LinkTo strURL
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		saveChanges
+'//  Purpose:   change the focus before saving, to ensure that the current field's changes are saved
+'//             (value changes are not recognized until a field loses focus)
+'//  Called by:	btnView_onClick
+'//				this is also the onClick handler for the Save Changes button
+'////////////////////////////////////////////////////////////////////////
+sub saveChanges
+	document.all.otherInfo.focus
+	document.all.aboutMe.focus
+
+	' save the person's hotmail name or not, depending on whether they checked the box
+	dim profile
+	set profile = top.clientUserPtr.profile
+	document.all("hotmailName").value = ""
+	if document.all("showHotmail").checked then
+		if profile.IsValid("E-mail Alias") then
+			document.all("hotmailName").value = profile.keyvalue("E-mail Alias")
+		end if
+	end if
+
+'////////////////////////////////////////////////////////////////////////////////
+'// The following bit of code was commented out because it caused a weird bug which
+'// we had no time to resolve. The intent was to remove user-entered HTML from the
+'// caption fields by loading each caption into a hidden div and getting innerText,
+'//	letting IE do the actual work.
+'// After this code executed, the Delete button logic would always fail with an
+'// unsupported-property error on "aspFrame.location = ..."
+'////////////////////////////////////////////////////////////////////////////////
+
+'	' remove HTML from the caption fields
+'	dim elem, strTemp
+'	for each elem in document.all
+'		if left(elem.id, len("caption")) = "caption" then
+'			strTemp = elem.value
+'			divHTMLfilter.innerHTML = strTemp
+'			elem.value = divHTMLfilter.innerText
+'		end if
+'	next			
+
+	window.setTimeout "submitDSOChanges", 100, "VBScript"
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		submitDSOChanges
+'//  Purpose:	tell the data source to save the changes
+'//				let error 4117 and 4113 pass without problems
+'//  Called by:	saveChanges
+'////////////////////////////////////////////////////////////////////////
+sub submitDSOChanges
+	on error resume next
+	
+	dsoUserPage.submitChanges
+	dsoUserPage.refresh
+	if Err.number <> 4117 and Err.number <> 4113 and Err.number <> 0 then	'for when the user rapidly clicks the save button 
+		msgbox "Error: " & Err.number & " : " & Err.description
+	end if	
+	
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		onUploadImage
+'//  Purpose:	calls uploadfile.htm to prompt the user to upload a file
+'//  Called by:	onClick hander for all the picture Upload buttons
+'////////////////////////////////////////////////////////////////////////
+sub onUploadImage
+	dim n
+	n = right(window.event.srcElement.id,1)
+	window.open "uploadFile.htm?" & n & "&" & top.ClientUserPtr.name & "&" & top.ClientWorldPtr.UserPagesServer, "Upload", "height=100, left=500, top=200, width=300, location=no, menubar=no, resizable=no, scrollbars=no, status=no, titlebar=no, toolbar=no", false
+end sub	
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		onDeleteImage
+'//  Purpose:	remove an image from the page
+'//  Called by:	onClick handler for all the picture Delete buttons
+'////////////////////////////////////////////////////////////////////////
+sub onDeleteImage
+	' invoked by btnDelete0, btnDelete1 etc.
+	dim n,delASP
+	n = right(window.event.srcElement.id,1)
+	' empty the image filename in the database
+	aspFrame.location = top.ClientWorldPtr.userPagesServer & top.ClientWorldPtr.userPagesPath & "deleteImage.asp?user=" _
+		& top.ClientUserPtr.name & "&imgNum=" & n
+	' blank the image in the page; next time the page is loaded it will get the empty name from the database
+	setImage n, top.ClientWorldPtr.userPagesServer & top.ClientWorldPtr.userPagesPath & "images/space.gif"
+
+	showOrHideImages
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		textChanged
+'//  Purpose:	fix incomplete urls embedded in typed text
+'//  Called by:	this is the onChanged handler for all the text fields on the page
+'////////////////////////////////////////////////////////////////////////
+sub textChanged
+	dim st, n
+	st = window.event.srcElement.value
+	' insert http:// if missing at beginning
+	if left(st,4) = "www." then st = "http://" & st
+	n = inStr(1,st," www.")
+	do while n > 0
+		' insert http:// if missing within the text
+		st = mid(st,1,n) & "http://" & mid(st,n+1,len(st))
+		n = inStr(1,st," www.")
+	loop
+	window.event.srcElement.value = st
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		ColorCellClick
+'//  Purpose:	event handler for when the user clicks on an item from the color chooser
+'////////////////////////////////////////////////////////////////////////
+sub ColorCellClick
+	dim elem
+
+	'set all elems to look normal
+	for each elem in ColorTable.cells
+		if elem.className = "ColorCell" then
+			elem.style.border = "2px ridge white"
+		end if
+	next
+		
+	'put a border around the clicked one
+	set elem = window.event.srcElement
+	elem.style.border = "2px ridge black"
+	BackGroundColor.value = elem.style.BackgroundColor
+	set elem = nothing
+end sub
+
+</script>
+</HEAD>
+
+<BODY bgcolor="#FFFFFF" class=vtext style="position:absolute;top:0;left:0;height:100%;width:95%;">
+
+<!--Start Heading Section-->
+<div id=bkgPageHeadingPatch
+	class=bkgPageHeadingPatch>
+</div>
+<div id=bkgPageHeading
+	class=bkgPageHeading
+	style=background-image:url(../images/bkgMyThings.gif);>
+</div>
+
+<span id=groupName class=PageHeading>My Web Page</span>
+<span class=PageHeadingRt></span>
+<hr class=PageHeadingHR>
+<!--End Heading Section-->
+
+<div style="position:absolute;top:50">
+
+<!--
+	<button id=SendButton
+		class=btnTeal
+		tabIndex=5
+		style="position:absolute;
+			top:432;
+			left:213;"
+		onclick=SendNote()
+		onKeyDown=CircularTab>
+		Send
+	</button>		
+-->
+
+<INPUT class="btnTeal" style="width:90" TYPE=BUTTON NAME=btnView ID=btnView VALUE="View Page" style="display:inline">
+&nbsp
+<INPUT class="btnTeal" style="width:90" TYPE=BUTTON NAME=btnSave ID=btnSave VALUE="Save Changes" style="display:inline" onClick="saveChanges">
+
+
+
+<INPUT TYPE=HIDDEN NAME=avatarName ID=avatarName DATASRC=#dsoUserPage DATAFLD="AvatarName">
+<INPUT TYPE=HIDDEN NAME=hotmailName ID=hotmailName DATASRC=#dsoUserPage DATAFLD="hotmailName">
+<br><br><B>About Me</B><br>
+<TEXTAREA NAME=aboutMe ID=aboutMe ROWS=5 class=vtext DATASRC=#dsoUserPage DATAFLD="aboutMe"
+	style="width:92%" onChange=textChanged></TEXTAREA>
+<BR><B>Other Information</B><BR>
+<TEXTAREA NAME=otherInfo ID=otherInfo ROWS=5 class=vtext DATASRC=#dsoUserPage DATAFLD="otherInfo"
+	style="width:92%" onChange=textChanged></TEXTAREA>
+</p>
+
+<input type=hidden name=BackgroundCOlor id=BackGroundColor DATASRC=#dsoUserPage DATAFLD="BackgroundColor">
+<table width="200">
+	<tr><td>
+	<table id=ColorTable>
+		<tr>
+			<td class=ColorCell style="background-color:#FFFFFF;" onclick=ColorCellClick>&nbsp;</td>
+			<td class=ColorCell style="background-color:#FFCCCC;" onclick=ColorCellClick>&nbsp;</td>
+			<td class=ColorCell style="background-color:#994444;" onclick=ColorCellClick>&nbsp;</td>
+		</tr>
+		<tr>
+			<td class=ColorCell style="background-color:#66FF66;" onclick=ColorCellClick>&nbsp;</td>
+			<td class=ColorCell style="background-color:#2C99FF;" onclick=ColorCellClick>&nbsp;</td>
+			<td class=ColorCell style="background-color:GOLD;"    onclick=ColorCellClick>&nbsp;</td>
+		</tr>
+	</table>
+	</td>
+	<td align=left>
+		<span class=vtext>&nbsp;Background color</span>
+	</td>
+	</tr>
+</table>
+
+<!-- an earlier version of this page allowed the user to specify whether their email address
+	should be displayed on their web page. The email address value from their avatar profile
+	was copied into the web page database. Although this feature was disabled on the page, the
+	hidden form field was left in place since it is referenced elsewhere in scripts on this page.
+	Re-enabling this feature should be a matter of uncommenting this block of HTML and the next.
+<br>
+<table width="250">
+	<tr>
+	<td>
+-->
+		<input type=hidden id=showHotmail>
+<!--	&nbsp;<span class=vtext>Display my hotmail address</span>
+	</td><td>
+		<INPUT class="btnTeal" style="width:90" TYPE=BUTTON NAME=btnMyDetails ID=btnMyDetails 
+		VALUE="Edit My Details" style="display:inline" onClick="top.LinkToSample 'MyDetails.htm' ">
+	</td>
+	</tr>
+</table>
+-->
+
+<p><b>My Picture</b><br>
+<table class=vtext width=95%><tr><td width=105 align=center>
+<img id=image0 DATASRC=#dsoUserPage DATAFLD="image0" onReadyStateChange=imgReadyStateChange></td>
+<td><input type=button class="btnTeal" id=btnUpload0 value="Upload a new picture" onClick=onUploadImage style="width:145"><br>
+<input type=button class="btnTeal" id=btnDelete0 value="Delete picture" onClick=onDeleteImage style="width:90;display:none">
+<p id=pCaption0>Caption&nbsp;&nbsp;<input type=text name=caption0 id=caption0 class=caption DATASRC=#dsoUserPage DATAFLD=caption0></p>
+</td></tr></table>
+</p>
+
+<p>
+<B>My Favorite Web Links</B><BR>
+<hr width="92%" align="left">
+<SPAN class=linkName>Link Name</SPAN>
+<SPAN class=linkURL>URL address (http://...)</SPAN>
+<INPUT TYPE=TEXT NAME=linkName1 ID=linkName1 class=linkName MAXLENGTH=80 DATASRC=#dsoUserPage DATAFLD=linkName1>
+<INPUT TYPE=TEXT NAME=linkURL1 ID=linkURL1 class=linkURL MAXLENGTH=255 DATASRC=#dsoUserPage DATAFLD=linkURL1 onChange=textChanged><br>
+<INPUT TYPE=TEXT NAME=linkName2 ID=linkName2 class=linkName MAXLENGTH=80 DATASRC=#dsoUserPage DATAFLD=linkName2>
+<INPUT TYPE=TEXT NAME=linkURL2 ID=linkURL2 class=linkURL MAXLENGTH=255 DATASRC=#dsoUserPage DATAFLD=linkURL2 onChange=textChanged><br>
+<INPUT TYPE=TEXT NAME=linkName3 ID=linkName3 class=linkName MAXLENGTH=80 DATASRC=#dsoUserPage DATAFLD=linkName3>
+<INPUT TYPE=TEXT NAME=linkURL3 ID=linkURL3 class=linkURL MAXLENGTH=255 DATASRC=#dsoUserPage DATAFLD=linkURL3 onChange=textChanged><br>
+<INPUT TYPE=TEXT NAME=linkName4 ID=linkName4 class=linkName MAXLENGTH=80 DATASRC=#dsoUserPage DATAFLD=linkName4>
+<INPUT TYPE=TEXT NAME=linkURL4 ID=linkURL4 class=linkURL MAXLENGTH=255 DATASRC=#dsoUserPage DATAFLD=linkURL4 onChange=textChanged></p>
+
+<br><br>
+<B>My Picture Album</B>
+<hr width="92%" align="left">
+<table width=95% class=vtext>
+<tr><td width=105 align=center><img id=image1 DATASRC=#dsoUserPage DATAFLD="image1" onReadyStateChange=imgReadyStateChange></td>
+<td><input type=button id=btnUpload1 value="Upload picture 1" onClick=onUploadImage class="btnTeal" style="width:110"> 
+<br><input type=button id=btnDelete1 value="Delete picture 1" onClick=onDeleteImage class="btnTeal" style="width:110;display:none">
+<p id=pCaption1>Caption<br><input type=text name=caption1 id=caption1 class=caption DATASRC=#dsoUserPage DATAFLD=caption1 style="width:100%" onChange=textChanged></p>
+</td></tr></table>
+
+<hr width="92%" align="left">
+<table width=95% class=vtext>
+<tr><td width=105 align=center><img id=image2 DATASRC=#dsoUserPage DATAFLD="image2" onReadyStateChange=imgReadyStateChange></td>
+<td><input type=button id=btnUpload2 value="Upload picture 2" onClick=onUploadImage class="btnTeal" style="width:110">
+<br><input type=button id=btnDelete2 value="Delete picture 2" onClick=onDeleteImage class="btnTeal" style="width:110;display:none">
+<p id=pCaption2>Caption<br><input type=text name=caption2 id=caption2 class=caption DATASRC=#dsoUserPage DATAFLD=caption2 style="width:100%" onChange=textChanged></p>
+</td></tr></table>
+
+<hr width="92%" align="left">
+<table width=95% class=vtext>
+<tr><td width=105 align=center><img id=image3 DATASRC=#dsoUserPage DATAFLD="image3" onReadyStateChange=imgReadyStateChange></td>
+<td><input type=button id=btnUpload3 value="Upload picture 3" onClick=onUploadImage class="btnTeal" style="width:110">
+<br><input type=button id=btnDelete3 value="Delete picture 3" onClick=onDeleteImage class="btnTeal" style="width:110;display:none">
+<p id=pCaption3>Caption<br><input type=text name=caption3 id=caption3 class=caption DATASRC=#dsoUserPage DATAFLD=caption3 style="width:100%" onChange=textChanged></p>
+</td></tr></table>
+
+<hr width="92%" align="left">
+<table width=95% class=vtext>
+<tr><td width=105 align=center><img id=image4 DATASRC=#dsoUserPage DATAFLD="image4" onReadyStateChange=imgReadyStateChange></td>
+<td><input type=button id=btnUpload4 value="Upload picture 4" onClick=onUploadImage class="btnTeal" style="width:110">
+<br><input type=button id=btnDelete4 value="Delete picture 4" onClick=onDeleteImage class="btnTeal" style="width:110;display:none">
+<p id=pCaption4>Caption<br><input type=text name=caption4 id=caption4 class=caption DATASRC=#dsoUserPage DATAFLD=caption4 style="width:100%" onChange=textChanged></p>
+</td></tr></table>
+
+<br><br>
+</div>
+<div id=divInfo style="position:absolute;top:0;width:100%;display:none;">
+</div>
+<div id=divInfo2 style="position:absolute;top:0;width:100%;display:none;">
+</div>
+
+<div id="divHTMLfilter" style="display:none">
+
+<iframe id=aspFrame src="" style="position:absolute;top:0;left:0;width:100;height:100;display=none;"></iframe>
+
+
+
+</BODY>
+</HTML>
+
+
+
+

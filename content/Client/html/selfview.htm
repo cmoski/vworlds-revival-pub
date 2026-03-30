@@ -1,0 +1,30 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+
+<head>
+<meta http-equiv="Expires" content="0">
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="GENERATOR" content="Microsoft FrontPage (Visual InterDev Edition) 2.0">
+<title>V-Worlds Self-View Pane</title>
+</head>
+<body BGCOLOR="#F4F4E8">
+<div align="center">
+<object style="position: absolute; left: 23; top: 0" id="selfview" name="selfview" 
+classid="clsid:63FB7203-909E-11D0-89AA-00A0C9054129" border="0"
+width="128" height="128"></object>
+</div>
+<script language="VBScript">
+
+sub Initialize()
+	set selfview.VWClient = top.theclient.VWClient
+	selfview.SetBackgroundColor 244, 244, 232 '' F4 F4 E8
+end sub
+
+sub window_onload
+	parent.ChildReady(window)
+end sub
+
+</script>
+
+</body>
+</html>

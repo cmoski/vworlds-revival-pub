@@ -1,0 +1,3 @@
+style_name:STRING,description:STRING,previewGIF:STRING,gifInfo:STRING
+'Classic','This is a Classic Swing Door.','CLswing.gif','View of classic swing door:'
+'High Tech','This is a High Tech Swing Door.','HTswing.gif','View of high tech swing door:'

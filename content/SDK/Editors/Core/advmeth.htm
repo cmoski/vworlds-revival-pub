@@ -1,0 +1,92 @@
+<HTML>
+<HEAD>
+<style>
+.head {font-family: Arial;font-size:12pt;color:"#67675D";font-weight:bold}</style>
+</HEAD>
+<BODY BGCOLOR="#F4F4E8" LEFTMARGIN=19 TOPMARGIN=12>
+<div class="head" align="center">Advanced Method</div><br>
+<div style="border-color:#77786F; border-width:2px;border-style:solid">
+<OBJECT ID="listprop" CLASSID="clsid:EF7D6561-0161-11D2-88BE-00C04FC32EF3" border="1" height="82%" width="100%"></div>
+</OBJECT>
+<OBJECT id="Popup"
+		CLASSID="clsid:7E3832CD-4F4E-11D0-89AB-00A0C9054129"
+		BORDER=0 WIDTH=0 HEIGHT=0>
+</OBJECT>
+<SCRIPT LANGUAGE="VBScript">
+On error resume next
+
+public editThing
+public editPropName
+
+
+sub Window_OnLoad
+     set listprop.vwclient=parent.helper.client
+     set listprop.targetobjectproperty=parent.helper.arg
+	 'turn off the apply button
+	 parent.Btns.ApplyBtn.style.visibility = "hidden"
+	 parent.Btns.ResetBtn.style.visibility = "hidden"
+end sub
+
+sub Window_OnUnload
+	parent.Btns.ApplyBtn.style.visibility = "visible"
+	parent.Btns.ResetBtn.style.visibility = "visible"
+end sub
+
+sub Reset
+	Window_OnLoad
+end sub
+
+sub Apply
+	Window_OnUnLoad
+end sub
+
+sub Cancel
+end sub
+
+SUB listprop_EditName(thing, name)
+	msgbox "Edit name of " & name & ".", vbInformation, "Microsoft Virtual Worlds"
+END SUB
+
+SUB listprop_EditValue(thing, name)
+	dim prop
+	dim world
+	dim editorMap
+	dim editorHTML
+	set prop = thing.Method(name)
+	if IsObject(prop) then
+		set editorMap = parent.helper.client.world.global.property("PropertyEditors")
+		if IsObject(editorMap) then
+			editorHTML = editorMap.property(prop.type)
+			set editThing = thing
+			editPropName = name
+			Popup.ShowUrlEx "Create Menu Item", 0, editorHTML, _
+							"Enter Menu information", false, window, 30, 30, 400, 240
+		end if
+	end if
+END SUB
+
+SUB listprop_NewMethod(thing)
+	set editThing = thing
+	Popup.ShowUrlEx "Create New Method", 0, "SDK/Editors/Core/newmeth.htm", _
+							"Enter Method information", false, window, 30, 30, 400, 240
+END SUB
+
+SUB listprop_Help(helpId)
+	top.DoHelp helpId
+END SUB
+
+function GetHelpURL
+	GetHelpURL = ""
+end function
+
+function GetHelpTopic
+	GetHelpTopic = "advanced"
+end function
+
+function verify
+	verify = true
+end function
+
+</SCRIPT>
+</BODY>
+</HTML>

@@ -1,0 +1,130 @@
+<HTML>
+<HEAD>
+<TITLE>Microsoft Virtual Worlds - Create a room wizard</TITLE>
+<LINK Rel=Stylesheet href=../../../client/shared/global.css>
+<script language=VBSCRIPT>
+
+Public ctlBottom, ctlTop
+
+'-----------------------------------
+' window_OnLoad
+' Wait before loading up the page to ensure that everything is initialized properly
+
+sub window_OnLoad
+	Set ctlTop = txtRoomName
+	Set ctlBottom = chkTeleport
+	window.setTimeOut "LoadPage", 200, "VBScript"
+end sub
+
+'-----------------------------------
+' LoadPage
+' Initializes objects & variables on page
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+sub LoadPage
+	top.page=1
+	top.buttons.UpdateButtons
+	top.main.oldroom.innerText = top.goUser.container.toascii
+
+	txtRoomName.value = top.NewRoomName
+	txtRoomDesc.value = top.NewRoomDesc
+	chkTeleport.checked = top.bTeleport
+
+	if top.bNoPortal then
+		chkMakePortal.checked = False
+	else
+		chkMakePortal.checked = True
+	end if
+	if top.fFirstTime then
+		txtRoomName.focus
+		txtRoomName.select
+		top.fFirstTime = false
+	else
+		top.fraButtons.nextbtn.focus
+	end if
+end sub
+
+sub window_OnUnLoad()
+	top.NewRoomName = txtRoomName.value
+	top.NewRoomDesc = txtRoomDesc.value
+	top.bTeleport = chkTeleport.checked
+	if chkMakePortal.checked then
+		top.bNoPortal	= False
+	else
+		top.bNoPortal	= True
+	end if
+end sub
+
+function verify()
+	if txtRoomName.value = "" then
+		msgbox "Enter a name for the new room.", vbInformation, "Microsoft Virtual Worlds"
+		txtRoomName.focus
+		verify =  false
+	elseif top.goWorld.validateInstanceName(txtRoomName.value) = false then
+		msgbox "Enter a valid room name.  Room names can not contain a tab, a return, or any of the following characters: <>%#?,:;|", vbExclamation, "Microsoft Virtual Worlds"
+		txtRoomName.focus
+		txtRoomName.select
+	else
+		verify = true
+	end if
+end function
+
+sub document_onKeyPress()
+	Select Case window.event.keyCode
+	Case 27
+		top.buttons.OnCancel
+	Case 13
+		If Not top.buttons.finishbtn.disabled Then
+			top.buttons.OnFinish
+		ElseIf Not top.buttons.nextbtn.disabled Then
+			top.buttons.OnNext
+		End If
+	Case Else
+	End Select
+end sub
+
+</script>
+</HEAD>
+<BODY>
+	<div style=position:absolute;left:0;top:0;height:273;width:95;overflow:hidden;>
+		<img src=..\..\..\client\shared\menuclouds.gif>
+	</div>
+	<div class=vH2 style=left:18;top:9;>Setup your room name, description, and portal options</div>
+	<div class=vStepBackGround style=left:440;top:1;>=</div>
+	<div class=vStep style=left:452;top:9;>Step 1 of 2</div>
+	<div class=vH1 style=left:178;top:56;>Add a Room Wizard</div>
+	<div class=vLabel style=left:20;top:110;>Room Name:</div>
+	<input id=txtRoomName maxlength=25 class=vInput style=left:135;top:107;width:255;>
+	<div class=vLabel style=left:20;top:140;>Description:</div>
+	<input id=txtRoomDesc class=vInput maxlength=255 style=left:135;top:137;width:255;>
+	<div class=vLabelSmall style=left:394;top:140;>(Optional)</div>
+	<div class=vLabel style=left:20;top:170;>Portals:</div>
+	<div style=position:absolute;left:125;top:167;>
+		<input type=checkbox id=chkMakePortal style=position:relative;left:6;>
+		<label class=vInputLbl for=chkMakePortal>
+			&nbsp;Create a portal to the new room from <span id=OldRoom>&nbsp;</span>&nbsp;
+		</label>
+	</div>
+	<div class=vLabelSmall style=left:153;top:187;width:280;>
+		(You can add portals later via the Add an Object Wizard or authoring tools.)
+	</div>
+	<div style=position:absolute;left:125;top:240;;>
+		<input type=checkbox id=chkTeleport value=on style=position:relative;left:6>
+		<label class=vInputLbl for=chkTeleport>
+			&nbsp;Teleport to the new room when the wizard is finished&nbsp;
+		</label>
+	</div>
+</BODY>
+</HTML>

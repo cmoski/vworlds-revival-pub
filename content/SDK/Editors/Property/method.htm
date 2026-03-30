@@ -1,0 +1,624 @@
+<html>
+<head>
+<title>Method Editor</title>
+<link rel=stylesheet href=../../../client/shared/global.css>
+<object id=FileTool classid=clsid:F5B9E8D3-74C4-11D1-B344-00C04FB6A5C8></object>
+<script language=vbs>
+
+On error resume next
+
+Public currentMethod		'Last select method
+Public currentMethodName	'Last selected method key
+Public currentMethodText	'Last select method's text
+Public MethodsMap			'The thing's method PropertyMap
+Public fChanged				'Do we need to save a change?
+Public newName				'have we changed the name of the method
+Public menuName				'need to be here so popup can get to it
+Public whichMenu			'where does the menu item live
+Public oldIndex				'used for knowing what the previous selection was when changing indicies
+Public targetObj
+Public World
+Public bCanAdd
+Public tabSize
+Public tabText
+
+tabSize = 3
+tabText = Space(tabSize)
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+sub Window_OnLoad
+	dim user
+	set targetObj = window.dialogArguments.editThing
+	set world = targetObj.world
+	set user = world.user
+	set currentMethod = nothing
+	fChanged = false
+	divObject.innerText = window.dialogArguments.editThing.name
+	window_onresize
+	ReadFuncNames targetObj
+	SelectByName(window.dialogArguments.editPropName)
+	If MethodList.Length = 0 Then
+		NoMethods
+	End If
+	bCanAdd = targetObj.CheckMethodsSecurity(world.PS_ADD)
+	if not bCanAdd then
+		DisableButton btnNew
+		DisableButton btnDelete
+		' can't change the name of a method if you can't add it
+		DisableButton btnEditName
+	end if
+	MethodList.focus
+end sub
+
+sub OnOk
+	OnApply
+	window.close
+end sub
+
+sub OnCancel
+	fChanged = false
+	window.close
+end sub
+
+sub OnHelp
+	Dim helpstringsList
+	window.event.returnValue = false
+	on error resume next
+	set helpstringsList = world.global.CreatePropertyList
+	helpstringsList.add "Authoring"
+	helpstringsList.add "Object Explorer"
+	helpstringsList.add "Method Editor"
+	world.FireUIEvent world.user, "Help", helpstringsList
+end sub
+
+sub ReadFuncNames(objct)
+	Dim count
+	Dim el
+	Dim keyname
+	Dim i
+	for i = 0 to listLen
+		MethodList.remove(0)
+	next
+	Set MethodsMap = objct.InstanceMethods
+	count = MethodsMap.count
+	For Each keyname In MethodsMap
+		set el = MethodsMap.property(keyname)
+		If el.IsInline Then
+			AddDropDownElement keyname
+		End If
+	Next
+end sub
+
+sub AddDropDownElement(keyname)
+	Dim el
+	set el = document.createElement("OPTION")
+	el.text = keyname
+	el.value = keyname
+	MethodList.add el, PosInList(MethodList, el.text)
+end sub
+
+function PosInList(tagName, sItem)
+	dim i
+	PosInList = tagName.length
+	for i = 0 to tagName.length - 1
+		if lcase(sItem) < lcase(tagName.options.item(i).text) then
+			PosInList = i
+			exit for
+		end if
+	next
+end function
+
+function verifyName(keyname)
+	dim prompt
+	verifyName = MethodsMap.IsValid(keyname)
+	if verifyName then
+		if StrComp(LCase(MethodList.options(MethodList.SelectedIndex).text), LCase(prompt), 1) <> 0 then
+			verifyName = false
+			exit function
+		end if
+		prompt = msgbox("A method called """ & keyname & """ exists." & vbcrlf & vbcrlf & "Replace it?", vbYesNo + vbQuestion, "Microsoft Virtual Worlds")
+		If prompt = 6 then
+			verifyName = true
+		else
+			verifyName = false
+		end if
+	else
+		if targetobj.IsValidMethod(keyname) then
+			prompt = msgbox("Override the exemplar method?", vbYesNo + vbQuestion, "Microsoft Virtual Worlds")
+			If prompt = 6 then
+				verifyName = true
+			else
+				verifyName = false
+			end if
+		else
+			verifyName = true
+		end if
+	end if
+end function
+
+sub NoMethods
+	' disable some buttons
+	DisableButton btnEditName
+	DisableButton btnDelete
+	DisableButton btnAddMenu
+	DisableButton btnLoad
+	DisableButton btnSave
+	ExecuteList.disabled = true
+	lblExecuteList.style.color = "gray"
+	set currentMethod = nothing
+end sub
+
+sub SomeMethods
+	' enable some buttons
+	if bCanAdd then
+		EnableButton btnDelete
+		EnableButton btnEditName
+	end if
+	EnableButton btnAddMenu
+	EnableButton btnLoad
+	EnableButton btnSave
+	ExecuteList.disabled = false
+	lblExecuteList.style.color = ""
+end sub
+
+sub OnExecuteSelect
+	fChanged = true
+	EnableButton btnApply
+end sub
+
+Sub MethodTextChanged_Timeout
+	if StrComp(MethodText.value, currentMethodText, vbTextCompare) <> 0 then
+		fChanged = true
+		EnableButton btnApply
+	end if
+End Sub
+
+Sub MethodText_onkeyup
+	if (fChanged = false) Then
+		window.setTimeout "MethodTextChanged_Timeout", 250
+	End If
+End Sub
+
+Sub MethodText_onmouseup
+	if (fChanged = false) Then
+		window.setTimeout "MethodTextChanged_Timeout", 250
+	End If
+End Sub
+
+Sub MethodText_oncut
+	if (fChanged = false) Then
+		window.setTimeout "MethodTextChanged_Timeout", 250
+	End If
+End Sub
+
+Sub MethodText_onpaste
+	if (fChanged = false) Then
+		window.setTimeout "MethodTextChanged_Timeout", 250
+	End If
+End Sub
+
+sub OnApply
+	Dim oldMethod
+	Dim methodKey
+	Dim methodflags
+	Dim localOldIndex 'needed for re-entrancy issues
+	Dim NameSelect
+	if not currentMethod is nothing then
+		if not MethodText.readonly then
+			' Set the Server Side / Client Side Bits
+			dim currentValue
+			currentValue = ExecuteList.SelectedIndex
+			methodflags = currentMethod.Flags
+			if currentValue = 0 then
+				methodflags = methodflags or world.METHOD_CLIENT
+				methodflags = methodflags and not world.METHOD_SERVER
+			else
+				if currentValue = 1 then
+					methodflags = methodflags or world.METHOD_SERVER
+					methodflags = methodflags and not world.METHOD_CLIENT
+				else
+					if currentValue = 2 then
+						methodflags = methodflags or world.METHOD_SERVER or world.METHOD_CLIENT
+					end if
+				end if
+			end if
+			currentMethod.Flags = methodflags
+			' Set the new code
+			currentMethod.Code = MethodText.value
+			currentMethodText = MethodText.value
+			' Set the new name
+			if newName <> "" then
+				MethodKey = MethodList.options(oldIndex).value
+				Dim tempMethod
+				set tempMethod = MethodsMap.Property(MethodKey)
+				TargetObj.RemoveMethod MethodKey
+				if targetobj.IsValidMethod(newName) then
+					targetobj.Method(newName) = tempMethod
+				else
+					TargetObj.AddMethod newName, tempMethod
+				end if
+				MethodList.options(oldIndex).value = newName
+				MethodList.options(oldIndex).text = newName
+				SortList(MethodList)
+				fChanged = false
+				DisableButton btnApply
+				SelectByName(NameSelect)
+			end if
+		end if
+	end if
+	newName = ""
+	fChanged = false
+	DisableButton btnApply
+end sub
+
+sub SelectByName(methodKey)
+	Dim i
+	for i = 0 to MethodList.Length - 1
+		if StrComp(methodKey, MethodList.options(i).text, vbTextCompare) = 0 then
+			MethodList.SelectedIndex = i
+		end if
+	next
+	OnSelect
+end sub
+
+sub OnSelect
+	Dim prompt
+	Dim MethodKey
+	Dim Selected
+	Dim methodflags
+	If MethodList.SelectedIndex >= 0 Then
+		' save the value of the previous editing
+		if len(currentMethodText) <> 0 then
+			If StrComp(MethodText.value, currentMethodText, vbTextCompare) <> 0 or fChanged Then
+				prompt = msgbox("Do you want to save your changes?", vbYesNo + vbQuestion, "Microsoft Virtual Worlds")
+				If prompt = 6 then
+					Selected = MethodList.options(MethodList.SelectedIndex).value
+					OnApply
+					SelectByName(Selected)
+				End If
+			End If
+		end if
+		newName = ""
+		' load the new method text
+		MethodKey = MethodList.options(MethodList.SelectedIndex).value
+		set currentMethod = MethodsMap.Property(MethodKey)
+		currentMethodName = MethodKey
+		MethodText.value = currentMethod.Code
+		currentMethodText = MethodText.value
+		methodflags = currentMethod.Flags
+		if methodflags and World.METHOD_SERVER then
+			if methodflags and World.METHOD_CLIENT then
+				ExecuteList.SelectedIndex = 2
+			else
+				ExecuteList.SelectedIndex = 1
+			end if
+		else
+			ExecuteList.SelectedIndex = 0
+		end if
+		fChanged = false
+		DisableButton btnApply
+		oldIndex = MethodList.SelectedIndex
+	End If
+	if targetObj.CheckMethodSecurity(MethodKey, world.PS_WRITE) then
+		EnableOwner
+	else
+		DisableOwner
+	end if
+end sub
+
+sub DoMenu
+	If MethodList.SelectedIndex >= 0 Then
+		window.showModelessDialog "methmenu.htm", window,  "dialogHeight:207px;dialogWidth:394px;status:no;help:no;resizable:no;"
+	end if
+end sub
+
+sub FinishMenu
+	Dim MenuItem
+	Dim ExemplarMenu
+	Dim newMenu
+	if menuName = "" then
+		msgbox "Enter a name for the menu item. The menu item was not created.", vbInformation, "Microsoft Virtual Worlds"
+		exit sub
+	end if
+	Set MenuItem = world.Global.CreateMenuItem(menuName, 0, targetobj, "", currentMethodName)
+	' check to see if we need to copy the menu from the exemplar
+	If targetobj.InstanceProperties.IsValid(whichMenu) then
+		targetobj.property(whichMenu).Add MenuItem
+	else
+		set newMenu = world.CreateMenu
+		if not IsNull(targetobj.Exemplar) then
+			set ExemplarMenu = targetobj.Exemplar.property(whichMenu)
+			ExemplarMenu.CopyTo(newMenu)
+		end if
+		targetobj.Property(whichMenu) = newMenu
+		targetobj.Property(whichMenu).Add MenuItem
+	end if
+end sub
+
+sub DoNew
+	'on error resume next
+	Dim prompt
+	Dim newMethod
+	dim bMethodAdded
+	dim bReplacing
+	dim tempMethodText
+	dim bYesNo
+	bMethodAdded = false
+	bReplacing = false
+	prompt = inputbox("Enter a new method name.", "Microsoft Virtual Worlds", "")
+	if prompt <> "" then
+		if verifyName(prompt) then
+			if targetobj.IsValidMethod(prompt) then
+				bReplacing = true
+				bYesNo = MsgBox("There is already a method by that name.  Replace it?", vbYesNo, "Microsoft Virtual Worlds")
+				if bYesNo is vbNo then
+					exit sub
+				end if
+			end if
+			set newMethod = world.CreateInlineMethod(world.METHOD_CLIENT, "VBScript", prompt + CStr(targetobj.id), "")
+			tempMethodText = "Sub " + prompt + CStr(targetobj.id) + "()" + chr(13) + chr(10) + "   'TODO: Add code here" + chr(13) + chr(10) + "   'this.InvokeSuperMethod(Array(arg1, arg2, ...))" + chr(13) + chr(10) + "End Sub"+ chr(13) + chr(10)
+			newMethod.Code = tempMethodText
+			if bReplacing = true then
+				targetobj.method(prompt) = newMethod
+			else
+				targetobj.AddMethod prompt, newMethod
+			end if
+			' now, check to see if it actually worked
+			if targetobj.IsValidMethod(prompt) then
+				bMethodAdded = true
+			else
+				msgbox "Failed to add the new method.", vbExclamation, "Microsoft Virtual Worlds"
+			end if
+			' update UI only if a method could be added
+			if bMethodAdded = true and bReplacing = false then
+				AddDropDownElement prompt
+				SelectByName(prompt)
+				OnSelect
+				if btnEditName.disabled = true then
+					SomeMethods
+				end if
+			end if
+		end if
+	end if
+end sub
+
+sub DoName
+	Dim prompt
+	prompt = inputbox("Enter a new method name.", "Microsoft Virtual Worlds", MethodList.options(MethodList.SelectedIndex).text)
+	if prompt <> "" then
+		if verifyName(prompt) then
+			MethodList.options(MethodList.SelectedIndex).text = prompt
+			newName = prompt
+			fChanged = true
+			EnableButton btnApply
+			' fix for 6456
+			' the problem is that we want to rename the method in the script module, but currently we don't update the method object
+			' itself.  A new UI for the method editor where the user can't specify the sub name should help.
+			' msgbox "The function/subroutine in the script will need to be renamed.", vbInformation, "Microsoft Virtual Worlds"
+		end if
+	end if
+end sub
+
+sub DeleteMenuItems(MethodName)
+	Dim el
+	Dim i
+	For i = targetobj.Menu.count-1 to 0 step -1
+		set el = targetobj.Menu.property(i)
+		If el.Method = MethodName Then
+			targetobj.Menu.RemoveAt(i)
+		End If
+	Next
+end sub
+
+sub DoDelete
+	Dim prompt
+	Dim MethodKey
+	If MethodList.SelectedIndex >= 0 then
+		MethodKey = MethodList.options(MethodList.SelectedIndex).value
+		if not targetObj.CheckMethodSecurity(MethodKey, world.PS_ADD) then
+			msgbox "Insufficient permission to delete.", vbExclamation, "Microsoft Virtual Worlds"
+			exit sub
+		end if
+		prompt = msgbox("Are you sure you want to delete """ & MethodKey & """?", vbYesNo + vbQuestion, "Microsoft Virtual Worlds")
+		If prompt = 6 Then
+			targetobj.RemoveMethod(MethodKey)
+			MethodList.remove MethodList.SelectedIndex
+			currentMethodText = ""
+			MethodText.value = currentMethodText
+			prompt = msgbox("Delete the menu items associated with this method?", vbYesNo + vbQuestion, "Microsoft Virtual Worlds")
+			If prompt = 6 then
+				DeleteMenuItems(MethodKey)
+			End If
+		End if
+		If MethodList.Length > 0 Then
+			MethodList.SelectedIndex = 0
+			OnSelect
+		else
+			NoMethods
+		End If
+	End If
+end sub
+
+sub DoLoad
+	Dim szFileText
+	szFileText = FileTool.ReadFile("")
+	if (Len(szFileText))  then
+		MethodText.value = szFileText
+	end if
+end sub
+
+sub DoSave
+	FileTool.WriteFile "", MethodText.value
+end sub
+
+function GetHelpTopic
+	GetHelpTopic = "method"
+end function
+
+sub EnableOwner
+	On error resume next
+	If MethodList.Length > 0 Then
+		EnableButton btnEditName
+		EnableButton btnDelete
+		EnableButton btnAddMenu
+		EnableButton btnLoad
+		ExecuteList.disabled = false
+		lblExecuteList.style.color = ""
+'		WarningMsg.outerhtml = ""
+		MethodText.readonly = false
+	end if
+end sub
+
+sub DisableOwner
+	On error resume next
+	document.all("editname").disabled = true
+	DisableButton btnDelete
+	DisableButton btnAddMenu
+	DisableButton btnLoad
+	ExecuteList.disabled = true
+	lblExecuteList.style.color = "gray"
+'	WarningMsg.innerhtml = "<BR>Insufficient security privileges for editing"
+	MethodText.readonly = true
+end sub
+
+sub DisableButton(btn)
+	btn.disabled=true
+	btn.className = "bDisabled"
+end sub
+
+sub EnableButton(btn)
+	btn.disabled=false
+	btn.className = "bEnabled"
+end sub
+
+sub document_OnMouseOver
+	select case window.event.srcElement.className
+	case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	case "vHelp"
+		imgHelp.src="../../../client/shared/helpH.gif"
+	case else
+	end select
+end sub
+
+sub document_OnMouseOut
+	select case window.event.srcElement.className
+	case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	case "vHelp"
+		imgHelp.src="../../../client/shared/help.gif"
+	case else
+	end select
+end sub
+
+sub document_onkeypress
+	select case window.event.keyCode
+	case 27
+		OnCancel
+	case 13
+	case else
+	end select
+end sub
+
+sub window_onresize
+	if document.body.clientHeight - btnOK.offsetHeight - 7 > 346 then
+		btnOK.style.top = document.body.clientHeight - btnOK.offsetHeight - 7
+		btnCancel.style.top = document.body.clientHeight - btnCancel.offsetHeight - 7
+		btnApply.style.top = document.body.clientHeight - btnApply.offsetHeight - 7
+		imgHelp.style.top = document.body.clientHeight - imgHelp.offsetHeight - 7
+		lblExecuteList.style.top = document.body.clientHeight - lblExecuteList.offsetHeight - 44
+		ExecuteList.style.top = document.body.clientHeight - ExecuteList.offsetHeight - 41
+		MethodText.style.height = document.body.clientHeight - MethodText.offsetTop - 66
+	else
+		btnOK.style.top = 346
+		btnCancel.style.top = 346
+		btnApply.style.top = 346
+		imgHelp.style.top = 346
+		lblExecuteList.style.top = 316
+		ExecuteList.style.top = 313
+		MethodText.style.height = 253
+	end if
+	if document.body.clientWidth - btnNew.offsetWidth - 18 > 370 then
+		btnNew.style.left = document.body.clientWidth - btnNew.offsetWidth - 18
+		btnLoad.style.left = document.body.clientWidth - btnLoad.offsetWidth - 18
+		btnSave.style.left = document.body.clientWidth - btnSave.offsetWidth - 18
+		btnDelete.style.left = document.body.clientWidth - btnDelete.offsetWidth - 18
+		btnAddMenu.style.left = document.body.clientWidth - btnAddMenu.offsetWidth - 18
+		MethodText.style.width = document.body.clientWidth - MethodText.offsetLeft - 10 - btnNew.offsetWidth - 18
+		btnApply.style.left = document.body.clientWidth - btnApply.offsetWidth - 18
+		btnCancel.style.left = document.body.clientWidth - btnCancel.offsetWidth - 10 - btnApply.offsetWidth - 18
+		btnOK.style.left = document.body.clientWidth - btnOK.offsetWidth - 10 - btnCancel.offsetWidth - 10 - btnApply.offsetWidth - 18
+	else
+		btnNew.style.left = 370
+		btnLoad.style.left = 370
+		btnSave.style.left = 370
+		btnDelete.style.left = 370
+		btnAddMenu.style.left = 370
+		MethodText.style.width = 342
+		btnApply.style.left = 410
+		btnCancel.style.left = 340
+		btnOK.style.left = 270
+	end if
+end sub
+
+</script>
+<SCRIPT LANGUAGE="JScript" SRC="..\..\..\client\html\common.htm"></SCRIPT>
+</head>
+<body class=vBody>
+	<div class=vLabel style=left:18;top:7;>Object:</div>
+	<div id=divObject class=vLabel style=left:70;top:7;></div>
+	<div class=vLabel style=left:18;top:32;>Inline Method:</div>
+	<select id=MethodList class=vInput style=left:110;top:29;width:110; onchange=OnSelect>
+		<option>PlaceHolder</option>
+	</select>
+	<button class=bEnabled id=btnEditName style=left:230;top:28;width:80; onclick=DoName>
+		<span style=position:relative;top:-1;>Edit Name</span>
+	</button>
+	<textarea id=MethodText class=vInput style=left:18;top:54;width:342;height:253;overflow:auto; wrap=off></TEXTAREA>
+	<button class=bEnabled id=btnNew style=left:370;top:54;width:100; onclick=DoNew>
+		<span style=position:relative;top:-1;>New Method</span>
+	</button>
+	<button class=bEnabled id=btnLoad style=left:370;top:80;width:100; onclick=DoLoad>
+		<span style=position:relative;top:-1;>Load Script</span>
+	</button>
+	<button class=bEnabled id=btnSave style=left:370;top:106;width:100; onclick=DoSave>
+		<span style=position:relative;top:-1;>Save to Script</span>
+	</button>
+	<button class=bEnabled id=btnDelete style=left:370;top:132;width:100; onclick=DoDelete>
+		<span style=position:relative;top:-1;>Delete</span>
+	</button>
+	<button class=bEnabled id=btnAddMenu style=left:370;top:158;width:100; onclick=DoMenu>
+		<span style=position:relative;top:-1;>Add Menu Item</span>
+	</button>
+	<div id=lblExecuteList class=vLabel style=left:18;top:316;>Execute On:</div>
+	<select class=vInput id=ExecuteList style=left:110;top:313;width:110; onchange=OnExecuteSelect>
+		<option>Client</option>
+		<option>Server</option>
+		<option>Client And Server</option>
+	</select>
+	<button class=bEnabled id=btnOK style=left:270;top:346; onclick=OnOK>
+		<span style=position:relative;top:-1;>OK</span>
+	</button>
+	<button class=bEnabled id=btnCancel style=left:340;top:346; onclick=OnCancel>
+		<span style=position:relative;top:-1;>Cancel</span>
+	</button>
+	<button class=bDisabled id=btnApply style=left:410;top:346; onclick=OnApply disabled>
+		<span style=position:relative;top:-1;>Apply</span>
+	</button>
+	<a id=lnkHelp onclick=OnHelp href="">
+		<img src=../../../client/shared/help.gif id=imgHelp class=vHelp style=top:346;>
+	</a>
+</body>
+</html>

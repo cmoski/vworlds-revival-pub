@@ -1,0 +1,406 @@
+<html>
+<head>
+<link rel=stylesheet href=..\..\..\client\shared\global.css>
+<script language=vbs>
+
+Option Explicit
+
+
+Public ctlBottom, ctlTop, fIsDirty, fIsRoom, fIsAvatar, oWorld
+dim bLoaded
+bLoaded = false
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+Sub window_onload
+	Dim target, owner
+	On Error Resume Next
+	Set oWorld = parent.Helper.client.world
+	Set ctlTop = txtName
+	' set read/only if user can't change value
+	' peg target
+	Set target = parent.Helper.Arg
+	fIsRoom = target.IsOfType("Room")
+	fIsAvatar = target.IsOfType("Avatar")
+	txtName.value = target.Name
+
+	If target.CheckPropertySecurity("Name", oWorld.PS_WRITE) = False Then
+		txtName.readOnly = True
+		txtName.style.color = "gray"
+	End If
+
+	' don't allow changing of avatar names (later, security would prevent this)
+	If target.World.IsAvatar(target) Then
+		txtName.readOnly = True
+		txtName.style.color = "gray"
+	End If
+
+	If fIsAvatar Then
+		txtDesc.value = target.profile.keyvalue("quote")
+	Else
+		txtDesc.value = target.Description
+	End If
+
+	If target.CheckPropertySecurity("Description", oWorld.PS_WRITE) = False Then
+		txtDesc.readOnly = True
+		txtDesc.style.color = "gray"
+	End If
+
+	chkTaken.checked = parent.Helper.Arg.IsTakeable
+	chkMoved.checked = parent.Helper.Arg.IsMoveable
+	chkUI.checked = parent.Helper.Arg.IsUIVisible
+	chkSolid.checked = parent.Helper.Arg.IsSolid
+	chkDisplays.checked = parent.Helper.Arg.IsVisible
+	UpdateCheckbox "Taken", "IsTakeable", target
+	UpdateCheckbox "Moved", "IsMoveable", target
+	UpdateCheckbox "UI", "IsUIVisible", target
+	UpdateCheckbox "Solid", "IsSolid", target
+	UpdateCheckbox "Displays", "IsVisible", target
+	Set owner = parent.Helper.Arg.Owner
+	If IsObject(owner) And Not (owner Is Nothing) Then
+		txtOwner.innerText = "Owner: " & owner.RemoteProperty("Name")
+'Remove on suggestion by Kirk. Stephen
+'	Else
+'		txtOwner.innerText = "Owner: No One"
+	End If
+	If fIsRoom Or fIsAvatar Then
+		grpNotRoom.style.visibility = "hidden"
+		Set ctlBottom = txtDesc
+	Else
+		If Not chkUI.disabled Then
+			Set ctlBottom = chkUI
+		ElseIf Not chkMoved.disabled Then
+			Set ctlBottom = chkMoved
+		ElseIf Not chkTaken.disabled Then
+			Set ctlBottom = chkTaken
+		ElseIf Not chkDisplays.disabled Then
+			Set ctlBottom = chkDisplays
+		ElseIf Not chkSolid.disabled Then
+			Set ctlBottom = chkSolid
+		Else
+			Set ctlBottom = txtDesc
+		End If
+	End If
+	InitFocus
+	fIsDirty = False
+	bLoaded = true
+End Sub
+
+Sub InitFocus
+	If parent.fraTabs.fMouseClicked Then
+		if not txtName.readOnly = True then
+			txtName.focus
+			txtName.select
+		end if
+		parent.fraTabs.fMouseClicked = False
+	End If
+End Sub
+
+Sub window_onunload
+End Sub
+
+Sub UpdateCheckbox(ctlBase, propName, target)
+	If target.CheckPropertySecurity(propName, oWorld.PS_WRITE) = False Then
+		document.all("chk" & ctlBase).disabled = True
+		document.all("lbl" & ctlBase).style.color = "gray"
+	End if
+End Sub
+
+Sub document_onclick
+	If window.event.srcElement.tagName = "INPUT" Then
+		If window.event.srcElement.type = "checkbox" Then
+			If Not fIsDirty Then
+				parent.PageDirty
+				fIsDirty = True
+			End If
+		End If
+	End If
+End Sub
+
+Sub Reset
+	window_onload
+End Sub
+
+Sub Apply
+	On Error Resume Next
+	if bLoaded = false or fIsDirty = false then
+	 exit sub
+	end if
+	If Not txtName.readOnly Then parent.Helper.Arg.Name = txtName.value
+	If Not txtDesc.readOnly Then
+		If fIsAvatar Then
+			parent.Helper.Arg.profile.keyvalue("quote") = txtDesc.value
+			parent.Helper.Arg.world.FireUIEvent user, "OnProfileChanged"
+		Else
+			parent.Helper.Arg.Description = txtDesc.value
+		End If
+	End If
+	If Not fIsRoom Or Not fIsAvatar Then
+		If Not chkTaken.disabled Then
+			' Take logic per JasonD: if Take box is checked, both IsTakeable and CanChangeContainer should be true
+			' If box is not checked, leave CanChangeContainer as is, but make IsTakeable false (ReenaK, 11.9.98)
+			If chkTaken.checked Then
+				parent.Helper.Arg.IsTakeable = True
+				parent.Helper.Arg.CanChangeContainer = True
+			Else
+				parent.Helper.Arg.IsTakeable = False
+			End If
+		End If
+		If Not chkMoved.disabled Then parent.Helper.Arg.IsMoveable = chkMoved.checked
+		If Not chkUI.disabled Then parent.Helper.Arg.IsUIVisible = chkUI.checked
+		If Not chkSolid.disabled Then parent.Helper.Arg.IsSolid = chkSolid.checked
+		If Not chkDisplays.disabled Then parent.Helper.Arg.IsVisible = chkDisplays.checked
+	End If
+	fIsDirty = False
+End Sub
+
+Function GetHelpURL
+	GetHelpURL = ""
+End Function
+
+Function GetHelpTopic
+	GetHelpTopic = "description"
+End Function
+
+Function verify
+	verify = True
+	If document.readyState = "complete" Then
+		If Len(txtName.value) = 0 Then
+			MsgBox "The name is missing. Enter a new name.", vbInformation, "Microsoft Virtual Worlds"
+			txtName.focus
+			verify = False
+		End if
+	End If
+End Function
+
+Sub document_onkeypress
+	Select Case window.event.keyCode
+	Case 27
+		parent.btnCancel.click
+	Case 13
+		parent.btnOK.click
+	Case 9
+		window.event.returnValue = False
+		Select Case window.event.srcElement.id
+		Case "txtName"
+			If window.event.shiftKey Then
+				parent.Tabs.ctlBottom.focus
+			Else
+				txtDesc.focus
+				txtDesc.select
+			End If
+		Case "txtDesc"
+			If window.event.shiftKey Then
+				txtName.focus
+				txtName.select
+			Else
+				If grpNotRoom.style.visibility = "" Then
+					If Not chkSolid.disabled Then
+						chkSolid.focus
+					ElseIf Not chkDisplays.disabled Then
+						chkDisplays.focus
+					ElseIf Not chkTaken.disabled Then
+						chkTaken.focus
+					ElseIf Not chkMoved.disabled Then
+						chkMoved.focus
+					ElseIf Not chkUI.disabled Then
+						chkUI.focus
+					Else
+						parent.ctlTop.focus
+					End If
+				Else
+					parent.ctlTop.focus
+				End If
+			End If
+		Case "chkSolid"
+			If window.event.shiftKey Then
+				txtDesc.focus
+				txtDesc.select
+			Else
+				If Not chkDisplays.disabled Then
+					chkDisplays.focus
+				ElseIf Not chkTaken.disabled Then
+					chkTaken.focus
+				ElseIf Not chkMoved.disabled Then
+					chkMoved.focus
+				ElseIf Not chkUI.disabled Then
+					chkUI.focus
+				Else
+					parent.ctlTop.focus
+				End If
+			End If
+		Case "chkDisplays"
+			If window.event.shiftKey Then
+				If Not chkSolid.disabled Then
+					chkSolid.focus
+				Else
+					txtDesc.focus
+					txtDesc.select
+				End If
+			Else
+				If Not chkTaken.disabled Then
+					chkTaken.focus
+				ElseIf Not chkMoved.disabled Then
+					chkMoved.focus
+				ElseIf Not chkUI.disabled Then
+					chkUI.focus
+				Else
+					parent.ctlTop.focus
+				End If
+			End If
+		Case "chkTaken"
+			If window.event.shiftKey Then
+				If Not chkDisplays.disabled Then
+					chkDisplays.focus
+				ElseIf Not chkSolid.disabled Then
+					chkSolid.focus
+				Else
+					txtDesc.focus
+					txtDesc.select
+				End If
+			Else
+				If Not chkMoved.disabled Then
+					chkMoved.focus
+				ElseIf Not chkUI.disabled Then
+					chkUI.focus
+				Else
+					parent.ctlTop.focus
+				End If
+			End If
+		Case "chkMoved"
+			If window.event.shiftKey Then
+				If Not chkTaken.disabled Then
+					chkTaken.focus
+				ElseIf Not chkDisplays.disabled Then
+					chkDisplays.focus
+				ElseIf Not chkSolid.disabled Then
+					chkSolid.focus
+				Else
+					txtDesc.focus
+					txtDesc.select
+				End If
+			Else
+				If Not chkUI.disabled Then
+					chkUI.focus
+				Else
+					parent.ctlTop.focus
+				End If
+			End If
+		Case "chkUI"
+			If window.event.shiftKey Then
+				If Not chkMoved.disabled Then
+					chkMoved.focus
+				ElseIf Not chkTaken.disabled Then
+					chkTaken.focus
+				ElseIf Not chkDisplays.disabled Then
+					chkDisplays.focus
+				ElseIf Not chkSolid.disabled Then
+					chkSolid.focus
+				Else
+					txtDesc.focus
+					txtDesc.select
+				End If
+			Else
+				parent.ctlTop.focus
+			End If
+		Case Else
+			txtName.focus
+			txtName.select
+		End Select
+	Case Else
+		Select Case window.event.srcElement.id
+		Case "txtDesc"
+			If Len(txtDesc.value) > 255 Then
+				MsgBox "The description can not be longer than 255 characters.", vbExclamation, "Microsoft Virtual Worlds"
+				window.event.returnValue=false
+			End If
+			If Not txtDesc.readOnly Then
+				If window.event.keyCode = 8 Then	'backspace
+				ElseIf window.event.keyCode > 31 And window.event.keyCode < 127 Then
+				Else
+					window.event.returnValue = False
+				End If
+				If window.event.returnValue = "" Then
+					If Not fIsDirty Then
+						parent.PageDirty
+						fIsDirty = True
+					End If
+				End If
+			End If
+		Case "txtName"
+			If Len(txtName.value) > 200 Then
+				MsgBox "The name can not be longer than 200 characters.", vbExclamation, "Microsoft Virtual Worlds"
+				window.event.returnValue=false
+			End If
+			If Not txtName.readOnly Then
+				If window.event.keyCode = 8 Then	'backspace
+				ElseIf window.event.keyCode > 31 And window.event.keyCode < 127 Then
+				Else
+					window.event.returnValue = False
+				End If
+				If window.event.returnValue = "" Then
+					If Not fIsDirty Then
+						parent.PageDirty
+						fIsDirty = True
+					End If
+				End If
+			End If
+		Case Else
+		End Select
+	End Select
+End Sub
+
+</script>
+</head>
+<body>
+	<div id=lblName class=vLabel style=left:13;top:10;>Name:</div>
+	<input id=txtName class=vInput style=left:95;top:7;width:258;></input>
+	<div id=lblDesc class=vLabel style=left:13;top:33;>Description:</div>
+	<textarea id=txtDesc class=vInput style=left:95;top:30;width:258; rows=5></textarea>
+	<span id=grpNotRoom>
+		<div id=lblObject class=vLabel style=left:13;top:113;>This object:</div>
+		<div style=position:absolute;left:91;top:110;>
+			<input type=checkbox id=chkSolid value=v4>
+			<label id=lblSolid class=vInputLbl for=chkSolid>
+				&nbsp;Is solid&nbsp;
+			</label>
+		</div>
+		<div style=position:absolute;left:91;top:127;>
+			<input type=checkbox id=chkDisplays value=v5>
+			<label id=lblDisplays class=vInputLbl for=chkDisplays>
+				&nbsp;Is visible&nbsp;
+			</label>
+		</div>
+		<div style=position:absolute;left:91;top:144;>
+			<input type=checkbox id=chkTaken value=v1>
+			<label id=lblTaken class=vInputLbl for=chkTaken>
+				&nbsp;Can be taken&nbsp;
+			</label>
+		</div>
+		<div style=position:absolute;left:91;top:161;>
+			<input type=checkbox id=chkMoved value=v2>
+			<label id=lblMoved class=vInputLbl for=chkMoved>
+				&nbsp;Can be moved&nbsp;
+			</label>
+		</div>
+		<div style=position:absolute;left:91;top:178;>
+			<input type=checkbox id=chkUI value=v3>
+			<label id=lblUI class=vInputLbl for=chkUI>
+				&nbsp;Is user interface accessible&nbsp;
+			</label>
+		</div>
+	</span>
+	<div id=txtOwner class=vLabel style=left:13;top:216;text-align:right;padding-right:6;></div>
+</body>
+</html>

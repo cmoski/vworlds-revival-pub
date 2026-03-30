@@ -1,0 +1,82 @@
+<html id=ext>
+<head>
+<title>ComboBox Scriptlet</title>
+</head>
+
+
+<SCRIPT LANGUAGE=javascript> 
+var inScriptlet = (typeof(window.external.version) == "string");
+var public_dropdownVisible;
+var mBackColor = "white";
+var mForeColor = "black";
+
+function public_Init() {
+    public_dropdownVisible = false;
+
+    // subtract the width of the button to get the goalWidth of the textbox
+    goalWidth = ext.style.pixelWidth - cmdDropdown.offsetWidth;
+
+    actualWidth = txtDropdown.offsetWidth;
+    curSize = txtDropdown.size;
+    
+    newSize = curSize * goalWidth / actualWidth;
+        
+    comboUI.innerHTML = "<input ID=txtDropdown type=text size=" + newSize + " onkeydown=external.bubbleEvent() onkeypress=external.bubbleEvent() style=position:absolute;left:0;top:0>";
+    comboUI.innerHTML = comboUI.innerHTML + "<input ID=cmdDropdown type=button onclick=dropdownClick() value=6 style=position:absolute;left:" + goalWidth + ";top:0;font-family:webdings;font-size=8>"
+    
+    txtDropdown.style.backgroundColor = mBackColor;
+    txtDropdown.style.color = mForeColor;
+}
+
+function public_put_ForeColor(stColor) {
+    mForeColor = stColor;
+    
+    txtDropdown.style.color = stColor;
+}
+
+function public_put_BackColor(stColor) {
+    mBackColor = stColor;
+
+    txtDropdown.style.backgroundColor = stColor;
+}
+
+
+function public_get_selectionObject() {
+    
+    return document.selection;
+    
+}
+
+function public_get_txtDropdown() {
+    return txtDropdown;
+}
+
+function public_put_value(stValue) {
+    txtDropdown.value = stValue;
+}
+
+function public_get_value() {
+    return txtDropdown.value;
+}
+
+function dropdownClick() {
+    if(inScriptlet)
+        if(public_dropdownVisible) {
+            external.raiseEvent("hideDropdown", null);
+        } else {
+            external.raiseEvent("showDropdown", null);
+        }
+
+}
+
+</SCRIPT>
+
+
+<SPAN id=comboUI>
+<input ID=txtDropdown type=text size=300><input ID=cmdDropdown type=button onclick=dropdownClick() value="6" style="font-family:webdings;font-size=8">
+
+</SPAN>
+</BODY>
+</HTML>
+
+

@@ -1,0 +1,243 @@
+<html>
+<head>
+<link rel=stylesheet href=..\..\..\client\shared\global.css>
+<object id=Helper classid=clsid:7E3832CF-4F4E-11D0-89AB-00A0C9054129></object>
+<object id=Popup classid=clsid:7E3832CD-4F4E-11D0-89AB-00A0C9054129></object>
+<script language=vbs>
+
+Option Explicit
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+Public ctlBottom, ctlTop, editorName, editMap, fraProperty, fraTabs
+
+Set editMap = Helper.Arg.GetSortedEditTabMap()
+editorName = "object editor"
+
+Sub window_onload
+	Set fraProperty = window.frames(1)
+	Set fraTabs = window.frames(0)
+	Set ctlTop = btnOK
+	Set ctlBottom = lnkHelp
+	window.open "ObjTabs.htm", "Tabs"
+
+	'select the object
+	if Helper.client.World.IsValidTool("ControlManager") then
+		Helper.client.World.tool("ControlManager").select(Helper.Arg)
+	end if
+
+end sub
+
+Sub document_onmouseover
+	Select Case window.event.srcElement.className
+	Case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	Case "vHelp"
+		imgHelp.src="../../../client/shared/helpH.gif"
+	Case Else
+	End Select
+End Sub
+
+Sub document_onMouseOut
+	Select Case window.event.srcElement.className
+	Case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	Case "vHelp"
+		imgHelp.src="../../../client/shared/help.gif"
+	Case Else
+	End Select
+End Sub
+
+Sub DoReset
+	fraTabs.fMouseClicked = True
+	fraProperty.Reset
+	DisableButton btnReset
+	DisableButton btnApply
+End Sub
+
+Sub DoApply
+	If fraProperty.verify Then
+		fraProperty.Apply
+		fraTabs.fMouseClicked = True
+		fraProperty.InitFocus
+		DisableButton btnReset
+		DisableButton btnApply
+	End If
+End Sub
+
+Sub TabChange
+	If fraProperty.verify Then
+		fraProperty.Apply
+		fraTabs.fMouseClicked = True
+		DisableButton btnReset
+		DisableButton btnApply
+	End If
+End Sub
+
+Sub DoOK
+	If fraProperty.verify Then
+		fraProperty.Apply
+		Helper.closewindow
+	End If
+End Sub
+
+Sub DoCancel
+		Helper.closewindow
+End Sub
+
+Sub OnHelp
+	Dim helpurl, url, i, helpname, client, helptopic, helpstringsList
+	On Error Resume Next
+	window.event.returnValue = False
+	helpurl = fraProperty.GetHelpURL()
+	If helpurl = "" Then
+		DoHTMLHelp
+		Exit Sub
+	else
+		Set client = helper.client
+		Set helpstringsList = client.world.global.CreatePropertyList
+		helpstringsList.add "Authoring"
+		helpstringsList.add "editors"
+		helpstringsList.add "exemplar"
+		helpstringsList.add helpurl
+		client.world.FireUIEvent client.world.user, "Help", helpstringsList
+	end if
+End Sub
+
+Sub DoHTMLHelp
+	Dim client, helptopic, helpstringsList
+	On Error Resume Next
+	' currently vworlds specific, should it be generalized?
+	Set client = helper.client
+	helptopic = fraProperty.GetHelpTopic()
+	Set helpstringsList = client.world.global.CreatePropertyList
+	helpstringsList.add "Authoring"
+	helpstringsList.add "editors"
+	helpstringsList.add helptopic
+	client.world.FireUIEvent client.world.user, "Help", helpstringsList
+End Sub
+
+Sub DisableButton(btn)
+	btn.disabled = True
+	btn.className = "bDisabled"
+End Sub
+
+Sub EnableButton(btn)
+	btn.disabled = False
+	btn.className = "bEnabled"
+End Sub
+
+Sub PageDirty
+	EnableButton btnReset
+	EnableButton btnApply
+End Sub
+
+Sub document_onkeypress
+	Select Case window.event.keyCode
+	Case 27
+		btnCancel.click
+	Case 13
+	Case 9
+		Select Case window.event.srcElement.id
+		Case "btnOK"
+			If window.event.shiftKey Then
+				fraProperty.ctlBottom.focus
+				If fraProperty.ctlBottom.tagName = "INPUT" Then
+					If fraProperty.ctlBottom.type = "text" Then
+						fraProperty.ctlBottom.select
+					End If
+				ElseIf fraProperty.ctlBottom.tagName = "TEXTAREA" Then
+					fraProperty.ctlBottom.select
+				End If
+			Else
+				btnCancel.focus
+			End If
+		Case "btnCancel"
+			If window.event.shiftKey Then
+				btnOK.focus
+			Else
+				If not btnReset.disabled Then
+					btnReset.focus
+				Else
+					lnkHelp.focus
+				End If
+			End If
+		Case "btnReset"
+			If window.event.shiftKey Then
+				btnCancel.focus
+			Else
+				btnApply.focus
+			End If
+		Case "btnApply"
+			If window.event.shiftKey Then
+				btnReset.focus
+			Else
+				lnkHelp.focus
+			End If
+		Case "lnkHelp"
+			If window.event.shiftKey Then
+				If not btnApply.disabled Then
+					btnApply.focus
+				Else
+					btnCancel.focus
+				End If
+			Else
+				fraTabs.ctlTop.focus
+			End If
+		Case Else
+			If window.event.shiftKey Then
+				lnkHelp.focus
+			Else
+				btnOK.focus
+			End If
+		End Select
+	Case Else
+	End Select
+End Sub
+
+</script>
+</head>
+<body>
+	<iframe frameborder=no
+					name=Tabs
+					src=""
+					scrolling=auto
+					style=position:absolute;left:0;top:0;width:108;height:236;>
+	</iframe>
+	<iframe frameborder=no
+					name=Property
+					src=""
+					scrolling=auto
+					style=position:absolute;left:108;top:0;width:371;height:236;>
+	</iframe>
+	<hr id=lnTop color=gray style=position:absolute;left:0;top:236;height:1;>
+	<hr id=lnBottom color=black style=position:absolute;left:0;top:237;height:1;>
+
+	<button class=bEnabled id=btnOK onclick=DoOK style=left:191;top:246;>
+		<span style="position: relative; top: -1;">OK</span>
+	</button>
+	<button class=bEnabled id=btnCancel onclick=DoCancel style=left:261;top:246;>
+		<span style="position: relative; top: -1;">Cancel</span>
+	</button>
+	<button class=bDisabled id=btnReset onclick=DoReset style=left:331;top:246; disabled>
+		<span style="position: relative; top: -1;">Reset</span>
+	</button>
+	<button class=bDisabled id=btnApply onclick=DoApply style=left:401;top:246; disabled>
+		<span style="position: relative; top: -1;">Apply</span>
+	</button>
+	<a id=lnkHelp onclick=OnHelp href="">
+		<img src=../../../client/shared/help.gif id=imgHelp class=vHelp style=top:246;>
+	</a>
+</body>
+</html>

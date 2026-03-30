@@ -1,0 +1,323 @@
+<html>
+<head>
+<link rel=stylesheet href=../../../client/shared/global.css>
+<script language=vbs>
+
+dim Thing
+dim User
+dim World
+dim List
+
+Public sarrArgs
+
+sarrArgs = Array()
+sarrArgs = window.dialogArguments
+document.title = sarrArgs(0)
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+sub Window_OnLoad
+	Dim Security
+
+	On Error Resume Next
+	set Security = nothing
+	set World = sarrArgs(1).goWorld
+
+	divObject.innerText = sarrArgs(1).editThing.name
+	if len(divObject.innerText) = 0 then
+		divObject.innerText = sarrArgs(1).divObject.innerText
+	end if
+	divProperty.innerText = sarrArgs(1).editPropName
+	if len(sarrArgs(1).pNameExt) <> 0 then
+		divProperty.innerText = sarrArgs(1).divProperty.innerText & sarrArgs(1).pNameExt
+	end if
+	set User = World.user
+
+	set Thing = sarrArgs(1).editThing.property(sarrArgs(1).editPropName)
+	set Thing = sarrArgs(1).editMap.property(sarrArgs(1).editPropName)
+	set Thing = sarrArgs(1).editList.property(sarrArgs(1).editIndex)
+
+	if not Thing is nothing then
+		if Thing.IsStub then
+			set Security = sarrArgs(1).editThing.PropertySecurity(sarrArgs(1).editPropName)
+			if not Security is nothing then
+				if StrComp(Security.PropertyType,"room", vbTextCompare) = 0 then
+					set List = World.global.Rooms
+					FilterSelect.selectedIndex = 1
+					FillThingSelectWithRoomList
+				else
+					if StrComp(Security.PropertyType,"avatar", vbTextCompare) = 0 then
+						set List = World.Avatars
+						FilterSelect.selectedIndex = 2
+						FillThingSelectWithMap
+					else
+						set List = User.container.contents
+						FilterSelect.selectedIndex = 0
+						FillThingSelectWithList
+					end if
+				end if
+			else
+				set List = User.container.contents
+				FilterSelect.selectedIndex = 0
+				FillThingSelectWithList
+			end if
+		else
+			if Thing.IsOfType("Avatar") then
+				set List = World.Avatars
+				FilterSelect.selectedIndex = 2
+				FillThingSelectWithMap
+			else
+				if Thing.IsOfType("room") then
+					set List = World.global.Rooms
+					FilterSelect.selectedIndex = 1
+					FillThingSelectWithRoomList
+				else
+					set List = User.container.contents
+					FilterSelect.selectedIndex = 0
+					FillThingSelectWithList
+				end if
+			end if
+		end if
+	else
+		set Security = sarrArgs(1).editThing.PropertySecurity(sarrArgs(1).editPropName)
+		if not Security is nothing then
+			if StrComp(Security.PropertyType,"room", vbTextCompare) = 0 then
+				set List = World.global.Rooms
+				FilterSelect.selectedIndex = 1
+				FillThingSelectWithRoomList
+			else
+				if StrComp(Security.PropertyType,"avatar", vbTextCompare) = 0 then
+					set List = World.Avatars
+					FilterSelect.selectedIndex = 2
+					FillThingSelectWithMap
+				else
+					set List = User.container.contents
+					FilterSelect.selectedIndex = 0
+					FillThingSelectWithList
+				end if
+			end if
+		else
+			set List = User.container.contents
+			FilterSelect.selectedIndex = 0
+			FillThingSelectWithList
+		end if
+	end if
+	ThingSelect.focus
+end sub
+
+sub OnFilterChange
+	select case FilterSelect.selectedIndex
+	case 0
+		set List = User.container.contents
+		FillThingSelectWithList
+	case 1
+		set List = World.global.Rooms
+		FillThingSelectWithRoomList
+	case 2
+		set List = World.Avatars
+		FillThingSelectWithMap
+	case else
+	end select
+end sub
+
+sub FillThingSelectWithMap
+	' clear out the existing values if there are any
+	for i = 0 to ThingSelect.length
+		ThingSelect.remove(0)
+	next
+	AddNothing
+	for each el in List
+		set oOption = document.createElement("OPTION")
+		oOption.text = el
+		oOption.value = el
+		ThingSelect.add oOption, PosInList(ThingSelect, oOption.text)
+	Next
+	if not Thing is nothing then
+		ThingSelect.value = Thing.name
+	else
+		ThingSelect.selectedIndex = 0
+	end if
+end sub
+
+sub FillThingSelectWithList
+	' clear out the existing values if there are any
+	on error resume next
+	for i = 0 to ThingSelect.length
+		ThingSelect.remove(0)
+	next
+	AddNothing
+	for each el in List
+		set oOption = document.createElement("OPTION")
+		oOption.text = el.name
+		oOption.value = el.name
+		ThingSelect.add oOption, PosInList(ThingSelect, oOption.text)
+	Next
+	if not Thing is nothing then
+		ThingSelect.value = Thing.name
+	else
+		ThingSelect.selectedIndex = 0
+	end if
+end sub
+
+sub FillThingSelectWithRoomList
+
+	Dim roomnames
+	dim roomids
+	Dim curID
+
+	' clear out the existing values if there are any
+	on error resume next
+	for i = 0 to ThingSelect.length
+		ThingSelect.remove(0)
+	next
+	AddNothing
+
+	' generate id list
+	set roomids = world.global.createpropertylist
+	for each r in List
+		roomids.add r.id
+	next
+	set roomnames = world.global.GetNamesFromIDs(roomids)
+	'Enumerate rooms
+	i = 0
+	for each curID in roomids
+		set oOption = document.createElement("OPTION")
+		oOption.text = roomnames.property(i)
+		oOption.value = curID
+		ThingSelect.add oOption, PosInList(ThingSelect, oOption.text)
+		i = i + 1
+	next
+
+	if not Thing is nothing then
+		ThingSelect.value = Thing.id
+	else
+		ThingSelect.selectedIndex = 0
+	end if
+end sub
+
+sub AddNothing
+	set oOption = document.createElement("OPTION")
+	oOption.text = "--Nothing--"
+	oOption.value = "--Nothing--"
+	ThingSelect.add oOption, PosInList(ThingSelect, oOption.text)
+end sub
+
+sub Window_OnUnload
+end sub
+
+function PosInList(tagName, sItem)
+	dim i
+	PosInList = tagName.length
+	for i = 0 to tagName.length - 1
+		if lcase(sItem) < lcase(tagName.options.item(i).text) then
+			PosInList = i
+			exit for
+		end if
+	next
+end function
+
+sub OnHelp
+	Dim helpstringsList
+	window.event.returnValue = false
+	on error resume next
+	set helpstringsList = world.global.CreatePropertyList
+	helpstringsList.add "Authoring"
+	helpstringsList.add "Object Explorer"
+	helpstringsList.add "Thing Editor"
+	world.FireUIEvent world.user, "Help", helpstringsList
+end sub
+
+sub OnSelect
+'	stop
+	if ThingSelect.selectedIndex = 0 then
+		set Thing = Nothing
+	else
+		select case FilterSelect.selectedIndex
+		case 0
+			set Thing = User.container.FindWithin(ThingSelect.value, True)
+		case 1
+			'set Thing = World.global.Rooms.Property(ThingSelect.selectedIndex-1)
+			set Thing = World.ObjectByID(ThingSelect.value)
+		case 2
+			set Thing = World.global.Avatars.Property(ThingSelect.value)
+		case else
+		end select
+	end if
+
+	on error resume next
+	sarrArgs(1).editThing.property(sarrArgs(1).editPropName) = Thing
+	sarrArgs(1).editMap.property(sarrArgs(1).editPropName) = Thing
+	sarrArgs(1).editList.property(sarrArgs(1).editIndex) = Thing
+
+	window.close
+end sub
+
+sub document_OnMouseOver
+	select case window.event.srcElement.className
+	case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	case "vHelp"
+		imgHelp.src="../../../client/shared/helpH.gif"
+	case else
+	end select
+end sub
+
+sub document_OnMouseOut
+	select case window.event.srcElement.className
+	case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	case "vHelp"
+		imgHelp.src="../../../client/shared/help.gif"
+	case else
+	end select
+end sub
+
+sub document_onkeypress
+	select case window.event.keyCode
+	case 27
+		window.close
+	case 13
+		if window.event.srcElement.tagName <> "BUTTON" and window.event.srcElement.tagName <> "A" then OnSelect
+	case else
+	end select
+end sub
+
+</script>
+</head>
+<body class=vBody>
+	<div class=vLabel style=left:18;top:7;>Object:</div>
+	<div id=divObject class=vLabel style=left:80;top:7;></div>
+	<div class=vLabel style=left:18;top:25;>Property:</div>
+	<div id=divProperty class=vLabel style=left:80;top:25;></div>
+	<div class=vLabel style=left:18;top:50;>Things:</div>
+	<select id=ThingSelect size=10 class=vinput style=left:18;top:65;width:187; ondblclick=OnSelect>
+		<option>--Nothing--</option>
+	</select>
+	<div class=vLabel style=left:33;top:205;>Display</div>
+	<select id=FilterSelect onchange=OnFilterChange class=vInput style=left:80;top:202;width:125;>
+		<option>Room Contents</option>
+		<option>Rooms</option>
+		<option>Avatars</option>
+	</select>
+	<button class=bEnabled id=btnSelect style=left:75;top:237; onclick=OnSelect>
+		<span style=position:relative;top:-1;>Select</span>
+	</button>
+	<button class=bEnabled id=btnCancel style=left:145;top:237; onclick=window.close>
+		<span style=position:relative;top:-1;>Cancel</span>
+	</button>
+	<a id=lnkHelp onclick=OnHelp href="">
+		<img src=../../../client/shared/help.gif id=imgHelp class=vHelp style=top:237;>
+	</a>
+</body>
+</html>

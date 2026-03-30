@@ -1,0 +1,88 @@
+<html>
+<head>
+<title>Whisper</title>
+<link rel=stylesheet href=global.css>
+<script language=vbs src=scripts/NoSelection.vbs></script>
+<script language=vbs src=scripts/Sorting.vbs></script>
+<script language=vbs src=scripts/Whisper.vbs></script>
+</head>
+<body scroll=no style="margin:7px 18px;">
+	<table cellpadding=0 cellspacing=0 height=100% width=100%>
+		<tr height=10px>
+			<td class=vwText>
+				Avatars:
+			</td>
+			<td>
+			</td>
+			<td class=vwText>
+				Whisper to:
+			</td>
+		</tr>
+		<tr height=10px>
+			<td width=10px>
+				<select id=lstNames size=6 class=vwInput style=width:105px; multiple disabled onchange=UpdateButtons></select>
+			</td>
+			<td align=center>
+				<button class=vwButton id=btnAdd onclick=DoAdd style=width:80px;margin-bottom:5px; disabled>
+					Add <img src=images/arrowrd.gif imgEnabled=images/arrowr.gif imgDisabled=images/arrowrd.gif style=cursor:default;>
+				</button><br>
+				<button class=vwButton id=btnRemove onclick=DoRemove style=width:80px; disabled>
+					<img src=images/arrowld.gif imgEnabled=images/arrowl.gif imgDisabled=images/arrowld.gif style=cursor:default;> Remove
+				</button>
+				<hr size=1px width=80px>
+				<button class=vwButton id=btnRefresh onclick=DoRefresh style=width:80px; disabled>Refresh</button>
+			</td>
+			<td width=10px>
+				<select id=lstTargets size=6 class=vwInput style=width:105px; multiple disabled onchange=UpdateButtons></select>
+			</td>
+		</tr>
+		<tr height=10px>
+			<td colspan=3>
+				<table cellspacing=0 cellpadding=0 style=height:100%;width:100%;>
+					<tr>
+						<td width=5px>
+							<input type=checkbox id=chkShow onClick=DoShow disabled>
+						</td>
+						<td>
+							<label class=vwText for=chkShow>
+								Show avatars in all rooms in this world
+							</label>
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+		<tr>
+			<td colspan=3>
+				<iframe src=WhispHist.htm id=fraWhispHist style=width:100%;height:100%;></iframe>
+			</td>
+		</tr>
+		<tr height=10px>
+			<td colspan=3 style=padding-bottom:2px;>
+				<table cellspacing=0 cellpadding=0 style=height:100%;width:100%;>
+					<tr>
+						<td>
+							<input class=vwInput id=txtWhisper maxlength=200 style=width:100%; disabled>
+						</td>
+						<td width=10px>
+							<img alt=Whisper
+									 id=btnWhisper
+									 src=images/say.gif
+									 class=vwChatButton
+									 mOver=images/sayo.gif
+									 mOut=images/say.gif
+									 enabled=false
+									 align=middle>
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+		<tr height=10px>
+			<td colspan=3 align=center valign=bottom style="border-top:1 solid gray;padding-top:4px;">
+				<button id=btnClose class=vwButton onclick=window.close>Close</button>
+			</td>
+		</tr>
+	</table>
+</body>
+</html>

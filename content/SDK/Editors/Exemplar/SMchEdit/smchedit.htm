@@ -1,0 +1,484 @@
+<HTML>
+<HEAD>
+<style>
+.head {font-family: Arial;font-size:12pt;color:"#67675D";font-weight:bold}
+</style>
+<TITLE>State Machine Editor</TITLE>
+<HEAD>
+<OBJECT ID="FileTool"
+		CLASSID="CLSID:F5B9E8D3-74C4-11D1-B344-00C04FB6A5C8"
+		border="0" height="0" width="0">
+</OBJECT>
+<SCRIPT LANGUAGE="VBSCRIPT">
+dim World					' The world
+dim StateMachine			' The state machine within the V-World
+dim StatePropName			' The current state string
+dim ValueName				' The current value string
+dim EventName				' The current event string
+dim TempStates				' List of states that aren't real yet
+dim OldMethodText			' What the method text used to be
+dim OldMethodFlags			' What the method flags used to be
+dim EditingOnTimeOut		' True if we're editing an OnTimeOut event
+dim OldTimeOut				' What the time-out used to be
+dim ClientServerMask		' Client/server flags mask
+
+sub Reset
+	' Establish communication with the real state machine
+	set StateMachine = parent.Helper.arg
+	set World = parent.Helper.Client.World
+	ClientServerMask = World.METHOD_CLIENT + World.METHOD_SERVER
+	StatePropName = parent.Tabs.GetCurrentTab()
+	ValueName = ""
+	NameName = ""
+	set TempStates = World.Global.CreatePropertyList()
+
+	' Display the current state by default
+	ValueName = StateMachine.Property(StatePropName)
+
+	' Ensure we don't try to save
+	OldMethodText = MethodText.value
+	OldMethodFlags = MethodFlags.value
+	EditingOnTimeOut = false
+
+	CreateCurrentList
+	CreateValueList
+end sub
+
+sub Unload
+	CheckForApply
+	parent.Popup.CloseAll
+end sub
+
+function NeedToApply
+	NeedToApply = false
+	if (ValueName <> "") and (EventName <> "") then
+		if EditingOnTimeOut then
+			NeedToApply = OldTimeOut <> TimeOut.value
+		end if
+		if (OldMethodText <> MethodText.value) or (OldMethodFlags <> MethodFlags.value) then
+			NeedToApply = true
+		end if
+	end if
+end function
+
+sub Apply
+	if EditingOnTimeOut then
+		if OldTimeOut <> TimeOut.value then
+			StateMachine.PutStateProperty StatePropName, ValueName, "TimeOut", _
+											   clng(1000*TimeOut.value)
+			OldTimeOut = TimeOut.value
+		end if
+	end if
+	if (OldMethodText <> MethodText.value) or (OldMethodFlags <> MethodFlags.value) then
+		StateMachine.PutInlineStateMethod MethodFlags.value, StatePropName, ValueName, _
+										 EventName, MethodText.value
+		OldMethodText = MethodText.value
+		OldMethodFlags = MethodFlags.value
+	end if
+end sub
+
+sub CheckForApply
+	dim prompt
+
+	if NeedToApply() then
+		prompt = msgbox("Do you want to save your changes?", vbYesNo + vbQuestion, "Microsoft Virtual Worlds")
+		if prompt = 6 then
+			Apply
+		else
+			if EditingOnTimeOut then
+				OldTimeOut = TimeOut.value
+			end if
+			OldMethodText = MethodText.value
+			OldMethodFlags = MethodFlags.value
+		end if
+	end if
+end sub
+
+function GetHelpURL
+	GetHelpURL = "smchhelp.htm"
+end function
+
+function Verify
+	Verify = true
+end function
+
+sub CreateCurrentList
+	dim actualValue, vl, el, i, si
+
+	' Set the current state
+	actualValue = StateMachine.Property(StatePropName)
+
+	' Remove the old stuff
+	while CurrentList.length > 0
+		CurrentList.Remove 0
+	wend
+
+	' Add all the state values
+	si = -1
+	i = 0
+	for each vl in StateMachine.GetStateValues(StatePropName)
+		' Check if it's in the temp list
+		for each tempVl in tempStates
+			if tempVl = vl then
+				tempStates.Remove vl
+			end if
+		next
+		set el = document.createElement("OPTION")
+		el.text = vl
+		el.value = vl
+		CurrentList.add(el)
+		if vl = actualValue then
+			si = i
+		end if
+		i = i+1
+	next
+
+	' Add all the temporary state values
+	for each vl in tempStates
+		set el = document.createElement("OPTION")
+		el.text = vl
+		el.value = vl
+		CurrentList.add(el)
+		if vl = actualValue then
+			si = i
+		end if
+		i = i+1
+	next
+
+	' If the current state wasn't in the list, add it too
+	if si = -1 then
+		set el = document.createElement("OPTION")
+		el.text = actualValue
+		el.value = actualValue
+		CurrentList.add(el)
+		si = i
+	end if
+
+	' Add a way for the user to select some completely different state
+	set el = document.createElement("OPTION")
+	el.text = "<Other>"
+	el.value = "<Other>"
+	CurrentList.add(el)
+
+	' Set the current state
+	CurrentList.selectedIndex = si
+end sub
+
+sub OnSelectCurrent
+	dim newState
+
+	' Get the new value
+	newState = CurrentList.options(CurrentList.selectedIndex).text
+	if newState = "<Other>" then
+		newState = InputBox("New state:", "Microsoft Virtual Worlds", _
+							StateMachine.Property(StatePropName))
+	end if
+
+	' If there's anything to set, set it
+	if newState <> "" then
+		StateMachine.SetAState StatePropName, newState
+		World.Synchronize
+		CreateCurrentList
+	end if
+end sub
+
+sub CreateValueList
+	dim vl, tempVl, el, i, si
+
+	' Remove the old stuff
+	while ValueList.length > 0
+		ValueList.Remove 0
+	wend
+
+	' Add all the active state values
+	i = 0
+	si = -1
+	for each vl in StateMachine.GetStateValues(StatePropName)
+		' Check if it's in the temp list
+		for each tempVl in tempStates
+			if tempVl = vl then
+				tempStates.Remove vl
+			end if
+		next
+		set el = document.createElement("OPTION")
+		el.text = vl
+		el.value = vl
+		ValueList.add(el)
+		if vl = ValueName then
+			si = i
+		end if
+		i = i+1
+	next
+
+	' Add all the temporary state values
+	for each vl in tempStates
+		set el = document.createElement("OPTION")
+		el.text = vl
+		el.value = vl
+		ValueList.add(el)
+		if vl = ValueName then
+			si = i
+		end if
+		i = i+1
+	next
+
+	' Make sure there's at least one thing in the list
+	if i = 0 then
+		set el = document.createElement("OPTION")
+		el.text = ""
+		el.value = ""
+		ValueList.add(el)
+	end if
+
+	' If the current state isn't in the list, just select the first one
+	if si = -1 then
+		si = 0
+	end if
+
+	' Add a way to add states
+	set el = document.createElement("OPTION")
+	el.text = "<Add state>"
+	el.value = "<Add state>"
+	ValueList.add(el)
+
+	ValueList.selectedIndex = si
+	OnSelectValue
+end sub
+
+sub OnSelectValue
+	dim newState
+
+	' Give the user a chance to save changes
+	CheckForApply
+
+	' Get the new value
+	newState = ValueList.options(ValueList.selectedIndex).text
+
+	' Check for new addition
+	if newState = "<Add state>" then
+		' Ask for the new value
+		newState = InputBox("New state:", "Microsoft Virtual Worlds", "")
+		if newState <> "" then
+			' Add it to temps
+			tempStates.Add newState
+			' Select it
+			ValueName = newState
+		end if
+		' Redisplay
+		CreateValueList
+		exit sub
+	end if
+
+	' Set the value
+	ValueName = newState
+
+	' Create the event list
+	CreateEventList
+end sub
+
+sub CreateEventList
+	dim nm, el, i, si
+
+	' Remove the old stuff
+	while EventList.length > 0
+		EventList.Remove 0
+	wend
+
+	' Add all the events
+	i = 0
+	si = -1
+	if ValueName <> "" then
+		for each nm in StateMachine.GetStateValueMethodNames(StatePropName, ValueName)
+			set el = document.createElement("OPTION")
+			el.text = nm
+			el.value = nm
+			EventList.add(el)
+			if nm = EventName then
+				si = i
+			end if
+			i = i+1
+		next
+	end if
+
+	' Make sure there's at least one
+	if i = 0 then
+		set el = document.createElement("OPTION")
+		el.text = ""
+		el.value = ""
+		EventList.add(el)
+	end if
+
+	' If the current event isn't in the list, just select the first one
+	if si = -1 then
+		si = 0
+	end if
+
+	' Allow for new events
+	set el = document.createElement("OPTION")
+	el.text = "<Add event>"
+	el.value = "<Add event>"
+	EventList.add(el)
+
+	EventList.selectedIndex = si
+	OnSelectEvent
+end sub
+
+sub OnSelectEvent
+	dim newEvent, timeoutName
+
+	' Give the user a chance to save changes
+	CheckForApply
+
+	' Get the selected value
+	newEvent = EventList.options(EventList.selectedIndex).text
+
+	' If it an add request?
+	if newEvent = "<Add event>" then
+		if ValueName = "" then
+			MsgBox "Select or create a state first.", vbInformation, "Microsoft Virtual Worlds"
+		else
+			newEvent = InputBox("New event (common events are OnEnterState, OnTimeOut, and OnLeftClick):", "Microsoft Virtual Worlds", "")
+			if newEvent <> "" then
+				' Create it
+				StateMachine.PutInlineStateMethod true, StatePropName, ValueName, newEvent, ""
+				if StrComp(newEvent, "OnTimeOut", vbTextCompare) = 0 then
+					StateMachine.PutStateProperty StatePropName, ValueName, "TimeOut", _
+													   clng(1000)
+				end if
+				World.Synchronize
+				' Select it
+				EventName = newEvent
+			end if
+			' Redisplay
+			CreateEventList
+		end if
+		exit sub
+	end if
+
+	' Set the event name
+	EventName = newEvent
+
+	' If it's a time-out, add the property info
+	if StrComp(EventName, "OnTimeOut", vbTextCompare) = 0 then
+		SubEvent.innerHTML = "&nbsp;(in <INPUT TYPE=""TEXT"" ID=""TimeOut"" VALUE=""1"" SIZE = ""6"" STYLE=""{font: 12pt Serif; position: relative; top: 3px}""> seconds)"
+		EditingOnTimeOut = true
+		timeoutName = StateMachine.GetStateValueName(StatePropName, ValueName, "TimeOut")
+		if StateMachine.IsValidProperty(timeoutName) then
+			TimeOut.value = StateMachine.GetStateValueProperty(StatePropName, ValueName, _
+															   "TimeOut") / 1000
+		else
+			TimeOut.value = 0.0
+		end if
+		OldTimeOut = TimeOut.value
+	else
+		SubEvent.innerHTML = ""
+		EditingOnTimeOut = false
+	end if
+
+	CreateScript
+end sub
+
+sub CreateScript
+	if EventName <> "" then
+		MethodText.value = StateMachine.GetStateValueInline(StatePropName, ValueName, _
+															EventName)
+		OldMethodText = MethodText.value
+		MethodFlags.value = StateMachine.GetStateValueMethodFlags(StatePropName, _
+																  ValueName, _
+																  EventName) and _
+							ClientServerMask
+		OldMethodFlags = MethodFlags.value
+	else
+		MethodText.value = ""
+		OldMethodText = MethodText.value
+		MethodFlags.value = World.METHOD_SERVER
+		OldMethodFlags = MethodFlags.value
+	end if
+end sub
+
+sub AppendTemplate
+	dim newCode
+
+	parent.Popup.ShowUrlEx "Add Predefined", 0, "editors/exemplar/smchedit/smchappl.htm", _
+								"Add Predefined", false, window, 30, 30, 146, 190
+end sub
+
+sub DoAppendTemplate(newCode)
+	if newCode <> "" then
+		if MethodText.value <> "" then
+			newCode = vbNewLine & newCode
+		end if
+		MethodText.insertAdjacentText "BeforeEnd", newCode
+	end if
+end sub
+
+sub LoadFromFile
+	MethodText.value = FileTool.ReadFile("")
+end sub
+
+sub SaveToFile
+	FileTool.WriteFile "", MethodText.value
+end sub
+
+
+sub mover
+	if (window.event.srcElement.className = "vinput1") then
+		window.event.srcElement.className = "vinputHi"
+
+	end if
+end sub
+
+sub moveOut
+	if (window.event.srcElement.className = "vinputHi") then
+		window.event.srcElement.className = "vinput1"
+
+	end if
+end sub
+
+</SCRIPT>
+</HEAD>
+
+<STYLE>
+	SELECT {Font-Size: 9pt;Font-Family: Arial;Color: #000000}
+	INPUT {Font-Size: 9pt;Font-Family: Arial;Color: #000000}
+	BODY{Font-Size: 9pt;Font-Family: Arial;Color: #000000}
+	.vinput1{Font-Size: 8pt;border-color: #cbccba;width:84;background-color:#ffffff;Font-Family: Arial;Color: #333333}
+.vinputHi {
+	background-color:FFFFFF;width:84;Font-Size: 8pt;
+	left:20;Font-Family: Arial;Color: #000000;border-color: #713252;border-style: solid;border-width: 2px;
+}
+</STYLE>
+<BODY BGCOLOR="#F4F4E8" LEFTMARGIN=12 TOPMARGIN=12 ONLOAD="Reset" ONUNLOAD="Unload">
+<div class="head" align="center">Default</div><br>
+The current state of object is:
+<SELECT SIZE=1 style="position:relative;left:15" style="width:95" ID="CurrentList" NAME="CurrentList" ONCHANGE="VBScript:OnSelectCurrent">
+</SELECT>
+<INPUT onmouseover="mover()" onmouseout="moveOut()" class="vinput1" TYPE="BUTTON" style="position:relative;left:25" VALUE="Refresh" ONCLICK="VBScript:CreateCurrentList"
+		TITLE="Reset the current state from the in-world object">
+<HR>
+If the state of the object is:
+<SELECT SIZE=1 style="width:95" style="position:relative;left:33" ID="ValueList" NAME="ValueList" ONCHANGE="VBScript:OnSelectValue">
+</SELECT><br><br>And the event method called is:
+<SELECT SIZE=1 style="width:95" style="position:relative;left:5" ID="EventList" NAME="ActionList" ONCHANGE="VBScript:OnSelectEvent">
+</SELECT>
+<SPAN ID="SubEvent"></SPAN>
+<BR><BR>
+Do the following action:<br>
+&nbsp;&nbsp;<TEXTAREA NAME="MethodText" COLS=31 ROWS=6></TEXTAREA>
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+Execute on the:
+&nbsp;&nbsp;<SELECT style="width:95" NAME="MethodFlags" TITLE="Display/select where the script runs">
+<OPTION VALUE="1">Client
+<OPTION VALUE="2" SELECTED>Server
+</SELECT>
+&nbsp;&nbsp;&nbsp;
+<INPUT onmouseover="mover()" onmouseout="moveOut()" class="vinput1" TYPE="BUTTON" style="position:absolute;left:300;top:280" NAME="AppendTemplate" VALUE="Predefined"
+	   ONCLICK="VBScript:AppendTemplate" TITLE="Append a pre-defined code template">
+<INPUT onmouseover="mover()" onmouseout="moveOut()" class="vinput1" style="position:absolute;left:300;top:190" TYPE="BUTTON" NAME="Load" VALUE="Load script" ONCLICK="VBScript:LoadFromFile"
+	   TITLE="Load a method from a text file">
+<INPUT onmouseover="mover()" onmouseout="moveOut()" class="vinput1" style="position:absolute;left:300;top:220" TYPE="BUTTON" NAME="Save" VALUE="Save to script" ONCLICK="VBScript:SaveToFile"
+	   TITLE="Save the current method to a text file">
+
+</BODY>
+</HTML>

@@ -1,0 +1,130 @@
+'////////////////////////////////////////////////////////////////////////
+'//  File:		ToolbarRollover.htc
+'//  Purpose:	To add rollover functionality to specific toolbar buttons.
+'////////////////////////////////////////////////////////////////////////
+
+<public:attach event=onmouseover onevent=DoOnMouseOver() />
+<public:attach event=onmouseout onevent=DoOnMouseOut() />
+<public:attach event=onclick onevent=DoOnClick() />
+
+<script language="vbscript">
+option explicit
+
+'////////////////////////////////////////////////////////////////////////
+'//  Setup global variables
+'////////////////////////////////////////////////////////////////////////
+
+dim imgElem
+dim originalSrc  
+dim cacheRollover
+dim cacheClicked
+
+cacheImages
+
+'////////////////////////////////////////////////////////////////////////
+'//  Cache images needed for effects
+'////////////////////////////////////////////////////////////////////////
+
+sub cacheImages
+	set imgElem = Nothing
+	' Find the actual img tag and set it as the imgElem object
+	if LCase(element.classname) = "btncontainer" then
+		dim elem
+		for each elem in element.children
+			if LCase(elem.tagName) = "img" then
+				if elem.className = "btnImage" or elem.className = "btnSmImage" then
+					set imgElem = elem
+				end if
+			end if
+		next
+	end if
+
+	if imgElem is Nothing then exit sub
+	originalSrc = imgElem.src
+	if imgElem.hoverSrc <> "" then
+		set cacheRollover = document.createElement("img")
+		cacheRollover.src = imgElem.hoverSrc
+	end if
+		if imgElem.pressedSrc <> "" then
+		set cacheClicked = document.createElement("img")
+		cacheClicked.src = imgElem.pressedSrc
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  DoOnMouseOver()
+'//  Purpose:  When the mouse is over the image, change the src to
+'//             the hoverSrc image (if specified).
+'////////////////////////////////////////////////////////////////////////
+
+sub DoOnMouseOver()
+	if imgElem is Nothing then exit sub
+	if right(imgElem.parentElement.className,4) <> "_CLK" and imgElem.hoverSrc <> "" then
+		imgElem.src = imgElem.hoverSrc
+    end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  DoOnMouseOut()
+'//  Purpose:  When the mouse moves off the image, the image src back to
+'//				original image.
+'////////////////////////////////////////////////////////////////////////
+
+sub DoOnMouseOut()
+	if right(imgElem.parentElement.className,4) <> "_CLK" then imgElem.src = originalSrc
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  DoOnClick()
+'//  Purpose:  When the image is clicked, set the src to the pressedSrc
+'//				image (if specified).
+'////////////////////////////////////////////////////////////////////////
+'
+sub DoOnClick()
+	on error resume next
+	dim navEnabled
+	if imgElem is Nothing then exit sub
+	' this causes an error in a Whisper modeless dialog because the top window is
+	' the dialog itself, but in the case of Whisper we don't care.
+	navEnabled = top.NavigationEnabled
+	if err.number > 0 then
+		navEnabled = true
+		err.clear
+	end if
+	if navEnabled then
+		if imgElem.pressedSrc <> "" then
+			imgElem.src = imgElem.pressedSrc
+			dim elem
+			for each elem in window.document.all
+				' if old selected container
+				if elem.className = imgElem.parentElement.className & "_CLK" then
+					elem.className = imgElem.parentElement.className							
+				end if
+
+				' if old selected img
+				if elem.className <> "" then
+					if elem.className = imgElem.className then
+						elem.src = elem.origSrc				
+					end if			
+				end if
+			next
+			imgElem.parentElement.className = className & "_CLK"
+			imgElem.src = imgElem.pressedSrc			
+		end if
+		
+		dim btnFunc
+		btnFunc = imgElem.getAttribute ("func")
+		if btnFunc <> "" and _
+		InStr(imgElem.className, "CLK") = False then
+			execScript btnFunc, "vbscript"
+		end if
+						
+	end if
+end sub
+
+</script>
+
+
+  

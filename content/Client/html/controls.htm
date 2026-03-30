@@ -1,0 +1,57 @@
+<HTML>
+<HEAD>
+<link rel=stylesheet href=../shared/global.css>
+<meta http-equiv="Expires" content="0">
+<META NAME="GENERATOR" Content="Microsoft Developer Studio">
+<META HTTP-EQUIV="Content-Type" content="text/html; charset=iso-8859-1">
+<TITLE>Control Area</TITLE>
+</HEAD>
+
+<SCRIPT LANGUAGE="VBScript">
+
+sub Initialize()
+	HistoryPaneFrame.Initialize()
+	TextEntryPaneFrame.Initialize()
+	DoPosition
+end sub
+
+dim iReadyCount
+iReadyCount = 0
+
+sub ChildReady(theWin)
+	iReadyCount = iReadyCount + 1
+	if iReadyCount >= 3 then
+		iReadyCount = 3
+		parent.ChildReady(window)
+	end if
+end sub
+
+sub window_onload
+	DoPosition
+	ChildReady(window)
+end sub
+
+sub window_onresize
+	DoPosition
+end sub
+
+sub DoPosition
+	dim HistoryPaneElement
+	topHeight = document.body.offsetHeight - 24
+	set HistoryPaneElement = document.all("HistoryPaneFrame")
+	if topHeight < 20 then
+		topHeight = 20
+	end if
+	HistoryPaneElement.style.height=topHeight
+end sub
+
+</SCRIPT>
+<BODY class=vBody style=margin-top:2;margin-left:2;margin-right:2;>
+<IFRAME NAME="HistoryPaneFrame" ID="HistoryPaneFrame" SRC="combo.htm" hspace=0 border=0 framespacing=0 vspace=0 marginheight=0 marginwidth=0 scrolling=yes noresize width=100% frameborder=yes></IFRAME>
+<IFRAME ID="TextEntryPaneFrame" SRC="tentry.htm" HSPACE=0 BORDER=0 FRAMESPACING=0 VSPACE=0 MARGINHEIGHT=0 MARGINWIDTH=0 scrolling="no" noresize height=24 width=100% frameborder="no"></IFRAME>
+</BODY>
+</HTML>
+
+
+
+

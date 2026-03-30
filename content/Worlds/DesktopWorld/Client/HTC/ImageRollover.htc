@@ -1,0 +1,154 @@
+<!-- ---------------------------------------------------------------------
+//
+//  Copyright 1999 Microsoft Corporation.  All Rights Reserved.
+//
+//  File:         imageRollover.htc
+//
+//  Description:  The image rollover behavior applies image rollover effects.
+//
+//-------------------------------------------------------------------- -->
+
+
+<script language="javascript">
+
+//------------------------------------------------------------------------
+// Attach to mouse events and setup global variables
+//------------------------------------------------------------------------
+
+element.attachEvent("onmouseover",      fnOnMouseOver);
+element.attachEvent("onmouseout",       fnOnMouseOut);
+element.attachEvent("onmousedown",      fnOnMouseDown);
+element.attachEvent("onmouseup",        fnOnMouseUp);
+element.attachEvent("onpropertychange", fnOnPropertyChange);
+
+var originalSrc = element.src
+var state = "normal"
+var cacheRollover
+var cacheClicked
+
+
+//------------------------------------------------------------------------
+// Cache images needed for effects
+//------------------------------------------------------------------------
+
+if (element.HoverSrc)
+{
+  cacheRollover = new Image()
+  cacheRollover.src = element.HoverSrc
+}
+
+if (element.PressedSrc)
+{
+  cacheClicked = new Image()
+  cacheClicked.src = element.PressedSrc
+}
+
+//------------------------------------------------------------------------
+//
+//  Function:  fnOnMouseOver()
+//
+//  Synopsis:  When the mouse is over the image, change the src to
+//             the HoverSrc image (if specified).
+//
+//------------------------------------------------------------------------
+
+function fnOnMouseOver()
+{
+  state = "Hover"
+
+  if (element.HoverSrc)
+  {
+    element.src = element.HoverSrc
+  }
+}
+
+//------------------------------------------------------------------------
+//
+//  Function:  fnOnMouseOut()
+//
+//  Synopsis:  When the mouse moves off the image, change the image src back to
+//             the original image.
+//
+//------------------------------------------------------------------------
+
+function fnOnMouseOut()
+{
+  state = "normal"
+
+  element.src = originalSrc
+}
+
+//------------------------------------------------------------------------
+//
+//  Function:  fnOnMouseDown()
+//
+//  Synopsis:  When the image is clicked, set the src to the PressedSrc
+//             image (if specified).
+//
+//------------------------------------------------------------------------
+
+function fnOnMouseDown()
+{
+  state = "clicked"
+
+  if (element.PressedSrc)
+  {
+    element.src = element.PressedSrc
+  }
+}
+
+//------------------------------------------------------------------------
+//
+//  Function:  fnOnMouseUp()
+//
+//  Synopsis:  When the mouse button is released, set the src back to 
+//             the HoverSrc image (if specified).
+//
+//------------------------------------------------------------------------
+
+function fnOnMouseUp()
+{
+  state = "Hover"
+
+  if (element.HoverSrc)
+  {
+    element.src = element.HoverSrc
+  }
+  else
+  {
+    element.src = originalSrc
+  }
+}
+
+//------------------------------------------------------------------------
+//
+//  Function:  fnOnPropertyChange()
+//
+//  Synopsis:  If the HoverSrc or PressedSrc properties are changed while
+//             their image is being displayed, update the src.  Update
+//             the originalSrc global variable when the src property is
+//             changed.
+//
+//------------------------------------------------------------------------
+
+function fnOnPropertyChange()
+{
+  if ((window.event.src == "PressedSrc") && (state == "normal"))
+  {
+    originalSrc = element.src
+  }
+
+  if ((window.event.propertyName == "HoverSrc") && (state == "Hover"))
+  {
+    element.src = element.HoverSrc
+  }
+
+  if ((window.event.propertyName == "PressedSrc") && (state == "clicked"))
+  {
+    element.src = element.PressedSrc
+  }
+}
+
+</script>
+
+

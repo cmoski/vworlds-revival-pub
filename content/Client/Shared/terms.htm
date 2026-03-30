@@ -1,0 +1,41 @@
+<html>
+<head>
+<title>Terms of Use</title>
+<link rel=stylesheet href=global.css>
+<script language=vbs>
+
+sub window_onload
+	btnOK.focus
+end sub
+
+sub document_OnMouseOver
+	if window.event.srcElement.className = "bEnabled" then
+		window.event.srcElement.className = "bHighlight"
+	end if
+end sub
+
+sub document_OnMouseOut
+	if window.event.srcElement.className = "bHighlight" then
+		window.event.srcElement.className = "bEnabled"
+	end if
+end sub
+
+sub document_onkeypress
+	if window.event.keycode = 27 then
+		window.close
+	end if
+end sub
+
+</script>
+</head>
+<BODY style=background-color:white;>
+	<div class=vH1 style=left:93;top:18;width:114;>
+		<nobr>Terms of Use</nobr>
+	</div>
+	<div class=vH2 style=left:18;top:50;width:264;>
+		Microsoft Virtual Worlds is offered to you based on the terms contained in the End User License Agreement that was accepted before you installed Microsoft Virtual Worlds.
+Please refer to the file eula.txt in the Virtual Worlds installation directory for more information.
+	</div>
+	<button id=btnOK class=bEnabled onclick=window.close style=left:117;top:154;>OK</button>
+</body>
+</html>

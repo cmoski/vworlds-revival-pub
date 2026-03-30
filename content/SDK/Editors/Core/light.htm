@@ -1,0 +1,191 @@
+<html>
+<head>
+<link rel=stylesheet href=../../../client/shared/global.css>
+<object id=webhelper classid=clsid:7886A636-606B-11d1-BB36-00C04FC2CAB1></object>
+<script language=vbs>
+
+Option Explicit
+dim bLoaded
+
+bLoaded = false
+Public ctlBottom, ctlColor, ctlTop, fIsDirty
+Public g_Thing, g_TimerID
+Public idTimer, oWorld
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+Sub window_onload
+	g_TimerID = -1
+	Set oWorld = parent.Helper.client.world
+	Set webhelper.vwclient = parent.Helper.client
+	Set g_Thing = parent.Helper.Arg
+	lstType.selectedIndex = g_Thing.LightType
+	txtRed.value = cstr(g_Thing.LightColor.x)
+	txtGreen.value = cstr(g_Thing.LightColor.y)
+	txtBlue.value = cstr(g_Thing.LightColor.z)
+	
+	If g_Thing.CheckPropertySecurity("LightType", oWorld.PS_WRITE) = False Then
+		lstType.disabled = True
+	End If
+	If g_Thing.CheckPropertySecurity("LightColor", oWorld.PS_WRITE) = False Then
+		txtRed.disabled = True
+		txtGreen.disabled = True
+		txtBlue.disabled = True
+	End If
+	
+	InitFocus
+	fIsDirty = False
+	bLoaded = true
+End Sub
+
+Sub InitFocus
+	If parent.fraTabs.fMouseClicked Then
+		If Not lstType.disabled Then
+			lstType.focus
+		Else
+			txtRed.focus
+			txtRed.select
+		End If
+		parent.fraTabs.fMouseClicked = False
+	End If
+End Sub
+
+Sub Reset
+	window_onload
+End Sub
+
+Sub Apply
+	Dim i
+	if bLoaded = false or fIsDirty = false then
+		exit sub
+	end if
+	g_Thing.LightType = lstType.selectedIndex 
+	g_Thing.LightColor.Set cdbl(txtRed.value), cdbl(txtGreen.value), cdbl(txtBlue.value)
+	fIsDirty = false
+End Sub
+
+Function GetHelpURL
+	GetHelpURL = "vworlds.chm::/API Reference/Exemplars/Light/Light.htm>sdkall"
+End Function
+
+Function GetHelpTopic
+	GetHelpTopic = "Light"
+End Function
+
+Sub RGBChanged
+	If Not fIsDirty Then
+		parent.PageDirty
+		fIsDirty = True
+	End If
+End Sub
+
+Sub TypeChanged(bChange)
+	If Not fIsDirty Then
+		parent.PageDirty
+		fIsDirty = True
+	End If
+End Sub
+
+Sub window_onunload
+End Sub
+
+Sub document_onKeyPress
+	Select Case window.event.keyCode
+	Case 27
+		parent.btnCancel.click
+	Case 13
+		parent.btnOK.click
+	Case 9
+		window.event.returnValue = False
+		Select Case window.event.srcElement.id
+		Case "lstType"
+			If window.event.shiftKey Then
+				parent.Tabs.ctlBottom.focus
+			Else
+				txtRed.focus
+				txtRed.select
+			End If
+		Case "txtRed"
+			If window.event.shiftKey Then
+				If Not lstType.disabled Then
+					lstType.focus
+				Else
+					parent.Tabs.ctlBottom.focus
+				End If
+			Else
+				txtGreen.focus
+				txtGreen.select
+			End If
+		Case "txtGreen"
+			If window.event.shiftKey Then
+				txtRed.focus
+				txtRed.select
+			Else
+				txtBlue.focus
+				txtBlue.select
+			End If
+		Case "txtBlue"
+			If window.event.shiftKey Then
+				txtGreen.focus
+				txtGreen.select
+			Else
+				parent.ctlTop.focus
+			End If
+		Case Else
+			ctlTop.focus
+			If ctlTop Is txtFilePath Then ctlTop.select
+		End Select
+	Case Else
+		'Only permit numbers in RGB boxes.
+		Select Case window.event.srcElement.id
+		Case "txtRed", "txtGreen", "txtBlue"
+			If window.event.returnValue = "" Then
+				If idTimer <> 0 Then
+					window.clearTimeout idTimer
+				End If
+				Set ctlColor = window.event.srcElement
+				idTimer = window.setTimeout("RGBChanged : idTimer=0", 150)
+			End If
+		Case else
+		End Select
+	End Select
+End Sub
+
+Function verify
+	verify = True
+End Function
+
+</script>
+
+</head>
+<body>
+	<div id=lblType class=vLabel style=left:13;top:10;>Light Type:</div>
+	<select id=lstType onchange=TypeChanged(True) class=vInput style=left:95;top:7;width:125;>
+	<OPTION value="0">Ambient
+	<OPTION value="1">Point
+	<OPTION value="2">Spot
+	<OPTION value="3">Directional
+	<OPTION value="4">Parallel Point
+	</select>
+
+	<div id=lblColor class=vLabel style=left:13;top:43;>Light Color:</div>
+	<div id=lblRed class=vLabel style=left:95;top:43;>R:</div>
+	<input id=txtRed class=vInput style=left:108;top:40;width:28; maxlength=3>
+	<div id=lblGreen class=vLabel style=left:141;top:43;>G:</div>
+	<input id=txtGreen class=vInput style=left:155;top:40;width:28; maxlength=3>
+	<div id=lblBlue class=vLabel style=left:188;top:43;>B:</div>
+	<input id=txtBlue class=vInput style=left:201;top:40;width:28; maxlength=3>
+	<div id=lblVector class=vLabel style=left:95;top:65>A light's color is a vector value, so the above boxes expect float values between 0 and 1 instead of standard RGB integer values between 0 and 255.</div>
+</body>
+</html>

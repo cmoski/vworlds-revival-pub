@@ -1,0 +1,374 @@
+option explicit
+
+sub make_lesson_9 (lesson_9_box)
+	' Build the structures for the animation tutorial room
+	set lesson_9_box = world.createInstance("lesson_9 portal","portal")
+	lesson_9_box.initializegraphics "SDK\library\models\_ScriptTutorial\door 1.x", 5,-200,10, 0,0,1
+	dim myvec
+	set myvec = world.createvector(2,2,2)
+	lesson_9_box.scale = myvec
+	lesson_9_box.moveinto home
+	world.global.addproperty "lesson_9" , lesson_9_box
+	lesson_9_box.IsNoticeable = true
+	lesson_9_box.description = "portal to Lesson 9 Animation Room"
+	AnimationRoom.CreateAndAddMethod world.METHOD_SERVER, Lesson_9_Module, "toggleShowPath", "toggleShowPath", , world.PS_ALL_E + world.PS_ALL_RWA
+	AnimationRoom.CreateAndAddMethod world.METHOD_CLIENT, Lesson_9_Module, "cloneMaps", "cloneMaps", , world.PS_ALL_E + world.PS_ALL_RWA
+	AnimationRoom.GeometryName = "sdk\library\models\_ScriptTutorial\1_by_1_grid.3ds"
+	Dim fromlesson9
+	Set fromlesson9 = World.CreateInstance ("Animation-Room Portal","Portal")
+	fromlesson9.initializegraphics "SDK\library\models\_ScriptTutorial\door 1.x", -19.8,1,26.8, 0.66,0,-0.75
+	fromlesson9.Destinations.Add lesson_9_box
+	fromlesson9.Descriptions.Add "To main room (other lessons)"
+	fromlesson9.MoveInto animationRoom
+	fromlesson9.IsNoticeable = true
+	fromlesson9.entryPoint.set -27.3,1,26.2
+	fromlesson9.entryOrientation.set 0.89,0,-0.45
+	lesson_9_box.Destinations.Add fromlesson9
+ 	lesson_9_box.Descriptions.Add "To lesson 9 Animation Room"
+	fromlesson9.description = "a scripting tutorial object"
+
+	' Make path maps to animate the segmented fish
+	animationRoom.addproperty "fishPosMap", world.createPropertyMap
+	animationRoom.addproperty "fishDirMap", world.createPropertyMap
+
+	' Generate an animation path based on an array of position and direction coordinates.
+	' To achieve a constant speed, the keyframe values are calculated based on the distance 
+	' between each point and the previous point in the position path. Since these distances 
+	' are fairly small in this path, to retain some precision we multiply each distance by 100
+	' before rounding to an integer to produce a keyframe value.
+	dim fishPosPoints, fishDirPoints
+	' each array contains a series of coordinates: x1, y1, z1, x2, y2, z2, ...
+	fishPosPoints = array(0, 1.5, 7.555, -0.489, 1.5, 9.136, -1.1, 1.5, 10.78, -1.358, 1.5, 12.457, -1.095, 1.5, 13.946, -0.498, 1.5, 15.1, 0.446, 1.5, 16.122, 1.859, 1.5, 16.811, 3.27, 1.5, 16.796, 4.734, 1.5, 16.074, 5.86, 1.5, 14.805, 6.902, 1.5, 13.004, 7.401, 1.5, 11.111, 7.494, 1.5, 9.34, 7.406, 1.5, 7.598, 7.642, 1.5, 5.689, 8.76, 1.5, 4.298, 10.416, 1.5, 3.626, 12.072, 1.5, 3.778, 13.602, 1.5, 4.7, 15.135, 1.5, 4.971, 16.712, 1.5, 4.516, 18.163, 1.5, 3.566, 19.285, 1.5, 2.022, 19.484, 1.5, 0.158, 19.333, 1.5, -1.645, 18.946, 1.5, -3.061, 18.266, 1.5, -4.012, 17.232, 1.5, -4.85, 16.588, 1.5, -6.1, 16.886, 1.5, -7.471, 17.813, 1.5, -8.563, 18.961, 1.5, -9.573, 19.9, 1.5, -11.016, 20.232, 1.5, -12.605, 20.187, 1.5, -14.319, 19.871, 1.5, -15.793, 19.102, 1.5, -17.375, 18.43, 1.5, -18.366, 17.647, 1.5, -19.242, 16.769, 1.5, -19.923, 15.62, 1.5, -20.463, 14.432, 1.5, -20.554, 13.103, 1.5, -20.473, 11.637, 1.5, -20.224, 10.25, 1.5, -20.182, 8.934, 1.5, -20.517, 7.762, 1.5, -21.303, 6.69, 1.5, -22.14, 5.719, 1.5, -22.853, 4.642, 1.5, -23.777, 3.542, 1.5, -24.839, 2.74, 1.5, -26.055, 2.459, 1.5, -27.627, 2.804, 1.5, -29.157, 3.611, 1.5, -30.246, 4.583, 1.5, -31.179, 5.741, 1.5, -31.817, 6.928, 1.5, -32.006, 8.295, 1.5, -31.846, 9.446, 1.5, -31.374, 10.453, 1.5, -30.36, 10.782, 1.5, -28.84, 10.435, 1.5, -27.536, 9.665, 1.5, -26.253, 8.792, 1.5, -25.041, 7.816, 1.5, -24.079, 7.087, 1.5, -23.345, 6.061, 1.5, -22.433, 5.007, 1.5, -21.82, 3.749, 1.5, -21.042, 2.447, 1.5, -20.394, 1.184, 1.5, -19.676, 0.1, 1.5, -18.93, -0.779, 1.5, -18.002, -1.834, 1.5, -16.795, -2.767, 1.5, -15.521, -3.281, 1.5, -14.208, -3.596, 1.5, -12.629, -3.461, 1.5, -10.805, -3.059, 1.5, -9.272, -2.553, 1.5, -7.753, -2.02, 1.5, -6.386, -1.219, 1.5, -4.994, -0.516, 1.5, -3.628, -0.182, 1.5, -2.231, 0.028, 1.5, -0.813, 0.124, 1.5, 0.955, 0.194, 1.5, 2.398, 0.294, 1.5, 3.649, 0.291, 1.5, 5.034, 0.242, 1.5, 5.967, 0, 1.5, 7.555)
+	fishDirPoints = array(0.003, 0, 0.02, -0.54, 0, 1.399, -0.314, 0, 1.467, 0.144, 0, 1.493, 0.581, 0, 1.383, 0.909, 0, 1.193, 1.276, 0, 0.789, 1.493, 0, 0.14, 1.431, 0, -0.45, 1.115, 0, -1.004, 0.012, 0, -0.016, 0.008, 0, -0.018, 0.002, 0, -0.02, -0.037, 0, -1.5, 0.064, 0, -1.499, 0.682, 0, -1.336, 1.328, 0, -0.697, 1.498, 0, -0.078, 1.249, 0, 0.831, 1.444, 0, 0.406, 1.462, 0, -0.335, 1.292, 0, -0.761, 1.052, 0, -1.069, 0.332, 0, -1.463, -0.001, 0, -0.02, -0.246, 0, -1.48, -0.696, 0, -1.329, -1.246, 0, -0.835, -0.893, 0, -1.205, 0.076, 0, -1.498, 0.918, 0, -1.186, 1.224, 0, -0.868, 0.936, 0, -1.172, 0.005, 0, -0.019, 0.001, 0, -0.02, -0.004, 0, -0.02, -0.008, 0, -0.018, -0.01, 0, -0.017, -0.011, 0, -0.017, -0.015, 0, -0.014, -1.368, 0, -0.615, -1.448, 0, -0.39, -1.5, 0, 0.032, -1.483, 0, 0.224, -1.493, 0, 0.146, -1.462, 0, -0.334, -1.259, 0, -0.815, -1.224, 0, -0.867, -0.015, 0, -0.013, -1.171, 0, -0.938, -0.015, 0, -0.013, -0.013, 0, -0.015, -0.476, 0, -1.422, 0.25, 0, -1.479, 0.774, 0, -1.285, 1.086, 0, -1.035, 0.016, 0, -0.012, 0.02, 0, -0.004, 1.5, 0, -0.03, 1.415, 0, 0.497, 1.078, 0, 1.043, 0.571, 0, 1.387, -0.232, 0, 1.482, -0.727, 0, 1.312, -0.858, 0, 1.231, -0.993, 0, 1.124, -0.015, 0, 0.013, -0.015, 0, 0.013, -0.016, 0, 0.012, -1.291, 0, 0.763, -1.325, 0, 0.704, -1.31, 0, 0.73, -0.017, 0, 0.011, -0.015, 0, 0.013, -0.013, 0, 0.016, -0.012, 0, 0.016, -0.01, 0, 0.017, -0.006, 0, 0.019, 0.083, 0, 1.498, 0.356, 0, 1.457, 0.475, 0, 1.423, 0.007, 0, 0.019, 0.736, 0, 1.307, 0.011, 0, 0.017, 0.006, 0, 0.019, 0.298, 0, 1.47, 0.112, 0, 1.496, 0.01, 0, 1.01, 0.03, 0, 1.5, -0.01, 0, 1.01, -0.01, 0, 1.01, -0.01, 0, 0.6, -0.003, 0, 0.02)
+
+	dim n, keyFrame, prevKeyFrame
+	keyFrame = "0"
+	animationRoom.fishPosMap.property(keyFrame) = world.createVector(fishPosPoints(0), fishPosPoints(1), fishPosPoints(2))
+	animationRoom.fishDirMap.property(keyFrame) = world.createVector(fishDirPoints(0), fishDirPoints(1), fishDirPoints(2))
+	prevkeyFrame = keyFrame
+	for n = 1 to 92
+		' Each keyFrame value is the previous keyFrame value plus the distance (in the xz plane) between the previous position 
+		' point and the current point, multiplied by 100 to retain precision, rounded to an integer and converted to a string.
+		' Keyframe values can be any magnitude because the speed at which they are processed can be specified when the 
+		' StartAnimation method is called.
+		keyFrame = CStr(int(sqr((fishPosPoints(n*3) - fishPosPoints(n*3 - 3))^2 + (fishPosPoints(n*3 + 2) - fishPosPoints(n*3 - 1))^2) * 100) + CInt(prevkeyFrame))
+		' add position and distance vectors to the maps
+		animationRoom.fishPosMap.property(keyFrame) = world.createVector(fishPosPoints(n*3),fishPosPoints(n*3 + 1),fishPosPoints(n*3 + 2))
+		animationRoom.fishDirMap.property(keyFrame) = world.createVector(fishDirPoints(n*3),fishDirPoints(n*3 + 1),fishDirPoints(n*3 + 2))
+		prevkeyFrame = keyFrame
+	next
+
+	' Make propertyMaps to animate the user to chase the fish.
+	' These propertyMaps are created by adding the vectors directly instead of
+	' generating them from an array points as in the fish bodypart animations.
+	' The coordinates were generated with a temporary method that captured the user's
+	' position and direction once per second and wrote them to the command window using 
+	' the world.trace method, while the user manually chased the fish around the path.
+	' The coordinates were cut from the command window edited into the following code.
+	' Since we know the points were sampled 1 second apart, the keyFrame values are a 
+	' straightforward series of numbers. Running these animations at 0.001 keyframes
+	' per millisecond will recreate the user's original movements.
+	
+	' Create the position propertyMap
+	animationRoom.addproperty "chasePosMap", world.createPropertyMap
+	animationRoom.chasePosMap.property("1") = world.createVector(-12.385, 2, 11.3)
+	animationRoom.chasePosMap.property("2") = world.createVector(-11.141, 2, 11.263)
+	animationRoom.chasePosMap.property("3") = world.createVector(-7.718, 2, 10.671)
+	animationRoom.chasePosMap.property("4") = world.createVector(-4.934, 2, 9.513)
+	animationRoom.chasePosMap.property("5") = world.createVector(-1.467, 2, 7.019)
+	animationRoom.chasePosMap.property("6") = world.createVector(2.767, 2, 4.939)
+	animationRoom.chasePosMap.property("7") = world.createVector(7.961, 2, 3.341)
+	animationRoom.chasePosMap.property("8") = world.createVector(10.763, 2, 1.978)
+	animationRoom.chasePosMap.property("9") = world.createVector(12.099, 2, -0.524)
+	animationRoom.chasePosMap.property("10") = world.createVector(13.761, 2, -4.542)
+	animationRoom.chasePosMap.property("11") = world.createVector(15.178, 2, -8.53)
+	animationRoom.chasePosMap.property("12") = world.createVector(15.924, 2, -12.191)
+	animationRoom.chasePosMap.property("13") = world.createVector(15.606, 2, -14.001)
+	animationRoom.chasePosMap.property("14") = world.createVector(13.682, 2, -16.221)
+	animationRoom.chasePosMap.property("15") = world.createVector(10.137, 2, -19.404)
+	animationRoom.chasePosMap.property("16") = world.createVector(7.333, 2, -22.555)
+	animationRoom.chasePosMap.property("17") = world.createVector(7.037, 2, -23.685)
+	animationRoom.chasePosMap.property("18") = world.createVector(6.777, 2, -23.094)
+	animationRoom.chasePosMap.property("19") = world.createVector(5.459, 2, -19.952)
+	animationRoom.chasePosMap.property("20") = world.createVector(5.386, 2, -15.934)
+	animationRoom.chasePosMap.property("21") = world.createVector(5.943, 2, -15.056)
+	animationRoom.chasePosMap.property("22") = world.createVector(5.415, 2, -15.06)
+	animationRoom.chasePosMap.property("23") = world.createVector(3.572, 2, -14.478)
+	animationRoom.chasePosMap.property("24") = world.createVector(2.06, 2, -12.827)
+	animationRoom.chasePosMap.property("25") = world.createVector(1.574, 2, -9.344)
+	animationRoom.chasePosMap.property("26") = world.createVector(1.26, 2, -3.427)
+	animationRoom.chasePosMap.property("27") = world.createVector(0.163, 2, 3.284)
+	animationRoom.chasePosMap.property("28") = world.createVector(-0.937, 2, 8.988)
+	animationRoom.chasePosMap.property("33") = world.createVector(-11.3,1,19.6)
+
+	' Create the direction propertyMap
+	animationRoom.addproperty "chaseDirMap", world.createPropertyMap
+	animationRoom.chaseDirMap.property("1") = world.createVector(1, 0, 0.003)
+	animationRoom.chaseDirMap.property("2") = world.createVector(0.996, 0, -0.091)
+	animationRoom.chaseDirMap.property("3") = world.createVector(0.981, 0, -0.194)
+	animationRoom.chaseDirMap.property("4") = world.createVector(0.819, 0, -0.574)
+	animationRoom.chaseDirMap.property("5") = world.createVector(0.812, 0, -0.584)
+	animationRoom.chaseDirMap.property("6") = world.createVector(0.956, 0, -0.294)
+	animationRoom.chaseDirMap.property("7") = world.createVector(0.955, 0, -0.298)
+	animationRoom.chaseDirMap.property("8") = world.createVector(0.705, 0, -0.709)
+	animationRoom.chaseDirMap.property("9") = world.createVector(0.382, 0, -0.924)
+	animationRoom.chaseDirMap.property("10") = world.createVector(0.382, 0, -0.924)
+	animationRoom.chaseDirMap.property("11") = world.createVector(0.267, 0, -0.964)
+	animationRoom.chaseDirMap.property("12") = world.createVector(0.048, 0, -0.999)
+	animationRoom.chaseDirMap.property("13") = world.createVector(-0.49, 0, -0.872)
+	animationRoom.chaseDirMap.property("14") = world.createVector(-0.731, 0, -0.683)
+	animationRoom.chaseDirMap.property("15") = world.createVector(-0.746, 0, -0.666)
+	animationRoom.chaseDirMap.property("16") = world.createVector(-0.406, 0, -0.914)
+	animationRoom.chaseDirMap.property("17") = world.createVector(0.224, 0, -0.975)
+	animationRoom.chaseDirMap.property("18") = world.createVector(0.408, 0, -0.913)
+	animationRoom.chaseDirMap.property("19") = world.createVector(0.307, 0, -0.952)
+	animationRoom.chaseDirMap.property("20") = world.createVector(-0.381, 0, -0.925)
+	animationRoom.chaseDirMap.property("21") = world.createVector(-0.919, 0, -0.395)
+	animationRoom.chaseDirMap.property("22") = world.createVector(-0.998, 0, 0.064)
+	animationRoom.chaseDirMap.property("23") = world.createVector(-0.848, 0, 0.53)
+	animationRoom.chaseDirMap.property("24") = world.createVector(-0.386, 0, 0.922)
+	animationRoom.chaseDirMap.property("25") = world.createVector(-0.039, 0, 0.999)
+	animationRoom.chaseDirMap.property("26") = world.createVector(-0.101, 0, 0.995)
+	animationRoom.chaseDirMap.property("27") = world.createVector(-0.196, 0, 0.981)
+	animationRoom.chaseDirMap.property("28") = world.createVector(-0.126, 0, 0.992)
+	animationRoom.chaseDirMap.property("31") = world.createVector(0.84, 0, -0.54)
+
+	world.exemplar("artifact").renderquality = 3
+
+	' body segments for the articulated fish 
+	dim obj
+
+	set obj = world.createinstance("fishHead","artifact", AnimationRoom)
+	obj.initializegraphics "SDK/library/models/_ScriptTutorial/animHead.x" , 0,1,5.96,0,0,1
+	obj.scale = world.global.createVector(.01,.01,.01)
+	obj.renderquality = 3
+	obj.label = "head"
+	world.global.addProperty "fishHead", obj
+
+	set obj = world.createinstance("fishBody1","artifact", AnimationRoom)
+	obj.initializegraphics "SDK/library/models/_ScriptTutorial/animMid.x" , 0,1,5.0,0,0,1
+	obj.scale = world.global.createVector(.01,.01,.01)
+	obj.renderquality = 3
+	obj.label = "body1"
+	world.global.addProperty "fishBody1", obj
+
+	set obj = world.createinstance("fishBody2","artifact", AnimationRoom)
+	obj.initializegraphics "SDK/library/models/_ScriptTutorial/animMid.x" , 0,1,4.1,0,0,1
+	obj.scale = world.global.createVector(.01,.01,.01)
+	obj.renderquality = 3
+	obj.label = "body2"
+	world.global.addProperty "fishBody2", obj
+
+	set obj = world.createinstance("fishBody3","artifact", AnimationRoom)
+	obj.initializegraphics "SDK/library/models/_ScriptTutorial/animMid.x" , 0,1,3.2,0,0,1
+	obj.scale = world.global.createVector(.01,.01,.01)
+	obj.renderquality = 3
+	obj.label = "body3"
+	world.global.addProperty "fishBody3", obj
+
+	set obj = world.createinstance("fishTail1","artifact", AnimationRoom)
+	obj.initializegraphics "SDK/library/models/_ScriptTutorial/animTail01.x" , 0,1,2.3,0,0,1
+	obj.scale = world.global.createVector(.01,.01,.01)
+	obj.renderquality = 3
+	obj.label = "tail1"
+	world.global.addProperty "fishTail1", obj
+
+	set obj = world.createinstance("fishTail2","artifact", AnimationRoom)
+	obj.initializegraphics "SDK/library/models/_ScriptTutorial/animTail02.x" , 0,1,1.4,0,0,1
+	obj.scale = world.global.createVector(.01,.01,.02)
+	obj.renderquality = 3
+	obj.label = "tail2"
+	world.global.addProperty "fishTail2", obj
+	
+	set obj = world.createinstance("fishTail3","artifact", AnimationRoom)
+	obj.initializegraphics "SDK/library/models/_ScriptTutorial/animTail03.x" , 0,1,0.3,0,0,1
+	obj.scale = world.global.createVector(.01,.01,.02)
+	obj.renderquality = 3
+	obj.label = "tail3"
+	world.global.addProperty "fishTail3", obj
+	
+	set obj = world.createinstance("fishTail4","artifact", AnimationRoom)
+	obj.initializegraphics "SDK/library/models/_ScriptTutorial/animTail04.x" , 0,1,-0.7,0,0,1
+	obj.scale = world.global.createVector(.01,.01,.02)
+	obj.renderquality = 3
+	obj.label = "tail4"
+	world.global.addProperty "fishTail4", obj
+
+	dim speedval, spreadVal
+	speedval = 0.5
+	spreadVal = 80
+
+' This demonstrates how you can start an animation in world build code. This is a server-side animation;
+' animations that run locally (with the A_LOCAL flag) give better performance.
+dim fishPosFlags, fishDirFlags
+	fishPosFlags = world.A_LOOP + world.A_SPLINE
+	fishDirFlags = world.A_LOOP + world.A_LINEAR
+dim startTime
+	startTime = 100
+	
+	world.fishHead.startanimation "Position" , animationRoom.fishPosMap , , fishPosFlags, speedval , , , spreadVal*8
+	world.fishHead.startanimation "Direction" , animationRoom.fishDirMap , , fishDirFlags, speedval , , , spreadVal*8
+	world.fishHead.property("positionAnimProperties").property("positionAnimStartTime") =  startTime
+	world.fishHead.property("directionAnimProperties").property("directionAnimStartTime") =  startTime
+	world.fishHead.property("positionAnimProperties").property("positionAnimIndex") = spreadVal*8
+	world.fishHead.property("directionAnimProperties").property("directionAnimIndex") = spreadVal*8
+
+	world.fishBody1.startanimation "Position" , animationRoom.fishPosMap , , fishPosFlags, speedval , , , spreadVal*7
+	world.fishBody1.startanimation "Direction" , animationRoom.fishDirMap , , fishDirFlags, speedval , , , spreadVal*7
+	world.fishBody1.property("positionAnimProperties").property("positionAnimStartTime") =  startTime
+	world.fishBody1.property("directionAnimProperties").property("directionAnimStartTime") =  startTime
+	world.fishBody1.property("positionAnimProperties").property("positionAnimIndex") = spreadVal*7
+	world.fishBody1.property("directionAnimProperties").property("directionAnimIndex") = spreadVal*7
+
+	world.fishBody2.startanimation "Position" , animationRoom.fishPosMap , , fishPosFlags, speedval , , , spreadVal*6
+	world.fishBody2.startanimation "Direction" , animationRoom.fishDirMap , , fishDirFlags, speedval , , , spreadVal*6
+	world.fishBody2.property("positionAnimProperties").property("positionAnimStartTime") =  startTime
+	world.fishBody2.property("directionAnimProperties").property("directionAnimStartTime") =  startTime
+	world.fishBody2.property("positionAnimProperties").property("positionAnimIndex") = spreadVal*6
+	world.fishBody2.property("directionAnimProperties").property("directionAnimIndex") = spreadVal*6
+
+	world.fishBody3.startanimation "Position" , animationRoom.fishPosMap , , fishPosFlags, speedval , , , spreadVal*5
+	world.fishBody3.startanimation "Direction" , animationRoom.fishDirMap , , fishDirFlags, speedval , , , spreadVal*5
+	world.fishBody3.property("positionAnimProperties").property("positionAnimStartTime") =  startTime
+	world.fishBody3.property("directionAnimProperties").property("directionAnimStartTime") =  startTime
+	world.fishBody3.property("positionAnimProperties").property("positionAnimIndex") = spreadVal*5
+	world.fishBody3.property("directionAnimProperties").property("directionAnimIndex") = spreadVal*5
+
+	world.fishTail1.startanimation "Position" , animationRoom.fishPosMap , , fishPosFlags, speedval , , , spreadVal*4
+	world.fishTail1.startanimation "Direction" , animationRoom.fishDirMap , , fishDirFlags, speedval , , , spreadVal*4
+	world.fishTail1.property("positionAnimProperties").property("positionAnimStartTime") =  startTime
+	world.fishTail1.property("directionAnimProperties").property("directionAnimStartTime") =  startTime
+	world.fishTail1.property("positionAnimProperties").property("positionAnimIndex") = spreadVal*4
+	world.fishTail1.property("directionAnimProperties").property("directionAnimIndex") = spreadVal*4
+
+	world.fishTail2.startanimation "Position" , animationRoom.fishPosMap , , fishPosFlags, speedval , , , spreadVal*3
+	world.fishTail2.startanimation "Direction" , animationRoom.fishDirMap , , fishDirFlags, speedval , , , spreadVal*3
+	world.fishTail2.property("positionAnimProperties").property("positionAnimStartTime") =  startTime
+	world.fishTail2.property("directionAnimProperties").property("directionAnimStartTime") =  startTime
+	world.fishTail2.property("positionAnimProperties").property("positionAnimIndex") = spreadVal*3
+	world.fishTail2.property("directionAnimProperties").property("directionAnimIndex") = spreadVal*3
+
+	world.fishTail3.startanimation "Position" , animationRoom.fishPosMap , , fishPosFlags, speedval , , , spreadVal*2
+	world.fishTail3.startanimation "Direction" , animationRoom.fishDirMap , , fishDirFlags, speedval , , , spreadVal*2
+	world.fishTail3.property("positionAnimProperties").property("positionAnimStartTime") =  startTime
+	world.fishTail3.property("directionAnimProperties").property("directionAnimStartTime") =  startTime
+	world.fishTail3.property("positionAnimProperties").property("positionAnimIndex") = spreadVal*2
+	world.fishTail3.property("directionAnimProperties").property("directionAnimIndex") = spreadVal*2
+
+	world.fishTail4.startanimation "Position" , animationRoom.fishPosMap , , fishPosFlags, speedval , , , spreadVal*1
+	world.fishTail4.startanimation "Direction" , animationRoom.fishDirMap , , fishDirFlags, speedval , , , spreadVal*1
+	world.fishTail4.property("positionAnimProperties").property("positionAnimStartTime") =  startTime
+	world.fishTail4.property("directionAnimProperties").property("directionAnimStartTime") =  startTime
+	world.fishTail4.property("positionAnimProperties").property("positionAnimIndex") = spreadVal*1
+	world.fishTail4.property("directionAnimProperties").property("directionAnimIndex") = spreadVal*1
+
+	set obj = world.createinstance("fishSwitch","artifact", AnimationRoom)
+	obj.label = "start/stop fish"
+	obj.description = "Starts and stops position and direction animations on the fish body parts."
+	obj.initializegraphics "SDK/library/models/shapes/artifact.x" , -7.5,1,18, -1,0,0
+	obj.renderquality = 3
+	obj.CreateAndAddMethod world.METHOD_CLIENT, Lesson_9_Module, "fishSwitch_onLButtonUp", "onLButtonUp",  , world.PS_ALL_E + world.PS_ALL_RWA
+	world.global.addProperty "fishSwitch", obj
+	
+	set obj = world.createinstance("chaseSwitch","artifact", AnimationRoom)
+	obj.label = "chase fish"
+	obj.description = "Starts the multi-part fish animation, and starts position and direction animations on your avatar to make you chase the fish around."
+	obj.initializegraphics "SDK/library/models/shapes/artifact.x" , -8,2,17, -1,0,0
+	obj.renderquality = 3
+	obj.CreateAndAddMethod world.METHOD_CLIENT, Lesson_9_Module, "chaseSwitch_onLButtonUp", "onLButtonUp",  , world.PS_ALL_E + world.PS_ALL_RWA
+	world.global.addProperty "chaseSwitch", obj
+	
+	set obj = world.createinstance("pathSwitch","artifact", AnimationRoom)
+	obj.label = "show/hide path"
+	obj.description = "Draws/hides a series of polygons to show the path followed by the multi-part fish."
+	obj.initializegraphics "SDK/library/models/shapes/artifact.x" , -9,1,15.5, -1,0,0
+	obj.renderquality = 3
+	obj.CreateAndAddMethod world.METHOD_CLIENT, Lesson_9_Module, "pathSwitch_onLButtonUp", "onLButtonUp",  , world.PS_ALL_E + world.PS_ALL_RWA
+	world.global.addProperty "pathSwitch", obj
+	
+	set obj = world.createinstance("bridge","artifact", AnimationRoom)
+	obj.description = "A really big piece of scenery."
+	obj.initializegraphics "SDK/library/models/landmark/bridge.x" , 0.9,8.1,2.1, 1.6,0,-2.4
+	obj.scale.set 3.1,3.0,2.9
+	obj.renderquality = 3
+	obj.isSolid = false
+	world.global.addProperty "bridge", obj
+	
+	set obj = world.createinstance("cube","artifact", AnimationRoom)
+	obj.label = "animate cube"
+	obj.description = "This cube does a simple position animation when you click on it."
+	obj.initializegraphics "SDK/library/models/shapes/cube.x" , 1,1,25,1,0,0
+	obj.renderquality = 3
+	obj.CreateAndAddMethod world.METHOD_CLIENT, Lesson_9_Module, "cube_onLButtonUp", "onLButtonUp",  , world.PS_ALL_E + world.PS_ALL_RWA
+	obj.CreateAndAddMethod world.METHOD_CLIENT, Lesson_9_Module, "cube_animationDone", "animationDone",  , world.PS_ALL_E + world.PS_ALL_RWA
+	' Create a property map for a simple position animation
+	obj.addproperty "simpleAnimMap", world.createPropertyMap
+	obj.simpleAnimMap.property("0") = world.createVector(1,1,25)
+	obj.simpleAnimMap.property("1") = world.createVector(1,4,30)
+	obj.simpleAnimMap.property("2") = world.createVector(1,5,35)
+	obj.simpleAnimMap.property("3") = world.createVector(1,4,45)
+	obj.simpleAnimMap.property("4") = world.createVector(1,1,50)
+	obj.simpleAnimMap.property("8") = world.createVector(1,1,25)
+	world.global.addProperty "cube", obj
+	
+	set obj = world.createinstance("directionalLight","Light", AnimationRoom)
+	obj.label = "animate light color"
+	obj.description = "A directional light; casts parallel light on all objects, as if from an infinitely distant source. The direction of this object determines the direction of the lighting; its position has no effect."
+	obj.initializegraphics "SDK/library/models/shapes/artifact.x" , -5,4,17, 0.9, 0.0, -0.3
+	obj.lightType = 3
+	obj.lightColor = world.createVector(0.4,0.4,1)
+	obj.lightAttenuation = world.createVector(1,0,0)
+	obj.CreateAndAddMethod world.METHOD_CLIENT, Lesson_9_Module, "directionalLight_onLButtonUp", "onLButtonUp",  , world.PS_ALL_E + world.PS_ALL_RWA
+	' Create a property map for a light animation, using rgb values in the vectors
+	obj.addproperty "lightAnimMap", world.createPropertyMap
+	obj.lightAnimMap.property("0") = world.createVector(0.4,0.4,1)
+	obj.lightAnimMap.property("2000") = world.createVector(1,0,0)
+	obj.lightAnimMap.property("3000") = world.createVector(1,1,0)
+	obj.lightAnimMap.property("4000") = world.createVector(0,1,0)
+	obj.lightAnimMap.property("5000") = world.createVector(0,1,1)
+	obj.lightAnimMap.property("6000") = world.createVector(0,0,1)
+	obj.lightAnimMap.property("7000") = world.createVector(1,0,1)
+	obj.lightAnimMap.property("8000") = world.createVector(1,1,1)
+	obj.lightAnimMap.property("9000") = world.createVector(0.4,0.4,1)
+	world.global.addProperty "directionalLight", obj
+	
+	set obj = world.createinstance("treeAnim","artifact", AnimationRoom)
+	obj.label = "grow tree"
+	obj.description = "This tree will grow by performing a file animation when you click on it. Clicking it again returns it to its original state by performing only the first frame of the file animation."
+	obj.initializegraphics "SDK/library/models/_ScriptTutorial/treeAnim04.x" , 1,0.5,22, 1,0,0
+	obj.renderquality = 3
+	obj.scale.set 20,20,20
+	obj.CreateAndAddMethod world.METHOD_CLIENT, Lesson_9_Module, "treeAnim_onLButtonUp", "onLButtonUp",  , world.PS_ALL_E + world.PS_ALL_RWA
+	world.global.addProperty "treeAnim", obj
+	
+	set obj = world.createinstance("tree1","artifact", AnimationRoom)
+	obj.description = "A piece of scenery"
+	obj.initializegraphics "SDK/library/models/landscape/tree2.x" , 21.6,1,-0.8, 1,0,0
+	obj.renderquality = 3
+	world.global.addProperty "tree1", obj
+	
+	set obj = world.createinstance("tree2","artifact", AnimationRoom)
+	obj.description = "A piece of scenery"
+	obj.initializegraphics "SDK/library/models/landscape/tree1.x" , 8.35,3.2,-29, -1,0,0
+	obj.renderquality = 3
+	world.global.addProperty "tree2", obj
+	
+	set obj = world.createinstance("tree3","artifact", AnimationRoom)
+	obj.description = "A piece of scenery"
+	obj.initializegraphics "SDK/library/models/landscape/tree1.x" , 2.12,3.2,-23.5, 0.89,0,0.46
+	obj.renderquality = 3
+	world.global.addProperty "tree3", obj
+	
+	set obj = world.createinstance("tree4","artifact", AnimationRoom)
+	obj.description = "A piece of scenery"
+	obj.initializegraphics "SDK/library/models/landscape/tree1.x" , 1.04,3.2,-28.7, 0.19,0,0.99
+	obj.renderquality = 3
+	world.global.addProperty "tree4", obj
+	
+	AnimationRoom.fog = true
+	AnimationRoom.fogStart = 0
+	AnimationRoom.fogEnd = 60
+	AnimationRoom.fogColor = rgb (180,60,60)
+	
+end sub
+

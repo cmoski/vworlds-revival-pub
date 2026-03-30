@@ -1,0 +1,89 @@
+<html>
+<head>
+<LINK Rel=Stylesheet href="..\..\..\..\shared\global.css">
+</head>
+<body topmargin=8 leftmargin=24 bgcolor="F4F4E8">
+<object id="elements" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83" width="0"
+height="0">
+  <param name="DataURL" value="revolve.csv">
+  <param name="UseHeader" value="True">
+  <param name="TextQualifier" value="'">
+</object>
+<script language="VBSCRIPT">
+Dim RoomType
+Dim WorldType
+WorldType = "Revolving"
+RoomType = "Portal"
+dim rs
+dim ready
+
+ready = false
+
+sub elements_ondatasetcomplete
+	set rs = elements.recordset
+	fillin_select
+end sub
+
+function verify()
+	verify = ready
+end function
+
+sub fillin_select()
+	dim el
+
+	rs.MoveFirst
+	' interate on world templates
+	Do Until rs.EOF
+			set el = document.CreateElement("OPTION")
+			el.value = rs.Fields(0).value
+			el.text = rs.Fields(0).value
+			stylechoice.add el
+			rs.MoveNext
+	Loop
+
+	roomtitle.innerText = WorldType + " " + RoomType
+	stylechoice.options(0).click
+	choseName
+end sub
+
+sub choseName()
+	dim selected
+
+	selected = stylechoice.selectedIndex
+
+	rs.MoveFirst
+	rs.Move selected
+	ready = true
+
+'	top.frames(0).RoomType = rs.fields(0)
+'	top.frames(0).Geometry = rs.fields(4)
+
+end sub
+
+
+sub Finish()
+	top.frames(0).buildroom
+end sub
+
+sub AddObjects()
+	msgbox "Individual page's objects.", vbInformation, "Microsoft Virtual Worlds"
+end sub
+
+</script>
+<div class=vworld align=center id="roomtitle"></div>
+<table width = 100% border=0>
+<tr>
+<td valign=top><div class="vinput1" style="top:45">Styles:</div>
+<select name="stylechoice" class="vinput1"
+        id="stylechoice" type="textarea" size="7" onchange="choseName" style="width:100">
+        </select>
+</td>
+<td valign=top><div id="info" name="info" datafld="gifInfo" class="vinput1" datasrc="#elements"></div>
+<img datafld="previewGIF" datasrc="#elements" name="preview" id="preview"></img>
+</td>
+</tr>
+<tr><td colspan=2><div class=vworld2>Description of Revoloving Portal:</div></td></tr>
+<tr><td colspan="2"><div id="blah" name="blah" class=vinput1 datafld="description" datasrc="#elements"></div></td></tr>
+</table>
+</body>
+</html>

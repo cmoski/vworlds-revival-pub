@@ -1,0 +1,119 @@
+<HTML>
+<HEAD>
+<LINK REL=STYLESHEET HREF=../../../../client/shared/global.css>
+<OBJECT ID=helper width=0 height=0 border=0 CLASSID="CLSID:7E3832CF-4F4E-11D0-89AB-00A0C9054129"></OBJECT>
+<SCRIPT language=vbs>
+
+sub btnHighLight(Numb)
+	for each btn in document.all.tags("button")
+		if btn.style.fontweight = "bold" then
+			btn.style.fontweight = ""
+			exit for
+		end if
+	next
+	if document.all.tags("button").length > 2 then
+		document.all(Numb & "btn").style.fontweight = "bold"
+	end if
+end sub
+
+sub BuildButtons(Steps)
+	if Steps > 2 then
+		backbtn.style.display = ""
+		nextbtn.style.display = ""
+		DisableButton backbtn
+		EnableButton nextbtn
+		MiddleBtns.innerHTML = ""
+		for i = 1 to Steps
+			MiddleBtns.insertAdjacentHTML "beforeEnd", _
+				"<BUTTON class=bEnabled id=" & trim(i) & "btn style=width:50;position:relative;>" & _
+				"<SPAN style=position:relative;top:-1;>Step " & trim(i) & "</SPAN></BUTTON>&nbsp;"
+		next
+		MiddleBtns.insertAdjacentHTML "beforeEnd", "&nbsp;"
+		top.frames("Tutorial").ShowStep(document.all("1btn"))
+	elseif Steps = 2 then
+		MiddleBtns.innerHTML = ""
+		backbtn.style.display = ""
+		nextbtn.style.display = ""
+		DisableButton backbtn
+		EnableButton nextbtn
+	else
+		MiddleBtns.innerHTML = ""
+		DisableButton backbtn
+		DisableButton nextbtn
+		backbtn.style.display = "none"
+		nextbtn.style.display = "none"
+	end if
+end sub
+
+sub DisableButton(btn)
+	btn.className = "bDisabled"
+	btn.disabled = true
+end sub
+
+sub EnableButton (btn)
+	btn.className = "bEnabled"
+	btn.disabled = false
+end sub
+
+sub OnHelp
+	Dim helpstringsList, client
+	window.event.returnValue = false
+	set client = top.goTop.theclient.VWClient
+	set helpstringsList = top.goWorld.global.CreatePropertyList
+	helpstringsList.add "Authoring"
+	helpstringsList.add "wizards"
+	helpstringsList.add "new room"
+	client.world.FireUIEvent client.world.user, "Help", helpstringsList
+end sub
+
+sub document_OnMouseOver
+	select case window.event.srcElement.className
+	case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	case "vHelp"
+		imgHelp.src="..\..\client\shared\helpH.gif"
+	case else
+	end select
+end sub
+
+sub document_OnMouseOut
+	select case window.event.srcElement.className
+	case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	case "vHelp"
+		imgHelp.src="..\..\client\shared\help.gif"
+	case else
+	end select
+end sub
+
+sub document_OnClick
+	if window.event.srcElement.tagName = "BUTTON" then
+		if not window.event.srcElement.disabled then
+			top.frames("Tutorial").ShowStep(window.event.srcElement)
+		end if
+	end if
+end sub
+
+</SCRIPT>
+
+</HEAD>
+<BODY class=vBody>
+<div id=divButtons align=center style=position:absolute;left:1%;top:0;width=100%;height:100%;>
+	<nobr>
+		<BUTTON class=bDisabled id=backbtn disabled style=width:50;position:relative;display:none;>
+			<span style=position:relative;top:-3;><font face=webdings style=position:relative;top:-1;>3</font>Back</SPAN>
+		</BUTTON>
+		&nbsp;
+		<span id=MiddleBtns></span>
+		<BUTTON class=bDisabled id=nextbtn disabled style=width:50;position:relative;display:none;>
+			<SPAN style=position:relative;top:-3;>&nbsp;Next<font face=webdings style=position:relative;top:-1;>4</FONT></SPAN>
+		</BUTTON>
+	</nobr>
+</div>
+<!--
+	<a id=lnkHelp onclick=OnHelp href="">
+		<img src=../../client/shared/help.gif id=imgHelp class=vHelp style=top:280;>
+	</a>
+-->
+</BODY>
+</HTML>

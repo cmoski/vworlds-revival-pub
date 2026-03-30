@@ -1,0 +1,153 @@
+<html>
+<head>
+<LINK Rel=Stylesheet href="..\..\..\client\shared\global.css">
+<object ID=lister CLASSID="CLSID:969AD685-5B00-11D1-88AE-00C04FC32EF4"></object>
+</head>
+<script language=vbscript>
+
+Public ctlBottom, ctlTop, curElement, fMouseClicked
+
+fMouseClicked = True
+curElement=null
+
+Sub window_onload
+	Dim posVert, curName, titleOffset, Name, Path, namelist, DirType, shortname
+	posVert = 20
+	lister.initialize "SDK\Wizards\Room\Kits\*.htm"
+	namelist = lister.typeNames
+	for each curName in namelist
+		titleOffset = InStr(curName, "|")
+		if titleOffset > 0 then
+			Name = Left(curName, titleOffset-5)
+			Path = Mid(curName, titleOffset+1)
+		else
+			Name = curName
+			Path = curName & ".htm"
+		end if
+		' Write out a tab
+		document.body.insertAdjacentHTML "beforeEnd", _
+			"<input type=radio name=tab id=""opt" & Name & _
+			""" style=position:absolute;left:-20;top:-20 tabURL=""" & Path & """>" & _
+			"<div style=position:absolute;top:" & posVert & ";width:94;padding-bottom:2;>" & _
+			"<label id=""lbl" & Name & """ class=vTab for=""opt" & Name & _
+			""" style=position:relative;left:9; title=""" & Name & """>" & Name & "</label></div>"
+		posVert = posVert + 20
+		If top.RoomType = "" Then
+			top.RightFrameURL = Path
+			top.RoomType = Name
+		End If
+	next
+	'Once list is written out, set highlight if a selection has been previously chosen
+	if top.RoomType <> "" then
+		SetHighlight document.all("lbl" & top.RoomType)
+		parent.frames("kit").location = document.all("opt" & top.RoomType).tabURL
+	else
+		SetHighlight document.all.tags("label")(0)
+		parent.frames("kit").location = document.all.tags("input")(0).tabURL
+	end if
+End Sub
+
+Sub window_OnUnload
+	top.RoomType = mid(curElement.id, 4)
+	top.RightFrameURL = document.all("opt" & mid(curElement.id, 4)).tabURL
+	selectedStyle = parent.kit.lstStyle.selectedindex
+	If selectedStyle < 0 Then
+		selectedStyle = 0
+	End If
+	top.SelectedStyleIndex = selectedStyle
+End Sub
+
+Sub document_onmouseup
+	fMouseClicked = True
+End Sub
+
+Sub document_onclick
+	Dim fVerified
+	If window.event.srcElement.tagName = "INPUT" Then
+		' Deselect the old
+		If Not document.all("lbl" & Mid(window.event.srcElement.id, 4)) Is curElement Then
+			If idLoadTimer <> 0 Then
+				window.clearTimeout idLoadTimer
+			End If
+			fVerified = True
+			If parent.kit.document.readyState = "complete" Then
+				fVerified = parent.kit.verify
+			End If
+			If fVerified Then
+				idLoadTimer = window.setTimeout("parent.frames(""kit"").location = """ & window.event.srcElement.tabURL & _
+					""" : idLoadTimer = 0", 150)
+				SetHighlight document.all("lbl" & Mid(window.event.srcElement.id, 4))
+			End If
+		Else
+			fMouseClicked = False
+		End If
+	End If
+End Sub
+
+Sub document_OnMouseOver
+	Select Case window.event.srcElement.className
+	Case "vTab"
+		window.event.srcElement.className = "vTabHightlight"
+	Case Else
+	End Select
+End Sub
+
+Sub document_onmouseout
+	Select Case window.event.srcElement.className
+	Case "vTabHightlight"
+		window.event.srcElement.className = "vTab"
+	Case Else
+	End Select
+End Sub
+
+Sub SetHighlight(el)
+	el.className = "vTabSelect"
+	el.parentElement.className = "vTabSelect"
+	If IsObject(curElement) Then
+		If curElement.id <> el.id Then
+			curElement.className = "vTab"
+			curElement.parentElement.className = ""
+		End If
+	End If
+	Set curElement = el
+	Set ctlTop = document.all("opt" & mid(curElement.id, 4))
+	Set ctlBottom = ctlTop
+	Set parent.ctlTop = ctlTop
+End Sub
+
+sub document_onKeyPress
+	select case window.event.keycode
+	case 27
+		top.buttons.OnCancel
+	case 13
+		If Not top.buttons.finishbtn.disabled Then
+			top.buttons.OnFinish
+		ElseIf Not top.buttons.nextbtn.disabled Then
+			top.buttons.OnNext
+		End If
+	case Else
+	end select
+end sub
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+</script>
+</head>
+<body>
+	<div style=position:absolute;left:0;top:-38;height:273;width:95;overflow:hidden;>
+		<img src=..\..\..\client\shared\menuclouds.gif>
+	</div>
+	<div class=vH2 style=left:15;top:0>Rooms:</div>
+</body>
+</html>

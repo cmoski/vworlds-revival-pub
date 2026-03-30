@@ -1,0 +1,92 @@
+<html>
+<head>
+<TITLE>Login to Chess World - VBScript Version</TITLE>
+
+<SCRIPT LANGUAGE="VBScript">
+option explicit
+
+'//////////////////////////////////////////////////////////////////////////
+'//  Global constants (to this file)
+'//////////////////////////////////////////////////////////////////////////
+const strClient = "Client_VB.htm"
+const strUserInp = "<username>"			'// the default for the username input
+const strWorldInp = "localhost/<worldname>"	'// the default for the server and world name input
+
+
+'//////////////////////////////////////////////////////////////////////////
+'//  Function:	window_OnLoad
+'//  Purpose:  	To set the default values for the inputs
+'//////////////////////////////////////////////////////////////////////////
+sub window_onLoad()
+	txtWorld.value = strWorldInp
+	txtUser.value = strUserInp
+end sub
+
+
+'//////////////////////////////////////////////////////////////////////////
+'//  Function:	Login
+'//  Purpose:  	To forward the username, servername, and login name
+'//  		to the client page
+'//  Called By:	btnConnect.click
+'//////////////////////////////////////////////////////////////////////////
+sub Login()
+	' first check the input values
+	if (txtWorld.value = ""  _
+	or txtUser.value = ""  _
+	or txtWorld.value = strWorldInp  _
+	or txtUser.value = strUserInp) then 
+		msgbox "The provided server, world or user names are incorrect. " & _
+			" Please reenter the names and try again."
+		exit sub
+	end if
+	document.location = strClient & "?" & txtWorld.value & "&" & txtUser.value
+end sub
+
+</SCRIPT>
+
+</head>
+
+<body>
+<font face="verdana, arial" size=4>
+	<b>Login to Chess World - VBScript Version</b>
+</font>
+<br>
+<table width=400>
+	<tr>
+		<td width=300>
+			<font face="verdana, arial" size=2>
+				<b>Server & World Names:</b>
+			</font>
+		</td>
+		<td width=100>
+			<input id="txtWorld" type=text value="">
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<font face="verdana, arial" size=2>
+				<b>User Name:</b>
+			</font>
+		</td>
+		<td>
+			<INPUT ID="txtUser" type=text value="">
+		</td>
+	</tr>
+	<tr>
+		<td colspan=2>
+			<font face="verdana, arial" size=3>
+		  		Please enter a worldname and username for your sample world.  Note that the Virtual
+				Worlds server must be running either locally ("localhost") or remotely ("&lt;servername&gt;")
+				to login the world.			
+			</font>
+			<div align=center>
+				<input id=btnConnect type=button value="Login" onClick="Login()">
+			</div>
+		</td>
+	</tr>
+</table>
+<br>
+
+</body>
+</html>
+

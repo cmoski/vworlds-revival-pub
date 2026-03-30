@@ -1,0 +1,791 @@
+/* new global styles */
+body {
+	background-color: #f4f4e8;
+	margin: 0;
+	padding: 0;
+}
+/* Generic text for labels, descriptions */
+.vwText {
+	color: black;
+	cursor: default;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: normal;
+}
+/* used for input boxes, list-boxes */
+.vwInput {
+	color: window-text;
+	background-color: window;
+	font-family: verdana;
+	font-size: 8pt;
+}
+/* chat buttons */
+.vwChatButton {
+	behavior: url(chat.htc);
+	cursor: hand;
+	height: 18px;
+	width: 24px;
+}
+/* Chat/Whisper history image */
+.vwThumbnailHist {
+	behavior: url(LeftClickAction.htc);
+	height: 16px;
+	margin-left: 4px;
+	margin-right: 5px;
+	width: 16px;
+}
+/* Chat history emoticon image */
+.vwEmoticonImage {
+	height: 16px;
+	width: 16px;
+}
+/* Whisper history emoticon image */
+.vwEmoticonImageWhisp {
+	height: 12px;
+	width: 12px;
+}
+/* Chat history message text */
+.vwMsgText {
+	color: red;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+}
+/* Chat/Whisper history whisper text */
+.vwWhisperText {
+	color: blue;
+	font-family: verdana;
+	font-size: 8pt;
+}
+/* Chat/Whisper history for speaker's name on speaker's client */
+.vwMyName {
+	color: blue;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+}
+/* Chat/Whisper history for speaker's name on other's client */
+.vwOtherName {
+	color: black;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+}
+/* Welcome dialog title text */
+.vwHead3 {
+	color: #002f5f;
+	cursor: default;
+	font-family: verdana;
+	font-size: 11pt;
+	font-weight: bold;
+	margin-bottom: 2px;
+	width: 100%;
+}
+/* Link style choices (used in Welcome dialog...) */
+.vwLink {
+	behavior: url(scripts/link.htc)
+	color: #555a47;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+	text-decoration: underline;
+}
+/* Heading used in dialogs and some lists */
+.vwHead1 {
+	color: #555a47;
+	cursor: default;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+}
+/* Generic text for labels, descriptions */
+.vwButton {
+	cursor: hand;
+	font-family: verdana;
+	font-size: 8pt;
+	width: 60px;
+}
+/* Profile dialog menu style */
+.vvProfMenu {
+	behavior: url(profmenu.htc)
+	background-color: default;
+	color: #555a47;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: normal;
+	text-decoration: none;
+}
+/* Tab heading text */
+.vwHead2 {
+	color: #002f5f;
+	cursor: default;
+	font-family: verdana;
+	font-size: 11pt;
+	font-weight: bold;
+	margin-bottom: 2px;
+	text-align: center;
+	width: 100%;
+}
+/* gesture buttons */
+.vwGestureButton {
+	behavior: url(gesture.htc);
+	cursor: hand;
+	height: 25px;
+	width: 25px;
+}
+.bDisabled {
+	background-color: f2f2f2;
+	border-color: #713252;
+	border-style: solid;
+	border-width: 1;
+	color: #555a47;
+	cursor: arrow;
+/*	filter: alpha(opacity=60);*/
+	font-family: verdana;
+	font-size: 8pt;
+	height: 20;
+	position: absolute;
+	text-align: center;
+	top: 9;
+	width: 60;
+}
+.bEnabled {
+	background-color: white;
+	border-color: #713252;
+	border-style: solid;
+	border-width: 1;
+	color: black;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 8pt;
+	height: 20;
+	position: absolute;
+	text-align: center;
+	top: 9;
+	width: 60;
+}
+.bGesture {
+	background-color: transparent;
+	border-style: none;
+	border-width: 0;
+	color: #713252;
+	cursor: hand;
+	height: 27;
+	left: 18;
+	position: absolute;
+	top: 9;
+	width: 27;
+}
+.bHelp {
+	background-color: transparent;
+	border-style: none;
+	border-width: 0;
+	color: #713252;
+	cursor: hand;
+	height: 20;
+	left: 18;
+	position: absolute;
+	top: 9;
+	width: 46;
+}
+.bHighlight {
+	background-color: white;
+	border-color: #713252;
+	border-style: solid;
+	border-width: 1;
+	color: mediumvioletred;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 8pt;
+	height: 20;
+	position: absolute;
+	text-align: center;
+	top: 9;
+	width: 60;
+}
+.bMain {
+	background-color: transparent;
+	border-color: #003366;
+	border-style: none;
+	border-width: 0;
+	cursor: hand;
+	height: 20;
+	position: absolute;
+	top: 1;
+}
+.vAvFriend {
+	color: #348230;
+	cursor: default;
+	font-family: verdana;
+	font-size: 10pt;
+	font-weight: bold;
+}
+.vAvIgnore {
+	color: #b0b098;
+	cursor: default;
+	font-family: verdana;
+	font-size: 10pt;
+	font-weight: bold;
+}
+.vAvOther {
+	color: #484635;
+	cursor: default;
+	font-family: verdana;
+	font-size: 10pt;
+	font-weight: bold;
+}
+.vAvSelf {
+	color: blue;
+	cursor: default;
+	font-family: verdana;
+	font-size: 10pt;
+	font-weight: bold;
+}
+.vMainEnabled {
+	color: #a8a896;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+	text-decoration: none;
+	top: 4;
+}
+.vMainHighlight {
+	color: white;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+	text-decoration: none;
+	top: 4;
+}
+.vBody {
+	background-color: #f4f4e8;
+	margin: 0;
+	padding: 0;
+}
+.vCopyTerms {
+	color: #555a47;
+	font-family: verdana;
+	font-size: 7pt;
+	position: absolute;
+}
+.vGo {
+	border-style: none;
+	cursor: hand;
+	position: absolute;
+}
+.vH1 {
+	color: #002f5f;
+	cursor: default;
+	font-family: verdana;
+	font-size: 11pt;
+	font-weight: bold;
+	position: absolute;
+}
+.vH2 {
+	color: #555a47;
+	cursor: default;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+	position: absolute;
+}
+.vHelp {
+	border-style: none;
+	cursor: hand;
+	left: 18;
+	position: absolute;
+	top: 9;
+}
+.vwHelp {
+	border-style: none;
+	cursor: hand;
+}
+.vInput {
+	color: black;
+	font-family: verdana;
+	font-size: 8pt;
+	position: absolute;
+}
+.vInputLbl {
+	color: black;
+	font-family: verdana;
+	font-size: 8pt;
+	left: 0;
+	position: relative;
+	top: -2;
+}
+.vLabel {
+	color: black;
+	cursor: default;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: normal;
+	position: absolute;
+}
+.vLabelSmall {
+	color: black;
+	cursor: default;
+	font-family: verdana;
+	font-size: 7pt;
+	font-weight: normal;
+	position: absolute;
+}
+.vMainTitle {
+	color: #002f5f;
+	font-family: verdana;
+	font-size: 14pt;
+	position: absolute;
+}
+.vMenuStart {
+	color: #002f5f;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+	text-decoration: underline;
+}
+.vStep {
+	color: #a1927f;
+	cursor: default;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+	position: absolute;
+}
+.vStepBackGround {
+	color: #ddd8c8;
+	font-family: webdings;
+	font-size: 22pt;
+	font-weight: bold;
+	position: absolute;
+}
+.vTab {
+	background-color: default;
+	color: #555a47;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: normal;
+	text-decoration: none;
+}
+.vTabHightlight {
+	background-color: default;
+	color: #555a47;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: normal;
+	text-decoration: underline;
+}
+.vTabSelect {
+	background-color: #9c9b8b;
+	color: white;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: normal;
+}
+.vText {
+	color: black;
+	font-family: verdana;
+	font-size: 8pt;
+}
+.vThing {
+	color: #484635;
+	cursor: default;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: normal;
+}
+.vThingSubMenu {
+	color: #484635;
+	cursor: default;
+	font-family: verdana;
+	font-size: 7pt;
+	font-weight: normal;
+	left: 0;
+	line-height: 9pt;
+	list-style-type: none;
+	margin-bottom: 0;
+	margin-top: 0;
+	padding-bottom: 0;
+	padding-top: 0;
+	position: relative;
+}
+.vTitle {
+	color: #002f5f;
+	font-family: verdana;
+	font-size: 11pt;
+	font-weight: bold;
+	position: absolute;
+}
+/* styles with a second letter of t are used only in the tutorial */
+.vtCode {
+	color: black;
+	font-family: verdana;
+	font-size: 10pt;
+}
+.vtComment {
+	color: gray;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 10pt;
+}
+/* styles with a second letter of w are used only in the whisper dialog */
+.vwMyName {
+	color: blue;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+}
+.vwMyWhisper {
+	color: blue;
+	font-family: verdana;
+	font-size: 8pt;
+}
+.vwOtherName {
+	color: black;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+}
+.vwOtherWhisper {
+	color: black;
+	font-family: verdana;
+	font-size: 8pt;
+}
+/* styles with a second letter of p are used only in the profile dialog */
+.vpSymbol {
+	color: #e2dbcd;
+	cursor: default;
+	font-family: wingdings;
+	font-size: 65pt;
+	position: absolute;
+}
+/* styles with a second letter of s are used only in the script dialog */
+.vsReportText {
+	color: gray;
+	font-family: courier;
+	font-size: 7pt;
+	font-weight: bold;
+}
+.vsReturnText {
+	color: black;
+	font-family: courier;
+	font-size: 7pt;
+}
+.vsErrorText {
+	color: red;
+	font-family: courier;
+	font-size: 7pt;
+}
+.vsTraceText {
+	color: gray;
+	font-family: courier;
+	font-size: 7pt;
+	font-style: italic;
+}
+.vsEchoText {
+	color: black;
+	font-family: courier;
+	font-size: 7pt;
+	font-weight: bold;
+}
+.vsPromptText {
+
+	color: black;
+	font-family: courier;
+	font-size: 8pt;
+}
+/* styles with a second letter of w are used only in the welcome dialog */
+.vwMenu {
+	color: #555a47;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+	text-decoration: underline;
+}
+.vwMenuHighlight {
+	color: mediumvioletred;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+	text-decoration: underline;
+}
+
+
+
+/* old styles */
+.Help {
+	background-color: transparent;
+	color: #713252;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 8pt;
+	height: 19;
+	left: 11;
+	position: absolute;
+	text-align: center;
+	top: 8;
+	width: 60;
+}
+.bSay {
+	background-color: transparent;
+	border-style: none;
+	border-width: 0;
+	border-color: #713252;
+	color: #713252;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 8pt;
+	height: 22;
+	left: 18;
+	position: absolute;
+	text-align: center;
+	top: 9;
+	width: 28;
+}
+.bDisabledStyle2 {
+	background-color: white;
+	border-color: #713252;
+	border-style: solid;
+	border-width: 1;
+	color: #555a47
+	cursor: arrow;
+	filter: alpha(opacity=60);
+	font-family: verdana;
+	font-size: 8pt;
+	height: 20;
+	position: absolute;
+	text-align: center;
+	top: 9;
+	width: 60;
+}
+.bDisabledStyle {
+	background-color: white;
+	border-color: #713252;
+	border-style: solid;
+	border-width: 1;
+	color: #555a47;
+	cursor: arrow;
+	filter: alpha(opacity=60);
+	font-family: verdana;
+	font-size: 8pt;
+	height: 20;
+	position: absolute;
+	text-align: center;
+	top: 9;
+	width: 80;
+}
+.bHighlightStyle {
+	background-color: white;
+	border-color: #713252;
+	border-style: solid;
+	border-width: 1;
+	color: mediumvioletred;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 8pt;
+	height: 20;
+	position: absolute;
+	text-align: center;
+	top: 9;
+	width: 60;
+}
+.bHighlightStyle1 {
+	background-color: white;
+	border-color: #713252;
+	border-style: solid;
+	border-width: 1;
+	color: mediumvioletred;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 8pt;
+	height: 20;
+	position: absolute;
+	text-align: center;
+	top: 9;
+	width: 80;
+}
+.bStyle1 {
+	background-color: white;
+	border-color: #713252;
+	border-style: solid;
+	border-width: 1;
+	color: black;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 8pt;
+	height: 20;
+	position: absolute;
+	text-align: center;
+	top: 9;
+	width: 80;
+}
+.bStyle2 {
+	background-color: white;
+	border-color: #713252;
+	border-style: solid;
+	border-width: 1;
+	color: black;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 8pt;
+	height: 20;
+	position: absolute;
+	text-align: center;
+	top: 9;
+	width: 35;
+}
+.bStyle {
+	background-color: white;
+	border-color: #713252;
+	border-style: solid;
+	border-width: 1;
+	color: black;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 8pt;
+	height: 20;
+	position: absolute;
+	text-align: center;
+	top: 9;
+	width: 60;
+}
+.onHelp {
+	background-color: transparent;
+	color: mediumvioletred;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 8pt;
+	height: 19;
+	left: 11;
+	position: absolute;
+	text-align: center;
+	top: 8;
+	width: 60;
+}
+.vHighlightinput2 {
+	background-color: gray;
+	color: black;
+	font-family: arial;
+	font-size: 8pt;
+}
+.vastep {
+	color: #747466;
+	font-family: verdana;
+	font-size: 7.5pt;
+	font-weight: bold;
+}
+.vauthor {
+	color: #002f5f;
+	font-family: verdana;
+	font-size: 11pt;
+	font-weight: bold;
+}
+.vcomment {
+	color: black;
+	font-family: arial;
+	font-size: 7pt;
+}
+.vhh1 {
+	color: #810043;
+	cursor: default;
+	font-family: georgia;
+	font-size: 15pt;
+	font-weight: bold;
+	position: absolute;
+}
+.vhh2 {
+	color: #747466;
+	cursor: default;
+	font-family: verdana;
+	font-size: 9pt;
+	font-weight:bold
+}
+.vinput1 {
+	color: black;
+	font-family: arial;
+	font-size: 8pt;
+}
+.vlabelh2 {
+	color: #555a47;
+	cursor: default;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+}
+.vlabelh3 {
+	color: #555a47;
+	cursor: default;
+	font-family: verdana;
+	font-size: 9pt;
+	font-weight: bold;
+}
+.vplabelh2 {
+	color: white;
+	cursor: default;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+	padding-top: 2;
+}
+.vplabel {
+	color: #798e87;
+	cursor: default;
+	font-family: verdana;
+	font-size: 8pt;
+}
+.vprofile1 {
+	color: #4f5e59;
+	font-family: georgia;
+	font-size: 15pt;
+	font-weight: bold;
+}
+.vsmall {
+	color: black;
+	font-family: verdana;
+	font-size: 7pt;
+}
+.vweb1 {
+	color: #713252;
+	cursor: hand;
+	font-family: webdings;
+	font-size: 22pt;
+	font-weight: bold;
+}
+.vweb2 {
+	color: white;
+	cursor: hand;
+	font-family: webdings;
+	font-size: 8pt;
+}
+.vweb {
+	color: #ddd8c8;
+	font-family: webdings;
+	font-size: 22pt;
+	font-weight: bold;
+}
+.vworld2 {
+	color: #5f66bb;
+	font-family: arial;
+	font-size: 8pt;
+}
+.vworldwiz3 {
+	color: #555a47;
+	font-family: verdana;
+	font-size: 10pt;
+	font-weight: bold;
+}
+.vworld {
+	color: #5f66bb;
+	cursor: default;
+	font-family: georgia;
+	font-size: 9pt;
+	font-weight: bold;
+}

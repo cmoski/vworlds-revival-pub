@@ -1,0 +1,80 @@
+'---------------------------------------------------------------
+' util.scr: Utility subs related to cells & intereactions
+'---------------------------------------------------------------
+
+sub CreateCellFromArray(theCell, ptsBoundary(), upper, lower)
+	Dim boundary
+	set boundary = World.CreateBoundary(ptsBoundary)
+
+	boundary.HeightUpper = upper
+	boundary.HeightLower = lower
+
+	theCell.Add(boundary)
+
+	set boundary = Nothing		
+end sub
+
+'---------------------------------------------------------------
+' Add a cube cell of specified height & width around an object
+' If bPassable = True a user can pass through a cell
+'---------------------------------------------------------------
+
+sub AddCubeCell(aThing, Width, Height, bPassable )
+
+	Dim acell
+	Dim boundary
+	Dim succ
+
+	set acell = World.Global.CreateBoundaryList()
+	set boundary = World.Global.CreateBoundary()
+
+	' Build an anti-clockwise Cell
+	succ = boundary.InsertVertexSafe(-1, -(Width/2), -(Width/2))
+	succ = boundary.InsertVertexSafe(-1, (Width/2), -(Width/2))
+	succ = boundary.InsertVertexSafe(-1, (Width/2), (Width/2))
+	succ = boundary.InsertVertexSafe(-1, -(Width/2), (Width/2))
+
+	boundary.HeightUpper = Height/2
+	boundary.HeightLower = -(Height/2)
+	boundary.IsPassable = bPassable
+
+	acell.Add(boundary)
+	aThing.BoundaryList = acell
+
+	set boundary = Nothing
+	set acell = Nothing
+end sub
+
+'---------------------------------------------------------------
+' Create standard portal cells: Adds a square boundary
+' which triggers a transition to the next room
+'---------------------------------------------------------------
+
+sub AddPortalCell( ThisPortal )
+	AddCubeCell ThisPortal, 2.0, 8.0, False
+end sub
+
+'--------------------------------------------------------------
+' CreateInteractions
+' Set up default spr files, text, etc. for interactions
+'---------------------------------------------------------------
+
+sub CreateInteractions
+	dim ints
+	set ints = World.Global.Interactions
+
+	ints.Add "Hug ->>"
+	ints.Add "shared/hug.spr"
+	ints.Add "shared/kiss.wav"
+	ints.Add "You hug {object}.|{subject} hugs you.|{subject} hugs {object}."
+	ints.Add "UpdateIsAvatar"
+
+	ints.Add "Shake hands ->>"
+	ints.Add "shared/shake.spr"
+	ints.Add "shared/kiss.wav"
+	ints.Add "You shake hands with {object}.|{subject} shakes hands with you.|{subject} shakes hands with {object}."
+	ints.Add "UpdateIsAvatar"
+
+	' release reference to ints
+	set ints = Nothing
+end sub

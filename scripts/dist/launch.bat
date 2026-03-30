@@ -1,14 +1,16 @@
 @echo off
 REM VWorlds Revival - Launch a world
 REM Usage: launch.bat [worldname]
-REM Available: Gallery, Home, Landscape, Office, DesktopWorld, EmpyreanStudy
+REM Available: Gallery, Home, Landscape, Office, DesktopWorld
 setlocal
 
 set WORLD=%~1
 if "%WORLD%"=="" set WORLD=Gallery
 
-set BIN=%~dp0bin
-set CONTENT=%~dp0content
+set ROOT=%~dp0
+set BIN=%ROOT%bin
+set WORLDS=%ROOT%worlds
+set SCRIPTS=%ROOT%scripts
 
 echo ============================================
 echo   VWorlds Revival: %WORLD%
@@ -21,14 +23,17 @@ taskkill /f /im serverV2.exe 2>nul
 timeout /t 1 /nobreak >nul
 
 REM Create world if .vwc doesn't exist
-if not exist "%~dp0worlds\%WORLD%.vwc" (
+if not exist "%WORLDS%\%WORLD%.vwc" (
     echo Creating %WORLD%...
-    if exist "%~dp0worlds\create_%WORLD%.vbs" (
+    if /i "%WORLD%"=="DesktopWorld" (
         cd /d "%BIN%"
-        C:\Windows\SysWOW64\cscript.exe /nologo "%~dp0worlds\create_%WORLD%.vbs"
+        C:\Windows\SysWOW64\cscript.exe /nologo "%SCRIPTS%\create_desktopworld.vbs"
     ) else (
-        echo ERROR: No creation script for %WORLD%
-        echo Available worlds: Gallery, Home, Landscape, Office, DesktopWorld
+        cd /d "%BIN%"
+        C:\Windows\SysWOW64\cscript.exe /nologo "%SCRIPTS%\create_allworlds.vbs" %WORLD%
+    )
+    if not exist "%WORLDS%\%WORLD%.vwc" (
+        echo ERROR: Failed to create world %WORLD%
         pause
         exit /b 1
     )
@@ -41,10 +46,11 @@ timeout /t 3 /nobreak >nul
 echo Launching renderer...
 echo.
 echo   Controls:
-echo     Arrow keys / mouse - Navigate
-echo     Command Window - Type VBScript commands
+echo     Arrow keys / mouse drag - Navigate
+echo     Right-click objects - Context menu
 echo     Ctrl+S - Save world
+echo     Command Window - Type VBScript commands
 echo.
-"%BIN%\renderhost.exe" --trace --autoconnect --server localhost --world %WORLD% --user Explorer --avatar alice.spr --cmdwin
+"%BIN%\renderhost.exe" --autoconnect --server localhost --world %WORLD% --user Explorer --avatar alice.spr --cmdwin
 
 taskkill /f /im serverV2.exe 2>nul

@@ -1,0 +1,246 @@
+<html>
+<head>
+<LINK Rel=Stylesheet href=../../../../client/shared/global.css>
+<style>
+	.note {font-family:Webdings;color:#cc6600;font-size:14pt;}
+	.task {font-family:Webdings;color:#009900;font-size:14pt;}
+	.alert {font-family:Webdings;color:#cc0000;font-size:14pt;}
+	.helplink {font-family:Verdana;color:#3300cc;cursor:hand;font-size:8pt;font-weight:bold;}
+	.scriptlink {font-family:Verdana;color:#3300cc;cursor:hand;font-size:9pt;font-weight:bold;}
+</style>
+<title>Welcome to Collision Detection Script Tutorial!</title>
+<script language=vbs src=ComVBScript.htm></script>
+<script LANGUAGE="VBSCRIPT">
+
+dim world
+
+sub Window_OnLoad
+	window.settimeout "top.frames(""Btns"").BuildButtons(theBody.MaxSteps)", 0, "vbs"
+	window.settimeout "top.frames(""Tabs"").HighlightItem mid(window.location, instrRev(window.location, ""/"") + 1, len(window.location) - instrRev(window.location, ""/"") - 4)", 0, "vbs"
+	set world = top.goWorld
+	world.tutorial.start_lesson 6
+	world.fireUIEvent world.user, "EventRequest", window
+end sub
+
+Sub window_onunload
+    world.fireUIEvent world.user, "EventRequestCancel", window
+End sub
+
+</script>
+</head>
+<body id=theBody class=vBody CurrentStep=1 MaxSteps=3>
+	<div class=vh1 Style=position:absolute;left:0;top:10; id=heading>
+		Collision Detection
+	</div>
+	<div class=vweb style=position:absolute;left:340;top:1; id=circle>=</div>
+
+<!--Step 1 -->
+<div id=Step1 style=position:absolute;width:99%;left:0;top:44;>
+	<nobr>
+		<div class=vstep Style=position:absolute;left:351;top:-35; id=divSteps>
+			Step 1 of 3
+		</div>
+	</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step One: Collision Detection and Boundaries
+		</div>
+	<div class=vtext id=body style=position:absolute;left:0;top:30;width:99%;height:100%;>
+		<p>You can surround objects in a virtual world with an invisible <span class=helplink HelpString="vworlds.chm::/API Reference/Boundary/Boundary.htm" TITLE="Help">boundary</span> so that an avatar cannot pass through them - the object appears to be "solid." This technique is commonly referred to as adding "collision detection" to an object. Boundaries can also be passable, so that scripts can detect where an avatar or other object has intersected another object. This technique is useful in creating a "trip-wire" effect that allows scripts to detect where, and in what direction, an avatar or object is moving.
+	<p>In this lesson, we move the camera outside of your avatar's position so that you can see your avatar in the third-person context. This will make it easier for you to see exactly when you cross the plane of an object. Your navigation will still work normally.
+		<table class=vtext cellspacing=3>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Try moving your avatar with the arrow keys, out of the wire-frame box.</td></tr>
+			<tr><td valign=top><span class=note>$</span></td>
+			<td>Notice what happens when you cross the boundary of the box, and notice that the star-like shape moves to the place where you crossed the boundary of the object.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Click to place your cursor in the window, and then try moving your avatar out of the wire-frame box with the arrow keys.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Look for the solid box nearby and navigate into it.</td></tr>
+			<tr><td valign=top><span class=note>$</span></td>
+			<td>This boundary is not a trip-wire one, but has been made solid. The script it uses to detect a collision, however, is the same. In fact, both objects share exactly the same script from the same module, but only one will allow you to cross its boundary (the wire-frame box).</td></tr>
+			<tr><td valign=top><span class=note>$</span></td>
+			<td>Thus, if you look at the <span class=helplink HelpString="vworlds.chm::/UIREF/cmdwin/cwinintf.htm" TITLE="Help">Command Window</span> reports for the detection scripts, you will notice that the solid object's script only reports collisions with the outer edge of its boundary, whereas the wire-frame can detect a user passing through it on either side. </td></tr>
+		</table>
+<p>Collision can be placed on any object at the top level of the <span class=helplink HelpString="vworlds.chm::/UIREF/objexpl/intrface.htm" TITLE="Help">Object Explorer</span> hierarchy. For example, collision can be added to an object at the first level of a room's contents, and not within other objects. That is also why <b>Lesson_6</b> needs to be two top level objects  if there are two distinct objects with boundaries (check this out in the <b>Object Explorer</b>). Objects that are contained by other objects do not currently support collision detection.
+<p> In this example, each object has only one simple square boundary that surrounds it.
+		<table class=vtext cellspacing=3>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>You can verify this by looking at the objects from the boundary editor by clicking the <span class=helplink HelpString="vworlds.chm::/UIREF/boundary/intrface.htm" TITLE="Help">Boundary Editor</span> tab under the 3D view.</td></tr>
+			<tr><td valign=top><span class=alert>~</span></td>
+			<td>You lose your automatic third-person viewpoint when you go back to the normal view, but you can restart the lesson to regain it).</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>If you feel comfortable with editing the boundary, you may try it to verify that the scripts still work.</td></tr>
+			<tr><td valign=top><span class=note>$</span></td>
+			<td>A boundary does not have to correspond to an object's shape, and it does not even have to completely enclose its object.  In addition, you can add as many boundaries to an object as you like, and the same script can handle all of them.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>To see the script code for these collision-enabled objects, go on to the next step. </td></tr>
+		</table>
+	</div>
+</div>
+
+<!-- Step 2 -->
+<div id=Step2 style=position:absolute;left:0;top:44;width:99%;display:none;>
+	<nobr>
+		<div class=vstep Style=position:absolute;left:351;top:-35; id=divSteps>
+			Step 2 of 3
+		</div>
+	</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step Two:
+		</div>
+	<div class=vtext id=body2 style=position:relative;left:0;top:30;width:99%;>
+		<p>Below is the script code found in the module <b>lesson_6_collision_objects.vbs</b>. It contains two methods
+		(or VBScript subroutines) that are associated with the cube. To learn more about how to associate a method with
+		an object so that the object runs your script code, see <b>Lesson 1</b>.
+		<p>&nbsp;</p>
+	</div><br>
+		<table style=background-color:white;vertical-align:top;padding-left:7;padding-right:5;padding-top:5;width:610;>
+		<tr>
+   			 <td valign=top><font face=verdana size=2>option explicit</font></td>
+   			 <td>&nbsp;</td>
+  		</tr>
+		<tr>
+   		 	<td valign=top><font face=verdana size=2>dim first_run_flag</font></td>
+   		 	<td valign=top>
+			<span CLASS="Outline" ID="Out1" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out1d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>'we can use an empty global to tell when this
+					'script is first run by a client...<br>
+					'see the comments below for the details<br>
+				</div></td>
+  		</tr>
+		<tr>
+   		 	<td valign=top><font face=verdana size=2>dim timer_counter</font></td>
+   		 	<td valign=top>
+			<span CLASS="Outline" ID="Out2" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out2d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>'using another timer here...<br>
+				</div></td>
+  		</tr>
+		<tr>
+   		 	<td valign=top><font face=verdana size=2>dim collision_sound
+			<td valign=top>
+			<span CLASS="Outline" ID="Out3" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out3d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>'this variable will be re-used each time the <br>
+						'script runs, but only needs to be set once<br>
+						'at the first time it runs- a good<br>
+						'candidate for a global variable<br>
+				</div></td>
+  		</tr>
+		<tr>
+  			<td width="100%" colspan=2><font face=verdana size=2>sub <span class=helplink HelpString="vworlds.chm::/API Reference/Events/OnIntersectee.htm" TITLE="Help">OnIntersectee</span>(Thing, X, Y, Z, iBoundaryIndex, iEdgeIndex, bTransition)</font></td>
+		</tr>
+		<tr>
+		<td width="45%">&nbsp;</td>
+		<td  width="55%" valign=top><span CLASS="Outline" ID="Out4" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out4d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>'in this if statement, if the script has run for the<br>
+					'first time, first_run_flag is not initialized, but<br>
+					'we know it will not be 'true', so we put in this <br>
+					'code to prepare the object for a non-looping <br>
+					'sound. Afterwards, when we set the global to <br>
+					''true', state - we are making sure that the code <br>
+					'inside the if statement will not run again.<br>
+				</div></td>
+		</tr>
+		<tr>
+  			<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>if first_run_flag <> true then<br>
+			<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>set collision_sound = world.createsound _<br>
+<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=48 height=4>("SDK\library\sounds\_ScriptTutorial\shield.wav", false, false)<br>
+			<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>first_run_flag = true<br>
+			<img src="Images/spacer.gif" width=32 height=4>end if<br>
+				</font></td>
+		</tr>
+		<tr>
+  			<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>this.sound = collision_sound<br><br>
+			<img src="Images/spacer.gif" width=32 height=4>world.trace "OnIntersectee method was invoked on object "&this.name<br>
+			<img src="Images/spacer.gif" width=32 height=4>world.trace thing.name&" hit boundary "&cstr(iBoundaryIndex)&" at coords "_<br>
+			<img src="Images/spacer.gif" width=48 height=4>&cstr(cInt(x))&","&cstr(cInt(y))&","&cstr(cint(z))&" edge "&cstr(iEdgeIndex)&_<br>
+			<img src="Images/spacer.gif" width=48 height=4>", side "&cstr(bTransition)<br>
+				</font></td>
+		</tr>
+		<tr>
+			<td width="45%">&nbsp;</td>
+			<td  width="55%" valign=top><span CLASS="Outline" ID="Out5" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out5d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+					'objects can also be properties of other objects.<br>
+					'Each of the objects that have this method must<br>
+					'also have a property called 'hit_marker'<br>
+					'that is itself an artifact.<br>
+					'Setting the marker object's position relative<br>
+					'to its parent shows us where<br>
+					'the intersection is occurring...<br>
+				</div></td>
+		</tr>
+		<tr>
+  			<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>this.hit_marker.position.set x,y,z<br>
+				</font></td>
+		</tr>
+		<tr>
+			<td width="45%">&nbsp;</td>
+			<td  width="55%" valign=top><span CLASS="Outline" ID="Out6" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out6d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+					'we discovered that when the marker moves to<br>
+					'two of the edges of the box at right angles<br>
+					'to the front, the marker looks like it is<br>
+					'turned sideways, since we are just moving<br>
+					'its position and not its direction!<br>
+					'we can handle this and make a better look<br>
+					'by changing the direction of the marker,<br>
+					'but only when an avatar hits those<br>
+					'even-numbered edges. Instead of an 'if'<br>
+					'we can use 'mod' to detect even-ness or<br>
+					'oddness of the incoming edge parameter<br>
+					' 'iEdgeIndex' and apply it right to<br>
+					'the direction. Look up the keyword <br>
+					' 'mod' in the VBScript language<br>
+					'documentation for details.<br>
+				</div></td>
+		</tr>
+		<tr>
+  			<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>this.hit_marker.direction.set 1-(iEdgeIndex mod 2) , 0 , (iEdgeIndex mod 2)<br>
+				</font></td>
+		</tr>
+		<tr>
+  			<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>dim flashtimer<br>
+			<img src="Images/spacer.gif" width=32 height=4>timer_counter = 0<br>
+			<img src="Images/spacer.gif" width=32 height=4>set flashtimer = world.createtimer (100, this, "flash_timer_method")<br><br>
+			end sub<br>
+			</font></td>
+		</tr>
+		<tr>
+  			<td width="100%" colspan=2><font face=verdana size=2>sub flash_timer_method (the_timer)<br>
+			<img src="Images/spacer.gif" width=32 height=4>this.SetNamedMeshColor "*", rgb (0,  (timer_counter mod 2)*255, 255-(_<br>
+			<img src="Images/spacer.gif" width=48 height=4>(timer_counter mod 2)*255))<br>
+			</font></td>
+		</tr>
+		<tr>
+  			<td width="100%" colspan=2><font face=verdana size=2><img src="Images/spacer.gif" width=32 height=4>timer_counter = timer_counter + 1<br>
+			</font></td>
+		</tr>
+		<tr>
+  			<td width="100%" colspan=2><font face=verdana size=2>
+			<img src="Images/spacer.gif" width=32 height=4>if timer_counter > 4 then<br>
+			<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>	world.destroyTimer the_timer<br>
+			<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>	this.SetNamedMeshColor "*", rgb (255, 255, 255)<br>
+			<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>	this.hit_marker.SetNamedMeshColor "*", rgb (0,0,0)<br>
+			<img src="Images/spacer.gif" width=32 height=4>end if<br>
+end sub<br>
+			</font></td>
+		</tr>
+	</table><br>
+</div>
+
+<!-- Script 3 -->
+<div id=Step3 style=position:absolute;left:0;top:44;width:99%;display:none;>
+	<nobr>
+		<div class=vstep Style=position:absolute;left:351;top:-35; id=divSteps>
+			Step 3 of 3
+		</div>
+	</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step Three:
+		</div>
+	<div class=vtext id=body2 style=position:absolute;left:20;top:30;width:99%;height:100%;>
+		<p>You can use impassable, or "solid," boundaries purely for design and navigation purposes, such as creating staircases and otherwise enhancing the illusion of three-dimensional space for users. Remember, however, that passable, trip-wire scripts can provide very useful information for potential interactivity, such as the number of users are in a certain place together at once. Another possible use might be to cause a user's movement in the world to change behaviors of objects. A trip-wire is a very easy technique to provide a way for objects to detect that a user is approaching or departing, in order to activate or deactivate a scripted behavior.
+	</div>
+</div>
+</body>
+</html>

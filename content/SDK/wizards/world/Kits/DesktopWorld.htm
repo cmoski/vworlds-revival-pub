@@ -1,0 +1,2105 @@
+<html>
+<head>
+<link Rel=Stylesheet href="../../../../Worlds/DesktopWorld/Client/shared/global.css">
+
+<object id="params" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83" VIEWASTEXT>
+  <param name="DataURL" value="DesktopWorld.csv">
+  <param name="UseHeader" value="True">
+  <param name="TextQualifier" value="'">
+</object>
+
+<!--include Scripts-->
+<SCRIPT LANGUAGE="vbscript" SRC="DesktopWorld/pathnames.vbs"></SCRIPT>
+<SCRIPT LANGUAGE="vbscript" SRC="DesktopWorld/camera_functions.vbs"></SCRIPT>
+<SCRIPT LANGUAGE="vbscript" SRC="DesktopWorld/avatar_functions.vbs"></SCRIPT>
+<SCRIPT LANGUAGE="vbscript" SRC="DesktopWorld/area_functions.vbs"></SCRIPT>
+<SCRIPT LANGUAGE="vbscript" SRC="DesktopWorld/music_garden.vbs"></SCRIPT>
+<SCRIPT LANGUAGE="vbscript" SRC="DesktopWorld/gadget_functions.vbs"></SCRIPT>
+<SCRIPT LANGUAGE="vbscript" SRC="DesktopWorld/gift_functions.vbs"></SCRIPT>
+<SCRIPT LANGUAGE="vbscript" SRC="DesktopWorld/bot_functions.vbs"></SCRIPT>
+<!--end include scripts-->
+
+<script language="vbscript">
+option explicit
+
+' max chars in a BBS message
+const intMaxMessageLength = 5000
+' minutes of inactivity before avatar falls asleep
+const sleepIdleTime = 14.5
+
+' Internal content pages -- these are pages containing no external links. 
+' They are opened in an iframe within sampleLinks.htm.
+' These are vars rather than constants because constants cannot use other constant
+dim strNewsURL
+dim strNews2URL
+dim strResourceBotURL
+dim strSeaBotURL
+dim strResourceLblURL
+dim strSeaLblURL
+dim strGiftsLblURL
+dim strGameRmLblURL
+dim strBBSURL
+strNewsURL = strWebContentPath & "ResourceDeskNews.htm"
+strNews2URL = strWebContentPath & "SeattleNews.htm"
+strResourceBotURL = strWebContentPath & "ResourceDeskBot.htm"
+strSeaBotURL = strWebContentPath & "SeattleDeskBot.htm"
+strResourceLblURL = strWebContentPath & "ResourceDesk.htm"
+strSeaLblURL = strWebContentPath & "SeattleDesk.htm"
+strGiftsLblURL = strWebContentPath & "GiftCarts.htm"
+strGameRmLblURL = strWebContentPath & "GameRoom.htm"
+strBBSURL = "BBS.htm"
+
+' external pages; opened in a separate window
+const strBulletinURL = "http://www.vworlds.org/maillist.asp"
+const strRoloURL = "http://www.vworlds.org/group.asp"
+const strLogoURL = "http://www.vworlds.org"
+const strPatResURL = "http://www.vworlds.org"
+const strPuterURL = "http://www.vworlds.org/faq.asp"
+const strResourceMapURL = "http://www.vworlds.org/download.asp"
+const strNeedleURL = "http://seattle.citysearch.com/page/uit?_uit_id=UIT_00007107"
+const strDaffodilURL = "http://www.vworlds.org/documentation.asp"
+const strSeattleMapURL = "http://seattle.citysearch.com/page/gen?_template=/maps/neighborhood_map.html&latitude=476064&longitude=-1223308&name_one=seattle&level=6"
+const strMovieURL = "http://seattle.citysearch.com/Seattle/movies/"
+const strEatURL = "http://seattle.citysearch.com/Seattle/restaurants_bars/"
+const strTravelURL = "http://seattle.citysearch.com/Seattle/city_visitors_guide/"
+const strTranspoURL = "http://transit.metrokc.gov/"
+const strHouseURL = "http://www.homeadvisor.com"
+const strFlowerURL = "CartFlowers.htm"
+const strBalloonURL = "CartBalloons.htm"
+
+'//////////////////////////////////////////////////////////////////////////
+'//  Global constants (to this file)
+'//////////////////////////////////////////////////////////////////////////
+const imagesPath = "Worlds\DesktopWorld\Client\Images\"
+const strVBModulesPath = "Worlds\DesktopWorld\VBModules\"
+' strHTMLPath might not be needed. Right now all our click-URLs are displayed within
+' client/html/sampleLinks.htm, and are either in the same dir or are full external URLs.
+const strHTMLPath = "Worlds\DesktopWorld\Client\HTML\"	
+const strLobbyPath = "Worlds\DesktopWorld\Models\Lobby\"
+const strPaintingPath = "Worlds\DesktopWorld\Models\MusicGarden\"
+const strSoundPath = "Worlds\DesktopWorld\Sounds\"
+const stdHeight = 10	' StdHeight determines the upper plane of all non-floor boundaries, and is well above the world.
+const stdDepth = -10	' StdDepth determines the lower plane of all boundaries, and is well below the world.
+' Note: For floor boundaries the upper plane, which is what the avatars walk on, is set individually.
+const numRow1Z = .6 ' the worlds z position value for row 1
+const numColAX = -19.8  ' the worlds X position value for col A
+const numRow8Z = 11.05 ' the worlds z position value for row 8
+const numColHX = -9.8 ' the worlds x position value for col H
+
+
+'//////////////////////////////////////////////////////////////////////////
+'//  Global variables (to this file)
+'//////////////////////////////////////////////////////////////////////////
+dim rs
+dim blnReady
+dim world
+dim LobbyRm
+dim Lobby
+dim FlowerRm
+dim StyleName
+dim selected
+dim avatar_module
+dim camera_module
+dim area_module
+dim music_module
+dim gadget_module
+dim gift_module
+dim DeskBots_module
+dim numSquareX
+dim numSquareZ 
+numSquareX = (numColHX-numColAX)/7
+numSquareZ = (numRow8Z-numRow1Z)/7
+blnReady = False
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		window_onLoad
+'//  Purpose:  	To start the processes when the window is loaded
+'////////////////////////////////////////////////////////////////////////
+sub window_onload
+	if top.SelectedStyleIndex <> -1 then
+		lstStyle.selectedIndex = top.SelectedStyleIndex
+	else
+		lstStyle.selectedIndex = 0
+	end if
+	choseName 'since we are selecting first element it will have same effect
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		params_onDatasetComplete
+'//  Purpose:  	Initialize HTML elements when values from DesktopWorld.csv
+'//				have been loaded into the "params" object.
+'////////////////////////////////////////////////////////////////////////
+sub params_onDatasetComplete
+	set rs = params.recordset
+	fillin_select
+	if top.SelectedStyleIndex <> -1 then
+		lstStyle.selectedIndex = top.SelectedStyleIndex
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Function:	Verify
+'//  Purpose:  	return true if a world type has been chosen, else false.
+'//				DesktopWorld is the only world type available to this sample wizard.
+'//	 Called by:	page3.htm:verify
+'//				picker.htm:document_onclick
+'////////////////////////////////////////////////////////////////////////
+function Verify()
+	Verify = blnReady
+end function
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		Fillin_Select
+'//  Purpose:  	populate the world type selection box from the params file
+'////////////////////////////////////////////////////////////////////////
+sub Fillin_Select()
+	dim el
+	rs.MoveFirst
+	' interate on world templates
+	Do Until rs.EOF
+		set el = document.CreateElement("OPTION")
+		el.value = rs.Fields(0).value
+		el.text = rs.Fields(0).value
+		lstStyle.add el
+		rs.MoveNext
+	Loop
+	set el = nothing
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		ChoseName
+'//  Purpose:  	Get info about the selected world type.
+'//				DesktopWorld is the only world type available to this sample wizard.
+'////////////////////////////////////////////////////////////////////////
+sub ChoseName()
+	selected = lstStyle.selectedIndex
+	rs.MoveFirst
+	rs.Move selected
+	StyleName = rs.fields(0)
+	top.SelectedStyleIndex = selected
+	blnReady = true
+	set rs = nothing
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		BuildWorld
+'//  Purpose:  	Create the world and its component objects
+'////////////////////////////////////////////////////////////////////////
+sub BuildWorld
+	if top.buildworld then
+		set world = top.client.world
+		createmodules
+		world.global.addproperty "WebContentPath", strWebContentPath, , world.PS_ALL_RWA		
+		world.global.addproperty "LobbyGraphicsPath", "\" & strLobbyPath, , world.PS_ALL_RWA		
+		world.global.addproperty "bbsServer", strBBSServer, , world.PS_ALL_RWA		
+		world.global.addproperty "bbsMaxMessageLength", intMaxMessageLength, , world.PS_ALL_RWA		
+		world.global.addproperty "UserPagesServer", strUserPagesServer, , world.PS_ALL_RWA		
+		world.global.addproperty "UserPagesPath", strUserPagesPath, , world.PS_ALL_RWA		
+		world.global.addproperty "sleepIdleTime", sleepIdleTime, , world.PS_ALL_RWA		
+		modify_artifact_exemplar		' in gift_functions.vbs
+		make_gifts_and_notes			' in gift_functions.vbs
+		make_gadget_exemplar			' in gadget_functions.vbs
+		make_chessPiece_exemplar		' in gadget_functions.vbs
+		make_contentArtifact_exemplar	' in gadget_functions.vbs
+		make_bot_exemplar				' in bot_functions.vbs
+		CreateLobbyRm
+		add_area_functions				' in area_functions.vbs
+		make_music_garden				' in music_garden.vbs
+		PopulateLobbyRm
+		CreateBots
+		CreateLinkObjects
+		CreateMusicGarden
+		CreateMusicBlocks	
+		CreateMusicTrees
+		CreateMusicHorns
+		CreateMusicDrums
+		CreateFlowers	
+		CreateBalloons
+		CreateChessPieces
+		CreatePortals
+		make_camera_helpers				' in camera_functions.vbs
+		modify_avatars					' in avatar_functions.vbs
+		make_navigation_paths			' in area_functions.vbs
+		CreateAreaBoundaries LobbyRm
+		make_area_labels
+		world.Global.DefaultRoom = LobbyRm
+		world.user.MoveInto LobbyRm
+		world.SaveDatabase
+		world.disconnect
+		set LobbyRm = nothing
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		CreateModules
+'//  Purpose:  	Load code module files (.vbs files containing code for custom object methods)
+'//				into module objects, making the methods available to VWorlds.
+'////////////////////////////////////////////////////////////////////////
+sub CreateModules
+	set avatar_module = World.CreateScriptModule("avatar_module", strVBModulesPath & "avatar_module.vbs",  World.MODULE_CLIENT + World.MODULE_SERVER)
+	set camera_module = World.CreateScriptModule("camera_module", strVBModulesPath & "camera_module.vbs",  World.MODULE_CLIENT + World.MODULE_SERVER)
+	set area_module = World.CreateScriptModule("area_module", strVBModulesPath & "area_module.vbs",  World.MODULE_CLIENT + World.MODULE_SERVER)
+	set music_module = World.CreateScriptModule("music_module", strVBModulesPath & "music_module.vbs",  World.MODULE_CLIENT + World.MODULE_SERVER)
+	set gadget_module = World.CreateScriptModule("gadget_module", strVBModulesPath & "gadget_module.vbs",  World.MODULE_CLIENT + World.MODULE_SERVER)
+	set gift_module = World.CreateScriptModule("gift_module", strVBModulesPath & "gift_module.vbs",  World.MODULE_CLIENT + World.MODULE_SERVER)
+	set DeskBots_module = World.CreateScriptModule("DeskBots_module", strVBModulesPath & "DeskBots_module.vbs",  World.MODULE_CLIENT + World.MODULE_SERVER)
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		CreateLobbyRm
+'//  Purpose:  	Create the default room for the world.
+'//				Every world must have at least one room; the default room is where
+'//				avatars automatically start when they enter the world.
+'//				In this sample world there is only one room: the Lobby. The various
+'//				room-like areas (Music Garden, etc) are just areas within the Lobby room.
+'//  Called by:	BuildWorld
+'////////////////////////////////////////////////////////////////////////
+sub CreateLobbyRm
+	set LobbyRm = world.CreateInstance("Lobby Room", "Room")
+	LobbyRm.InitializeGraphics strLobbyPath & "", 0.0, 0.0, 0.0, 1.0, 0.0, 0.0
+	LobbyRm.BackgroundColor = &HD7E7FF
+	LobbyRm.fog = true
+	LobbyRm.fogstart = 50
+	LobbyRm.fogend = 1500
+	LobbyRm.fogcolor = &HD7E7FF
+	world.trace "CreateLobbyRm done"
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		PopulateLobbyRoom
+'//  Purpose:  	Create graphical objects that give the Lobby room its appearance.
+'//				These specific objects are not clickable and have no methods;
+'//				their only function is to hold graphics. Partitioning the room graphics
+'//				into these specific objects was somewhat arbitrary; the main purpose
+'//				was to allow the various parts to be repositioned easily during design.
+'//  Called by:	BuildWorld
+'////////////////////////////////////////////////////////////////////////
+sub PopulateLobbyRm
+	parent.StatusMsg "adding objects to Lobby Room"
+	set Lobby = World.CreateInstance("Lobby", "artifact", LobbyRm)
+	Lobby.Description = ""
+	Lobby.InitializeGraphics strLobbyPath & "Lobby.x", 0.0,0.31,0.0,0.0,0.0,1.0
+	Lobby.IsMoveable = false
+	Lobby.IsUiVisible = true
+	CreateLobbyBounds(LobbyRm)
+	addToSwapList LobbyRm, Lobby, array("Lobby", "GameRoom", "GiftCarts", "Overview", "DiscussionArea")
+	set Lobby = nothing
+			
+	dim LobbyWallsG1
+	set LobbyWallsG1 = World.CreateInstance("Patio walls from lobby", "artifact", LobbyRm)
+	LobbyWallsG1.Description = ""
+	LobbyWallsG1.InitializeGraphics strLobbyPath & "LobbyWallsG1.x", 0.0,0.31,0.0,0.0,0.0,1.0
+	LobbyWallsG1.IsMoveable = false
+	LobbyWallsG1.IsUiVisible = true
+	addToSwapList LobbyRm, LobbyWallsG1, array("Lobby", "GiftCarts", "DiscussionArea")
+	set LobbyWallsG1 = nothing
+							
+	dim LobbyWallsG
+	set LobbyWallsG = World.CreateInstance("LobbyWalls facing patio", "artifact", LobbyRm)
+	LobbyWallsG.Description = ""
+	LobbyWallsG.InitializeGraphics strLobbyPath & "LobbyWallsG.x", 0.0,0.31,0.0,0.0,0.0,1.0
+	LobbyWallsG.IsMoveable = false
+	LobbyWallsG.IsUiVisible = true
+	addToSwapList LobbyRm, LobbyWallsG, array("Lobby", "GiftCarts", "Overview", "DiscussionArea")
+	set LobbyWallsG = nothing
+						
+	dim gamewallsP
+	set gamewallsP = World.CreateInstance("Gamewalls & steps ", "artifact", LobbyRm)
+	gamewallsP.Description = ""
+	gamewallsP.InitializeGraphics strLobbyPath & "gamewallsP.x", 0.0,0.31,0.0,0.0,0.0,1.0
+	gamewallsP.IsMoveable = false
+	gamewallsP.IsUiVisible = true
+	addToSwapList LobbyRm, gamewallsP, array("Lobby", "GameRoom", "Overview", "DiscussionArea")
+	set GameWallsP = nothing
+	
+	dim gamewallsL
+	set gamewallsL = World.CreateInstance("Gamewalls", "artifact", LobbyRm)
+	gamewallsL.Description = ""
+	gamewallsL.InitializeGraphics strLobbyPath & "gamewallsL.x", 0.0,0.31,0.0,0.0,0.0,1.0
+	gamewallsL.IsMoveable = false
+	gamewallsL.IsUiVisible = true
+	addToSwapList LobbyRm, gamewallsL, array("GameRoom", "Overview")
+	set GameWallsL = nothing
+									
+	dim floorchat
+	set floorchat = World.CreateInstance("Chat Floor", "artifact", LobbyRm)
+	floorchat.Description = ""
+	floorchat.InitializeGraphics strLobbyPath & "floorchat.x", 0.0,0.31,0.0,0.0,0.0,1.0
+	floorchat.IsMoveable = false
+	floorchat.IsUiVisible = true
+	addToSwapList LobbyRm, floorchat, array("Lobby", "DiscussionArea", "Overview")
+	set FloorChat = nothing
+									
+	dim chatfurn
+	set chatfurn = World.CreateInstance("Chat Furniture", "artifact", LobbyRm)
+	chatfurn.Description = ""
+	chatfurn.InitializeGraphics strLobbyPath & "chatfurniture.x", 0.0,0.31,0.0,0.0,0.0,1.0
+	chatfurn.IsMoveable = false
+	chatfurn.IsUiVisible = true
+	addToSwapList LobbyRm, chatfurn, array("Lobby", "DiscussionArea", "Overview")
+	set ChatFurn = nothing
+	
+	dim chattabletop
+	set chattabletop = World.CreateInstance("Discussion Area", "gadget", LobbyRm)
+	chattabletop.Description = ""
+	chattabletop.InitializeGraphics strLobbyPath & "chatdsk.x", 4.77,-0.129,0.0,0.0,0.0,1.0
+	chattabletop.IsMoveable = false
+	chattabletop.IsUiVisible = true
+	chattabletop.ClickURL = "BBS.htm"
+	chattabletop.ShowSampleLinks = true
+	addToSwapList LobbyRm, chattabletop, array("Lobby", "DiscussionArea", "Overview")
+	set ChatTableTop = nothing
+
+	dim patiowall
+	set patiowall = World.CreateInstance("Patio walls low", "artifact", LobbyRm)
+	patiowall.Description = ""
+	patiowall.InitializeGraphics strLobbyPath & "patiowall.x", 0.0,0.31,0.0,0.0,0.0,1.0
+	patiowall.IsMoveable = false
+	patiowall.IsUiVisible = true
+	addToSwapList LobbyRm, patiowall, "GiftCarts"
+	set PatioWall = nothing
+
+	dim patio
+	set patio = World.CreateInstance("Patio", "artifact", LobbyRm)
+	patio.Description = ""
+	patio.InitializeGraphics strLobbyPath & "patio.x", 0.0,0.31,0.0,0.0,0.0,1.0
+	patio.IsMoveable = false
+	patio.IsUiVisible = true
+	addToSwapList LobbyRm, patio, array("Lobby", "GiftCarts", "Overview")
+	set Patio = nothing
+
+	' Resource Desk Objects
+	dim Background
+	set Background = World.CreateInstance ("Seattle", "artifact", LobbyRM)
+	Background.description=""
+	Background.InitializeGraphics strLobbyPath & "background.x",0.0,0.0,0.0,0,0,1
+	Background.IsMoveable = false
+	Background.IsUiVisible = false
+	addToSwapList LobbyRm, Background, array("Lobby", "GameRoom", "GiftCarts", "Overview", "DiscussionArea")
+	set Background = nothing
+
+	dim lobbycling
+	set lobbycling= World.CreateInstance("Lobby Ceiling", "artifact", LobbyRm)
+	lobbycling.Description = ""
+	lobbycling.InitializeGraphics strLobbyPath & "ceiling.x", 0.0,0.3,0.0,0.0,0.0,1.0
+	lobbycling.IsMoveable = false
+	lobbycling.IsUiVisible = false
+	addToSwapList LobbyRm, lobbycling, array("Lobby", "GameRoom", "GiftCarts", "DiscussionArea")
+	set LobbyCling = nothing
+
+	dim lobbyoverview
+	set lobbyoverview= World.CreateInstance("Overview Mask", "artifact", LobbyRm)
+	lobbyoverview.Description = ""
+	lobbyoverview.InitializeGraphics strLobbyPath & "overvwedge.x", 0.0,0.16,0.0,0.0,0.0,1.0
+	lobbyoverview.IsMoveable = false
+	lobbyoverview.IsUiVisible = false
+	addToSwapList LobbyRm, lobbyoverview, "Overview"
+	set LobbyOverview = nothing
+
+	dim lobbyroof
+	set lobbyroof= World.CreateInstance("Lobby Roof", "artifact", LobbyRm)
+	lobbyroof.Description = ""
+	lobbyroof.InitializeGraphics strLobbyPath & "roof.x", 0.0,0.355,0.0,0.0,0.0,1.0
+	lobbyroof.IsMoveable = false
+	lobbyroof.IsUiVisible = false
+	addToSwapList LobbyRm, lobbyroof, "Lobby"
+	set LobbyRoof = nothing
+			
+	dim oviewPicM
+	set oviewPicM = World.CreateInstance("Music Garden", "artifact", LobbyRM)
+	oviewPicM.InitializeGraphics strPaintingPath & "oviewpic.x", 0.3,0.3,-2.5,0.0,0.0,1.0
+	oviewPicM.IsMoveable = false
+	oviewPicM.IsUiVisible = false
+'	addToSwapList LobbyRm, oviewPicM, array("Overview", "DiscussionArea")
+	set OViewPicM = nothing
+			
+	dim cloud
+	set cloud = World.CreateInstance("Cloud", "artifact", LobbyRM)
+	cloud.InitializeGraphics strLobbyPath & "cloud.x", 0.0,1.0,0.0,0.0,0.0,1.0
+	cloud.scale.set 6,16,6
+	cloud.rotationaxis.set 0,1,0
+	cloud.rotationrate = .002
+	cloud.IsMoveable = false
+	cloud.IsUiVisible = false
+	addToSwapList LobbyRm, cloud, array("Lobby", "GameRoom", "GiftCarts", "DiscussionArea", "MusicGarden")
+	set Cloud = nothing
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		CreateLinkObjects
+'//  Purpose:  	Create the clickable objects that open web pages.
+'//  Called by:	BuildWorld
+'////////////////////////////////////////////////////////////////////////
+sub CreateLinkObjects
+	dim Logo
+	set Logo = World.CreateInstance("Resource Logo", "gadget", LobbyRM)
+	Logo.description=""
+	Logo.InitializeGraphics strLobbyPath & "logo.x",0.0,0.0,0.0,0,0,1
+	Logo.IsMoveable = false
+	Logo.ClickURL = strLogoURL
+	addToSwapList LobbyRm, Logo, array("Lobby", "DiscussionArea")
+	set Logo = nothing
+
+	dim PosterPat
+	set PosterPat = World.CreateInstance("Virtual Worlds Information", "gadget", LobbyRM)
+	PosterPat.description=""
+	PosterPat.InitializeGraphics strLobbyPath & "postpat.x",0.0,0.0,0.0,0,0,1
+	PosterPat.IsMoveable = false
+'			PosterPat.IsUiVisible = false
+	PosterPat.ClickURL = strPatResURL
+	addToSwapList LobbyRm, PosterPat, array("Lobby", "DiscussionArea")
+	set PosterPat = nothing
+
+	dim NewsWelcome2
+	set NewsWelcome2 = World.CreateInstance("Seattle News", "gadget", LobbyRM)
+	NewsWelcome2.description=""
+	NewsWelcome2.showSampleLinks = True
+	NewsWelcome2.InitializeGraphics strLobbyPath & "desknews.x",4,1.3,15,-0.05,0,-1
+	NewsWelcome2.scale.set 1,1,1
+	NewsWelcome2.IsMoveable = false
+	NewsWelcome2.ClickURL = strNewsURL
+	addToSwapList LobbyRm, NewsWelcome2, array("Lobby", "DiscussionArea")
+	set NewsWelcome2 = nothing
+
+	dim RoloDeck
+	set RoloDeck = World.CreateInstance("Virtual Worlds Group Information", "gadget", LobbyRM)
+	RoloDeck.description=""
+	RoloDeck.InitializeGraphics strLobbyPath & "deskrolo.x",12,1.125,15.2,0.05,0,1
+	RoloDeck.scale.set 1,1,1
+	RoloDeck.IsMoveable = false
+	RoloDeck.ClickURL = strRoloURL
+	addToSwapList LobbyRm, RoloDeck, array("Lobby", "DiscussionArea")
+	set RoloDeck = nothing
+			
+	dim puter2
+	set puter2 = World.CreateInstance("Virtual Worlds FAQ", "gadget", LobbyRM)
+	puter2.description=""
+	puter2.InitializeGraphics strLobbyPath & "puter2.x",11,1.125,15.1,-.05,0,-1
+	puter2.scale.set 1,1,1
+	puter2.IsMoveable = false
+	puter2.ClickURL = strPuterURL
+	addToSwapList LobbyRm, puter2, array("Lobby", "DiscussionArea")
+	set Puter2 = nothing
+			
+' Seattle Desk
+	dim Needle
+	set Needle = World.CreateInstance("Sight Seeing", "gadget", LobbyRM)
+	Needle.description = ""
+	Needle.InitializeSpriteGraphics strLobbyPath & "needle.gif",12.8,1.5,-2.5,0,0,0
+	Needle.scale.set  .1,.2,.1
+	Needle.IsMoveable = false
+	Needle.ClickURL = strNeedleURL
+	addToSwapList LobbyRm, Needle, array("Lobby", "DiscussionArea")
+	set Needle = nothing
+
+	dim daffodil
+	set daffodil = World.CreateInstance("Virtual Worlds Documentation", "gadget", LobbyRM)
+	daffodil.description = ""
+	daffodil.InitializeSpriteGraphics strLobbyPath & "fldafdil.gif",3.5,1.55,15.5,0,0,0
+	daffodil.scale.set  .2,.39,.2
+	daffodil.IsMoveable = false
+	daffodil.ClickURL = strDaffodilURL
+	addToSwapList LobbyRm, daffodil, array("Lobby", "DiscussionArea")
+	set Daffodil = nothing
+			
+	dim PosterMov
+	set PosterMov = World.CreateInstance("Movie Poster", "gadget", LobbyRM)
+	PosterMov.description=""
+	PosterMov.InitializeGraphics strLobbyPath & "postmov.x",15.2,0.0,-10,-1,0,0
+	PosterMov.IsMoveable = false
+	PosterMov.ClickURL = strMovieURL
+	addToSwapList LobbyRm, PosterMov, array("Lobby", "DiscussionArea")
+	set PosterMov = nothing
+			
+	dim MusicView
+	set MusicView = World.CreateInstance("Music Garden View", "gadget", LobbyRM)
+	MusicView.description=""
+	MusicView.InitializeGraphics strLobbyPath & "MusicView.x",0.0,0.32,0.0,0,0,1
+	MusicView.IsMoveable = false
+	MusicView.ClickURL = strEatURL
+	addToSwapList LobbyRm, MusicView, array("Lobby", "DiscussionArea")
+	set MusicView = nothing
+			
+	dim Bulletin
+	set Bulletin = World.CreateInstance("Discussion Area", "gadget", LobbyRM)
+	Bulletin.description=""
+	Bulletin.showSampleLinks = True
+	Bulletin.InitializeGraphics strLobbyPath & "postbbs.x",0.0,0.32,0.0,0,0,1
+	Bulletin.IsMoveable = false
+	Bulletin.ClickURL = strBulletinURL
+	addToSwapList LobbyRm, Bulletin, array("Lobby", "DiscussionArea")
+	set Bulletin = nothing
+
+	dim PosterTrv
+	set PosterTrv = World.CreateInstance("Poster Travel", "gadget", LobbyRM)
+	PosterTrv.description=""
+	PosterTrv.InitializeGraphics strLobbyPath & "posttrv.x",0.0,0.32,0.0,0,0,1
+	PosterTrv.IsMoveable = false
+	PosterTrv.ClickURL = strTravelURL
+	addToSwapList LobbyRm, PosterTrv, array("Lobby", "DiscussionArea")
+	set PosterTrv = nothing
+
+	dim Transportation
+	set Transportation = World.CreateInstance("Transportation", "gadget", LobbyRM)
+	Transportation.description=""
+	Transportation.InitializeGraphics strLobbyPath & "transpo.x",14.5,1.156,2.4,.8,0,1
+	Transportation.scale.set .004,.004,.004
+	Transportation.IsMoveable = false
+	Transportation.ClickURL = strTranspoURL
+	addToSwapList LobbyRm, Transportation, array("Lobby", "DiscussionArea")
+	set Transportation = nothing
+
+	dim NewsWelcome1
+	set NewsWelcome1 = World.CreateInstance("Desktop World News", "gadget", LobbyRM)
+	NewsWelcome1.description=""
+	NewsWelcome1.InitializeGraphics strLobbyPath & "desknews.x",16.7,1.43,2.9,-.6,0,1
+	NewsWelcome1.scale.set 1,1,1
+	NewsWelcome1.showSampleLinks = True
+	NewsWelcome1.IsMoveable = false
+	NewsWelcome1.ClickURL = strNews2URL
+	addToSwapList LobbyRm, NewsWelcome1, array("Lobby", "DiscussionArea")
+	set NewsWelcome1 = nothing
+			
+	dim housing
+	set housing = World.CreateInstance("Virtual Worlds Gallery", "gadget", LobbyRM)
+	housing.description=""
+	housing.InitializeGraphics strLobbyPath & "housing.x",13.2,1.3,-2,0.5,0,-1
+	housing.scale.set .004,.004,.004
+	housing.IsMoveable = false
+	housing.ClickURL = strHouseURL
+	addToSwapList LobbyRm, housing, array("Lobby", "DiscussionArea")	
+	set Housing = nothing
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		CreateBots
+'//  Purpose:  	Create the bot objects for the info desks
+'//  Called by:	BuildWorld
+'////////////////////////////////////////////////////////////////////////
+sub CreateBots
+	dim Sound
+	set sound = world.CreateSound (strSoundPath & "click.wav", false, false)
+
+	dim ResourceDeskBot
+	set ResourceDeskBot = World.CreateInstance("Phebe", "bot", LobbyRM)
+	ResourceDeskBot.greetingEnabled = True
+	ResourceDeskBot.description = ""
+	ResourceDeskBot.InitializeGraphics strLobbyPath & "bot3.spr",8.443,1.531,17.063,0.0,0.0,-1.0
+	ResourceDeskBot.scale.set  .55,.55,.55
+	ResourceDeskBot.IsMoveable = false
+	ResourceDeskBot.IsUiVisible = false
+	ResourceDeskBot.ClickSound = sound
+	ResourceDeskBot.secret_word = "phebe"
+	ResourceDeskBot.clickText = ", here are some links that are worth investigating. Enjoy!"
+	ResourceDeskBot.greetText = ", Welcome! I am Phebe your Resource Desk receptionist. Click on me when you visit the Resource Desk to get helpful information about the sample world."
+	ResourceDeskBot.ClickURL = strResourceBotURL
+	addToSwapList LobbyRm, ResourceDeskBot, array("Lobby", "DiscussionArea")
+	dim Points
+	Points = Array(_
+		12.082440, 11.084707, 8.310701, 14.451673, 4.346809, 15.998666, -0.167692, 16.478910, _
+		-5.299023, 15.136574, -9.243500, 11.633617, -9.336542, -0.278929, 11.867423, -0.511702_
+		)
+	MakeBoundary ResourceDeskBot, Points, stdHeight, stdDepth, true, false
+	set ResourceDeskBot = nothing
+		
+	dim SeattleDeskBot
+	set SeattleDeskBot = World.CreateInstance("Morris", "bot", LobbyRM)
+	SeattleDeskBot.description = ""
+	SeattleDeskBot.InitializeGraphics strLobbyPath & "botb.spr",14.696,1.181,0.835,-0.5,0.0,0.5
+	SeattleDeskBot.scale.set  1.0,1.0,1.0
+	SeattleDeskBot.IsMoveable = false
+	SeattleDeskBot.IsUiVisible = false
+	SeattleDeskBot.ClickSound = sound
+	SeattleDeskBot.secret_word = "morris"
+	SeattleDeskBot.clickText = ", Super! Here are the Seattle links. Enjoy!"
+	SeattleDeskBot.ClickURL = strSeaBotURL
+	addToSwapList LobbyRm, SeattleDeskBot, array("Lobby", "DiscussionArea")
+	Points = Array(_
+		0,6,4,0,0,-4,-6,0_
+		)
+	MakeBoundary SeattleDeskBot, Points, stdHeight, stdDepth, true, false
+	
+	set SeattleDeskBot = nothing
+	set Sound = nothing
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		CreateMusicGarden
+'//  Purpose:  	Create the purely graphical, non-clickable music garden objects
+'//  Called by: BuildWorld
+'////////////////////////////////////////////////////////////////////////
+sub CreateMusicGarden
+					
+	dim MusicProp
+	set MusicProp = World.CreateInstance("Music Garden", "artifact", LobbyRM)
+	MusicProp.InitializeGraphics strPaintingPath & "muscprop.x", 0.0,1.5,0.0,0.0,0.0,1.0
+	MusicProp.IsMoveable = false
+	MusicProp.IsUiVisible = false
+	addToSwapList LobbyRm, MusicProp, array("Lobby", "DiscussionArea")
+	set MusicProp = nothing			
+
+	dim MusicFloor
+	set MusicFloor= World.CreateInstance("Music Floor", "artifact", LobbyRm)
+	MusicFloor.Description = ""
+	MusicFloor.InitializeGraphics strPaintingPath & "floor1.x", 0.0,0.0,0.0,0.0,0.0,1.0
+	MusicFloor.IsMoveable = false
+	MusicFloor.IsUiVisible = false
+	addToSwapList LobbyRm, MusicFloor, "MusicGarden"
+	set MusicFloor = nothing
+
+	dim Musicleaf
+	dim intLeaf
+	for intLeaf = 1 to 5
+		set Musicleaf= World.CreateInstance("Music Leaf " & intLeaf, "artifact", LobbyRm)
+		Musicleaf.Description = ""
+		Musicleaf.InitializeGraphics strPaintingPath & "leaf1.gif", 28.0,0.1,22.0,0.0,0.0,1.0
+		select case intLeaf
+		case 1	
+			Musicleaf.InitializeGraphics strPaintingPath & "leaf1.gif", 27,.1,22.5,0.0,0.0,1.0
+		case 2
+			Musicleaf.InitializeGraphics strPaintingPath & "leaf1.gif", 29.4,.15,21.5,0.0,0.0,1.0
+		case 3
+			Musicleaf.InitializeGraphics strPaintingPath & "leaf1.gif", -10.5,.1,22.5,0.0,0.0,1.0
+		case 4
+			Musicleaf.InitializeGraphics strPaintingPath & "leaf1.gif", -11.8,.1,22.5,0.0,0.0,1.0
+		case 5
+			Musicleaf.InitializeGraphics strPaintingPath & "leaf1.gif", -12.9,.1,22.4,0.0,0.0,1.0
+		end select
+		Musicleaf.scale.set .5,.5,.5
+		Musicleaf.IsMoveable = false
+		Musicleaf.IsUiVisible = false
+		addToSwapList LobbyRm, Musicleaf, "MusicGarden"
+	next
+	set Musicleaf = nothing	
+	
+	dim MusicShaker
+	set MusicShaker= World.CreateInstance("Shaker", "toy", LobbyRm)
+	MusicShaker.Description = ""
+	MusicShaker.InitializeGraphics strPaintingPath & "Thing3.x", 15,0,34,1,0,0
+	MusicShaker.Scale.set 1,.7,1
+	MusicShaker.IsMoveable = false
+	MusicShaker.IsUiVisible = false
+	MusicShaker.area = "MusicGarden"
+	MusicShaker.SoundNum = 18
+	LoadLoop MusicShaker, 6000, array(_
+		0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0.998027, 1, 1, 1, 0, 0, 0, 0, 0, 0.992115, 1, 1, 1, 0, 0, 0, 0, 0, 0.982287, 1, 1, 1, 0, 0, 0, 0, 0, 0.968583, 1, 1, 1, 0, 0, 0, 0, 0, 0.951056, 1, 1, 1, 0, 0, 0, 0, 0, 0.929776, 1, 1, 1, 0, 0, 0, 0, 0, 0.904827, 1, 1, 1, 0, 0, 0, 0, 0, 0.876306, 1, 1, 1, 0, 0, 0, 0, 0, 0.844327, 1, 1, 1, 0, 0, 0, 0, 0, 0.809017, 1, 1, 1, 0, 0, 0, 0, 0, 0.770513, 1, 1, 1, 0, 0, 0, 0, 0, 0.728968, 1, 1, 1, 0, 0, 0, 0, 0, 0.684547, 1, 1, 1, 0, 0, 0, 0, 0, 0.637424, 1, 1, 1, 0, 0, 0, 0, 0, 0.587785, 1, 1, 1, 0, 0, 0, 0, 0, 0.535826, 1, 1, 1, 0, 0, 0, 0, 0, 0.481753, 1, 1, 1, 0, 0, 0, 0, 0, 0.425779, 1, 1, 1, 0, 0, 0, 0, 0, 0.368124, 1, 1, 1, 0, 0, 0, 0, 0, 0.309017, 1, 1, 1, 0, 0, 0, 0, 0, 0.24869, 1, 1, 1, 0, 0, 0, 0, 0, 0.187381, 1, 1, 1, 0, 0, 0, 0, 0, 0.125333, 1, 1, 1, 0, 0, 0, 0, 0, 0.06279, 1, 1, 1, 0, 0, 0, 0, 0, -2.2E-16, 1, 1, 1, 0, 0, 0, 0, 0, -0.06279, 1, 1, 1, 0, 0, 0, 0, 0, -0.12533, 1, 1, 1, 0, 0, 0, 0, 0, -0.18738, 1, 1, 1, 0, 0, 0, 0, 0, -0.24869, 1, 1, 1, 0, 0, 0, 0, 0, -0.30902, 1, 1, 1, 0, 0, 0, 0, 0, -0.36812, 1, 1, 1, 0, 0, 0, 0, 0, -0.42578, 1, 1, 1, 0, 0, 0, 0, 0, -0.48175, 1, 1, 1, 0, 0, 0, 0, 0, -0.53583, 1, 1, 1, 0, 0, 0, 0, 0, -0.58778, 1, 1, 1, 0, 0, 0, 0, 0, -0.63742, 1, 1, 1, 0, 0, 0, 0, 0, -0.68455, 1, 1, 1, 0, 0, 0, 0, 0, -0.72897, 1, 1, 1, 0, 0, 0, 0, 0, -0.77051, 1, 1, 1, 0, 0, 0, 0, 0, -0.80902, 1, 1, 1, 0, 0, 0, 0, 0, -0.84433, 1, 1, 1, 0, 0, 0, 0, 0, -0.87631, 1, 1, 1, 0, 0, 0, 0, 0, -0.90483, 1, 1, 1, 0, 0, 0, 0, 0, -0.92978, 1, 1, 1, 0, 0, 0, 0, 0, -0.95106, 1, 1, 1, 0, 0, 0, 0, 0, -0.96858, 1, 1, 1, 0, 0, 0, 0, 0, -0.98229, 1, 1, 1, 0, 0, 0, 0, 0, -0.99211, 1, 1, 1, 0, 0, 0, 0, 0, -0.99803, 1, 1, 1, 0, 0, 0, 0, 0, -1, 1, 1, 1)
+	LoadAnimation MusicShaker, 2000, 4, array(_
+		0,0,0, 0,0,0, 1.10,1.10,1.10,_
+		0,0,0, 0,0,0, 1.25,1.25,1.25,_
+		0,0,0, 0,0,0, 1.30,1.30,1.30,_
+		0,0,0, 0,0,0, 1.25,1.25,1.25,_
+		0,0,0, 0,0,0, 1.30,1.30,1.30,_
+		0,0,0, 0,0,0, 1.25,1.25,1.25,_
+		0,0,0, 0,0,0, 1.30,1.30,1.30,_
+		0,0,0, 0,0,0, 1.25,1.25,1.25,_
+		0,0,0, 0,0,0, 1.10,1.10,1.10,_
+		0,0,0, 0,0,0, 1,1,1)
+	addToSwapList LobbyRm, MusicShaker, "MusicGarden"
+	addToLoopList LobbyRm, MusicShaker, "MusicGardenLoops"
+	set MusicShaker = nothing	
+
+	dim MusicSun
+	set MusicSun= World.CreateInstance("Music Sun", "artifact", LobbyRm)
+	MusicSun.Description = ""
+	MusicSun.InitializeGraphics strPaintingPath & "sun.x", -3,10,45,0.0,0.0,1.0
+	MusicSun.IsMoveable = false
+	MusicSun.IsUiVisible = false
+	addToSwapList LobbyRm, MusicSun, "MusicGarden"
+	set MusicSun = nothing	
+
+	dim MusicEasels
+	set MusicEasels= World.CreateInstance("Lobby", "artifact", LobbyRm)
+	MusicEasels.Description = ""
+	MusicEasels.InitializeGraphics strPaintingPath & "easels.x", 0.0,0.01,-2.3,0.0,0.0,1.0
+	MusicEasels.IsMoveable = false
+	MusicEasels.IsUiVisible = false
+	addToSwapList LobbyRm, MusicEasels, "MusicGarden"
+	set MusicEasels = nothing	
+end sub
+
+'////////////////////////////////////////////////////
+'//	Arrays of coordinates shared by some animations
+'////////////////////////////////////////////////////
+
+' slight wobble (idling loop, also used by the wood block)
+dim wobblePoints	
+wobblePoints = array(_
+		0, 0.03, -0.056, 0, 0, 0, 1, 1, 1,_
+		0, 0.02, -0.08, 0, 0, 0, 1, 1, 1,_
+		0, 0, -0.106, 0, 0, 0, 1, 1, 1,_
+		0, -0.005, -0.132, 0, 0, 0, 1, 1, 1,_
+		0, 0, -0.15, 0, 0, 0, 1, 1, 1,_
+		0, 0.016, -0.124, 0, 0, 0, 1, 1, 1,_
+		0, 0.016, -0.096, 0, 0, 0, 1, 1, 1,_
+		0, 0.004, -0.06, 0, 0, 0, 1, 1, 1,_
+		0, -0.016, -0.036, 0, 0, 0, 1, 1, 1,_
+		0, -0.02, 0, 0, 0, 0, 1, 1, 1,_
+		0, 0, 0.034, 0, 0, 0, 1, 1, 1,_
+		0, 0.016, 0.064, 0, 0, 0, 1, 1, 1,_
+		0, 0.02, 0.096, 0, 0, 0, 1, 1, 1,_
+		0, 0, 0.1, 0, 0, 0, 1, 1, 1,_
+		0, -0.016, 0.076, 0, 0, 0, 1, 1, 1,_
+		0, -0.022, 0.060, 0, 0, 0, 1, 1, 1,_
+		0, -0.016, 0.044, 0, 0, 0, 1, 1, 1,_
+		0, -0.004, 0.016, 0, 0, 0, 1, 1, 1,_
+		0, 0.004, -0.004, 0, 0, 0, 1, 1, 1,_
+		0, 0.02, -0.024, 0, 0, 0, 1, 1, 1)
+
+' drum bash motion
+dim bashPoints
+bashPoints = array(_
+		0, 0, 0, 0, 0, 0, 1, 1, 1,_
+		0, 0, 0, 0, 0, 0, 1.5, 1.5, 1.5,_
+		0, 0, 0, 0, 0, 0, 1.3, 1.3, 1.3,_
+		0, 0, 0, 0, 0, 0, 1.5, 1.5, 1.5,_
+		0, 0, 0, 0, 0, 0, 1.2, 1.2, 1.2,_
+		0, 0, 0, 0, 0, 0, 1.4, 1.4, 1.4,_
+		0, 0, 0, 0, 0, 0, 1.1, 1.1, 1.1,_
+		0, 0, 0, 0, 0, 0, 1.3, 1.3, 1.3,_
+		0, 0, 0, 0, 0, 0, 1.05, 1.05, 1.05,_
+		0, 0, 0, 0, 0, 0, 1.2, 1.2, 1.2,_
+		0, 0, 0, 0, 0, 0, 1.1, 1.1, 1.1,_
+		0, 0, 0, 0, 0, 0, 1, 1, 1)
+				
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		CreateMusicDrums
+'//  Purpose:  	Ccreate the drum objects in the music garden
+'//  Called by: BuildWorld
+'////////////////////////////////////////////////////////////////////////
+sub CreateMusicDrums
+	dim MusicDrum1
+	set MusicDrum1 = World.CreateInstance("Drum 1", "toy", LobbyRm)
+	MusicDrum1.Description = ""
+	MusicDrum1.InitializeGraphics strPaintingPath & "Thing2.x", 29.0,0.0,20.0,0.3,0.2,1.0
+	MusicDrum1.rotationaxis.set 0,1,0
+	MusicDrum1.rotationrate = 0
+	MusicDrum1.IsMoveable = false
+	MusicDrum1.IsUiVisible = false
+	MusicDrum1.area = "MusicGarden"
+	MusicDrum1.SoundNum = 12
+	LoadLoop MusicDrum1, 3000, wobblePoints
+	LoadAnimation MusicDrum1, 800, 2, bashPoints
+	addToSwapList LobbyRm, MusicDrum1, "MusicGarden"
+	addToLoopList LobbyRm, MusicDrum1, "MusicGardenLoops"
+	
+	dim MusicDrum2
+	set MusicDrum2 = World.CreateInstance("Drum 2", "toy", LobbyRm)
+	MusicDrum2.Description = ""
+	MusicDrum2.InitializeGraphics strPaintingPath & "Thing2.x", 28.5,0,18,.4,.2,1
+	MusicDrum2.rotationaxis.set 0,1,0
+	MusicDrum2.rotationrate = 0
+	MusicDrum2.IsMoveable = false
+	MusicDrum2.IsUiVisible = false
+	MusicDrum2.area = "MusicGarden"
+	MusicDrum2.SoundNum = 13
+	LoadLoop MusicDrum2, 4000, wobblePoints
+	LoadAnimation MusicDrum2, 800, 2, bashPoints
+	addToSwapList LobbyRm, MusicDrum2, "MusicGarden"
+	addToLoopList LobbyRm, MusicDrum2, "MusicGardenLoops"
+	
+	dim MusicDrum3
+	set MusicDrum3 = World.CreateInstance("Drum 3", "toy", LobbyRm)
+	MusicDrum3.Description = ""
+	MusicDrum3.InitializeGraphics strPaintingPath & "Thing2.x", 27,0,16,.8,0,1
+	MusicDrum3.rotationaxis.set 0,1,0
+	MusicDrum3.rotationrate = 0
+	MusicDrum3.IsMoveable = false
+	MusicDrum3.IsUiVisible = false
+	MusicDrum3.area = "MusicGarden"
+	MusicDrum3.SoundNum = 14
+	LoadLoop MusicDrum3, 2700, wobblePoints
+	LoadAnimation MusicDrum3, 800, 2, bashPoints
+	addToSwapList LobbyRm, MusicDrum3, "MusicGarden"
+	addToLoopList LobbyRm, MusicDrum3, "MusicGardenLoops"
+	
+	dim MusicDrum4
+	set MusicDrum4 = World.CreateInstance("Drum 4", "toy", LobbyRm)
+	MusicDrum4.Description = ""
+	MusicDrum4.InitializeGraphics strPaintingPath & "Thing2.x", 25.4,0,14.8,1,0.2,0
+	MusicDrum4.rotationaxis.set 0,1,0
+	MusicDrum4.rotationrate = 0
+	MusicDrum4.IsMoveable = false
+	MusicDrum4.IsUiVisible = false
+	MusicDrum4.area = "MusicGarden"
+	MusicDrum4.SoundNum = 15
+	LoadLoop MusicDrum4, 3500, wobblePoints
+	LoadAnimation MusicDrum4, 800, 2, bashPoints
+	addToSwapList LobbyRm, MusicDrum4, "MusicGarden"
+	addToLoopList LobbyRm, MusicDrum4, "MusicGardenLoops"
+	
+	dim MusicDrum5
+	set MusicDrum5 = World.CreateInstance("Drum 5", "toy", LobbyRm)
+	MusicDrum5.Description = ""
+	MusicDrum5.InitializeGraphics strPaintingPath & "Thing2.x", 23.3,0,14,1,0,0
+	MusicDrum5.rotationaxis.set 0,1,0
+	MusicDrum5.rotationrate = 0
+	MusicDrum5.IsMoveable = false
+	MusicDrum5.IsUiVisible = false
+	MusicDrum5.area = "MusicGarden"
+	MusicDrum5.SoundNum = 16
+	LoadLoop MusicDrum5, 5000, wobblePoints
+	LoadAnimation MusicDrum5, 800, 1, bashPoints
+	addToSwapList LobbyRm, MusicDrum5, "MusicGarden"
+	addToLoopList LobbyRm, MusicDrum5, "MusicGardenLoops"
+	
+	dim MusicDrum6
+	set MusicDrum6 = World.CreateInstance("Drum 6", "toy", LobbyRm)
+	MusicDrum6.Description = ""
+	MusicDrum6.InitializeGraphics strPaintingPath & "Thing2.x", 21,0,13.8,1,-0.3,0
+	MusicDrum6.rotationaxis.set 0,1,0
+	MusicDrum6.rotationrate = 0
+	MusicDrum6.IsMoveable = false
+	MusicDrum6.IsUiVisible = false
+	MusicDrum6.area = "MusicGarden"
+	MusicDrum6.SoundNum = 17
+	LoadLoop MusicDrum6, 3700, wobblePoints
+	LoadAnimation MusicDrum6, 800, 2, bashPoints
+	addToSwapList LobbyRm, MusicDrum6, "MusicGarden"
+	addToLoopList LobbyRm, MusicDrum6, "MusicGardenLoops"
+	
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		CreateMusicHorns
+'//  Purpose:  	Create the horn-shaped flowers in the music garden
+'//  Called by: BuildWorld
+'////////////////////////////////////////////////////////////////////////
+sub CreateMusicHorns
+	dim MusicHornFlower1
+	set MusicHornFlower1= World.CreateInstance("Harp", "toy", LobbyRm)
+	MusicHornFlower1.Description = ""
+	MusicHornFlower1.InitializeGraphics strPaintingPath & "Thing41.x", 3,0,35,2,-1,-0.5
+	MusicHornFlower1.Scale.set 1,.7,1
+	MusicHornFlower1.IsMoveable = false
+	MusicHornFlower1.area = "MusicGarden"
+	MusicHornFlower1.SoundNum = 19
+	LoadLoop MusicHornFlower1, 3000, array(_
+		-0.005,-0.008,0, 0.05,0,0, 1,1,1,_
+		-0.010,-0.016,0, 0.10,0,0, 1,1,1,_
+		-0.015,-0.024,0, 0.15,0,0, 1,1,1,_
+		-0.020,-0.032,0, 0.20,0,0, 1,1,1,_
+		-0.025,-0.040,0, 0.25,0,0, 1,1,1,_
+		-0.030,-0.048,0, 0.30,0,0, 1,1,1,_
+		-0.025,-0.040,0, 0.25,0,0, 1,1,1,_
+		-0.020,-0.032,0, 0.20,0,0, 1,1,1,_
+		-0.015,-0.024,0, 0.15,0,0, 1,1,1,_
+		-0.010,-0.016,0, 0.10,0,0, 1,1,1,_
+		-0.005,-0.008,0, 0.05,0,0, 1,1,1,_
+		0,0,0, 0,0,0, 1,1,1)
+	LoadAnimation MusicHornFlower1, 1000, 1, array(_
+		0,0,0, 0,0,0, 1.15,1.15,1.15,_
+		0,0,0, 0,0,0, 1.3,1.3,1.3,_
+		0,0,0, 0,0,0, 1.15,1.15,1.15,_
+		0,0,0, 0,0,0, 1,1,1)
+	addToSwapList LobbyRm, MusicHornFlower1, "MusicGarden"
+	addToLoopList LobbyRm, MusicHornFlower1, "MusicGardenLoops"
+	set MusicHornFlower1 = nothing	
+
+	dim MusicHornFlower2
+	set MusicHornFlower2= World.CreateInstance("Chimes", "toy", LobbyRm)
+	MusicHornFlower2.Description = ""
+	MusicHornFlower2.InitializeGraphics strPaintingPath & "Thing42.x", 4.5,-0.5,35,-0.25,0,-0.75
+	MusicHornFlower2.Scale.set 1,.7,1
+	MusicHornFlower2.IsMoveable = false
+	MusicHornFlower2.area = "MusicGarden"
+	MusicHornFlower2.SoundNum = 20
+	LoadLoop MusicHornFlower2, 4000, array(_
+		-0.005,-0.008,0, 0.05,0,0, 1,1,1,_
+		-0.010,-0.016,0, 0.10,0,0, 1,1,1,_
+		-0.015,-0.024,0, 0.15,0,0, 1,1,1,_
+		-0.020,-0.032,0, 0.20,0,0, 1,1,1,_
+		-0.025,-0.040,0, 0.25,0,0, 1,1,1,_
+		-0.030,-0.048,0, 0.30,0,0, 1,1,1,_
+		-0.025,-0.040,0, 0.25,0,0, 1,1,1,_
+		-0.020,-0.032,0, 0.20,0,0, 1,1,1,_
+		-0.015,-0.024,0, 0.15,0,0, 1,1,1,_
+		-0.010,-0.016,0, 0.10,0,0, 1,1,1,_
+		-0.005,-0.008,0, 0.05,0,0, 1,1,1,_
+		0,0,0, 0,0,0, 1,1,1)
+	LoadAnimation MusicHornFlower2, 1000, 1, array(_
+		0,0,0, 0,0,0, 1.25,1.25,1.25,_
+		0,0,0, 0,0,0, 1.5,1.5,1.5,_
+		0,0,0, 0,0,0, 1.25,1.25,1.25,_
+		0,0,0, 0,0,0, 1,1,1)
+	addToSwapList LobbyRm, MusicHornFlower2, "MusicGarden"
+	addToLoopList LobbyRm, MusicHornFlower2, "MusicGardenLoops"
+	set MusicHornFlower2 = nothing	
+				
+	dim MusicHornFlower3
+	set MusicHornFlower3= World.CreateInstance("Deep Chimes", "toy", LobbyRm)
+	MusicHornFlower3.Description = ""
+	MusicHornFlower3.InitializeGraphics strPaintingPath & "Thing43.x", 6,0,36,-0.5,0,-0.5
+	MusicHornFlower3.Scale.set 1,1.5,1
+	MusicHornFlower3.IsMoveable = false
+	MusicHornFlower3.area = "MusicGarden"
+	MusicHornFlower3.SoundNum = 21
+	LoadLoop MusicHornFlower3, 3500, array(_
+		0,0,-0.005, 0,0.005,0, 1,1,1,_
+		0,0,-0.010, 0,0.010,0, 1,1,1,_
+		0,0,-0.015, 0,0.015,0, 1,1,1,_
+		0,0,-0.020, 0,0.020,0, 1,1,1,_
+		0,0,-0.025, 0,0.025,0, 1,1,1,_
+		0,0,-0.030, 0,0.030,0, 1,1.05,1,_
+		0,0,-0.035, 0,0.035,0, 1,1,1,_
+		0,0,-0.040, 0,0.040,0, 1,0.95,1,_
+		0,0,-0.035, 0,0.035,0, 1,0.9,1,_
+		0,0,-0.030, 0,0.030,0, 1,0.95,1,_
+		0,0,-0.025, 0,0.025,0, 1,1,1,_
+		0,0,-0.020, 0,0.020,0, 1,1,1,_
+		0,0,-0.015, 0,0.015,0, 1,1,1,_
+		0,0,-0.010, 0,0.010,0, 1,1,1,_
+		0,0,-0.005, 0,0.005,0, 1,1,1,_
+		0,0,0, 0,0,0, 1,1,1)
+	LoadAnimation MusicHornFlower3, 1000, 1, array(_
+		0,0,0, 0,0,0, 1.25,1.25,1.25,_
+		0,0,0, 0,0,0, 1.5,1.5,1.5,_
+		0,0,0, 0,0,0, 1.25,1.25,1.25,_
+		0,0,0, 0,0,0, 1,1,1)
+	addToSwapList LobbyRm, MusicHornFlower3, "MusicGarden"
+	addToLoopList LobbyRm, MusicHornFlower3, "MusicGardenLoops"
+	set MusicHornFlower3 = nothing	
+				
+	dim MusicHornFlower4
+	set MusicHornFlower4= World.CreateInstance("Chimes", "toy", LobbyRm)
+	MusicHornFlower4.Description = ""
+	MusicHornFlower4.InitializeGraphics strPaintingPath & "Thing44.x", 7,0,35,-0.25,0,-0.75
+	MusicHornFlower4.Scale.set 1,.7,1
+	MusicHornFlower4.IsMoveable = false
+	MusicHornFlower4.area = "MusicGarden"
+	MusicHornFlower4.SoundNum = 22
+	LoadLoop MusicHornFlower4, 3200, array(_
+		-0.005,-0.008,0, 0.05,0,0, 1,1,1,_
+		-0.010,-0.016,0, 0.10,0,0, 1,1,1,_
+		-0.015,-0.024,0, 0.15,0,0, 1,1,1,_
+		-0.020,-0.032,0, 0.20,0,0, 1,1,1,_
+		-0.025,-0.040,0, 0.25,0,0, 1,1,1,_
+		-0.030,-0.048,0, 0.30,0,0, 1,1,1,_
+		-0.025,-0.040,0, 0.25,0,0, 1,1,1,_
+		-0.020,-0.032,0, 0.20,0,0, 1,1,1,_
+		-0.015,-0.024,0, 0.15,0,0, 1,1,1,_
+		-0.010,-0.016,0, 0.10,0,0, 1,1,1,_
+		-0.005,-0.008,0, 0.05,0,0, 1,1,1,_
+		0,0,0, 0,0,0, 1,1,1)
+	LoadAnimation MusicHornFlower4, 1000, 1, array(_
+		0,0,0, 0,0,0, 1.25,1.25,1.25,_
+		0,0,0, 0,0,0, 1.5,1.5,1.5,_
+		0,0,0, 0,0,0, 1.25,1.25,1.25,_
+		0,0,0, 0,0,0, 1,1,1)
+	addToSwapList LobbyRm, MusicHornFlower4, "MusicGarden"
+	addToLoopList LobbyRm, MusicHornFlower4, "MusicGardenLoops"
+	set MusicHornFlower4 = nothing	
+				
+	dim MusicHornFlower5
+	set MusicHornFlower5= World.CreateInstance("Harp", "toy", LobbyRm)
+	MusicHornFlower5.Description = ""
+	MusicHornFlower5.InitializeGraphics strPaintingPath & "Thing45.x", 7.8,0,34.5,-0.25,0,-0.75
+	MusicHornFlower5.Scale.set 1,.7,1
+	MusicHornFlower5.IsMoveable = false
+	MusicHornFlower5.area = "MusicGarden"
+	MusicHornFlower5.SoundNum = 23
+	LoadLoop MusicHornFlower5, 4500, array(_
+		0.005,0.008,0, -0.05,0,0, 1,1,1,_
+		0.010,0.016,0, -0.10,0,0, 1,1,1,_
+		0.015,0.024,0, -0.15,0,0, 1,1,1,_
+		0.020,0.032,0, -0.20,0,0, 1,1,1,_
+		0.025,0.040,0, -0.25,0,0, 1,1,1,_
+		0.030,0.048,0, -0.30,0,0, 1,1,1,_
+		0.025,0.040,0, -0.25,0,0, 1,1,1,_
+		0.020,0.032,0, -0.20,0,0, 1,1,1,_
+		0.015,0.024,0, -0.15,0,0, 1,1,1,_
+		0.010,0.016,0, -0.10,0,0, 1,1,1,_
+		0.005,0.008,0, -0.05,0,0, 1,1,1,_
+		0,0,0, 0,0,0, 1,1,1)
+	LoadAnimation MusicHornFlower5, 2000, 2, array(_
+		0,0,0, 0,0,0, 1.10,1.10,1.10,_
+		0,0,0, 0,0,0, 1.25,1.25,1.25,_
+		0,0,0, 0,0,0, 1.30,1.30,1.30,_
+		0,0,0, 0,0,0, 1.25,1.25,1.25,_
+		0,0,0, 0,0,0, 1.30,1.30,1.30,_
+		0,0,0, 0,0,0, 1.25,1.25,1.25,_
+		0,0,0, 0,0,0, 1.30,1.30,1.30,_
+		0,0,0, 0,0,0, 1.25,1.25,1.25,_
+		0,0,0, 0,0,0, 1.10,1.10,1.10,_
+		0,0,0, 0,0,0, 1,1,1)
+	addToSwapList LobbyRm, MusicHornFlower5, "MusicGarden"
+	addToLoopList LobbyRm, MusicHornFlower5, "MusicGardenLoops"
+	set MusicHornFlower5 = nothing	
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		CreateMusicTrees
+'//  Purpose:  	Create the trees for the music garden
+'//  Called by: BuildWorld
+'////////////////////////////////////////////////////////////////////////
+sub CreateMusicTrees
+	dim MusicTree1
+	set MusicTree1 = World.CreateInstance("Australian 1", "toy", LobbyRm)
+	MusicTree1.Description = ""
+	MusicTree1.InitializeSpriteGraphics strPaintingPath & "Thing5.gif",13,0,13,0.0,0,0
+	MusicTree1.Scale.set .9,6,.9
+	MusicTree1.IsMoveable = false
+	MusicTree1.IsUiVisible = false
+	MusicTree1.area = "MusicGarden"
+	MusicTree1.SoundNum = 10
+	LoadAnimation MusicTree1, 4000, 5, array(_
+		0, 1.0, 0, 0, 0, 0, 1.1, 1, 1.1,_
+		0, 1.0, 0, 0, 0, 0, 1.2, 1, 1.2,_
+		0, 1.0, 0, 0, 0, 0, 1.3, 1, 1.3,_
+		0, 1.0, 0, 0, 0, 0, 1.4, 1, 1.4,_
+		0, 1.0, 0, 0, 0, 0, 1.5, 1, 1.5,_
+		0, 1.0, 0, 0, 0, 0, 1.6, 1, 1.6,_
+		0, 1.0, 0, 0, 0, 0, 1.65, 1, 1.65,_
+		0, 1.0, 0, 0, 0, 0, 1.65, 1, 1.65,_
+		0, 1.0, 0, 0, 0, 0, 1.6, 1, 1.6,_
+		0, 1.0, 0, 0, 0, 0, 1.5, 1, 1.5,_
+		0, 1.0, 0, 0, 0, 0, 1.4, 1, 1.4,_
+		0, 1.0, 0, 0, 0, 0, 1.3, 1, 1.3,_
+		0, 1.0, 0, 0, 0, 0, 1.2, 1, 1.2,_
+		0, 1.0, 0, 0, 0, 0, 1.1, 1, 1.1,_
+		0, 1.0, 0, 0, 0, 0, 1, 1, 1,_
+		0, 1.0, 0, 0, 0, 0, 0.9, 1, 0.9,_
+		0, 1.0, 0, 0, 0, 0, 0.8, 1, 0.8,_
+		0, 1.0, 0, 0, 0, 0, 0.7, 1, 0.7,_
+		0, 1.0, 0, 0, 0, 0, 0.6, 1, 0.6,_
+		0, 1.0, 0, 0, 0, 0, 0.5, 1, 0.5,_
+		0, 1.0, 0, 0, 0, 0, 0.5, 1, 0.5,_
+		0, 1.0, 0, 0, 0, 0, 0.6, 1, 0.6,_
+		0, 1.0, 0, 0, 0, 0, 0.7, 1, 0.7,_
+		0, 1.0, 0, 0, 0, 0, 0.8, 1, 0.8,_
+		0, 1.0, 0, 0, 0, 0, 0.9, 1, 0.9,_
+		0, 1.0, 0, 0, 0, 0, 1, 1, 1)
+	addToSwapList LobbyRm, MusicTree1, "MusicGarden"
+	set MusicTree1 = nothing	
+
+	dim MusicTree2
+	set MusicTree2 = World.CreateInstance("Australian 2", "toy", LobbyRm)
+	MusicTree2.Description = ""
+	MusicTree2.InitializeSpriteGraphics strPaintingPath & "Thing5.gif", 11,2.5,12,0.0,0,0
+	MusicTree2.Scale.set .9,3.5,.9
+	MusicTree2.IsMoveable = false
+	MusicTree2.IsUiVisible = false
+	MusicTree2.area = "MusicGarden"
+	MusicTree2.SoundNum = 9
+	LoadAnimation MusicTree2, 1000, 6, array(_
+		0, 1.0, 0, 0, 0, 0, 1.25, 1, 1.25,_
+		0, 1.0, 0, 0, 0, 0, 1.3, 1, 1.3,_
+		0, 1.0, 0, 0, 0, 0, 1.25, 1, 1.25,_
+		0, 1.0, 0, 0, 0, 0, 1, 1, 1,_
+		0, 1.0, 0, 0, 0, 0, 0.7, 1, 0.7,_
+		0, 1.0, 0, 0, 0, 0, 0.5, 1, 0.5,_
+		0, 1.0, 0, 0, 0, 0, 0.4, 1, 0.4,_
+		0, 1.0, 0, 0, 0, 0, 0.5, 1, 0.5,_
+		0, 1.0, 0, 0, 0, 0, 0.7, 1, 0.7,_
+		0, 1.0, 0, 0, 0, 0, 1, 1, 1)
+	addToSwapList LobbyRm, MusicTree2, "MusicGarden"
+	set MusicTree2 = nothing	
+
+	dim MusicTree3
+	set MusicTree3 = World.CreateInstance("Australian 3", "toy", LobbyRm)
+	MusicTree3.Description = ""
+	MusicTree3.InitializeSpriteGraphics strPaintingPath & "Thing5.gif", 9,0,13,0.0,0,0
+	MusicTree3.Scale.set .9,4,.9
+	MusicTree3.IsMoveable = false
+	MusicTree3.IsUiVisible = false
+	MusicTree3.area = "MusicGarden"
+	MusicTree3.SoundNum = 11
+	LoadAnimation MusicTree3, 2000, 3, array(_
+		0, 1.0, 0, 0, 0, 0, 1.3, 1, 1.3,_
+		0, 1.0, 0, 0, 0, 0, 1.6, 1, 1.6,_
+		0, 1.0, 0, 0, 0, 0, 1.7, 1, 1.7,_
+		0, 1.0, 0, 0, 0, 0, 1.6, 1, 1.6,_
+		0, 1.0, 0, 0, 0, 0, 1.3, 1, 1.3,_
+		0, 1.0, 0, 0, 0, 0, 1, 1, 1,_
+		0, 1.0, 0, 0, 0, 0, 0.7, 1, 0.7,_
+		0, 1.0, 0, 0, 0, 0, 0.8, 1, 0.8,_
+		0, 1.0, 0, 0, 0, 0, 0.7, 1, 0.7,_
+		0, 1.0, 0, 0, 0, 0, 0.8, 1, 0.8,_
+		0, 1.0, 0, 0, 0, 0, 1, 1, 1)
+	addToSwapList LobbyRm, MusicTree3, "MusicGarden"
+	set MusicTree3 = nothing	
+
+	dim MusicTree4
+	set MusicTree4 = World.CreateInstance("Australian 4", "toy", LobbyRm)
+	MusicTree4.Description = ""
+	MusicTree4.InitializeSpriteGraphics strPaintingPath & "Thing5.gif", 8,2.5,12,0.0,0,0
+	MusicTree4.Scale.set .9,4,.9
+	MusicTree4.IsMoveable = false
+	MusicTree4.IsUiVisible = false
+	MusicTree4.area = "MusicGarden"
+	MusicTree4.SoundNum = 10
+	LoadAnimation MusicTree4, 2000, 4, array(_
+		0, 1, 0, 0, 0, 0, 1, 1, 1,_
+		0, 2.2, 0, 0, 0, 0, 1, 1, 1,_
+		0, 1.8, 0, 0, 0, 0, 1, 1, 1,_
+		0, 1.8, 0, 0, 0, 0, 3, 2, 3,_
+		0, 1.5, 0, 0, 0, 0, 3.0, 1.5, 3.0,_
+		0, 1.4, 0, 0, 0, 0, 1.5, 1, 1.5,_
+		0, 1.3, 0, 0, 0, 0, 0.8, 1, 0.8,_
+		0, 1.1, 0, 0, 0, 0, 0.3, 1, 0.3,_
+		0, 0.8, 0, 0, 0, 0, 0.3, 1, 0.3,_
+		0, 0.4, 0, 0, 0, 0, 0.3, 1, 0.3,_
+		0, -0.2, 0, 0, 0, 0, 0.6, 1, 0.6,_
+		0, 0.0, 0, 0, 0, 0, 1, 1, 1)
+	addToSwapList LobbyRm, MusicTree4, "MusicGarden"
+	set MusicTree4 = nothing	
+
+	dim MusicTree5
+	set MusicTree5 = World.CreateInstance("Australian 5", "toy", LobbyRm)
+	MusicTree5.Description = ""
+	MusicTree5.InitializeSpriteGraphics strPaintingPath & "Thing5.gif", 5,0,13,0.0,0,0
+	MusicTree5.Scale.set .9,6,.9
+	MusicTree5.IsMoveable = false
+	MusicTree5.IsUiVisible = false
+	MusicTree5.area = "MusicGarden"
+	MusicTree5.SoundNum = 9
+	LoadAnimation MusicTree5, 4000, 4, array(_
+		0, 1.0, 0, 0, 0, 0, 1.1, 1, 1.1,_
+		0, 1.0, 0, 0, 0, 0, 1.2, 1, 1.2,_
+		0, 1.0, 0, 0, 0, 0, 1.3, 1, 1.3,_
+		0, 1.0, 0, 0, 0, 0, 1.4, 1, 1.4,_
+		0, 1.0, 0, 0, 0, 0, 1.5, 1, 1.5,_
+		0, 1.0, 0, 0, 0, 0, 1.6, 1, 1.6,_
+		0, 1.0, 0, 0, 0, 0, 1.65, 1, 1.65,_
+		0, 1.0, 0, 0, 0, 0, 1.65, 1, 1.65,_
+		0, 1.0, 0, 0, 0, 0, 1.6, 1, 1.6,_
+		0, 1.0, 0, 0, 0, 0, 1.5, 1, 1.5,_
+		0, 1.0, 0, 0, 0, 0, 1.4, 1, 1.4,_
+		0, 1.0, 0, 0, 0, 0, 1.3, 1, 1.3,_
+		0, 1.0, 0, 0, 0, 0, 1.2, 1, 1.2,_
+		0, 1.0, 0, 0, 0, 0, 1.1, 1, 1.1,_
+		0, 1.0, 0, 0, 0, 0, 1, 1, 1,_
+		0, 1.0, 0, 0, 0, 0, 0.9, 1, 0.9,_
+		0, 1.0, 0, 0, 0, 0, 0.8, 1, 0.8,_
+		0, 1.0, 0, 0, 0, 0, 0.7, 1, 0.7,_
+		0, 1.0, 0, 0, 0, 0, 0.6, 1, 0.6,_
+		0, 1.0, 0, 0, 0, 0, 0.5, 1, 0.5,_
+		0, 1.0, 0, 0, 0, 0, 0.5, 1, 0.5,_
+		0, 1.0, 0, 0, 0, 0, 0.6, 1, 0.6,_
+		0, 1.0, 0, 0, 0, 0, 0.7, 1, 0.7,_
+		0, 1.0, 0, 0, 0, 0, 0.8, 1, 0.8,_
+		0, 1.0, 0, 0, 0, 0, 0.9, 1, 0.9,_
+		0, 1.0, 0, 0, 0, 0, 1, 1, 1)
+	addToSwapList LobbyRm, MusicTree5, "MusicGarden"
+	set MusicTree5 = nothing	
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		CreateMusicBlocks
+'//  Purpose:  	To create the musical blocks in the music garden
+'//  Called by: BuildWorld
+'////////////////////////////////////////////////////////////////////////
+sub CreateMusicBlocks
+	dim MusicWoodBlockBall1
+	set MusicWoodBlockBall1= World.CreateInstance("Light metal chimes", "toy", LobbyRm)
+	MusicWoodBlockBall1.Description = ""
+	MusicWoodBlockBall1.InitializeGraphics strPaintingPath & "Thing1Ball1.x", -4.84,1.2,17.5,0.0,0.0,1.0
+	MusicWoodBlockBall1.scale.set 0.3,0.3,0.3
+	MusicWoodBlockBall1.rotationaxis.set 0,1,0
+	MusicWoodBlockBall1.rotationrate = 0
+	MusicWoodBlockBall1.IsMoveable = false
+	MusicWoodBlockBall1.IsUiVisible = false
+	MusicWoodBlockBall1.area = "MusicGarden"
+	MusicWoodBlockBall1.SoundNum = 2
+	' half sine wave up and down the y axis
+
+	LoadLoop MusicWoodBlockBall1, 4000, wobblePoints
+	LoadAnimation MusicWoodBlockBall1, 1000, 6, array(_
+		0.587784823, 0.628318, 0, 0, 0, 0, 1, 1, 1,_
+		0.951056188, 1.256636, 0, 0, 0, 0, 1, 1, 1,_
+		0.951057008, 1.884954, 0, 0, 0, 0, 1, 1, 1,_
+		0.58778697, 2.513272, 0, 0, 0, 0, 1, 1, 1,_
+		0, 3.14159, 0, 0, 0, 0, 1, 1, 1,_
+		-0.58778697, 2.513272, 0, 0, 0, 0, 1, 1, 1,_
+		-0.951057008, 1.884954, 0, 0, 0, 0, 1, 1, 1,_
+		-0.951056188, 1.256636, 0, 0, 0, 0, 1, 1, 1,_
+		-0.587784823, 0.628318, 0, 0, 0, 0, 1, 1, 1,_
+		0, 0, 0, 0, 0, 0, 1, 1, 1)
+	addToSwapList LobbyRm, MusicWoodBlockBall1, "MusicGarden"
+	addToLoopList LobbyRm, MusicWoodBlockBall1, "MusicGardenLoops"
+	set MusicWoodBlockBall1 = nothing	
+
+	dim MusicWoodBlockBall2
+	set MusicWoodBlockBall2= World.CreateInstance("Light wood chimes", "toy", LobbyRm)
+	MusicWoodBlockBall2.Description = ""
+	MusicWoodBlockBall2.InitializeGraphics strPaintingPath & "Thing1Ball1.x", -5.9,1.2,17.9,0.0,0.0,1.0
+	MusicWoodBlockBall2.scale.set 0.3,0.3,0.3
+	MusicWoodBlockBall2.rotationaxis.set 0,1,0
+	MusicWoodBlockBall2.rotationrate = 0
+	MusicWoodBlockBall2.IsMoveable = false
+	MusicWoodBlockBall2.IsUiVisible = false
+	MusicWoodBlockBall2.area = "MusicGarden"
+	MusicWoodBlockBall2.SoundNum = 3
+	' vertical leap
+	LoadLoop MusicWoodBlockBall2, 3600, wobblePoints
+	LoadAnimation MusicWoodBlockBall2, 2000, 3, array(_
+		0, 0.6, 0, 0, 0, 0, 1, 1, 1,_
+		0, 1.125, 0, 0, 0, 0, 1, 1, 1,_
+		0, 1.575, 0, 0, 0, 0, 1, 1, 1,_
+		0, 1.95, 0, 0, 0, 0, 1, 1, 1,_
+		0, 2.25, 0, 0, 0, 0, 1, 1, 1,_
+		0, 2.475, 0, 0, 0, 0, 1, 1, 1,_
+		0, 2.625, 0, 0, 0, 0, 1, 1, 1,_
+		0, 2.7, 0, 0, 0, 0, 1, 1, 1,_
+		0, 2.7, 0, 0, 0, 0, 1, 1, 1,_
+		0, 2.625, 0, 0, 0, 0, 1, 1, 1,_
+		0, 2.475, 0, 0, 0, 0, 1, 1, 1,_
+		0, 2.25, 0, 0, 0, 0, 1, 1, 1,_
+		0, 1.95, 0, 0, 0, 0, 1, 1, 1,_
+		0, 1.575, 0, 0, 0, 0, 1, 1, 1,_
+		0, 1.125, 0, 0, 0, 0, 1, 1, 1,_
+		0, 0.6, 0, 0, 0, 0, 1, 1, 1,_
+		0, 0, 0, 0, 0, 0, 1, 1, 1)
+	addToSwapList LobbyRm, MusicWoodBlockBall2, "MusicGarden"
+	addToLoopList LobbyRm, MusicWoodBlockBall2, "MusicGardenLoops"
+	set MusicWoodBlockBall2 = nothing	
+
+	dim MusicWoodBlockBall3
+	set MusicWoodBlockBall3= World.CreateInstance("Medium metal chimes", "toy", LobbyRm)
+	MusicWoodBlockBall3.Description = ""
+	MusicWoodBlockBall3.InitializeGraphics strPaintingPath & "Thing1Ball1.x", -6.96,1.2,18.3,0.0,0.0,1.0
+	MusicWoodBlockBall3.scale.set 0.3,0.3,0.3
+	MusicWoodBlockBall3.rotationaxis.set 0,1,0
+	MusicWoodBlockBall3.rotationrate = 0
+	MusicWoodBlockBall3.IsMoveable = false
+	MusicWoodBlockBall3.IsUiVisible = false
+	MusicWoodBlockBall3.area = "MusicGarden"
+	MusicWoodBlockBall3.SoundNum = 4
+	' vertical leap
+	LoadLoop MusicWoodBlockBall3, 3400, wobblePoints
+	LoadAnimation MusicWoodBlockBall3, 1000, 6, array(_
+		0, 0.75, 0, 0, 0, 0, 1, 1, 1,_
+		0, 1.4211, 0, 0, 0, 0, 1, 1, 1,_
+		0, 2.0133, 0, 0, 0, 0, 1, 1, 1,_
+		0, 2.5266, 0, 0, 0, 0, 1, 1, 1,_
+		0, 2.961, 0, 0, 0, 0, 1, 1, 1,_
+		0, 3.3165, 0, 0, 0, 0, 1, 1, 1,_
+		0, 3.5931, 0, 0, 0, 0, 1, 1, 1,_
+		0, 3.7908, 0, 0, 0, 0, 1, 1, 1,_
+		0, 3.9096, 0, 0, 0, 0, 1, 1, 1,_
+		0, 3.9495, 0, 0, 0, 0, 1, 1, 1,_
+		0, 3.9105, 0, 0, 0, 0, 1, 1, 1,_
+		0, 3.7926, 0, 0, 0, 0, 1, 1, 1,_
+		0, 3.5958, 0, 0, 0, 0, 1, 1, 1,_
+		0, 3.3201, 0, 0, 0, 0, 1, 1, 1,_
+		0, 2.9655, 0, 0, 0, 0, 1, 1, 1,_
+		0, 2.532, 0, 0, 0, 0, 1, 1, 1,_
+		0, 2.0196, 0, 0, 0, 0, 1, 1, 1,_
+		0, 1.4283, 0, 0, 0, 0, 1, 1, 1,_
+		0, 0.7581, 0, 0, 0, 0, 1, 1, 1,_
+		0, 0.009, 0, 0, 0, 0, 1, 1, 1)
+	addToSwapList LobbyRm, MusicWoodBlockBall3, "MusicGarden"
+	addToLoopList LobbyRm, MusicWoodBlockBall3, "MusicGardenLoops"
+	set MusicWoodBlockBall3 = nothing	
+
+	dim MusicWoodBlockBall4
+	set MusicWoodBlockBall4= World.CreateInstance("Laser pulse", "toy", LobbyRm)
+	MusicWoodBlockBall4.Description = ""
+	MusicWoodBlockBall4.InitializeGraphics strPaintingPath & "Thing1Ball1.x", -9.08,1.2,19.1,0.0,0.0,1.0
+	MusicWoodBlockBall4.scale.set 0.3,0.3,0.3
+	MusicWoodBlockBall4.rotationaxis.set 0,1,0
+	MusicWoodBlockBall4.rotationrate = 0
+	MusicWoodBlockBall4.IsMoveable = false
+	MusicWoodBlockBall4.IsUiVisible = false
+	MusicWoodBlockBall4.area = "MusicGarden"
+	MusicWoodBlockBall4.SoundNum = 7
+	' vertical leap
+	LoadLoop MusicWoodBlockBall4, 3600, wobblePoints
+	LoadAnimation MusicWoodBlockBall4, 1000, 1, array(_
+		0, 1, 0, 0, 0, 0, 1, 1, 1,_
+		0, 2.2, 0, 0, 0, 0, 1, 1, 1,_
+		0, 1.8, 0, 0, 0, 0, 1, 1, 1,_
+		0, 1.8, 0, 0, 0, 0, 3, 2, 3,_
+		0, 1.5, 0, 0, 0, 0, 3.0, 1.5, 3.0,_
+		0, 1.4, 0, 0, 0, 0, 1.5, 1, 1.5,_
+		0, 1.3, 0, 0, 0, 0, 0.8, 1, 0.8,_
+		0, 1.1, 0, 0, 0, 0, 0.3, 1, 0.3,_
+		0, 0.8, 0, 0, 0, 0, 0.3, 1, 0.3,_
+		0, 0.4, 0, 0, 0, 0, 0.3, 1, 0.3,_
+		0, -0.2, 0, 0, 0, 0, 0.6, 1, 0.6,_
+		0, 0.0, 0, 0, 0, 0, 1, 1, 1)
+	addToSwapList LobbyRm, MusicWoodBlockBall4, "MusicGarden"
+	addToLoopList LobbyRm, MusicWoodBlockBall4, "MusicGardenLoops"
+	set MusicWoodBlockBall4 = nothing	
+
+	dim MusicWoodBlock
+	set MusicWoodBlock= World.CreateInstance("Music Wood Block", "instrument", LobbyRm)
+	MusicWoodBlock.Description = ""
+	MusicWoodBlock.InitializeGraphics strPaintingPath & "Thing1.x", 0.0,0.0,0.0,0.0,0.0,1.0
+	MusicWoodBlock.IsMoveable = false
+'				MusicWoodBlock.IsUiVisible = false
+	set MusicWoodBlock.Toys = world.CreatePropertyList
+	MusicWoodBlock.Toys.add MusicWoodBlockBall1
+	MusicWoodBlock.Toys.add MusicWoodBlockBall2
+	MusicWoodBlock.Toys.add MusicWoodBlockBall3
+	addToSwapList LobbyRm, MusicWoodBlock, "MusicGarden"
+	set MusicWoodBlock = nothing	
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		CreateFlowers
+'//  Purpose:  	Create the flower cart and flower gift component objects
+'//  Called by: BuildWorld
+'////////////////////////////////////////////////////////////////////////
+sub CreateFlowers
+
+	dim flowerCart, obj
+	set flowerCart = world.createInstance("Flower Cart", "giftCart", LobbyRm)
+	flowerCart.InitializeGraphics strLobbyPath & "cartflwr.x",29, .19, 7,-0.4,0.0,1.0
+	flowerCart.editPage = strFlowerURL
+'			flowerCart.showPage = "showFlowers.htm"
+	flowerCart.makesGiftName = "Bouquet of Flowers"
+	flowerCart.inWorldGraphic = strLobbyPath & "gift_bouquet.gif"
+	CreateFlowerCartBounds(flowerCart)
+	addToSwapList LobbyRm, flowerCart, "GiftCarts"
+			
+	set obj = world.createInstance("Tulip", "giftPiece", flowerCart)
+	obj.Description = ""
+	obj.InitializeGraphics strLobbyPath & "tulip1.gif", -0.0, 1.6, -0.1, 0.0, 0.0, -1.0
+	obj.scale.set 0.15, 0.11, 0.15
+	obj.displayName = "tulip"
+	obj.HTMLgraphic = imagesPath & "imgGift_Tulip.gif"	
+	addToSwapList LobbyRm, obj, "GiftCarts"
+	set obj = nothing	
+			
+	set obj = world.createInstance("Tulip1", "giftPiece", flowerCart)
+	obj.Description = ""
+	obj.InitializeGraphics strLobbyPath & "tulip1.gif", -0.0, 1.65, -0.4, 0.0, 0.0, -1.0
+	obj.scale.set 0.12, 0.12, 0.12
+	obj.displayName = "tulip"
+	obj.HTMLgraphic = imagesPath & "imgGift_Tulip.gif"	
+	addToSwapList LobbyRm, obj, "GiftCarts"
+	set obj = nothing	
+			
+	set obj = world.createInstance("daffodil", "giftPiece", flowerCart)
+	obj.Description = ""
+	obj.InitializeGraphics strLobbyPath & "daffad1.gif", -0.0, 1.55, 0.4, 0.0, 0.0, -1.0
+	obj.scale.set 0.22, 0.16, 0.22
+	obj.displayName = "daffodil"
+	obj.HTMLgraphic = imagesPath & "imgGift_Daffodil.gif"
+	addToSwapList LobbyRm, obj, "GiftCarts"
+	set obj = nothing	
+			
+	set obj = world.createInstance("Rose", "giftPiece", flowerCart)
+	obj.Description = ""
+	obj.InitializeGraphics strLobbyPath & "rose.gif", -0.1, 1.48, -0.55, 0.0, 0.0, -1.0
+	obj.scale.set 0.22, 0.22, 0.22
+	obj.displayName = "rose"
+	obj.HTMLgraphic = imagesPath & "imgGift_Rose.gif"
+	addToSwapList LobbyRm, obj, "GiftCarts"
+	set obj = nothing	
+
+	set obj = world.createInstance("iris", "giftPiece", flowerCart)
+	obj.Description = ""
+	obj.InitializeGraphics strLobbyPath & "iris1.gif", -0.1, 1.45, -0.3, 0.0, 0.0, -1.0
+	obj.scale.set 0.35, 0.25, 0.35
+	obj.displayName = "iris"
+	obj.HTMLgraphic = imagesPath & "imgGift_Iris.gif"
+	addToSwapList LobbyRm, obj, "GiftCarts"
+	set obj = nothing	
+
+	set obj = world.createInstance("Lily", "giftPiece", flowerCart)
+	obj.Description = ""
+	obj.InitializeGraphics strLobbyPath & "Lilyptl.gif", -0.1, 1.5, .9, 0.0, 0.0, -1.0
+	obj.scale.set 0.2, 0.2, 0.2
+	obj.displayName = "iris"
+	obj.HTMLgraphic = imagesPath & "imgGift_Lily.gif"
+	addToSwapList LobbyRm, obj, "GiftCarts"
+	set obj = nothing	
+
+	set obj = world.createInstance("leaves", "artifact", flowerCart)
+	obj.Description = ""
+	obj.InitializeSpriteGraphics strLobbyPath & "leaftile.gif", 0.00, 1.35, -0.2, 0.0, 0.0, 0.0
+	obj.scale.set 0.25, 0.25, 0.25
+	obj.displayName = "leaves"
+	addToSwapList LobbyRm, obj, "GiftCarts"
+	set obj = nothing	
+
+	set obj = world.createInstance("leaves", "artifact", flowerCart)
+	obj.Description = ""
+	obj.InitializeSpriteGraphics strLobbyPath & "leaftile.gif", -0.0, 1.35, 0.27, 0.0, 0.0, 0.0
+	obj.scale.set 0.25, 0.25, 0.25
+	obj.displayName = "leaves"
+	addToSwapList LobbyRm, obj, "GiftCarts"
+	set obj = nothing	
+
+	set obj = world.createInstance("leaves", "artifact", flowerCart)
+	obj.Description = ""
+	obj.InitializeSpriteGraphics strLobbyPath & "leaftile.gif", 0.0, 1.35, .7, 0.0, 0.0, 0.0
+	obj.scale.set 0.25, 0.25, 0.25
+	obj.displayName = "leaves"
+	addToSwapList LobbyRm, obj, "GiftCarts"
+	set obj = nothing	
+
+	set obj = world.createInstance("leafend", "artifact", flowerCart)
+	obj.Description = ""
+	obj.InitializeSpriteGraphics strLobbyPath & "leafend.gif", 0.0, 1.35, -.5, 0.0, 0.0, 0.0
+	obj.scale.set 0.5, 0.25, 0.25
+	obj.displayName = "leafend"
+	addToSwapList LobbyRm, obj, "GiftCarts"
+	set obj = nothing	
+
+	set obj = world.createInstance("leafend", "artifact", flowerCart)
+	obj.Description = ""
+	obj.InitializeSpriteGraphics strLobbyPath & "leafend.gif", -0.0, 1.35, .9, 0.0, 0.0, 0.0
+	obj.scale.set 0.5, 0.25, 0.25
+	obj.displayName = "leafend"
+	addToSwapList LobbyRm, obj, "GiftCarts"
+	set obj = nothing
+	
+	set flowerCart = nothing	
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		CreateBalloons
+'//  Purpose:  	Create the balloon cart and balloon gift component objects
+'//  Called by: BuildWorld
+'////////////////////////////////////////////////////////////////////////
+sub CreateBalloons
+	dim balloonCart, obj
+	set balloonCart = world.createInstance("Balloon Cart", "giftCart", LobbyRm)
+	balloonCart.InitializeGraphics strLobbyPath & "cartBln.x", 29, .22, -4,0.4,0.0,1.0
+	balloonCart.editPage = strBalloonURL
+	balloonCart.makesGiftName = "Bunch of Balloons"
+	balloonCart.inWorldGraphic = strLobbyPath & "gift_balloons.gif"
+	CreateBalloonCartBounds(balloonCart)
+	addToSwapList LobbyRm, balloonCart, "GiftCarts"
+
+	set obj = World.CreateInstance("Round", "giftPiece", balloonCart)
+	obj.Description = ""
+	obj.InitializeSpriteGraphics strLobbyPath & "balloonL.gif", .32, 1.871, 1.1, 0.0, 0.0, -1.0
+	obj.Scale.Set .4,.65,.4
+	obj.displayName = "balloon"
+	obj.HTMLgraphic = imagesPath & "imgBlnSausage.gif"
+	addToSwapList LobbyRm, obj, "GiftCarts"
+	set obj = nothing	
+
+	set obj = World.CreateInstance("Rings", "giftPiece", balloonCart)
+	obj.Description = ""
+	obj.InitializeSpriteGraphics strLobbyPath & "balloonM.gif", 0.312, 1.86, 0.592, 0.0, 0.0, -1.0
+	obj.Scale.Set .45,.65,.45
+	obj.displayName = "balloon"
+	obj.HTMLgraphic = imagesPath & "imgBlnSwirl.gif"
+	addToSwapList LobbyRm, obj, "GiftCarts"
+	set obj = nothing	
+
+	set obj = World.CreateInstance("Spiral", "giftPiece", balloonCart)
+	obj.Description = ""
+	obj.InitializeSpriteGraphics strLobbyPath & "balloonT.gif", -0.43, 1.95, 0.6, 1, 0.0, 0.0
+	obj.Scale.Set .5,.75,.5
+	obj.displayName = "balloon"
+	obj.HTMLgraphic = imagesPath & "imgBlnSpiral.gif"
+	addToSwapList LobbyRm, obj, "GiftCarts"
+	set obj = nothing	
+
+	set obj = World.CreateInstance("Star", "giftPiece", balloonCart)
+	obj.Description = ""
+	obj.InitializeSpriteGraphics strLobbyPath & "balloonS.gif", -0.42, 1.95, 1.1, 1, 0.0, 0.0
+	obj.Scale.Set .5,.75,.5
+	obj.displayName = "balloon"
+	obj.HTMLgraphic = imagesPath & "imgBlnStar.gif"
+	addToSwapList LobbyRm, obj, "GiftCarts"
+	set obj = nothing	
+	
+	set balloonCart = nothing	
+end sub
+
+'//////////////////////////////////////////////////////////////////////////
+'//  Sub:		CreateChessPieces
+'//  Purpose:  	Create the chess pieces by looping through a couple of property arrays
+'//  Note: piece naming notation: W = White, B=Black
+'//  Called by: BuildWorld
+'//////////////////////////////////////////////////////////////////////////
+sub CreateChessPieces()
+	dim objPiece		' the current piece
+	dim arrPieces(31,2)	' column 0 of the array contains piece names,
+						' column 1 specifies the home squares of the pieces
+	' piece names
+	arrPieces(0,0)="WQRook"
+	arrPieces(1,0)="WQKnight"
+	arrPieces(2,0)="WQBishop"
+	arrPieces(3,0)="WQueen"
+	arrPieces(4,0)="WKing"
+	arrPieces(5,0)="WKBishop"
+	arrPieces(6,0)="WKKnight"
+	arrPieces(7,0)="WKRook"
+	arrPieces(8,0)="WQRPawn"
+	arrPieces(9,0)="WQNPawn"
+	arrPieces(10,0)="WQBPawn"
+	arrPieces(11,0)="WQPawn"
+	arrPieces(12,0)="WKPawn"
+	arrPieces(13,0)="WKBPawn"
+	arrPieces(14,0)="WKNPawn"
+	arrPieces(15,0)="WKRPawn"
+	arrPieces(16,0)="BQRook"
+	arrPieces(17,0)="BQKnight"
+	arrPieces(18,0)="BQBishop"
+	arrPieces(19,0)="BQueen"
+	arrPieces(20,0)="BKing"
+	arrPieces(21,0)="BKBishop"
+	arrPieces(22,0)="BKKnight"
+	arrPieces(23,0)="BKRook"
+	arrPieces(24,0)="BQRPawn"
+	arrPieces(25,0)="BQNPawn"
+	arrPieces(26,0)="BQBPawn"
+	arrPieces(27,0)="BQPawn"
+	arrPieces(28,0)="BKPawn"
+	arrPieces(29,0)="BKBPawn"
+	arrPieces(30,0)="BKNPawn"
+	arrPieces(31,0)="BKRPawn"
+	' home squares of the pieces
+	arrPieces(0,1)="A1"
+	arrPieces(1,1)="B1"
+	arrPieces(2,1)="C1"
+	arrPieces(3,1)="D1"
+	arrPieces(4,1)="E1"
+	arrPieces(5,1)="F1"
+	arrPieces(6,1)="G1"
+	arrPieces(7,1)="H1"
+	arrPieces(8,1)="A2"
+	arrPieces(9,1)="B2"
+	arrPieces(10,1)="C2"
+	arrPieces(11,1)="D2"
+	arrPieces(12,1)="E2"
+	arrPieces(13,1)="F2"
+	arrPieces(14,1)="G2"
+	arrPieces(15,1)="H2"
+	arrPieces(16,1)="A8"
+	arrPieces(17,1)="B8"
+	arrPieces(18,1)="C8"
+	arrPieces(19,1)="D8"
+	arrPieces(20,1)="E8"
+	arrPieces(21,1)="F8"
+	arrPieces(22,1)="G8"
+	arrPieces(23,1)="H8"
+	arrPieces(24,1)="A7"
+	arrPieces(25,1)="B7"
+	arrPieces(26,1)="C7"
+	arrPieces(27,1)="D7"
+	arrPieces(28,1)="E7"
+	arrPieces(29,1)="F7"
+	arrPieces(30,1)="G7"
+	arrPieces(31,1)="H7"
+	
+	dim arrPieceProps(5,3)				' this array holds the 6 pieces' specific properties
+	arrPieceProps(0,0) = "Pawn"			' the name of the piece's rank 
+	arrPieceProps(0,1) = array(.4,.5,.4)	' the scale info for this rank	
+	arrPieceProps(0,2) = .08				' the original y position
+	arrPieceProps(1,0) = "Rook"
+	arrPieceProps(1,1) = array(.5,.7,.5)
+	arrPieceProps(1,2) = .22
+	arrPieceProps(2,0) = "Knight"
+	arrPieceProps(2,1) = array(.5,.7,.5)
+	arrPieceProps(2,2) = .3
+	arrPieceProps(3,0) = "Bishop"
+	arrPieceProps(3,1) = array(.5,.7,.5)
+	arrPieceProps(3,2) = .3
+	arrPieceProps(4,0) = "Queen"
+	arrPieceProps(4,1) = array(.6,.8,.6)
+	arrPieceProps(4,2) = .37
+	arrPieceProps(5,0) = "King"
+	arrPieceProps(5,1) = array(.6,.8,.6)
+	arrPieceProps(5,2) = .37
+
+	dim i, j
+	dim intTeam		' the pieces team, black or white
+	intTeam = 1
+	' for each piece in the array
+	for i = 0 to UBound(arrPieces)
+		if i = 16 then intTeam = 0
+		for j = 0 to UBound(arrPieceProps)
+			if InStr(LCase(arrPieces(i,0)),LCase(arrPieceProps(j,0))) then
+				' create the piece object in the current room 
+				set objPiece = World.CreateInstance(arrPieces(i,0), "ChessPiece", LobbyRm)
+				' set the home sqaure on the object for use when discarding
+				objPiece.Home = arrPieces(i,1)		
+				' the sprite in the world
+				objPiece.InitializeSpriteGraphics strLobbyPath & arrPieceProps(j,0) & ".gif", PieceX(arrPieces(i,1)),arrPieceProps(j,2),PieceY(arrPieces(i,1)),0,0,0
+				objPiece.Description = "The " & arrPieces(i,0)
+				' the name of the object in world
+				objPiece.DisplayName = arrPieces(i,0)
+				' the original y coord, when putting the piece back into play from discard
+				objPiece.OrigY = arrPieceProps(j,2)
+				' the scale of the graphics
+				objPiece.Scale.Set arrPieceProps(j,1)(0),arrPieceProps(j,1)(1),arrPieceProps(j,1)(2)
+				' the piece's team: Black=0, White=1
+				objPiece.Team = intTeam		
+				' add to the swaplist for going in and out of swappable rooms
+'				addToSwapList LobbyRm, objPiece, "GameRoom"
+				set objPiece = nothing					
+				exit for
+			end if
+		next
+	next
+end sub 'CreateChessPieces	
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Function:	PieceX and PieceY
+'//  Purpose:  	Calculate world coordinates for chess piece home squares (e.g. "B7")
+'//  Args:		strSquare - the home square of the piece
+'//  Returns:	The X or Y value as a number
+'//  Called by:	CreateChessPieces
+'////////////////////////////////////////////////////////////////////////
+function PieceX(strSquare)
+	' Note: 65 is "A"'s ascii char code
+	PieceX = (asc(Left(UCase(strSquare),1))-65)*numSquareX + numColAX
+end function
+	
+function PieceY(strSquare)
+	PieceY = ((Right(UCase(strSquare),1)-1)*numSquareZ) + numRow1Z
+end function
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		Make_Area_Labels
+'//  Purpose:  	Make the area label objects;
+'//				In an earlier version of the world these labels floated in the air
+'//				and were visible only from Overview. Clicking on them zoomed the
+'//				avatar down to a specific area.
+'//  Called by: BuildWorld
+'////////////////////////////////////////////////////////////////////////
+sub Make_Area_Labels
+	dim ResourceDeskLabel
+	set ResourceDeskLabel= World.CreateInstance("Resource Desk", "gadget", LobbyRm)
+	ResourceDeskLabel.Description = "ResourceDeskLabel"
+	ResourceDeskLabel.InitializeGraphics strLobbyPath & "HDlabel.x", 6, 6, 15, -1.0, -0.7, 0.0
+	ResourceDeskLabel.addproperty "areaName", "ResourceDesk", , world.PS_ALL_RWA
+	ResourceDeskLabel.CreateAndAddMethod World.METHOD_CLIENT, area_module, "ZoomInClick", "OnLButtonUp",  , world.PS_ALL_E + world.PS_ALL_RWA
+	ResourceDeskLabel.Scale = world.global.CreateVector(10, 15, 19)
+	ResourceDeskLabel.showSampleLinks = true		' this causes the gadget.OnLButtonUp method to fire a UI event called "SurfToSampleURL"
+	ResourceDeskLabel.clickURL = strResourceLblURL	' this URL is opened in an iframe by SampleLinks.htm when it handles the "SurfToSampleURL" UI event
+	addToSwapList LobbyRm, ResourceDeskLabel, "Overview"
+	set ResourceDeskLabel = nothing	
+
+	dim SeattleDeskLabel
+	set SeattleDeskLabel= World.CreateInstance("Seattle Information Desk", "gadget", LobbyRm)
+	SeattleDeskLabel.Description = "SeattleDeskLabel"
+	SeattleDeskLabel.InitializeGraphics strLobbyPath & "SDlabel.x", 11, 6, -1.5, -1.0, -1.1, 0.0
+	SeattleDeskLabel.addproperty "areaName", "SeattleDesk", , world.PS_ALL_RWA
+	SeattleDeskLabel.CreateAndAddMethod World.METHOD_CLIENT, area_module, "ZoomInClick", "OnLButtonUp",  , world.PS_ALL_E + world.PS_ALL_RWA
+	SeattleDeskLabel.Scale = world.global.CreateVector(10,12,14)
+	SeattleDeskLabel.showSampleLinks = true
+	SeattleDeskLabel.clickURL = strSeaLblURL
+	addToSwapList LobbyRm, SeattleDeskLabel, "Overview"
+	set SeattleDeskLabel = nothing	
+
+	dim DiscussionAreaLabel
+	set DiscussionAreaLabel= World.CreateInstance("Discussion Area", "gadget", LobbyRm)
+	DiscussionAreaLabel.Description = "DiscussionAreaLabel"
+	DiscussionAreaLabel.InitializeGraphics strLobbyPath & "DAlabel.x",  1, 7, -9, -1.0, -1.0, 0.0
+	DiscussionAreaLabel.addproperty "areaName", "DiscussionArea", , world.PS_ALL_RWA
+	DiscussionAreaLabel.CreateAndAddMethod World.METHOD_CLIENT, area_module, "ZoomInClick", "OnLButtonUp",  , world.PS_ALL_E + world.PS_ALL_RWA
+	DiscussionAreaLabel.Scale = world.global.CreateVector(10, 10, 20)
+	DiscussionAreaLabel.showSampleLinks = true
+	DiscussionAreaLabel.clickURL = strBBSURL
+	addToSwapList LobbyRm, DiscussionAreaLabel, "Overview"
+	set DiscussionAreaLabel = nothing	
+
+	dim GiftCartsLabel
+	set GiftCartsLabel= World.CreateInstance("Gift Carts", "gadget", LobbyRm)
+	GiftCartsLabel.Description = "GiftCartsLabel"
+	GiftCartsLabel.InitializeGraphics strLobbyPath & "GSlabel.x", 22, 8, 3.5, -1.0, -1.0, 0.0
+	GiftCartsLabel.addproperty "areaName", "GiftCarts", , world.PS_ALL_RWA
+	GiftCartsLabel.CreateAndAddMethod World.METHOD_CLIENT, area_module, "ZoomInClick", "OnLButtonUp",  , world.PS_ALL_E + world.PS_ALL_RWA
+	GiftCartsLabel.Scale = world.global.CreateVector(20,10,13)
+	GiftCartsLabel.showSampleLinks = true
+	GiftCartsLabel.clickURL = strGiftsLblURL
+	addToSwapList LobbyRm, GiftCartsLabel, "Overview"
+	set GiftCartsLabel = nothing	
+
+	dim GameRoomLabel
+	set GameRoomLabel= World.CreateInstance("Game Room", "gadget", LobbyRm)
+	GameRoomLabel.Description = "GameRoomLabel"
+	GameRoomLabel.InitializeGraphics strLobbyPath & "GZlabel.x", -9.5, 5.2, 4.1, -1.0, -0.7, -0.01
+	GameRoomLabel.addproperty "areaName", "GameRoom", , world.PS_ALL_RWA
+	GameRoomLabel.CreateAndAddMethod World.METHOD_CLIENT, area_module, "ZoomInClick", "OnLButtonUp",  , world.PS_ALL_E + world.PS_ALL_RWA
+	GameRoomLabel.Scale = world.global.CreateVector(17,12,22)
+	GameRoomLabel.showSampleLinks = true
+	GameRoomLabel.clickURL = strGameRmLblURL
+	addToSwapList LobbyRm, GameRoomLabel, "Overview"
+	set GameRoomLabel = nothing	
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		CreateLobbyBounds
+'//  Purpose:  	Create solid boundaries for walls, stairs and other impassable areas such as desks.
+'//  Called by: BuildWorld
+'////////////////////////////////////////////////////////////////////////
+
+Sub CreateLobbyBounds(thething)
+
+	'BOUNDARY1
+	dim Points
+	Points = Array(_
+		11.428864, -1.006671, 11.253680, -2.145357, 11.224483, -3.254848, 11.297480, -3.707400, _
+		11.487259, -3.984770, 11.779228, -4.189151, 12.114996, -4.305940, 12.698936, -5.4, _
+		13.691639, -5.4, 14.202586, -5.4, 16.574842, -5.415429, 20.056597, -5.634406, 20.582148, -5.167256, _
+		21.443449, -3.853388, 24.399666, 2.533476, 24.896013, 4.832746, 24.815722, 6.460481, _
+		24.501856, 7.971430, 24.027397, 8.606466, 23.450756, 8.861946, 22.735424, 9.037129, _
+		20.874119, 9.095518, 19.392365, 8.927638, 18.677036, 8.569973, 18.034698, 8.234205, _
+		16.786526, 7.270704, 16.363165, 6.876542, 16.071196, 6.263401, 15.983606, 5.621067, _
+		16.012802, 4.511578, 15.779223, 4.132016, 15.370468, 3.913037, 14.669741, 3.913036, _
+		12.961711, 3.927636, 12.042003, 3.752454, 11.720833, 3.577271, 11.574852, 3.285302_
+		)
+	MakeBoundary thething, Points, stdHeight, stdDepth, false, false
+
+	'BOUNDARY2
+	Points = Array(_
+		18.321167, -6.744528, 19.372265, -7.386863, 20.569342, -7.445256, 29.445255, -7.357666, _
+		32.218979, -4.321168, 32.131386, 10.686131, 29.912405, 12.788319, 21.649633, 12.846713, _
+		22.525545, 14.773724, 34.379559, 15.065692, 34.087589, -11.211679, 17.211678, -10.686132_
+		)
+	MakeBoundary thething, Points, stdHeight, stdDepth, false, false
+
+	'BOUNDARY3
+	Points = Array(_
+		-0.190259, -12.502733, -0.088071, -13.947991, 0.043316, -14.692515, 0.437477, -15.261859, _
+		0.860834, -15.612224, 1.152807, -15.816604, 1.576163, -15.918794, 8.028718, -15.845800, _
+		9.138206, -15.619526, 9.590763, -15.349449, 9.999521, -14.860397, 10.218496, -13.874995, _
+		10.167402, -6.969887, 10.335285, -6.415140, 10.787849, -5.991786, 11.262295, -5.729012, _
+		11.722151, -5.561127, 19.707569, -7.874997, 16.554279, -18.502747, -3.708509, -18.561146, _
+		-0.292450, -8.152371, -0.175661, -9.758208)
+	MakeBoundary thething, Points, stdHeight, stdDepth, false, false
+
+	'BOUNDARY4
+	Points = Array(_
+		-0.181958, -15.534870, -0.167363, 2.800896, -0.415535, 4.246154, -0.868094, 4.946884, _
+		-1.349843, 5.341038, -1.773202, 5.516224, -2.503131, 5.662209, -3.802401, 5.662210, _
+		-4.751309, 5.195059, -5.247657, 4.684107, -5.510431, 4.129361, -5.714810, 2.713305, _
+		-5.714808, -2.381586, -6.035977, -2.980127, -6.415540, -3.184506, -7.028678, -3.242898, _
+		-22.415545, -3.272098, -22.707514, -3.213703, -22.941092, -3.038520, -23.233061, -2.804945, _
+		-23.466639, -2.337791, -23.525030, 13.428636, -23.466637, 14.158563, -23.233065, 14.654914, _
+		-22.707518, 15.005279, -6.970284, 14.800899, -6.327948, 14.567323, -5.977584, 14.187761, _
+		-5.700212, 13.633010, -5.714811, 7.706007, -5.539629, 7.005276, -5.057878, 6.523523, _
+		-4.313348, 6.158560, -3.758602, 5.997976, -2.488531, 6.012575, -1.598021, 6.216954, _
+		-0.868094, 6.654912, -0.415540, 7.618416, -0.152766, 8.990683, -0.403462, 16.755459, _
+		-0.483751, 16.967140, -0.554225, 17.122066, -26.211164, 20.260750, -26.327951, -6.425383_
+		)
+	MakeBoundary thething, Points, stdHeight, stdDepth, false, false
+
+	'BOUNDARY5
+	Points = Array(_
+		24.345100, 13.614857, 26.388897, 13.089310, 25.162619, 12.738945, 24.870649, 12.651354, _
+		24.637072, 12.446972, 24.286705, 12.009020, 23.790358, 10.665951, 23.556778, 10.169601, _
+		23.118828, 9.819237, 22.476488, 9.498070, 21.045832, 9.293690, 19.556780, 9.381281, _
+		17.629772, 9.760843, 17.148020, 9.906828, 16.666269, 10.169601, 16.228312, 10.578362, _
+		15.994736, 11.162302, 15.410794, 13.235294, 15.264809, 14.257193, 15.294006, 15.687849, _
+		15.352400, 17.118507, 15.848751, 17.760843, 16.549480, 18.169601, 17.980137, 18.373981_
+		)
+	MakeBoundary thething, Points, stdHeight, stdDepth, false, false
+	
+	'BOUNDARY6
+	Points = Array(_
+		7.635030, 13.007299, 9.065686, 13.065696, 9.824418, 13.140488, 10.379169, 13.169683, _
+		10.729534, 13.111288, 10.965290, 12.975947, 11.257259, 12.683982, 11.517855, 12.439756, _
+		11.809826, 12.235376, 12.248169, 12.131385, 14.175178, 12.277371, 14.729924, 12.364962, _
+		14.992692, 12.540145, 15.197076, 12.832119, 15.255469, 13.211675, 15.197076, 13.824818, _
+		15.167880, 14.846715, 15.197076, 15.255473, 15.167880, 15.635036, 15.021894, 16.890511, _
+		14.934302, 17.182480, 14.642331, 17.532845, 14.116784, 18.087589, 13.503644, 18.963501, _
+		13.065690, 19.693428, 12.540141, 19.927006, 7.985394, 19.897808, 2.992695, 20.014595, _
+		2.379555, 19.839413, 1.854008, 19.051094, -0.051100, 17.357662, -0.218985, 16.861313, _
+		-0.248184, 16.364964, -0.248181, 15.430655, -0.248181, 14.233577, -0.189785, 13.737226, _
+		-0.131394, 13.211679, -0.014606, 12.744522, 0.306561, 12.394161, 0.832111, 12.160583, _
+		2.233569, 12.014598, 2.700724, 12.189780, 3.050697, 12.381365, 3.839018, 12.994504, _
+		4.160189, 13.257276, 4.773326, 13.403261, 5.416051, 13.299269, 6.204373, 13.153283_
+		)
+	MakeBoundary thething, Points, stdHeight, stdDepth, false, false
+
+	'BOUNDARY7
+	Points = Array(_
+		-0.974444, 17.456718, -0.645978, 17.245031, -0.516598, 17.062033, -0.456195, 16.814383, _
+		-0.682475, 15.734085, -7.397803, 18.069855, -12.069340, 20.639200, -12.770071, 29.515112, _
+		-0.857659, 38.157440, 16.310221, 38.507813, 27.521894, 31.734089, 28.339418, 20.288836, _
+		20.397814, 16.318031, 16.638695, 18.069851, 17.135040, 18.274233, 20.044838, 18.880554, _
+		20.453598, 19.187124, 23.957243, 21.763762, 24.584982, 22.413403, 24.855055, 23.413403, _
+		24.857668, 29.529709, 24.602196, 30.274235, 24.076649, 30.880066, 15.514612, 35.500515, _
+		14.923372, 35.726795, 14.339427, 35.872776, 1.879575, 35.522404, 1.076657, 35.471313, _
+		0.755481, 35.303425, -7.813864, 30.734083, -8.645971, 29.836275, -9.302908, 27.755983, _
+		-9.324806, 23.719486, -9.076632, 22.770582, -8.361305, 22.069853, -2.310209, 17.880072_
+		)
+	MakeBoundary thething, Points, stdHeight, stdDepth, false, false
+
+' Floor Boundaries -- the boundary Height is the plane on which the avatars walk.
+
+	'  ============== GameRoom step3
+	const GameRoomStep3Height = 0.67
+	Points = Array(_
+		-0.149220, 9.885143, -3.724573, 9.942766, -3.663409, 17.119225, -5.420526, 17.057281, _
+		-5.387800, -5.993337, -3.663410, -6.020999, -3.782194, 1.717515, -0.206842, 1.602271_
+		)
+	MakeBoundary thething, Points, GameRoomStep3Height, stdDepth, false, false
+	Points = Array(_
+		-5.751403, -6.273699, -27.014307, -6.273707, -27.014303, -2.816318, -5.520913, -2.816320_
+		)
+	MakeBoundary thething, Points, GameRoomStep3Height, stdDepth, false, false
+	Points = Array(_
+		-27.309361, -6.849933, -27.309368, 18.273718, -23.565407, 18.273718, -23.448616, -6.849934_
+		)
+	MakeBoundary thething, Points, GameRoomStep3Height, stdDepth, false, false
+	Points = Array(_
+		-27.271685, 15.229725, -4.887827, 15.171324, -5.117547, 17.755110, -27.417665, 17.697489_
+		)
+	MakeBoundary thething, Points, GameRoomStep3Height, stdDepth, false, false
+
+	' ===============  GameRoom step2
+	const GameRoomStep2Height = 0.27
+	Points = Array(_
+		-5.145204, -3.799765, -23.815075, -3.742141, -23.325661, -1.869777, -5.315760, -1.840584_
+		)
+	MakeBoundary thething, Points, GameRoomStep2Height, stdDepth, false, false
+	Points = Array(_
+		-23.789724, -4.080939, -23.847351, 15.568521, -22.207024, 15.655340, -22.207020, -3.963382_
+		)
+	MakeBoundary thething, Points, GameRoomStep2Height, stdDepth, false, false
+	Points = Array(_
+		-23.989485, 13.700010, -23.989483, 15.565435, -4.455270, 15.392565, -4.479066, 13.700011_
+		)
+	MakeBoundary thething, Points, GameRoomStep2Height, stdDepth, false, false
+	Points = Array(_
+		-6.896924, 15.308829, -5.232026, 15.308830, -4.973107, -3.764399, -6.838529, -3.532362_
+		)
+	MakeBoundary thething, Points, GameRoomStep2Height, stdDepth, false, false
+
+	' ============ GameRoom step1
+	const GameRoomStep1Height = -0.11
+	Points =Array(_
+		-5.949491, 14.738062, -6.095475, -2.079457, -8.197664, -2.021064, -8.197665, 14.446091_
+		)
+	MakeBoundary thething, Points, GameRoomStep1Height, stdDepth, false, false
+	Points = Array(_
+		-7.815452, -0.805197, -7.640269, -2.352642, -22.443190, -2.206658, -22.355598, -0.746803_
+		)
+	MakeBoundary thething, Points, GameRoomStep1Height, stdDepth, false, false
+	Points = Array(_
+		-21.275307, -1.505929, -22.559977, -1.447533, -22.413994, 13.822538, -21.275307, 13.851738_
+		)
+	MakeBoundary thething, Points, GameRoomStep1Height, stdDepth, false, false
+	Points = Array(_
+		-7.169058, 12.443166, -22.088766, 12.472363, -21.884386, 13.961414, -7.285847, 13.903021_
+		)
+	MakeBoundary thething, Points, GameRoomStep1Height, stdDepth, false, false
+
+	' ============== GameRoom floor
+	const GameRoomFloorHeight = -0.48
+	Points = Array(_
+		-21.820526, -1.162880, -21.790554, 13.195176, -7.459381, 13.253571, -7.576169, -1.221274_
+		)
+	MakeBoundary thething, Points, GameRoomFloorHeight, stdDepth, false, false
+	
+	const LobbyToGameRoomStepHeight = 0.50
+	Points = Array(_
+		0.268346, 1.071684, -4.207724, 1.068141, -4.207723, 10.648010, 0.266575, 10.648008_
+		)
+	MakeBoundary thething, Points, LobbyToGameRoomStepHeight, stdDepth, false, false
+
+	const LobbyFloorHeight = 0.13
+	Points = Array(_
+		-2.442485, -9.473484, -2.327242, 16.226393, 33.802406, 15.765417, 33.571922, -9.358244, _
+		12.885250, -9.358236)
+	MakeBoundary thething, Points, LobbyFloorHeight, stdDepth, false, false
+	Points = Array(_
+			3.128443, 16.198925, -2.979605, 16.198923, -11.104443, 22.767952, -11.277317, 39.593880, _
+			27.330126, 39.593880, 27.272501, 16.256548, 18.168060, 15.910805)
+	MakeBoundary thething, Points, LobbyFloorHeight, stdDepth, false, false
+	Points = Array(_
+		-2.958639, -10.166283, -3.016262, -9.417183, 13.291060, -9.474806, 13.406309, -10.108660_
+		)
+	MakeBoundary thething, Points, LobbyFloorHeight, stdDepth, false, false
+
+	const LobbyToChatStep2Height = -0.12
+	Points = Array(_
+		-3.095512, -10.852545, -3.268381, -10.103445, 14.076158, -9.988198, 14.018534, -10.737298_
+		)
+	MakeBoundary thething, Points, LobbyToChatStep2Height, stdDepth, false, false
+
+	const LobbyToChatStep1Height = -0.43
+	Points = Array(_
+		-3.498872, -17.363951, -3.441251, -10.737299, 14.191403, -10.506805, 13.730418, -17.306324_
+		)
+	MakeBoundary thething, Points, LobbyToChatStep1Height, stdDepth, false, false
+End Sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		CreateBalloonCartBounds
+'//  Purpose:  	Create a solid boundary around the balloon cart
+'//  Called by: BuildWorld
+'////////////////////////////////////////////////////////////////////////
+Sub CreateBalloonCartBounds(thething)
+     dim Points
+	 Points = Array(_
+		-1.092450, 0.737620, -1.146668, 1.344857, -1.124981, 1.605101, -0.929798, 1.746067, _
+		-0.658710, 1.854504, -0.094846, 2.017156, 0.458173, 2.049687, 0.956976, 1.746066, _
+		1.141314, 1.442449, 1.271437, 1.117143, 1.173843, 0.260506, 1.022038, 0.011103, _
+		0.848540, -0.184080, 0.490705, -0.390106, -0.029785, -0.346732, -0.550274, -0.303358, _
+		-0.745458, -0.129861, -0.897268, 0.249662)
+	MakeBoundary thething, Points, stdHeight, stdDepth, false, false
+End Sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		CreateFlowerCartBounds
+'//  Purpose:  	Create a solid boundary around the flower cart
+'//  Called by: BuildWorld
+'////////////////////////////////////////////////////////////////////////
+Sub CreateFlowerCartBounds(thething)
+     dim Points
+	 Points = Array(_
+		-1.392488, 1.519334, -1.164774, 1.931388, -0.893685, 2.137413, -0.535850, 2.245850, _
+		-0.253917, 2.321754, 0.223197, 2.256694, 0.678625, 2.137414, 1.199115, 1.866326, _
+		1.372610, 1.356680, 1.448516, 0.760287, 1.394297, 0.153049, 1.426829, -0.551780, _
+		1.329237, -1.267452, 1.177428, -1.646975, 0.797904, -2.124090, 0.234041, -2.275900, _
+		-0.373195, -2.221682, -0.947902, -1.928907, -1.284051, -1.354200, -1.500924, -0.638528, _
+		-1.631044, 0.294014)
+	MakeBoundary thething, Points, stdHeight, stdDepth, false, false
+End Sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		CreateAreaBoundaries
+'//  Purpose:  	Create passable boundaries that delineate various areas of the room.
+'//				An Avatar_OnIntersectee event is triggered on the client when the user's
+'//				avatar crosses one of these boundaries. Partitioning a room in this manner
+'//				and detecting boundary crossings is a way of simulating sub-rooms.
+'//  Called by: BuildWorld
+'////////////////////////////////////////////////////////////////////////
+sub CreateAreaBoundaries (theThing)
+	dim Points
+	
+	' Lobby -- this boundary encloses the entire lobby room
+	Points = Array( _
+		-31.600277, -19.909246, -31.994526, 53.815605, 39.364815, 53.914165, 39.266258, -20.106379 _
+		)
+	MakeAreaBoundary "Lobby", "Sample World", "Lobby", "Lobby", Points, stdHeight, stdDepth, true, false
+
+	' Resource Desk
+	' -- Note that this boundary delimits the vicinity of the desk, where avatars can enter
+	' and stand around; it does not delimit the impassable area right next to the desk.
+	Points = Array( _
+		2.066237, 18.608702, 1.880712, 11.294681, 3.554384, 9.494794, 6.201919, 8.458609, _
+		8.839282, 8.345578, 11.698413, 9.232488, 13.432968, 11.493237, 13.396721, 18.413012 _
+		)
+	MakeAreaBoundary "Resource Desk", "May I help you?", "ResourceDesk", "Lobby", Points, stdHeight, stdDepth, true, false
+
+	' Seattle Desk
+	Points = Array( _
+		10.460535, -3.7, 10.509814, 3.959828, 19.319141, 4.033749, 19.315895, -3.7, _
+		12.954659, -3.7 _
+		)
+	MakeAreaBoundary "Seattle Desk", "Care for a brochure?", "SeattleDesk", "Lobby", Points, stdHeight, stdDepth, true, false
+	
+	' Gift Carts
+	Points = Array( _
+		12.119564, -10.046474, 12.119565, -4.6, 19.369221, -4.6, 19.336117, 4.883178, _
+		22.845081, 4.949389, 22.878185, 13.324562, 35.126465, 13.291454, 34.994049, -9.781649 _
+		)
+	MakeAreaBoundary "Gift Carts", "Browse our gifts...", "GiftCarts", "Lobby", Points, stdHeight, stdDepth, true, false
+	
+	' Flower Cart
+	Points = Array( _
+		27.76, 9.840662, 28.86, 10.079411, 30.444619, 9.448427, 31.069916, 8.302042, _
+		30.906956, 6.003981, 30.205868, 4.6, 28.85, 4.5, 27.37, 5.24, 26.7, 6.3, 26.5, 8.9 _
+		)
+	MakeAreaBoundary "Flower Cart", "Send a bouquet of flowers!", "FlowerCart", "GiftCarts", Points, stdHeight, stdDepth, true, false
+	
+	' Balloon Cart
+	Points = Array( _
+		27.472889, -1.474864, 28.761621, -0.693174, 30.198246, -0.946694, 31.402470, -1.834018, _
+		31.423595, -3.988948, 29.944719, -5.425569, 28.465847, -5.362187, 27.113728, -4.432611, _
+		27.008102, -2.869230 _
+		)
+	MakeAreaBoundary "Balloon Cart", "Send a bunch of balloons!", "BalloonCart", "GiftCarts", Points, stdHeight, stdDepth, true, false
+	
+	' Discussion Area
+	Points = Array( _
+		-3.551007, -4.433717, 0.884854, -4.400613, 2.540027, -4.003371, 4.526234, -4.566130, _
+		5.949683, -6.022681, 6.545545, -8.108197, 6.545544, -14.530267, -3.683422, -14.530269 _
+		)
+	MakeAreaBoundary "Discussion Area", "Click on the table to join a discussion", "DiscussionArea", "Lobby", Points, stdHeight, stdDepth, true, false
+	
+	' Game Room
+	Points = Array( _
+		-3.892516, -8.979718, -3.670003, 17.866226, -29.813021, 17.897085, -29.674393, -8.919495 _
+		)
+	MakeAreaBoundary "Game Room", "Enjoy a game...", "GameRoom", "Lobby", Points, stdHeight, stdDepth, true, false
+	
+	' Music Garden
+	Points = Array( _
+		-3.849486, 15.3, 19.411295, 15.3, 31.0, 20.0, 31.0, 45.0, -12.0, 45.0, -12.0, 23.0 _
+		)
+	MakeAreaBoundary "Music Garden", "Group activities here...", "MusicGarden", "Lobby", Points, stdHeight, stdDepth, true, false
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		CreatePortals
+'//  Purpose:  	Create the portals in world.
+'//				There is one portal in the room in this sample world, where entering avatars appear.
+'//  Called by:	BuildWorld
+'////////////////////////////////////////////////////////////////////////
+sub CreatePortals
+	dim p_LobbyEntry
+	set p_LobbyEntry = world.CreateInstance("Entry Portal", "Portal", LobbyRm)
+	p_LobbyEntry.InitializeGraphics "", 0,1,0,0,0,1
+	p_LobbyEntry.EntryPoint.set 2.3,1.13,-0.5
+	p_LobbyEntry.EntryOrientation.set  0,0,1
+	p_LobbyEntry.EntryRadius = 0.25
+	World.DefaultPortal = p_LobbyEntry
+	set p_LobbyEntry = nothing	
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		document_onKeyPress
+'//  Purpose:  	Handle certain keystrokes on the wizard page as button clicks
+'//  Called by:	BuildWorld
+'////////////////////////////////////////////////////////////////////////
+sub document_onKeyPress
+	select case window.event.keycode
+	case 27
+		top.frames(1).OnCancel
+	case 13
+		top.frames(1).OnFinish
+	end select
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		document_onSelectStart
+'//  Purpose:  	Ignore mouse-drag selection of items on the wizard page.
+'//  Called by: BuildWorld
+'////////////////////////////////////////////////////////////////////////
+sub document_onSelectStart
+	select case TypeName(window.event.srcElement)
+	case "HTMLInputTextElement", "HTMLTextAreaElement", "HTMLInputFileElement"
+	case else
+		window.event.returnValue = false
+	end select
+end sub
+
+</script>
+</head>
+<body>
+	<div class=vLabel style=top:0;left:10;>Styles:</div>
+	<select id=lstStyle class=vInput style=left:10;top:15;width:120; size=7 onchange=choseName></select>
+	<div class=vLabel style=top:0;left:150;>Preview:</div>
+	<img datafld=previewGIF datasrc="#params" id=imgPreview style=position:absolute;left:150;top:15;></img>
+	<div id=lblDesc class=vInput datafld="description" datasrc="#params" style=left:10;top:130;width:400;>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<html>
+<head>
+<LINK REL=STYLESHEET HREF=../../../client/shared/global.css>
+<object id=helper classid=clsid:7E3832CF-4F4E-11D0-89AB-00A0C9054129></object>
+<script language=vbs>
+
+option explicit
+
+public lastcount
+lastcount = 0
+
+sub DisableButton(btn)
+	if IsObject(btn) then
+		btn.className = "bDisabled"
+		btn.disabled = true
+	end if
+end sub
+
+sub EnableButton(btn)
+	if IsObject(btn) then
+		btn.className = "bEnabled"
+		btn.disabled = false
+	end if
+end sub
+
+function IsEnabled(btn)
+	if btn.className = "bDisabled" then
+		IsEnabled = false
+	else
+		IsEnabled = true
+	end if
+end function
+
+sub window_OnLoad
+	UpdateButtons
+end sub
+
+sub UpdateButtons
+	'Enable back button when going past page 1
+	if (top.page > 1) then
+		EnableButton backBtn
+	else
+		DisableButton backBtn
+	end if
+	'Enable next button but not finish button
+	if (top.page > 1) and (top.page < top.PageArraySize) then
+		EnableButton nextbtn
+		DisableButton finishbtn
+	end if
+	'Enable finish button on last page
+	if (top.page = top.PageArraySize) then
+		DisableButton nextbtn
+		EnableButton finishbtn
+		finishbtn.focus
+	end if
+end sub
+
+sub OnHelp
+	window.event.returnValue = false
+	dim Global, HelpString, pageStr
+	set Global = Top.World.Global
+	if Global.IsValidProperty("HelpPath") then
+		pageStr = cstr(top.page)
+		HelpString = "mk:@MSITStore:" + Global.HelpPath + "vworlds.chm::/uiref/worldwiz/wwiz" & pageStr & ".htm>sdkall"
+		window.ShowHelp(HelpString)
+	else
+		msgbox "Sorry, help is not currently available.", vbExclamation, "Microsoft Virtual Worlds"
+	end if
+end sub
+
+sub OnCancel
+	Helper.closewindow
+end sub
+
+sub OnBack
+	on error resume next
+	'First see if we are on page three to set the current style
+	if (top.page  = 3) then
+		top.SelectedStyleIndex = top.main.kit.selected
+	end if
+	'If going back to first page, diable back button
+	if (top.page = 2) then
+		nextbtn.focus
+		DisableButton backBtn
+	end if
+	if top.page > 1 then
+		top.main = top.main.navigate(top.PageArray(top.page - 2))
+	end if
+end sub
+
+sub OnNext
+	if top.page < top.PageArraySize then
+		if (top.main.verify) then
+			top.main.navigate(top.PageArray(top.page))
+		end if
+	end if
+end sub
+
+sub OnFinish
+	if not finishbtn.disabled then
+		' Set cursor to hourglass
+		ChangeCursor()
+		' Hack to make sure cursor has time to change before calling Finish
+		' Otherwise Finish takes priority
+		window.setTimeout "top.Finish", 100, "VBScript"
+	end if
+end sub
+
+sub document_OnMouseOver
+	select case window.event.srcElement.className
+	case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	case "vHelp"
+		imgHelp.src="..\..\..\client\shared\helpH.gif"
+	case else
+	end select
+end sub
+
+sub document_OnMouseOut
+	select case window.event.srcElement.className
+	case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	case "vHelp"
+		imgHelp.src="..\..\..\client\shared\help.gif"
+	case else
+	end select
+end sub
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+</script>
+<script language=jscript>
+
+//------------------------------
+// ChangeCursor
+// For all the frames, make the document body and all elements
+// within the body display an hourglass cursor
+
+function ChangeCursor()
+{
+	// Current frame: buttons
+	document.body.style.cursor = "wait"
+	if (typeof(document.body) == "object"){
+		for (var i=0; i<document.body.children.length; i++){
+			document.body.children(i).style.cursor = "wait"
+		}
+	}
+
+	// Top frame
+	if (typeof(top.main.status.document) == "object"){
+		top.main.banner.document.body.style.cursor = "wait"
+		for (var i=0; i<top.main.banner.document.body.children.length; i++) {
+			top.main.banner.document.body.children(i).style.cursor = "wait"
+		}
+	}
+
+	// Main kit frame
+	if (typeof(top.main.kit.document) == "object"){
+		top.main.kit.document.body.style.cursor = "wait"
+		for (var i=0; i<top.main.kit.document.body.children.length; i++) {
+			top.main.kit.document.body.children(i).style.cursor = "wait"
+		}
+	}
+
+	// Lefthand frame
+	if (typeof(top.main.contents.document) == "object"){
+		top.main.contents.document.body.style.cursor = "wait"
+		for (var i=0; i<top.main.contents.document.body.children.length; i++) {
+			top.main.contents.document.body.children(i).style.cursor = "wait"
+		}
+	}
+}
+
+</script>
+</head>
+<body>
+	<hr id=lnTop color=gray style=position:absolute;left:0;top:0;height:1;>
+	<hr id=lnBottom color=black style=position:absolute;left:0;top:1;height:1;>
+	<button class=bEnabled id=cancelbtn onClick=OnCancel style=left:252;top:10;>
+		<span style=position:relative;top:-1;>Cancel</span>
+	</button>
+	<button class=bDisabled id=backbtn onClick=OnBack style=left:322;top:10; disabled>
+		<span style=position:relative;top:-3;><font face=Webdings>3</font>Back</span>
+	</button>
+	<button class=bEnabled id=nextbtn onClick=OnNext style=left:392;top:10;>
+		<span style=position:relative;top:-3;>&nbsp;&nbsp;Next<font face=webdings>4</font></span>
+	</button>
+	<button class=bDisabled id=finishbtn onClick=OnFinish style=left:462;top:10; disabled>
+		<span style=position:relative;top:-1;>Finish</span>
+	</button>
+	<a id=lnkHelp onclick=OnHelp href="">
+		<img src=../../../client/shared/help.gif id=imgHelp class=vHelp style=top:10;>
+	</a>
+</body>
+</html>

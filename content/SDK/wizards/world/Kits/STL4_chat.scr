@@ -1,0 +1,27 @@
+option explicit
+
+
+sub make_lesson_4 (lesson_4_box)
+
+	
+	set lesson_4_box = world.createInstance("lesson_4","artifact")
+	lesson_4_box.initializegraphics "SDK\library\models\_ScriptTutorial\eagle.x" , 10 , -200 , -10 , 0,0,1
+   	dim vec
+	 set vec = world.createvector(1,1,1)
+	 lesson_4_box.scale = vec
+	lesson_4_box.moveinto home
+	lesson_4_box.createandaddmethod World.METHOD_CLIENT, Lesson_4_Module,  "timer_method" 
+	lesson_4_box.createandaddmethod World.METHOD_CLIENT, Lesson_4_Module,  "avatar_spoke" , "OnPeerTell"
+	lesson_4_box.createandaddmethod World.METHOD_CLIENT, Lesson_4_Module,  "start_surprise"
+	lesson_4_box.createandaddmethod World.METHOD_CLIENT, Lesson_4_Module,  "end_surprise"
+	lesson_4_box.positionduration = 2000
+	lesson_4_box.directionduration = 1000
+	lesson_4_box.addproperty "listening" , FALSE
+	lesson_4_box.addproperty "timer_interval" , 2000
+	lesson_4_box.addproperty "timer_maximum" , 15
+	lesson_4_box.addproperty "secret_word" , "fly"
+	lesson_4_box.IsNoticeable = true
+	lesson_4_box.description = "a scripting tutorial object"
+	
+	world.global.addproperty "lesson_4" , lesson_4_box
+end sub

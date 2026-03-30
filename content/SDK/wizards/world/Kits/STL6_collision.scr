@@ -1,0 +1,85 @@
+option explicit
+
+
+sub make_lesson_6 (lesson_6_owner)
+
+	dim hit_marker, hit_marker2
+	
+	dim passable_boundary_box 
+	set passable_boundary_box = world.createInstance("lesson_6_passable_box","artifact")
+	passable_boundary_box.initializegraphics "SDK\library\models\_ScriptTutorial\intersector_box.3DS" , 1000 , -200 , 0 , 0,0,1
+ 	dim vec
+	 set vec = world.createvector(1,1,1)
+	 passable_boundary_box.scale = vec
+	passable_boundary_box.moveinto home
+	passable_boundary_box.createandaddmethod World.METHOD_CLIENT, Lesson_6_Module,  "OnIntersectee" , "OnIntersectee"
+	passable_boundary_box.createandaddmethod World.METHOD_CLIENT, Lesson_6_Module,  "flash_timer_method" , "flash_timer_method" 
+	passable_boundary_box.IsNoticeable = true
+	passable_boundary_box.description = "a scripting tutorial object"
+	passable_boundary_box.renderquality = 0
+	passable_boundary_box.isUIVisible = true
+	world.global.addproperty "lesson_6" , passable_boundary_box
+	 CreateBoundary  passable_boundary_box,  true
+	passable_boundary_box.isuivisible = false
+	
+	set hit_marker = world.createInstance("marker","artifact")
+	hit_marker.initializegraphics "SDK\library\models\_ScriptTutorial\Machine Gear.X" , 0 , 0 , 0 , 0,0,1
+	hit_marker.moveinto passable_boundary_box 
+	hit_marker.scale.set 5,5,5
+	passable_boundary_box.addproperty "hit_marker" , hit_marker
+	hit_marker.IsNoticeable = true
+	
+	dim impassable_boundary_box
+	set impassable_boundary_box= world.createInstance("lesson_6_impassable_box","artifact")
+	impassable_boundary_box.initializegraphics "SDK\library\models\_ScriptTutorial\intersector_box.3DS" , 1020 , -200 , 20 , 0,0,1
+	 set vec = world.createvector(1,1,1)
+	 impassable_boundary_box.scale = vec
+	impassable_boundary_box.moveinto home
+	impassable_boundary_box.createandaddmethod World.METHOD_CLIENT, Lesson_6_Module,  "OnIntersectee" , "OnIntersectee"
+	impassable_boundary_box.createandaddmethod World.METHOD_CLIENT, Lesson_6_Module,  "flash_timer_method" , "flash_timer_method" 
+	impassable_boundary_box.renderquality = 3
+	impassable_boundary_box.IsNoticeable = true
+	 CreateBoundary  impassable_boundary_box, false
+	impassable_boundary_box.description = "a scripting tutorial object"
+	set hit_marker2 = world.createInstance("marker","artifact")
+	hit_marker2.initializegraphics "SDK\library\models\_ScriptTutorial\Machine Gear.X" , 0 , 0 , 0 , 0,0,1
+	hit_marker2.moveinto impassable_boundary_box 
+	hit_marker2.scale.set 5,5,5
+	impassable_boundary_box.addproperty "hit_marker" , hit_marker2
+	hit_marker2.IsNoticeable = true
+	impassable_boundary_box.isuivisible = false
+end sub
+
+
+sub CreateBoundary(owner_object, passable)
+	world.trace "creating a boundary..."
+	Dim CellArray
+	Dim BoundaryList
+	set BoundaryList = World.Global.CreateBoundaryList()
+	'Create the main impassable cell
+	CellArray = Array( _
+	-5.0, -5.0, _
+	-5.0, 5.0, _
+	5.0,  5.0, _
+	5.0 ,-5.0)
+	CreateBoundaryFromArray BoundaryList, CellArray, 4 , 20.0, 0.0, passable
+	owner_object.BoundaryList = BoundaryList
+end sub
+
+
+
+sub CreateBoundaryFromArray(theCell, ptsBoundary(), numPts , upper, lower, passable)
+	Dim i
+	Dim boundary
+	Dim succ
+	
+	set boundary = World.Global.CreateBoundary()
+
+	for i = 0 To numPts - 1
+	    succ = boundary.InsertVertexSafe(-1,ptsBoundary(i*2),ptsBoundary(i*2 +1) )
+	next
+	boundary.isPassable = passable
+	boundary.HeightUpper = upper
+	boundary.HeightLower = lower
+	theCell.Add(boundary)
+end sub

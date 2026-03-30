@@ -1,0 +1,350 @@
+<HTML>
+<HEAD>
+<TITLE>Microsoft Virtual Worlds - Camera Control</TITLE>
+<LINK REL=StyleSheet HREF=../../shared/global.css>
+<OBJECT ID=helper WIDTH=0 HEIGHT=0 border=0 CLASSID="CLSID:7E3832CF-4F4E-11D0-89AB-00A0C9054129">
+</OBJECT>
+
+<SCRIPT language=VBScript>
+dim client, world, user, room
+
+sub window_OnLoad
+	dim el, obj
+
+	set client = helper.client
+	set world = client.world
+	set user = world.user
+	set room = user.container
+
+	set el = document.CreateElement("OPTION")
+	el.text = room.name
+	el.value = room.id
+	thingList.add el
+
+	for each art in room.contents
+		set el = document.CreateElement("OPTION")
+		el.text = art.name
+		el.value = art.id
+		thingList.add el, PosInList(thingList, el.text)
+	next
+
+	if thingList.length = 0 then
+		thingList.disabled=true
+	end if
+
+	DisableButton DeleteButton
+	DisableButton SelectButton
+
+	if client.World.IsValidTool("ControlManager") then
+		set sellist = client.World.Tool("ControlManager").SelectionList
+	else
+		set sellist = nothing
+	end if
+
+	if not sellist is Nothing then
+		If (sellist.count >= 0) Then
+			For Each obj In sellist
+				If obj.IsOfType("Thing") Then
+					For Each el in thingList
+						if (CLng(el.value) = CLng(obj.id)) Then
+							thingList.selectedIndex = el.index
+							chooseThing
+							Exit For
+						End If
+					Next
+					Exit For
+				Elseif StrComp(obj.Type, "PickData", 1) = 0 Then
+					For Each el in thingList
+						if (CLng(el.value) = CLng(obj.thing.id)) Then
+							thingList.selectedIndex = el.index
+							chooseThing
+							boundaryList.selectedIndex = obj.boundaryindex
+							chooseBoundary
+							Exit For
+						End If
+					Next
+					Exit For
+				End If
+			Next
+		End If
+	End If
+
+end sub
+
+Function PosInList(tagName, sItem)
+	Dim i
+	PosInList = tagName.length
+	For i = 0 To tagName.length - 1
+		If StrComp(sItem, tagName.options.item(i).text, vbTextCompare) = -1 Then
+			PosInList = i
+			Exit For
+		End If
+	Next
+End Function
+
+sub DoClose
+	Helper.Closewindow
+end sub
+
+sub OptFocus()
+end sub
+
+sub document_onKeyPress()
+	select case window.event.srcElement.id
+	case "closebtn", "thingList", "helpbtn"
+		select case window.event.srcElement.id
+		case "thingList"
+			if window.event.keycode = 9 then
+				if window.event.shiftkey = true then
+					OptFocus
+				else
+					closebtn.focus
+				end if
+			end if
+		case "closebtn"
+			if window.event.keycode = 9 then
+				if window.event.shiftkey = true then
+					theCamList.focus
+				else
+					helpbtn.focus
+				end if
+			end if
+		case "helpbtn"
+			if window.event.keycode = 9 then
+				if window.event.shiftkey = true then
+					closebtn.focus
+				else
+					OptFocus
+				end if
+			end if
+		end select
+	case else
+		if window.event.keycode = 9 then
+			if window.event.shiftkey = true then
+				helpbtn.focus
+			else
+				OptFocus
+			end if
+		end if
+	end select
+end sub
+
+
+Function GetSelectedByID(value)
+
+	dim el
+	Dim selList
+
+	If (CStr(world.user.container.id) = value) Then
+		set GetSelectedByID = world.user.container
+		Exit Function
+	End If
+
+	set selList = world.user.container.contents
+
+	for each obj in selList
+		if  CStr(obj.id) = value then
+			set GetSelectedByID = obj
+			Exit Function
+		end if
+	next
+
+	set GetSelectedByID = Nothing
+
+End Function
+
+sub AddBoundariesToChooser(pthing)
+
+	dim el, obj, selList, i, len
+
+	len = boundaryList.Length
+	For i = 0 to len - 1
+		boundaryList.Remove 0
+	Next
+
+	if (not (pthing is nothing)) Then
+		set selList = pthing.boundarylist
+
+		i = 0
+		for each obj in selList
+			set el = document.CreateElement("OPTION")
+			el.value = obj
+			el.text = i
+			boundaryList.add el
+			i = i + 1
+		next
+	End If
+End Sub
+
+sub chooseThing()
+
+	Dim obj, i, selLis
+	dim client
+	dim world
+	dim user
+
+	set client = helper.client
+	set world = client.world
+	set user = world.user
+
+	DisableButton DeleteButton
+	DisableButton SelectButton
+
+	If (thingList.selectedIndex >= 0) Then
+		set obj = GetSelectedByID(ThingList.Item(ThingList.selectedIndex).value)
+
+		if (obj.boundarylist.count > 0) Then
+'			BoundaryInObjectLabel.innerText = "Boundaries (by index) in " + obj.name + ":"
+			AddBoundariesToChooser(obj)
+		Else
+'			BoundaryInObjectLabel.innerText = "<" + obj.name + " has no boundaries" + ">"
+			AddBoundariesToChooser(Nothing)
+		End if
+
+
+	Else
+'		BoundaryInObjectLabel.innerText = "<No object selected>"
+	End If
+
+End Sub
+
+sub chooseBoundary
+
+	set obj = GetSelectedByID(ThingList.Item(ThingList.selectedIndex).value)
+
+	if (Obj.CheckPropertySecurity("BoundaryList", 2)) Then
+		EnableButton DeleteButton
+	Else
+		DisableButton DeleteButton
+	End If
+
+	EnableButton SelectButton
+
+end sub
+
+sub OnClickDelete
+
+	Dim obj
+
+	if (thingList.selectedIndex >= 0 AND boundaryList.selectedIndex >= 0) Then
+		set obj = GetSelectedByID(ThingList.Item(ThingList.selectedIndex).value)
+
+		if (Not obj.CheckPropertySecurity("BoundaryList", 2)) Then
+			Msgbox "Insufficient permission to delete " & obj.name & "'s boundaries.", vbExclamation, "Microsoft Virtual Worlds"
+			Exit Sub
+		Elseif (obj.IsValidProperty("IsSolid")) Then
+			if (obj.IsSolid And obj.boundarylist.property(BoundaryList.selectedIndex).IsAutoSolidBoundary) Then
+				Msgbox "The IsSolid boundary can not be deleted. To remove the boundary, set the object's IsSolid property to false.", vbExclamation, "Microsoft Virtual Worlds"
+				Exit Sub
+			End If
+		End If
+
+		helper.Arg.parent.renderer.ControlManager.ClearSelections
+
+		obj.boundarylist.RemoveAt BoundaryList.selectedIndex
+
+		AddBoundariesToChooser(obj)
+		BoundaryList.selectedIndex = -1
+
+		helper.Arg.RefillRoomContentsDropDown
+
+	Else
+		Msgbox "No boundaries chosen.", vbExclamation, "Microsoft Virtual Worlds"
+	End If
+
+	DisableButton DeleteButton
+	DisableButton SelectButton
+
+end sub
+
+sub OnClickSelect
+	Dim obj, pickdata
+
+	if (thingList.selectedIndex >= 0 AND boundaryList.selectedIndex >= 0) Then
+		set obj = GetSelectedByID(ThingList.Item(ThingList.selectedIndex).value)
+
+		set pickdata = client.World.CreatePickData()
+		pickdata.Thing = obj
+		pickdata.Boundary = obj.BoundaryList.property(BoundaryList.selectedIndex)
+		pickdata.BoundaryList = obj.BoundaryList
+		pickdata.BoundaryIndex = BoundaryList.selectedIndex
+		pickData.DataType = 1
+
+		helper.Arg.parent.renderer.ControlManager.Select pickdata
+
+
+	Else
+		Msgbox "No boundaries chosen.", vbExclamation, "Microsoft Virtual Worlds"
+
+		DisableButton DeleteButton
+		DisableButton SelectButton
+
+	End If
+
+end sub
+
+sub OnClickClose
+	helper.CloseWindow
+
+end sub
+
+sub document_onmouseover
+	select case window.event.srcElement.className
+	case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	case "vHelp"
+		imgHelp.src = "..\..\shared\helpH.gif"
+	case else
+	end select
+end sub
+
+sub document_onmouseout
+	select case window.event.srcElement.className
+	case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	case "vHelp"
+		imgHelp.src = "..\..\shared\help.gif"
+	case else
+	end select
+end sub
+
+sub OnHelp
+	dim helpstringsList
+	window.event.returnValue = false
+	set helpstringsList = world.global.CreatePropertyList
+	helpstringsList.add "Authoring"
+	helpstringsList.add "Boundary Browser"
+	world.FireUIEvent user, "Help", helpstringsList
+end sub
+
+sub DisableButton(btn)
+	btn.disabled=true
+	btn.className = "bDisabled"
+end sub
+
+sub EnableButton(btn)
+	btn.disabled=false
+	btn.className = "bEnabled"
+end sub
+
+</SCRIPT>
+</HEAD>
+<body>
+	<div class=vLabel style=top:7;left:18;>Objects:</div>
+	<select class=vInput id=thingList onchange=chooseThing size=5 name=thingList style=top:22;left:18;height:86;width:242;></select>
+	<div class=vlabel style=top:121;left:18; id=BoundaryInObjectLabel>Boundaries:</div>
+	<select class=vInput style=top:118;left:95;height:58;width:50; id=boundaryList onchange=chooseBoundary size=5 name=boundaryList></select>
+	<button class=bEnabled id=SelectButton name=SelectButton onclick=OnClickSelect style=left:160;top:122;>
+		<span style=position:relative;top:-1;>Select</span>
+	</button>
+	<button class=bEnabled id=DeleteButton name=DeleteButton onclick=OnClickDelete style=left:160;top:152;>
+		<span style=position:relative;top:-1;>Delete</span>
+	</button>
+	<button class=bEnabled id=CloseButton onclick=OnClickClose style=left:200;top:195;>
+		<span style=position:relative;top:-1;>Close</span>
+	</button>
+	<a id=lnkHelp onclick=OnHelp href="">
+		<img src=../../shared/help.gif id=imgHelp class=vHelp style=top:195;>
+	</a>
+</body>
+</HTML>

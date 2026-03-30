@@ -1,0 +1,168 @@
+<HTML>
+<BODY BGCOLOR="ACTIVEBORDER" LEFTMARGIN=7 TOPMARGIN=7>
+<FORM NAME="AdvGraphForm">
+<TABLE><TR>
+<TD>Motion Type:</TD><TD>
+<SELECT SIZE=1 NAME="MotionType">
+<OPTION VALUE="SwingIn">Swing In</OPTION>
+<OPTION VALUE="Revolving">Revolving</OPTION>
+<OPTION VALUE="SquashLeft">Squash Left</OPTION>
+<OPTION VALUE="SquashRight">Squash Right</OPTION>
+<OPTION VALUE="SquashUp">Squash Up</OPTION>
+<OPTION VALUE="SlideLeft">Slide Left</OPTION>
+<OPTION VALUE="SlideRight">Slide Right</OPTION>
+<OPTION VALUE="SlideUp">Slide Up</OPTION>
+</SELECT></TD>
+</TR><TR>
+<TD>Door Geometry:</TD><TD><INPUT TYPE="TEXT" NAME="DoorGeomURL"></TD>
+</TR><TR>
+<TD>Door Texture:</TD><TD><INPUT TYPE="TEXT" NAME="DoorTxURL"></TD>
+</TR><TR>
+<TD>Doorframe Geometry:</TD><TD><INPUT TYPE="TEXT" NAME="DoorframeGeomURL"></TD>
+</TR><TR>
+<TD>Doorframe Texture:</TD><TD><INPUT TYPE="TEXT" NAME="DoorframeTxURL"></TD>
+</TR><TR>
+<TD>View Geometry:</TD><TD><INPUT TYPE="TEXT" NAME="ViewGeomURL"></TD>
+</TR><TR>
+<TD>View Texture:</TD><TD><INPUT TYPE="TEXT" NAME="ViewTxURL"></TD>
+</TR><TR>
+<TD>Door Top, Left, Right:</TD><TD><INPUT TYPE="TEXT" NAME="CoordTop" SIZE=6><INPUT TYPE="TEXT" NAME="CoordLeft" SIZE=6><INPUT TYPE="TEXT" NAME="CoordRight" SIZE=6></TD>
+</TR></TABLE>
+</FORM>
+<SCRIPT LANGUAGE="VBSCRIPT">
+Dim oldMotion, oldDoorGeomURL, oldDoorframeGeomURL, oldViewGeomURL, oldDoorTxURL, oldDoorframeTxURL, oldViewTxURL, oldCoordTop, oldCoordLeft, oldCoordRight
+
+sub Window_OnLoad
+	On Error Resume Next
+	oldMotion = parent.Helper.Arg.MotionType
+	AdvGraphForm.MotionType.value = oldMotion
+
+	oldDoorGeomURL = parent.Helper.Arg.DoorGeom.GeometryName
+	AdvGraphForm.DoorGeomURL.value = oldDoorGeomURL
+
+	oldDoorframeGeomURL = parent.Helper.Arg.FrameGeom.GeometryName
+	AdvGraphForm.DoorframeGeomURL.value = oldDoorframeGeomURL
+
+	oldViewGeomURL = parent.Helper.Arg.ViewGeom.GeometryName
+	AdvGraphForm.ViewGeomURL.value = oldViewGeomURL
+
+	oldDoorTxURL = parent.Helper.Arg.DoorGeom.Texture
+	AdvGraphForm.DoorTxURL.value = oldDoorTxURL
+
+	oldDoorframeTxURL = parent.Helper.Arg.FrameGeom.Texture
+	AdvGraphForm.DoorframeTxURL.value = oldDoorframeTxURL
+
+	oldViewTxURL = parent.Helper.Arg.ViewGeom.Texture
+	AdvGraphForm.ViewTxURL.value = oldViewTxURL
+
+	oldCoordTop = parent.Helper.Arg.DoorGeom.CoordTop
+	AdvGraphForm.CoordTop.value = oldCoordTop
+
+	oldCoordLeft = parent.Helper.Arg.DoorGeom.CoordLeft
+	AdvGraphForm.CoordLeft.value = oldCoordLeft
+
+	oldCoordRight = parent.Helper.Arg.DoorGeom.CoordRight
+	AdvGraphForm.CoordRight.value = oldCoordRight
+end sub
+
+sub Window_OnUnload
+	On Error Resume Next
+
+	if AdvGraphForm.MotionType.value <> oldMotion then
+		parent.Helper.Arg.MotionType = AdvGraphForm.MotionType.value
+	end if
+
+	if AdvGraphForm.DoorGeomURL.value <> oldDoorGeomURL then
+		if Len(AdvGraphForm.DoorGeomURL.value) > 255 then
+			msgbox "The 3D model URL can not be longer than 255 letters, re-using the old 3D model URL.", vbInformation, "Microsoft Virtual Worlds"
+			parent.Helper.Arg.DoorGeom.GeometryName = oldDoorGeomURL
+			AdvGraphForm.DoorGeomURL.value = oldDoorGeomURL
+		else
+			parent.Helper.Arg.DoorGeom.GeometryName = AdvGraphForm.DoorGeomURL.value
+		end if
+	end if
+
+	if AdvGraphForm.DoorframeGeomURL.value <> oldDoorframeGeomURL then
+		if Len(AdvGraphForm.DoorframeGeomURL.value) > 255 then
+			msgbox "The door frame geometry URL can not be longer than 255 letters, re-using the old door frame geometry URL.", vbInformation, "Microsoft Virtual Worlds"
+			parent.Helper.Arg.FrameGeom.GeometryName = oldDoorframeGeomURL
+			AdvGraphForm.DoorframeGeomURL.value = oldDoorframeGeomURL
+		else
+			parent.Helper.Arg.FrameGeom.GeometryName = AdvGraphForm.DoorframeGeomURL.value
+		end if
+	end if
+
+	if AdvGraphForm.ViewGeomURL.value <> oldViewGeomURL then
+		if Len(AdvGraphForm.ViewGeomURL.value) > 255 then
+			msgbox "The view geometry URL can not be longer than 255 letters, re-using the old view geometry URL.", vbInformation, "Microsoft Virtual Worlds"
+			parent.Helper.Arg.ViewGeom.GeometryName = oldViewGeomURL
+			AdvGraphForm.ViewGeomURL.value = oldViewGeomURL
+		else
+			parent.Helper.Arg.ViewGeom.GeometryName = AdvGraphForm.ViewGeomURL.value
+		end if
+	end if
+
+	if AdvGraphForm.DoorTxURL.value <> oldDoorTxURL then
+		if Len(AdvGraphForm.DoorTxURL.value) > 255 then
+			msgbox "The door texture URL can not be longer than 255 letters, re-using the old door texture URL.", vbInformation, "Microsoft Virtual Worlds"
+			parent.Helper.Arg.DoorGeom.Texture = oldDoorTxURL
+			AdvGraphForm.DoorTxURL.value = oldDoorTxURL
+		else
+			parent.Helper.Arg.DoorGeom.Texture = AdvGraphForm.DoorTxURL.value
+			parent.Helper.Arg.DoorGeom.SetTexture
+		end if
+	end if
+
+	if AdvGraphForm.DoorframeTxURL.value <> oldDoorframeTxURL then
+		if Len(AdvGraphForm.DoorframeTxURL.value) > 255 then
+			msgbox "The door frame texture URL can not be longer than 255 letters, re-using the old door frame texture URL.", vbInformation, "Microsoft Virtual Worlds"
+			parent.Helper.Arg.FrameGeom.Texture = oldDoorframeTxURL
+			AdvGraphForm.DoorframeTxURL.value = oldDoorframeTxURL
+		else
+			parent.Helper.Arg.FrameGeom.Texture = AdvGraphForm.DoorframeTxURL.value
+			parent.Helper.Arg.FrameGeom.SetTexture
+		end if
+	end if
+
+	if AdvGraphForm.ViewTxURL.value <> oldViewTxURL then
+		if Len(AdvGraphForm.ViewTxURL.value) > 255 then
+			msgbox "The view texture URL can not be longer than 255 letters, re-using the old view texture URL.", vbInformation, "Microsoft Virtual Worlds"
+			parent.Helper.Arg.ViewGeom.Texture = oldViewTxURL
+			AdvGraphForm.ViewTxURL.value = oldViewTxURL
+		else
+			parent.Helper.Arg.ViewGeom.Texture = AdvGraphForm.ViewTxURL.value
+			parent.Helper.Arg.ViewGeom.SetTexture
+		end if
+	end if
+
+	if AdvGraphForm.CoordTop.value <> oldCoordTop then
+		parent.Helper.Arg.DoorGeom.CoordTop = AdvGraphForm.CoordTop.value
+	end if
+
+	if AdvGraphForm.CoordLeft.value <> oldCoordLeft then
+		parent.Helper.Arg.DoorGeom.CoordLeft = AdvGraphForm.CoordLeft.value
+	end if
+
+	if AdvGraphForm.CoordRight.value <> oldCoordRight then
+		parent.Helper.Arg.DoorGeom.CoordRight = AdvGraphForm.CoordRight.value
+	end if
+end sub
+
+sub Reset
+	Window_OnLoad
+end sub
+
+sub Apply
+	Window_OnUnLoad
+end sub
+
+function GetHelpURL
+	GetHelpURL = "advghelp.htm"
+end function
+
+function verify
+	verify = true
+end function
+</SCRIPT>
+</BODY>
+</HTML>

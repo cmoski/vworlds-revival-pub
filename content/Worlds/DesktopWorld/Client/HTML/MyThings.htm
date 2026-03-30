@@ -1,0 +1,703 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//
+'//  File:			MyThings.htm
+'//  Description:	This file hosts the legend and iframe for the mythings 
+'//					section.  The legend/side menu has a lot of 'legacy'
+'//					type code.
+'////////////////////////////////////////////////////////////////////////-->
+<html>
+<head>
+<link rel=stylesheet href=../shared/global.css>
+<meta http-equiv="Expires" content="0">
+<title>My Things</title>
+
+<!--include scripts-->
+<script language="vbscript" src="../vbs/WriteSideLink.vbs">
+</script>
+<script language="vbscript" src="../vbs/document_OnSelectStart.vbs">
+</script>
+<script language="vbscript" src="../vbs/MenuOnMouseDown.vbs">
+</script>
+<!--end include scripts-->
+
+
+<script language="VBScript">
+option explicit
+
+CONST strMyTDefault = "MyThingsDefault.htm"
+dim leftPanePct
+leftPanePct = 0.25
+
+dim colorHilite
+dim colorNormal
+colorHilite = "#4977F9"
+colorNormal = "#587f7e"
+
+dim thumbnailWidth, thumbnailHeight
+thumbnailWidth = 17
+thumbnailHeight = 17
+
+dim currentObjectId		' for Show<object>.htm
+dim currentAvatarId		' for ShowPerson.htm
+dim groupName			' for ShowPerson.htm
+dim user
+dim myThingsBlock
+dim PeopleBlock		' used for either the Friends block or the Ignoring block
+dim QQ					'double quote for using quotes within quotes
+
+QQ = chr(34)
+currentObjectId = 0
+set user = top.ClientUserPtr	
+
+dim lngSelectedItemId
+const SEL_COLOR = "#78fe8b"
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		document_OnMouseOver
+'//  Purpose:	highlight the menu item when the mouse if over
+'////////////////////////////////////////////////////////////////////////
+sub document_OnMouseOver
+	dim objTempElm
+	
+	set objTempElm = window.event.srcElement
+	if instr(objTempElm.id, "vwInfo") <> 1 then
+		exit sub
+	end if
+	objTempElm.style.color = SEL_COLOR			'color from help menu
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		document_OnMouseOut
+'//  Purpose:	un-highlight the menu item when the mouse is not over
+'////////////////////////////////////////////////////////////////////////
+sub document_OnMouseOut
+	dim objTempElm
+	
+	set objTempElm = window.event.srcElement
+	if instr(objTempElm.id, "vwInfo") <> 1 then
+		exit sub
+	end if
+
+	if lngSelectedItemId <> objTempElm.id then
+		objTempElm.style.color = "white"
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		document_OnMouseOut
+'//  Purpose:	make the current menu item active.
+'////////////////////////////////////////////////////////////////////////
+sub document_OnMouseDown
+	dim objTempElm, objLoopElem
+
+	set objTempElm = window.event.srcElement
+	if instr(objTempElm.id, "vwInfo") <> 1 then
+		exit sub
+	end if
+
+	lngSelectedItemId = objTempElm.id
+
+	for each objLoopElem in document.all
+		if left(objLoopElem.id, len("vwInfo")) = "vwInfo" and objLoopElem.id <> lngSelectedItemId then  
+			objLoopElem.style.color = "white"
+		end if
+	next
+	
+	objTempElm.style.color = SEL_COLOR
+	
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		window_onload
+'//  Purpose:	init's basic links. clicks on gifts or notes
+'////////////////////////////////////////////////////////////////////////
+sub window_onload
+	dim vwObject
+    top.AddToEventList window
+	
+	WriteSideLink "lnkMyNotes", "MenuI", "My Notes", "showMyThings(" & """lnkMyNotes""" & ")", 2  'False)", 2 
+	WriteSideLink "lnkMyGifts", "MenuI", "My Gifts", "showMyThings(" & """lnkMyGifts""" & ")", 2		'False)", 2 	
+	WriteSideLink "lnkMyEmail", "MenuI", "My E-mail", "top.Linkto 'http://www.hotmail.com'", 1 
+	WriteSideLink "lnkMyWebPage", "MenuI", "My Web Page", "ShowInInfoFrame('MyWebPage.htm?" & user.name & "')", 1 
+
+	isNavigationOk = true
+	
+	'for the new mouse over handlers
+	lngSelectedItemId =  "vwInfo" & top.CurrentVWObjectId
+	
+	currentAvatarId = top.currentAvatarId
+	top.CurrentAvatarId = 0
+	if top.CurrentVWObjectId <> 0 then
+		top.getObjectById top.CurrentVWObjectId, vwObject
+		if vwObject is Nothing then
+			document.frames(0).location = "MyThingsDefault.htm"
+			groupName = "My Things" 				
+		elseif vwObject.displayName = "Note" then			
+			MenuOnMouseDown (document.all.item("lnkMyNotes"))
+		else			
+			MenuOnMouseDown (document.all.item("lnkMyGifts"))
+		end if
+		top.CurrentVWObjectID = 0
+	else
+		MenuOnMouseDown (document.all.item("lnkMyNotes"))
+		document.frames(0).location = strMyTDefault
+		groupName = "My Notes" 
+	end if
+	CountItems()
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		window_onUnload
+'//  Purpose:	removes this page from the event list
+'////////////////////////////////////////////////////////////////////////
+sub window_onUnload
+	top.RemoveFromEventList window
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		document_onClick
+'//  Purpose:	removes this page from the event list
+'//				Walk up the HTML tree until we get to an element of classname vwObjectBlock or menuItem.
+'//				A vwObjectBlock is an element that displays information about an in-world object,
+'//				with a custom attribute vwObjectId that identifies the object. It contains a vwThumbnail element,
+'//				a vwInfo element that shows who sent the object and when, and a vwMenu element with items generated
+'//				from the object's right-click menu.
+'//				A vwMenuItem is a clickable element within a vwMenu, corresponding to one the object's menu methods.
+'////////////////////////////////////////////////////////////////////////
+sub document_onClick
+
+	dim elem, vwObjectId, vwObject, avatarId, avatar 
+	dim menu, menuItem, menuItemId
+	dim menuBlock, objectBlock
+	dim underscore
+	dim n,m
+	dim theFunc
+	set elem = window.event.srcElement
+	CountItems()
+	do while (elem.className <> "vwObjectBlock") _
+		and (elem.className <> "vwMenuItem") _
+		and (elem.className <> "MenuII") _
+		and (elem.className <> "MenuIII") _
+		and (elem.className <> "avatarBlock") _
+		and (elem.tagname <> "BODY")
+		set elem = elem.parentElement
+	loop
+
+	if elem.className = "MenuII" then	
+		hideMenus
+		vwObjectId = elem.getAttribute("vwObjectId")
+		top.getObjectById vwObjectId, vwObject
+		dim item
+		if vwObject is Nothing then exit sub
+		' generate the object's menu
+		makeObjectMenu vwObject.Id
+		currentObjectId = vwObject.Id
+		vwObject.IsOpened = true
+		document.all.item("vwThumbnailImg" & vwObject.Id).src = vwObject.thumbnailOpen
+		' display the object's web page in the iframe
+		if vwObject.IsValidProperty("showPage") then
+			document.all.infoIFrame.src = vwObject.showPage
+		end if
+
+	elseif elem.className = "MenuIII" then
+		' Get the object for the object block whose menu item we clicked on
+		dim strObjGroup
+		set menuBlock = elem.parentElement
+		set objectBlock = menuBlock.parentElement
+		vwObjectId = objectBlock.getAttribute("vwObjectId")	
+		top.getObjectById vwObjectId, vwObject
+		if not (vwObject is Nothing) then
+			strObjGroup = vwObject.DisplayName
+			' Execute an action from the object's in-world menu
+			currentObjectId = vwObject.Id
+			menuItemId = mid(elem.id,instrRev(elem.id, "_")+1,255)
+			' GetMenuList is an undocumented method that returns an object's menu;
+			' a menu is a propertyList filled with menuItem objects
+			set menu = vwObject.GetMenuList
+			set menuItem = menu.property(menuItemId)
+			menuItem.Execute
+			
+			' Refresh the MyThings block after allowing time for the world to change
+			menuBlock.RemoveNode true
+			' count up the number of gifts and notes 
+			
+			if document.all.item("MyThingsBlock").children.length = 1 then
+				window.setTimeout "document.all.item('MyThingsBlock').RemoveNode true", 150
+			end if
+
+			window.setTimeout "CountItems()", 50
+			if strObjGroup = "Gift" then
+				window.setTimeout "MenuOnMouseDown(document.all.item('lnkMyGifts'))", 50
+			else
+				window.setTimeout "MenuOnMouseDown(document.all.item('lnkMyNotes'))", 50			
+			end if
+			if strObjGroup = "Gift" and (menuItemId = 1 or menuItemId = 2) then
+				window.setTimeout "makeObjectMenu " & currentObjectId, 120
+			end if
+		end if
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		getCurrentObjectId
+'//  Purpose:	called by various Show pages to determine which object to display
+'//  Called by:	ShowNote.htm,
+'//				ShowGift.htm
+'////////////////////////////////////////////////////////////////////////
+function getCurrentObjectId
+	getCurrentObjectId = currentObjectId
+end function
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		GetCurrentAvatarId
+'//  Purpose:	when replying to a gift or note, used to find out who to reply to
+'//  Called by:	noteSend.htm
+'//				showPerson.htm
+'////////////////////////////////////////////////////////////////////////
+function GetCurrentAvatarId
+	GetCurrentAvatarId = currentAvatarId
+end function
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		getGroupName
+'//  Purpose:	get the name of a group (friends/ignored) for a heading on the ShowPerson page
+'//  Called by:	ShowPerson.htm
+'////////////////////////////////////////////////////////////////////////
+function getGroupName
+	getGroupName = groupName
+end function
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		hideMenus
+'//  Purpose:	undisplay menu items; shotgun approach for when we switch to a different object
+'//  Called by:	document_onClick
+'////////////////////////////////////////////////////////////////////////
+sub hideMenus
+	dim elem
+	for each elem in document.all
+		if elem.className = "vwMenu" then elem.style.display = "none"
+	next
+	' count up the number of gifts and notes 
+	CountItems()
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		hideLists
+'//  Purpose:	undisplays menus
+'//  Called by:	showMyThings
+'////////////////////////////////////////////////////////////////////////
+sub hideLists
+	on error resume next
+	myThingsBlock.style.display = "none"
+	PeopleBlock.removeNode true
+	' count up the number of gifts and notes 
+	CountItems()
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		showMyThings
+'//  Purpose:	Create a sorted list of user.contents objects whose ShowInContentsList property = true
+'//  Params:	parentBlock	-	<string> id of the paraent elem
+'//  Called by:	onClick for the "My Notes" and "My Gifts" links
+'////////////////////////////////////////////////////////////////////////
+sub showMyThings(parentBlock)
+	dim vwObject, currentObject, elem
+	set currentObject = Nothing
+	' Remove existing myThingsBlock, if any
+	if not IsEmpty(myThingsBlock) then
+		if not (myThingsBlock is Nothing) then 
+			myThingsBlock.removeNode true
+		end if
+	end if
+	
+	if parentBlock = "lnkMyGifts" then
+	  	set myThingsBlock = SideLinks.insertBefore (document.createElement("DIV"), lnkMyEmail)
+	  	myThingsBlock.setAttribute "thingType", "Gift"
+	  	' thingType is used by HandleEnter/LeaveInventory to identify the currently displayed type
+	else
+		set myThingsBlock = SideLinks.insertBefore (document.createElement("DIV"), lnkMyGifts)
+	  	myThingsBlock.setAttribute "thingType", "Note"
+	end if
+	myThingsBlock.id = "myThingsBlock"
+	myThingsBlock.style.display = "none"
+	for each vwObject in user.Contents
+		if vwObject.ShowInContentsList then 
+			if parentBlock = "lnkMyGifts" then 
+				addToMyThings vwObject, "Gift"
+			else  
+				addToMyThings vwObject, "Note"
+			end if
+			if vwObject.Id = top.currentVWObjectId then 
+				set currentObject = vwObject
+			end if
+		end if
+	next	
+	hideLists
+	if parentBlock = "lnkMyGifts" then
+		groupName = "My Gifts"
+	else
+		groupName = "My Notes"
+	end if
+	
+	if myThingsBlock.children.length = 0 then
+		myThingsBlock.style.display = "none"
+		myThingsBlock.className = "MenuBlock"		
+		document.frames(0).location = strMyTDefault
+		exit sub
+	end if
+	
+	myThingsBlock.style.display = "block"
+	myThingsBlock.className = "MenuBlock"
+	document.frames(0).location = strMyTDefault
+
+	if currentObject is Nothing then exit sub
+	set elem = document.all.item("vwObject" & currentObject.id)
+	if not IsNull(elem) and not elem is Nothing then 
+		elem.click
+		MenuOnMouseDown(elem)
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		addToMyThings
+'//  Purpose:	Insert a block of HTML code into myThingsBlock according to the objects SortKey.
+'//				SortKey consists of a 1-char Category + DisplayName + yyyymmddhhmm Date (if any).
+'//				Each known type of object is assigned a Category char that ensures its sort order,
+'//				with unknown types grouped at the end.
+'//  Params:	
+'//		vwObject	-	<object> a gift or note object
+'//		ThingType	-	<str> "Gift" or "Note"
+'//
+'//  Notes:		This logic assumes we are inserting all the object blocks and then adding the headings.
+'//				If HandleEnterInventory tries to insert an item at the bottom of a category, the item will
+'//				be inserted after the heading for the next category.
+'//  Called by:	HandleEnterInventory
+'//				ShowMyThings
+'////////////////////////////////////////////////////////////////////////
+sub addToMyThings (vwObject, ThingType)
+
+	dim gif
+	dim category
+	dim sortKey, insertBeforeId
+	dim objectBlock, thumbnailBlock, infoBlock, menuBlock
+	dim vwObjectDate
+	dim n, elem, img, newHTML, newElem
+	
+	' don't do anything if the My Things block is not visible
+	
+	if IsEmpty(myThingsBlock) then exit sub
+
+	if myThingsBlock is Nothing then exit sub
+
+	' generate a sortkey value for the object
+	myThingsBlock.style.display = "block"
+	category = "Z"
+	select case vwObject.displayName
+		case "Gift"
+			category = "A"			
+		case "Note"
+			category = "B"			
+	end select
+
+	if ThingType <> vwObject.displayName then exit sub
+
+	vwObjectDate = "999999999999"
+	if vwObject.IsValidProperty("date") then
+		vwObjectDate = vwObject.date
+	end if
+	sortKey = CStr(category) & CStr(vwObjectDate)
+
+	' generate a block of HTML code for the object, id="vwObjectN" where N = object ID
+	set objectBlock = document.createElement ("SPAN")
+	objectBlock.id = "vwObject" & vwObject.Id
+	objectBlock.className = "MenuII"
+	objectBlock.style.height = "35px"
+	objectBlock.setAttribute "sortKey", sortKey
+	objectBlock.setAttribute "displayName", vwObject.displayName
+	objectBlock.setAttribute "vwObjectId", vwObject.id
+
+	' insert the thumbnail image into the block
+	gif = vwObject.thumbnailclosed
+	if vwObject.IsValidProperty("IsOpened") then
+		if vwObject.IsOpened then 
+			gif = vwObject.thumbnailopen
+		end if
+	end if
+
+	set thumbnailBlock = document.createElement("SPAN")
+	thumbnailBlock.id = "vwThumbnail" & vwObject.Id
+	thumbnailBlock.className = "MenuII_Tnail"
+	thumbnailBlock.innerHTML = "<IMG ID=vwThumbnailImg" & vwObject.Id & " SRC='" & gif & "' WIDTH=" & thumbnailWidth & " HEIGHT=" & thumbnailHeight & ">"
+	objectBlock.InsertAdjacentElement "BeforeEnd", thumbnailBlock
+
+	' insert an item info block next to the image
+
+	set infoBlock = document.createElement ("SPAN")
+	infoBlock.id = "vwInfo" & vwObject.Id
+	if vwObject.from <> "" then 
+		newHTML = "from&nbsp;" & vwObject.from
+	else
+		newHTML = vwObject.name
+	end if
+	if vwObjectDate <> "" then 
+		newHTML = "" & newHTML & "<br><div style=text-decoration:none>" & mid(vwObjectDate,5,2) & _
+		"/" & mid(vwObjectDate,7,2) & "/" & mid(vwObjectDate,1,4) & "</div>"
+	end if
+	infoBlock.className = "MenuII_Title"
+	infoBlock.setAttribute "origClass", "MenuII_Title"
+	infoBlock.setAttribute "clickClass", "MenuII_Title_CLK"
+	infoBlock.setAttribute "hoverClass", "MenuII_Title_MO"
+	infoBlock.innerHTML = newHTML
+
+	objectBlock.InsertAdjacentElement "BeforeEnd", infoBlock
+
+	' insert the object block into the page
+	insertBeforeId = ""
+	for each elem in myThingsBlock.children
+		if elem.className = "MenuII" then
+			if elem.getAttribute("sortKey") <= sortKey then	
+				insertBeforeId = elem.Id
+				exit for
+			end	if
+		end if		
+	next
+	if insertBeforeId > "" then
+		myThingsBlock.insertBefore objectBlock, document.all.item(insertBeforeId)
+	else
+		myThingsBlock.insertAdjacentElement "BeforeEnd", objectBlock
+	end if
+	
+	if InStr(LCase(InfoIFrame.location),strMyTDefault) then
+		if InStr(LCase(InfoIFrame.document.all.item("groupName").innerText),LCase(vwObject.displayName)) then
+			objectBlock.click
+		end if
+	end if	 
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		makeObjectMenu()
+'//  Purpose:	Generate a menu based on the object's menu and insert it in the objectBlock
+'//	 Params:
+'//		vwObjectId	<int>	object's id
+'//  Called by:	document_onClick
+'////////////////////////////////////////////////////////////////////////
+sub makeObjectMenu (vwObjectId)
+	dim vwObject, objectBlock, menu, menuItem, menuItemCount, menuBlock, elem, n
+	dim userHasObject
+	top.getObjectById vwObjectId, vwObject
+
+	' verify that the object we are operating on still exists in the user's contents
+	for each vwObject in user.contents
+		if vwObject.Id = vwObjectId then 
+			userHasObject = true
+			exit for
+		end if
+	next
+	if not userHasObject then exit sub
+
+	' insert menu block
+	set objectBlock = document.all.item("vwObject" & vwObject.Id)
+	if objectBlock is Nothing then exit sub
+	set menuBlock = document.createElement ("SPAN")
+	menuBlock.id = "vwMenu" & vwObject.Id
+	menuBlock.classname = "vwMenu"
+	menuBlock.style.display = "none"
+	objectBlock.InsertAdjacentElement "BeforeEnd", menuBlock
+
+	' GetMenuList is an undocumented method that returns an object's menu;
+	' a menu is a propertyList filled with menuItem objects
+	set menu = vwObject.GetMenuList
+	menuItemCount = 0
+	for n = 0 to menu.count - 1
+		set menuItem = menu.property(n)
+		if menuItem.menuText > "" and menuItem.Flags <> top.ClientWorldPtr.MI_INVISIBLE then
+			menuItemCount = menuItemCount + 1
+			set elem = document.createElement("SPAN")
+			elem.className = "MenuIII"
+
+			' set the id so we can get the object id and the menu item id
+			elem.id = "vwMenuItem" & vwObject.id & "_" & n
+			elem.setAttribute "menuItemId",n
+			elem.innerHTML = "- " & menuItem.menuText
+			menuBlock.InsertAdjacentElement "BeforeEnd", elem
+		end if
+		set menuItem = Nothing
+	next
+	' add some bottom padding into the menu
+	set elem = document.createElement("SPAN")
+	elem.className = "MenuIII_BtmPad"
+	elem.innerHTML = "&nbsp;"
+	menuBlock.InsertAdjacentElement "BeforeEnd", elem
+
+	set menu = Nothing
+
+	if menuItemCount <> 0 then menuBlock.style.display = "block"
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		HandleEnterInventory
+'//  Purpose:	event handler for when gift's or note's are added
+'//  Params:	vwObject	- <object> gift or note object
+'//  Called by:	HandleUIEvent
+'////////////////////////////////////////////////////////////////////////
+sub HandleEnterInventory(byval vwObject)
+	dim currentThingType
+	if vwObject.showInContentsList = true and vwObject.container.id = top.ClientUserPtr.id _
+	 and isObject(myThingsBlock) then
+		' item has moved into user's contents; if objects of the same type are currently displayed, show the item
+		if vwObject.DisplayName = myThingsBlock.getAttribute("thingType") then addToMyThings vwObject, vwObject.DisplayName
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		HandleLeaveInventory
+'//  Purpose:	event handler for when gift's or note's removed
+'//  Params:	vwObject	- <object> gift or note object
+'//  Called by:	HandleUIEvent
+'////////////////////////////////////////////////////////////////////////
+sub HandleLeaveInventory(byval vwObject)
+	on error resume next
+	' object has left the user's contents; if it's listed remove its object block element
+	dim elem, prevElem, nextElem
+	set elem = document.all.item("vwObject" & vwObject.Id)
+	if not IsNull(elem) then
+		' Remove the element. Also remove its category heading if necessary.
+		' If the element being removed is preceded by a heading, and followed by
+		' another heading or nothing, then the preceding heading should be removed.
+		set prevElem = elem.previousSibling
+		set nextElem = elem.nextSibling
+		
+		if Err.number <> 0 then
+			exit sub
+		end if
+		
+		elem.RemoveNode true
+		if not (prevElem is Nothing) then
+			if prevElem.className = "vwMenuHeading" then
+				if IsNull(nextElem) then
+					prevElem.removeNode true
+				elseif nextElem is Nothing then
+					prevElem.removeNode true
+				elseif nextElem.className = "vwMenuHeading" then
+					prevElem.removeNode true
+				end if
+			end if
+		end if
+		CountItems
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		HandleUIEvent
+'//  Purpose:	catch events for "OnEnterInventory" and "OnLeaveInventory"
+'//	 Args:		who  - not used
+'//				what - <str> event id
+'//				args - <array> various args
+'//  Called by:	client.htm:theclient_OnUIEvent
+'////////////////////////////////////////////////////////////////////////
+sub HandleUIEvent(byVal who, what, byVal args)
+	if what = "OnEnterInventory" then
+		' for the OnEnterInventory UI event the new vwObject is passed alone, not in an array
+		HandleEnterInventory args
+		window.settimeout "CountItems()", 100, "vbscript"
+	elseif what = "OnLeaveInventory" then
+		HandleLeaveInventory args
+		window.settimeout "CountItems()", 100, "vbscript"
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		ShowInInfoFrame(inURL)
+'//  Purpose:	load a page into the sub frame
+'//	 Args:		
+'//		inURL	- <str>	the url to load 
+'//  Called by:	onClick for the "My Web Page" link
+'////////////////////////////////////////////////////////////////////////
+sub ShowInInfoFrame(inURL)
+	if not IsEmpty(myThingsBlock) then
+		if not (myThingsBlock is Nothing) then 
+			myThingsBlock.removeNode true
+		end if
+	end if
+	infoIFrame.navigate inURL 
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		CountItems()
+'//  Purpose:	test if we have ANY items or not.
+'//  Called by:	window_onLoad
+'//				document_onClick
+'////////////////////////////////////////////////////////////////////////
+sub CountItems()
+	dim intNotes, intGifts, lnkMyGifts, lnkMyNotes
+	dim strGifts, strNotes 
+  	intNotes = 0
+  	intGifts = 0
+
+	dim item, haveNewNote, haveNewGift
+	haveNewNote = false
+	haveNewGift = false
+	imgNewNote.style.display = "none"
+	imgNewGift.style.display = "none"
+	for each item in top.ClientUserPtr.contents 
+		if item.displayName = "Note" then
+			intNotes = intNotes + 1
+		elseif item.displayName = "Gift" then
+			intGifts = intGifts + 1
+		end if
+		if item.displayName = "Note" and not item.IsOpened then haveNewNote = true
+		if item.displayName = "Gift" and not item.IsOpened then haveNewGift = true
+	next
+
+	if haveNewNote then imgNewNote.style.display = "inline"
+	if haveNewGift then imgNewGift.style.display = "inline"
+	GiftsCount.innerText = " (" & intGifts & ")"
+	NotesCount.innerText = " (" & intNotes & ")"
+	top.intNoteCt = intNotes
+	top.intGiftCt = intGifts
+	' set the new item indicator in the toolbar
+	if haveNewNote or haveNewGift then
+		top.ClientMainToolsIFrame.FlashIcnNewThing(0)
+	else
+		top.ClientMainToolsIFrame.imgNewThingOff
+	end if
+end sub
+
+</script>
+</head>
+
+
+<body bgcolor=#ffffff>
+
+<span class=bkgMenu>
+</span>
+<span id=bkg
+	
+	
+	
+	
+	
+	 style="POSITION: absolute" height:41 width:100%; background:#E7E7E7; left:0; top:0;>
+</span>
+<span id=SideLinks
+	 class=SideLinks>
+</span>
+
+<iframe id=infoIFrame
+	
+	 
+	name=infoIFrame
+	
+	 class=infoIFrame marginwidth=0 marginheight=0 frameborder=no></iframe><!--iframe id=InfoIFrame
+	class=InfoIFrame
+	name=infoIFrame 
+	marginwidth=0
+	marginheight=0
+	frameborder=no
+	style="overflow-y:auto;overflow-x:auto;"></iframe-->
+</body>
+</html>
+

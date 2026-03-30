@@ -1,0 +1,769 @@
+<html>
+<head>
+<link rel=stylesheet href=../../../client/shared/global.css>
+<object id=webhelper classid=clsid:7886A636-606B-11d1-BB36-00C04FC2CAB1></object>
+<script language=vbs>
+
+Option Explicit
+dim bLoaded
+
+bLoaded = false
+Public ctlBottom, ctlColor, ctlTop, fIsDirty, folderList, g_fIsSprite, g_fNoMeshes, g_fSpriteChanged
+Public g_szCurrentCategory, g_szCurrentTexture, g_szCurrentURL, g_szURLPathOnFocus, g_Thing, g_TimerID
+Public idTimer, MeshList(), oWorld, pthContent, pthTextures
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+Sub window_onload
+	g_fSpriteChanged = False
+	g_szCurrentCategory = ""
+	g_szCurrentTexture = ""
+	g_szCurrentURL = ""
+	g_szURLPathOnFocus = ""
+	g_TimerID = -1
+	Set oWorld = parent.Helper.client.world
+	Set webhelper.vwclient = parent.Helper.client
+	Set g_Thing = parent.Helper.Arg
+	' get the global content path
+	pthContent = LCase(Right(oWorld.global.contentPath, Len(oWorld.global.contentPath) - 7))
+	pthTextures = "sdk\library\textures\"
+	lstSurface.selectedIndex = -1
+	Do While lstSurface.length > 0
+		lstSurface.remove(0)
+	Loop
+	lstCategory.selectedIndex = -1
+	Do While lstCategory.length > 0
+		lstCategory.remove(0)
+	Loop
+	lstChoice.selectedIndex = -1
+	Do While lstChoice.length > 0
+		lstChoice.remove(0)
+	Loop
+	lstChoice.disabled = True
+	txtFilePath.value = ""
+	txtRed.value = "255"
+	txtGreen.value = "255"
+	txtBlue.value = "255"
+	txtPrevColor.style.backgroundcolor = "FFFFFF"
+	ReadObjectTextureInfo
+	EnableTextureAndColorUI
+	FillCategoryUI
+	URLPathChanged
+	If g_Thing.CheckPropertySecurity("GeometryName", oWorld.PS_WRITE) = False Then
+		lstCategory.disabled = True
+		lstChoice.disabled = True
+		txtFilePath.readOnly = True
+		txtFilePath.style.color = "gray"
+		lblRed.style.color = "gray"
+		txtRed.readOnly = True
+		txtRed.style.color = "gray"
+		lblGreen.style.color = "gray"
+		txtGreen.readOnly = True
+		txtGreen.style.color = "gray"
+		lblBlue.style.color = "gray"
+		txtBlue.readOnly = True
+		txtBlue.style.color = "gray"
+		If Not lstSurface.disabled Then
+			Set ctlTop = lstSurface
+		Else
+			Set ctlTop = txtFilePath
+		End If
+	End If
+	InitFocus
+	fIsDirty = False
+	bLoaded = true
+End Sub
+
+Sub InitFocus
+	If parent.fraTabs.fMouseClicked Then
+		If Not lstSurface.disabled Then
+			lstSurface.focus
+		Else
+			txtFilePath.focus
+			txtFilePath.select
+		End If
+		parent.fraTabs.fMouseClicked = False
+	End If
+End Sub
+
+Sub ReadObjectTextureInfo
+	Dim MeshNamePropList, i, fURLSame, fColorSame
+	On Error Resume Next
+	Set MeshNamePropList = g_Thing.GetNamedMeshes
+	If TypeName(MeshNamePropList) = "Empty" Or MeshNamePropList.count = 0 Then
+		g_fNoMeshes = True
+		If IsObject(g_Thing.GeometryName) And Not g_Thing.GeometryName Is Nothing Then
+			g_szCurrentURL = Trim(g_Thing.GeometryName)
+		End If
+		If LCase(Right(g_szCurrentURL, Len(g_szCurrentURL) - InStrRev(g_szCurrentURL, "."))) = "x" Or _
+				LCase(Right(g_szCurrentURL, Len(g_szCurrentURL) - InStrRev(g_szCurrentURL, "."))) = "3ds" Then
+			g_fIsSprite = False
+		Else
+			g_fIsSprite = True
+		End If
+		If Left(g_szCurrentURL, Len(pthContent) - 1) = Left(pthContent, Len(pthContent) - 1) Then
+			g_szCurrentURL = Right(g_szCurrentURL, Len(g_szCurrentURL) - Len(pthContent))
+		End If
+	Else
+		g_fIsSprite = False
+		g_fNoMeshes = False
+		ReDim MeshList(MeshNamePropList.count, 3)
+		MeshList(0, 0) = "<All>"
+		MeshList(0, 3) = RGB(255, 255, 255)
+		For i = 1 To UBound(MeshList)
+			MeshList(i, 0) = LCase(MeshNamePropList.property(i - 1))		'MeshName
+			MeshList(i, 1) = LCase(g_Thing.getNamedMeshTexture(MeshList(i, 0)))		'MeshURL
+			If MeshList(i, 1) = "vwgcdefault" Then MeshList(i, 1) = "<texture not found>"
+			If Left(MeshList(i, 1), Len(pthContent) - 1) = Left(pthContent, Len(pthContent) - 1) Then
+				MeshList(i, 1) = Right(MeshList(i, 1), Len(MeshList(i, 1)) - Len(pthContent))
+			End If
+			MeshList(i, 2) = False		'MeshChanged
+			MeshList(i, 3) = g_Thing.getNamedMeshColor(MeshList(i, 0))	'MeshColor
+		Next
+		fURLSame = True
+		For i = 1 To UBound(MeshList)
+			If MeshList(i, 1) <> MeshList(1, 1) Then
+				fURLSame = False
+				Exit For
+			End If
+		Next
+		If fURLSame Then MeshList(0, 1) = MeshList(1, 1)
+		fColorSame = True
+		For i = 1 To UBound(MeshList)
+			If CLng(MeshList(i, 3)) <> CLng(MeshList(1, 3)) Then
+				fColorSame = False
+				Exit For
+			End If
+		Next
+		If fColorSame Then MeshList(0, 3) = MeshList(1, 3)
+	End If
+End Sub
+
+Sub EnableTextureAndColorUI
+	Dim i, splitPath
+	If g_fNoMeshes Then
+		'Disable texture stuff, unless object is a sprite
+		lstSurface.disabled = True
+		If g_fIsSprite Then
+			AddItemToSelect "No surfaces", lstSurface
+			If g_szCurrentURL <> "" Then
+				splitPath = Split(g_szCurrentURL, "\")
+				If UBound(splitPath) > 1 Then
+					g_szCurrentCategory = splitPath(UBound(splitPath) - 1)
+				End If
+				g_szCurrentTexture = splitPath(UBound(splitPath))
+			End If
+		Else
+			AddItemToSelect "Error loading!", lstSurface
+		End If
+		lstSurface.selectedIndex = 0
+		'Disable color boxes
+		lblRed.style.color = "gray"
+		txtRed.disabled = True
+		lblGreen.style.color = "gray"
+		txtGreen.disabled = True
+		lblBlue.style.color = "gray"
+		txtBlue.disabled = True
+		Set ctlTop = lstCategory
+		Set ctlBottom = txtFilePath
+	Else
+		For i = 0 To UBound(MeshList)
+			AddItemToSelect MeshList(i, 0), lstSurface
+		Next
+		lstSurface.selectedIndex = 0
+		g_szCurrentURL = MeshList(0, 1)
+		If g_szCurrentURL <> "" Then
+			splitPath = Split(g_szCurrentURL, "\")
+			If UBound(splitPath) > 1 Then
+				g_szCurrentCategory = splitPath(UBound(splitPath) - 1)
+			End If
+			g_szCurrentTexture = splitPath(UBound(splitPath))
+		End If
+		If CStr(Meshlist(0, 3)) <> "" Then
+			txtBlue.value = Int(CLng(Meshlist(0, 3)) / 256 / 256)
+			txtGreen.value = Int((CLng(Meshlist(0, 3)) - (txtBlue.value * 256 * 256)) / 256)
+			txtRed.value = Int(CLng(Meshlist(0, 3)) - (txtBlue.value * 256 * 256) - (txtGreen.value * 256))
+			txtPrevColor.style.backgroundcolor = GetHexColor
+		End If
+		Set ctlTop = lstSurface
+		Set ctlBottom = txtBlue
+	End If
+End Sub
+
+Sub FillCategoryUI
+	Dim folderList, folder, fileList, fileName
+	If g_fNoMeshes And Not g_fIsSprite Then
+		lstCategory.disabled = True
+		txtFilePath.readOnly = True
+		txtFilePath.style.color = "gray"
+		Set ctlTop = txtFilePath
+		Set ctlBottom = txtFilePath
+	Else
+		Set folderList = webHelper.GetSubFolderNames(pthContent & pthTextures & "*.*")
+		If folderList.count = 0 Then
+			lstCategory.disabled = True
+			If ctlTop Is lstCategory Then Set ctlTop = txtFilePath
+			If txtFilePath.value = "" Then
+				If Left(g_szCurrentURL, Len(pthContent) - 1) = Left(pthContent, Len(pthContent) - 1) Then
+					txtFilePath.value = Right(g_szCurrentURL, Len(g_szCurrentURL) - Len(pthContent))
+				Else
+					txtFilePath.value = g_szCurrentURL
+				End If
+			End If
+		Else
+			For Each folder In folderlist
+				If folder <> "." And folder <> ".." Then
+					AddItemToSelect LCase(folder), lstCategory
+				End If
+			Next
+			Set fileList = webHelper.GetFileNames(pthContent & pthTextures & g_szCurrentCategory & "\", "*.*")
+			If fileList.count <> 0 Then
+				For Each fileName In fileList
+					If StrComp(fileName, g_szCurrentTexture, vbTextCompare) = 0 Then
+						SelectOptionByText lstCategory, g_szCurrentCategory
+						CatChanged False
+						Exit For
+					End If
+				Next
+			End If
+			If txtFilePath.value = "" Then
+				If Left(g_szCurrentURL, Len(pthContent) - 1) = Left(pthContent, Len(pthContent) - 1) Then
+					txtFilePath.value = Right(g_szCurrentURL, Len(g_szCurrentURL) - Len(pthContent))
+				Else
+					txtFilePath.value = g_szCurrentURL
+				End If
+			End If
+		End If
+	End If
+End Sub
+
+Sub SelectOptionByText(selectTagName, itemToSelectName)
+	Dim i
+	selectTagName.selectedIndex = -1
+	For i = 0 To selectTagName.length - 1
+		If StrComp(itemToSelectName, selectTagName.options(i).text, vbTextCompare) = 0 Then
+			selectTagName.selectedIndex = i
+			Exit For
+		End If
+	Next
+End Sub
+
+Function PosInList(tagName, sItem)
+	Dim i
+	PosInList = tagName.length
+	For i = 0 To tagName.length - 1
+		If StrComp(sItem, tagName.options.item(i).text, vbTextCompare) = -1 Then
+			PosInList = i
+			Exit For
+		End If
+	Next
+End Function
+
+Sub AddItemToSelect(byval sItem, byval tagName)
+	Dim newElement
+	Set newElement = document.createElement("OPTION")
+	newElement.text = sItem
+	tagName.Add newElement, PosInList(tagName, sItem)
+End Sub
+
+Sub Reset
+	window_onload
+End Sub
+
+Sub Apply
+	Dim i
+	if bLoaded = false or fIsDirty = false then
+		exit sub
+	end if
+	If Not txtFilePath.readOnly Then
+		If Not g_fNoMeshes Then
+			If lstSurface.item(lstSurface.selectedIndex).text <> "<All>" Then
+				For i = 1 To UBound(MeshList)
+					If MeshList(i, 2) Then	'is dirty
+						g_Thing.setNamedMeshTexture MeshList(i, 0), MeshList(i, 1)
+						g_Thing.setNamedMeshColor MeshList(i, 0), MeshList(i, 3)
+						MeshList(i, 2) = False
+					End If
+				Next
+			Else
+				If MeshList(0, 2)Then
+					g_Thing.setNamedMeshTexture "*", MeshList(0, 1)
+					g_Thing.setNamedMeshColor "*", MeshList(0, 3)
+					MeshList(0, 2) = False
+				End If
+			End If
+		Else
+			If g_fIsSprite And g_fSpriteChanged Then
+				g_Thing.GeometryName = g_szCurrentURL
+				g_fSpriteChanged = False
+			End If
+		End If
+	End If
+	fIsDirty = false
+End Sub
+
+Function GetHelpURL
+	GetHelpURL = ""
+End Function
+
+Function GetHelpTopic
+	GetHelpTopic = "texture"
+End Function
+
+Function GetHexColor
+	If Len(Hex(txtRed.value)) = 1 Then
+		GetHexColor = "0" & Hex(txtRed.value)
+	Else
+		GetHexColor = Hex(txtRed.value)
+	End If
+	If Len(Hex(txtGreen.value)) = 1 Then
+		GetHexColor = GetHexColor & "0" & Hex(txtGreen.value)
+	Else
+		GetHexColor = GetHexColor & Hex(txtGreen.value)
+	End If
+	If Len(Hex(txtBlue.value)) = 1 Then
+		GetHexColor = GetHexColor & "0" & Hex(txtBlue.value)
+	Else
+		GetHexColor = GetHexColor & Hex(txtBlue.value)
+	End If
+End Function
+
+Sub UpdatePreviewWindow
+	If g_szCurrentURL = "" Then
+		imgPreview.src = "blank.gif"
+	ElseIf FileExists(pthContent & g_szCurrentURL) Then
+		imgPreview.src = pthContent & g_szCurrentURL
+	Else
+		imgPreview.src = g_szCurrentURL
+	End If
+End Sub
+
+Function FileExists(FilePath)
+	Dim splitPath, DirName, FileName, fileList
+	FileExists = False
+	splitPath = Split(FilePath, "\")
+	If UBound(splitPath) > 1 Then
+		FileName = splitPath(UBound(splitPath))
+	End If
+	DirName = Left(FilePath, Len(FilePath) - Len(FileName))
+	Set fileList = webHelper.GetFileNames(DirName, FileName)
+	If fileList.count = 1 Then FileExists = True
+End Function
+
+''''''''''''''''''''''''''' Events ''''''''''''''''''''''''''''''''''''
+Sub imgPreview_OnError
+	imgPreview.src = "ImageEr.gif"
+End Sub
+
+'Called when the URLPath text box value changes.
+Sub SplitURLAndSelectCategoryAndTexture
+	Dim splitPath, fBadCategory, szOldCategory, szOldTexture
+	If g_szCurrentURL = "" Then
+		fBadCategory = True
+	ElseIf StrComp(Left(g_szCurrentURL, 7), "http://", vbTextCompare) = 0 Then  'It's a web address, don't mess with it.
+		fBadCategory = True
+	ElseIf StrComp(Left(g_szCurrentURL, 7), "file://", vbTextCompare) = 0 Then  'It's a web address, don't mess with it.
+		fBadCategory = True
+	Else
+		fBadCategory = False
+	End If
+	If fBadCategory Then
+		g_szCurrentCategory = ""
+		g_szCurrentTexture = ""
+		lstCategory.selectedIndex = -1
+		lstChoice.selectedIndex = -1
+		Do While lstChoice.length > 0
+			lstChoice.remove(0)
+		Loop
+		UpdatePreviewWindow
+	Else
+		'Pull out possible Category And filenames.
+		splitPath = Split(g_szCurrentURL, "\")
+		szOldCategory = g_szCurrentCategory
+		szOldTexture = g_szCurrentTexture
+		If UBound(splitPath) > 1 Then
+			g_szCurrentCategory = splitPath(UBound(splitPath) - 1)
+		End If
+		g_szCurrentTexture = splitPath(UBound(splitPath))
+		SelectOptionByText lstChoice, g_szCurrentTexture
+		If StrComp(szOldCategory, g_szCurrentCategory, vbTextCompare) Then
+			SelectOptionByText lstCategory, g_szCurrentCategory
+			CatChanged False
+		Else
+			UpdatePreviewWindow
+		End If
+	End If
+End Sub
+
+'Event called when the "current mesh" is changed.
+Sub lstSurface_onchange
+	Dim i
+	'First, set up our UI values And get the new mesh's texture URL
+	For i = 0 To UBound(MeshList)
+		If lstSurface.item(lstSurface.selectedIndex).text = MeshList(i, 0) Then
+			g_szCurrentURL = MeshList(i, 1)
+			txtFilePath.value = g_szCurrentURL
+			If CStr(MeshList(i, 3)) <> "" Then
+				txtBlue.value = Int(CLng(Meshlist(i, 3)) / 256 / 256)
+				txtGreen.value = Int((CLng(Meshlist(i, 3)) - (txtBlue.value * 256 * 256) ) / 256)
+				txtRed.value = Int( CLng(Meshlist(i, 3)) - (txtBlue.value * 256 * 256) - (txtGreen.value * 256))
+				txtPrevColor.style.backgroundcolor = GetHexColor
+			Else
+				txtBlue.value = ""
+				txtGreen.value = ""
+				txtRed.value = ""
+				txtPrevColor.style.backgroundcolor = ""
+			End If
+			Exit For
+		End If
+	Next
+	URLPathPropertyChanged
+End Sub
+
+Sub CatChanged(UserClick)
+	Dim fileList, fileName, szExt
+	lstChoice.SelectedIndex = -1
+	Do While lstChoice.length > 0
+		lstChoice.remove(0)
+	Loop
+	If lstCategory.selectedIndex = -1 Then
+		g_szCurrentCategory = ""
+		lstChoice.disabled = True
+	Else
+		g_szCurrentCategory = lstCategory.item(lstCategory.selectedIndex).text
+		Set fileList = webHelper.GetFileNames(pthContent & pthTextures & g_szCurrentCategory & "\", "*.*")
+		If fileList.count = 0 Then
+			lstChoice.disabled = True
+		Else
+			For Each fileName In fileList
+				If fileName <> "" Then
+					szExt = Right(fileName, 4)
+					If StrComp(szExt, ".gif", vbTextCompare) = 0 Or StrComp(szExt, ".jpg", vbTextCompare) = 0 Or _
+							StrComp(szExt, ".bmp", vbTextCompare) = 0 Then
+						AddItemToSelect LCase(filename), lstChoice
+					End If
+				End If
+			Next
+			SelectOptionByText lstChoice, g_szCurrentTexture
+			If lstChoice.selectedIndex = -1 And UserClick Then
+				lstChoice.options(0).selected = True
+			End If
+			If Not txtFilePath.readOnly Then lstChoice.disabled = False
+			ChChanged UserClick
+		End If
+	End If
+	UpdatePreviewWindow
+End Sub
+
+'Event called when texture is changed in choice select.
+Sub ChChanged(UserClick)
+	If UserClick Then
+		If lstChoice.selectedIndex > -1 Then
+			g_szCurrentTexture = lstChoice.item(lstChoice.selectedIndex).text
+			txtFilePath.value = pthTextures & g_szCurrentCategory & "\" & g_szCurrentTexture
+			URLPathPropertyChanged
+		End If
+	End If
+End Sub
+
+Sub window_onunload
+End Sub
+
+Sub RGBChange
+	Dim i
+	If Not g_fNoMeshes Then
+		If txtRed.value = "" Then
+			txtRed.value = 0
+			If ctlColor Is txtRed Then txtRed.select
+		ElseIf txtRed.value > 255 Then
+			txtRed.value = 255
+			If ctlColor Is txtRed Then txtRed.select
+		End If
+		If txtGreen.value = "" Then
+			txtGreen.value = 0
+			If ctlColor Is txtGreen Then txtGreen.select
+		ElseIf txtGreen.value > 255 Then
+			txtGreen.value = 255
+			If ctlColor Is txtGreen Then txtGreen.select
+		End If
+		If txtBlue.value = "" Then
+			txtBlue.value = 0
+			If ctlColor Is txtBlue Then txtBlue.select
+		ElseIf txtBlue.value > 255 Then
+			txtBlue.value = 255
+			If ctlColor Is txtBlue Then txtBlue.select
+		End If
+		txtPrevColor.style.backgroundcolor = GetHexColor
+		For i = 0 To UBound(MeshList)
+			If lstSurface.item(lstSurface.selectedIndex).text = MeshList(i, 0) Then
+				If CLng(MeshList(i, 3)) <> RGB(CInt(txtRed.value), CInt(txtGreen.value), CInt(txtBlue.value)) Then
+					MeshList(i, 2) = True		'MeshChanged
+					MeshList(i, 3) = RGB(CInt(txtRed.value), CInt(txtGreen.value), CInt(txtBlue.value))
+					If Not fIsDirty Then
+						parent.PageDirty
+						fIsDirty = True
+					End If
+					Exit For
+				End If
+			End If
+		Next
+	End If
+End Sub
+
+Sub txtFilePath_onblur
+	g_szURLPathOnFocus = txtFilePath.value
+End Sub
+
+Sub txtFilePath_onfocus
+	If StrComp(g_szURLPathOnFocus, txtFilePath.value, vbTextCompare) <> 0 Then
+		URLPathChanged
+	End If
+End Sub
+
+Sub URLPathPropertyChanged
+	Dim nTimerValue
+	If StrComp(window.event.type, "propertychange", vbTextCompare) Or _
+			StrComp(window.event.propertyName, "value", vbTextCompare) = 0 Then
+		If g_TimerID <> -1 Then window.clearTimeout g_TimerID
+		g_TimerID = -1
+		If StrComp(window.event.type, "keypress", vbTextCompare) = 0 Then
+			nTimerValue = 1000  'Wait a second!!
+			g_TimerID = window.setTimeout("URLPath_KeyPress_Timeout", 250)
+		Else
+			URLPathChanged
+		End If
+	End If
+End Sub
+
+Sub URLPath_KeyPress_Timeout
+	g_TimerID = -1
+	URLPathChanged
+End Sub
+
+Sub URLPathChanged
+	Dim i
+	If Not g_fNoMeshes Then
+		For i = 0 To UBound(MeshList)
+			If lstSurface.item(lstSurface.selectedIndex).text = MeshList(i, 0) Then
+				If StrComp(g_szCurrentURL, txtFilePath.value, vbTextCompare) <> 0 Then
+					MeshList(i, 2) = True		'MeshChanged
+					MeshList(i, 1) = LCase(txtFilePath.value)
+					If Not fIsDirty Then
+						parent.PageDirty
+						fIsDirty = True
+					End If
+					Exit For
+				End If
+			End If
+		Next
+		g_szCurrentURL = txtFilePath.value
+		SplitURLAndSelectCategoryAndTexture	'SelectExisting
+	ElseIf StrComp(g_szCurrentURL, txtFilePath.value, vbTextCompare) Then
+		g_fSpriteChanged = True
+		g_szCurrentURL = txtFilePath.value
+		If txtFilePath.value = "" Then
+			UpdatePreviewWindow
+		Else
+			SplitURLAndSelectCategoryAndTexture 'SelectExisting
+			If FileExists(pthContent & g_szCurrentURL) Then
+				imgPreview.src = pthContent & g_szCurrentURL
+			ElseIf FileExists(pthContent & "worlds\" & oWorld.worldName & "\" & g_szCurrentURL) Then
+				imgPreview.src = pthContent & "worlds\" & oWorld.worldName & "\" & g_szCurrentURL
+			Else
+				imgPreview.src = g_szCurrentURL
+			End If
+		End If
+		If Not fIsDirty Then
+			parent.PageDirty
+			fIsDirty = True
+		End If
+	End If
+End Sub
+
+Sub document_onKeyPress
+	Select Case window.event.keyCode
+	Case 27
+		parent.btnCancel.click
+	Case 13
+		parent.btnOK.click
+	Case 9
+		window.event.returnValue = False
+		Select Case window.event.srcElement.id
+		Case "lstSurface"
+			If window.event.shiftKey Then
+				parent.Tabs.ctlBottom.focus
+			Else
+				If Not lstCategory.disabled Then
+					lstCategory.focus
+				ElseIf Not lstChoice.disabled Then
+					lstChoice.focus
+				Else
+					txtFilePath.focus
+					txtFilePath.select
+				End If
+			End If
+		Case "lstCategory"
+			If window.event.shiftKey Then
+				If Not lstSurface.disabled Then
+					lstSurface.focus
+				Else
+					parent.Tabs.ctlBottom.focus
+				End if
+			Else
+				If Not lstChoice.disabled Then
+					lstChoice.focus
+				Else
+					txtFilePath.focus
+					txtFilePath.select
+				End If
+			End If
+		Case "lstChoice"
+			If window.event.shiftKey Then
+				lstCategory.focus
+			Else
+				txtFilePath.focus
+				txtFilePath.select
+			End If
+		Case "txtFilePath"
+			If window.event.shiftKey Then
+				If Not lstChoice.disabled Then
+					lstChoice.focus
+				ElseIf Not lstCategory.disabled Then
+					lstCategory.focus
+				ElseIf Not lstSurface.disabled Then
+					lstSurface.focus
+				Else
+					parent.Tabs.ctlBottom.focus
+				End If
+			Else
+				If Not txtRed.disabled Then
+					txtRed.focus
+					txtRed.select
+				Else
+					parent.ctlTop.focus
+				End if
+			End If
+		Case "txtRed"
+			If window.event.shiftKey Then
+				txtFilePath.focus
+				txtFilePath.select
+			Else
+				txtGreen.focus
+				txtGreen.select
+			End If
+		Case "txtGreen"
+			If window.event.shiftKey Then
+				txtRed.focus
+				txtRed.select
+			Else
+				txtBlue.focus
+				txtBlue.select
+			End If
+		Case "txtBlue"
+			If window.event.shiftKey Then
+				txtGreen.focus
+				txtGreen.select
+			Else
+				parent.ctlTop.focus
+			End If
+		Case Else
+			ctlTop.focus
+			If ctlTop Is txtFilePath Then ctlTop.select
+		End Select
+	Case Else
+		'Only permit numbers in RGB boxes.
+		Select Case window.event.srcElement.id
+		Case "txtRed", "txtGreen", "txtBlue"
+			Select Case window.event.keyCode
+			Case 8 'backspace
+			Case 48, 49, 50, 51, 52, 53, 54, 55, 56, 57 'number
+			Case Else
+				window.event.returnValue = False
+			End Select
+			If window.event.returnValue = "" Then
+				If idTimer <> 0 Then
+					window.clearTimeout idTimer
+				End If
+				Set ctlColor = window.event.srcElement
+				idTimer = window.setTimeout("RGBChange : idTimer=0", 150)
+			End If
+		Case "txtFilePath"
+			If Len(txtFilePath.value) > 255 Then
+				MsgBox "The file path can not be longer than 255 characters.", vbExclamation, "Microsoft Virtual Worlds"
+				window.event.returnValue=false
+			End If
+			URLPathPropertyChanged
+		Case else
+		End Select
+	End Select
+End Sub
+
+Function verify
+	verify = True
+End Function
+
+</script>
+</head>
+<body>
+	<div id=lblSurface class=vLabel style=left:13;top:10;>Surface:</div>
+	<select id=lstSurface class=vInput style=left:95;top:7;width:125;></select>
+	<hr id=lntSurface color=#b5b564 style=position:absolute;left:7;top:34;height:1;width:95%;>
+	<hr id=lnbSurface color=white style=position:absolute;left:7;top:35;height:1;width:95%;>
+
+	<div id=lblMaterial class=vLabel style=left:13;top:47;>Material:</div>
+	<SELECT id=lstCategory onchange=CatChanged(True) class=vInput style=left:95;top:44;width:125;></select>
+	<SELECT id=lstChoice size=2 onchange=ChChanged(True) class=vInput style=left:95;top:67;width:125;height:98; disabled></select>
+	<div style="background-color: white;
+							border-bottom-color: ThreeDHighlight;
+							border-left-color: ThreeDShadow;
+							border-right-color: ThreeDHighlight;
+							border-style: solid;
+							border-top-color: ThreeDShadow;
+							border-width: 1px;
+							font-family: arial;
+							height: 120;
+							left: 230;
+							position: absolute;
+							top: 44;
+							width: 123;">
+	<div style="background-color: #F4F4E8;
+							border-bottom-color: ThreeDLightShadow;
+							border-left-color: ThreeDDarkShadow;
+							border-right-color: ThreeDLightShadow;
+							border-style: solid;
+							border-top-color: ThreeDDarkShadow;
+							border-width: 1px;
+							height: 118;
+							margin: 0;
+							padding: 0;
+							position: absolute;
+							top: 0.5px;
+							width: 121;">
+	</div></div>
+	<img src=blank.gif id=imgPreview style=position:absolute;top:46;left:232;height:116;width:119; title="">
+	<div id=lblFilePath class=vLabel style=left:13;top:176;>File path:</div>
+	<input id=txtFilePath class=vInput style=left:95;top:173;width:258>
+	<hr id=lntMaterial color=#b5b564 style=position:absolute;left:7;top:200;height:1;width:95%;>
+	<hr id=lnbMaterial color=white style=position:absolute;left:7;top:201;height:1;width:95%;>
+
+	<div id=lblColor class=vLabel style=left:13;top:213;>Base Color:</div>
+	<div id=lblRed class=vLabel style=left:95;top:213;>R:</div>
+	<input id=txtRed class=vInput style=left:108;top:210;width:28; maxlength=3>
+	<div id=lblGreen class=vLabel style=left:141;top:213;>G:</div>
+	<input id=txtGreen class=vInput style=left:155;top:210;width:28; maxlength=3>
+	<div id=lblBlue class=vLabel style=left:188;top:213;>B:</div>
+	<input id=txtBlue class=vInput style=left:201;top:210;width:28; maxlength=3>
+	<input id=txtPrevColor class=vInput style=left:237;top:210;width:116; readonly tabindex=-1>
+</body>
+</html>

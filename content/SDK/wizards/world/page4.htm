@@ -1,0 +1,98 @@
+<HTML>
+<HEAD>
+<LINK Rel=Stylesheet href="..\..\..\client\shared\global.css">
+<script language="VBscript">
+
+option explicit
+
+public fMouseClicked
+
+sub window_OnLoad
+	top.page = 3
+	txtContentServer.value = top.rootURL
+	top.buttons.UpdateButtons
+	txtContentServer.select
+	txtContentServer.Focus
+end sub
+
+sub window_OnUnLoad
+	top.rootURL = txtContentServer.value
+end sub
+
+function verify()
+	verify = true
+end function
+
+sub document_onKeyPress
+	select case window.event.keycode
+	case 27
+		parent.frames(1).OnCancel
+	case 13
+		parent.frames(1).OnNext
+	case Else
+	end select
+end sub
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+Sub document_onmousedown
+	If window.event.srcElement.tagName = "INPUT" Then
+		fMouseClicked = True
+	End If
+End Sub
+
+Sub document_onmouseup
+	fMouseClicked = False
+End Sub
+
+Sub TxtFocus
+	If Not fMouseClicked Then
+		window.event.srcElement.select
+	End If
+End Sub
+
+</script>
+</HEAD>
+<body>
+	<div style=position:absolute;left:0;top:0;height:273;width:95;overflow:hidden;>
+		<img src=..\..\..\client\shared\menuclouds.gif>
+	</div>
+	<div class=vH2 style=left:18;top:9;>Enter your content server location</div>
+	<div class=vStepBackGround style=left:440;top:1;>=</div>
+	<div class=vStep style=left:452;top:9;>Step 3 of 4</div>
+	<div class=vLabel style=left:70;top:35;>
+		To host your world on the Internet you will need to do the following:
+	</div>
+	<div class=vLabel style=left:80;top:57;>1.</div>
+	<div class=vLabel style=left:105;top:57;width:370;>
+		Setup a virtual directory on a Web server. Use Microsoft FrontPage Personal Web Server, or Microsoft Internet Information Server or your own server setup.
+	</div>
+	<div class=vLabel style=left:80;top:107;>2.</div>
+	<div class=vLabel style=left:105;top:107;width:370;>
+		Specify the Content Server location for the world. Make sure your world content is available at this location.
+	</div>
+	<div class=vLabel style=left:105;top:142;>Content server:</div>
+	<input id=txtContentServer class=vInput style=left:198;top:139;width:255; onfocus=TxtFocus>
+	<div class=vLabelSmall style=left:200;top:157;color:#713252;font-weight:bold;>
+		For example: http://www.microsoft.com
+	</div>
+	<div class=vLabelSmall style=left:125;top:172;width:330;>
+		(If you choose not to specify a Content Server at this time, you can set it later using Microsoft Virtual Worlds Object Explorer.)
+	</div>
+	<div class=vLabel style=left:80;top:207;>3.</div>
+	<div class=vLabel style=left:105;top:207;width:370;>
+		To provide others with your world name and server location, use the 'Show in Directory Services' command available under the Tools menu in Microsoft Virtual Worlds Server.
+	</div>
+</BODY>
+</HTML>

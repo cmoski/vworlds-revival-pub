@@ -1,0 +1,324 @@
+<html>
+<head>
+<TITLE>Create Chess World - JScript Version</TITLE>
+
+<!-- VWorld Client object which connects to the VWorlds server -->
+<object id=objClientCtrl name="objClientCtrl" classid="clsid:D4898803-20EF-11D0-8A96-00A0C9082583" VIEWASTEXT></object>
+
+<SCRIPT LANGUAGE="javascript">
+
+//////////////////////////////////////////////////////////////////////////
+//  Global variables (local to this file)
+//////////////////////////////////////////////////////////////////////////
+var World;				// the world object in the client control
+var User;				// the user/avatar object in the world object
+var Room;				// the user's container
+var numRow1Y = 350; 	// the Worlds Y position value for row 1
+var numColAX = 0;  		// the Worlds X position value for col A
+var numRow8Y = 0; 		// the Worlds Y position value for row 8
+var numColHX = 350; 	// the Worlds X position value for col H
+var strClient = "Client_JS.htm";			// path and file name of the client file
+var strUserInp = "<username>";				// the default for the username input
+var strWorldInp = "localhost/<worldname>";	// the default for the server and world name input
+var numSquareX = (numColHX-numColAX)/7; 	// the width of a world "square"			
+var numSquareY = (numRow8Y-numRow1Y)/7;		// " height " " " "
+
+
+//////////////////////////////////////////////////////////////////////////
+//  Function:	WinOnLoad
+//  Purpose:  	To set the default values for the inputs
+//////////////////////////////////////////////////////////////////////////
+function WinOnLoad()
+{
+	txtWorld.value = strWorldInp;
+	txtUser.value = strUserInp;
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+//  Function:	CreateTheWorld
+//  Purpose:  	Connect the client to the World, create the World
+//				and log the user into the World
+//////////////////////////////////////////////////////////////////////////
+function CreateTheWorld() 
+{
+	// check the inputs
+	if ((txtWorld.value == "")
+	|| (txtUser.value == "")
+	|| (txtWorld.value == strWorldInp)
+	|| (txtUser.value == strUserInp))
+	{
+		alert("The provided server, world or user names are incorrect. "
+			+ "  Please reenter the names and try again.");
+		return false;
+	}
+	var strServer;	// the server name
+	strServer = txtWorld.value.substr(0,txtWorld.value.indexOf("/"));
+
+	try
+	{
+		window.objClientCtrl.vwclient.ConnectToServer(strServer, true)
+	}
+	catch(err)
+	{
+		// Another way to trap this is err.number = -2147220211; server not started.;
+		alert( "Error: Cannot connect to " + strServer + " -- is the server running?" +
+		"Close the browser, start the server and try again.");
+		return false;
+	}
+
+	// Create the world
+	World = MakeWorldObject();
+
+	User = World.Connect(txtUser.value, "")
+	
+	if (User==null)
+	{
+		alert("Error: could not connect to " + txtWorld.value);
+		return;
+	}
+  
+	// Create a room for everyone to play in and it as the default room;
+	// subsequent users will be moved into it automatically when they connect.
+	Room = World.CreateInstance("MyRoom", "Room");
+	User.MoveInto(Room);
+	World.global.defaultroom = Room;
+	CreatePieces();
+	MoveToClient(World);
+} // end - btnCreateClick
+
+
+//////////////////////////////////////////////////////////////////////////
+//  Function:	MoveToClient
+//  Purpose:  	To logoff from the world and forward to the client
+//////////////////////////////////////////////////////////////////////////
+function MoveToClient(objWorld)
+{
+	// Disconnect the user and reconnect using the custom client
+	objWorld.disconnect();
+	document.location = strClient + "?" + txtWorld.value + "&" + txtUser.value;
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+//  Function:	MakeWorldObject
+//  Purpose:  	To create the world if it is not already created
+//////////////////////////////////////////////////////////////////////////
+function MakeWorldObject()
+{
+	var intErr = 0;
+	var strErr;
+	var WorldName;
+	var MakeWorldObj;
+
+	// determine if the World already exists by trying to connect to it
+	try
+	{
+		MakeWorldObj = window.objClientCtrl.VWClient.Connect(txtWorld.value);
+	}
+	// if there were errors, record the info
+	catch(err)
+	{
+		intErr = err.number;
+		strErr = err.description;
+	}	
+	// if it was successful, the world is already created
+	if (intErr == 0)
+	{
+		// just forward to the client
+		MoveToClient(MakeWorldObj);
+	}
+	else
+	{
+		// the World does not exist so create it
+		if (intErr!=0)
+		{
+			// World name is everything after the last slash in txtWorld
+			WorldName = txtWorld.value;
+			WorldName = WorldName.substr(WorldName.indexOf("/")+1,WorldName.length);
+				
+			return window.objClientCtrl.VWClient.CreateWorld(WorldName);
+
+			if (CreateTheWorld==null)
+			{
+				alert("could not create World");
+			}
+		}
+	}
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+//  Function:	CreatePieceExemplar
+//  Purpose:  	To create an exemplar for chess pieces.
+//////////////////////////////////////////////////////////////////////////
+function CreatePieceExemplar()
+{
+	var ThingExemplar = World.Exemplar ("Thing");
+	var ChessPiece = World.CreateExemplar("ChessPiece", ThingExemplar);
+	var ChessModule;
+	var objNewMeth;
+	ChessPiece.AddProperty("Mover", null, World.PSBIT_NONE, World.PS_ALL_RWA);			// avatar who last moved the piece
+	ChessPiece.AddProperty("Home", null, World.PSBIT_NONE, World.PS_ALL_RWA);			// piece home square
+	ChessPiece.AddProperty("PositionXY", null, World.PSBIT_NONE, World.PS_ALL_RWA);		// piece x and y position
+	var strFunc =	'sub FirePieceMoved(hint, hintData) : ' +
+					'	world.FireUIEvent this, "PieceMoved", array(this.Mover, this.PositionXY) : ' +
+					'end sub';
+	// the Create Method code could have been done using a module, instead of using an inline script.
+	//ChessModule = World.CreateScriptModule("ChessModule", "worlds/chess/ChessModule.vbs", World.MODULE_CLIENT + World.MODULE_SERVER)
+	//objNewMeth = world.CreateMethod (World.METHOD_CLIENT, "ChessModule", "FirePieceMoved")
+	objNewMeth = World.CreateInlineMethod(World.METHOD_CLIENT, "vbscript", "FirePieceMoved", strFunc)
+	ChessPiece.AddMethod("onPositionXYChanged", objNewMeth, World.PSBIT_NONE, World.PS_ALL_E + World.PS_ALL_RWA);	
+} // end - CreateChessPieceExemplar
+
+
+//////////////////////////////////////////////////////////////////////////
+//  Function: 	CreatePieces
+//  Purpose:  	To create all the chess piece objects in the world.
+//////////////////////////////////////////////////////////////////////////
+function CreatePieces()
+{
+	var arrPieces = new Array();	// holds piece names of all the pieces
+	var arrPieces2 = new Array();	// holds home squares of all the pieces
+	var objPiece;	// the current piece
+	// the piece names
+	arrPieces[0]="WQRook";
+	arrPieces[1]="WQKnight";
+	arrPieces[2]="WQBishop";
+	arrPieces[3]="WQueen";
+	arrPieces[4]="WKing";
+	arrPieces[5]="WKBishop";
+	arrPieces[6]="WKKnight";
+	arrPieces[7]="WKRook";
+	arrPieces[8]="WQRPawn";
+	arrPieces[9]="WQNPawn";
+	arrPieces[10]="WQBPawn";
+	arrPieces[11]="WQPawn";
+	arrPieces[12]="WKPawn";
+	arrPieces[13]="WKBPawn";
+	arrPieces[14]="WKNPawn";
+	arrPieces[15]="WKRPawn";
+	arrPieces[16]="BQRook";
+	arrPieces[17]="BQKnight";
+	arrPieces[18]="BQBishop";
+	arrPieces[19]="BQueen";
+	arrPieces[20]="BKing";
+	arrPieces[21]="BKBishop";
+	arrPieces[22]="BKKnight";
+	arrPieces[23]="BKRook";
+	arrPieces[24]="BQRPawn";
+	arrPieces[25]="BQNPawn";
+	arrPieces[26]="BQBPawn";
+	arrPieces[27]="BQPawn";
+	arrPieces[28]="BKPawn";
+	arrPieces[29]="BKBPawn";
+	arrPieces[30]="BKNPawn";
+	arrPieces[31]="BKRPawn";
+	// the piece home locations
+	arrPieces2[0]="A1";
+	arrPieces2[1]="B1";
+	arrPieces2[2]="C1";
+	arrPieces2[3]="D1";
+	arrPieces2[4]="E1";
+	arrPieces2[5]="F1";
+	arrPieces2[6]="G1";
+	arrPieces2[7]="H1";
+	arrPieces2[8]="A2";
+	arrPieces2[9]="B2";
+	arrPieces2[10]="C2";
+	arrPieces2[11]="D2";
+	arrPieces2[12]="E2";
+	arrPieces2[13]="F2";
+	arrPieces2[14]="G2";
+	arrPieces2[15]="H2";
+	arrPieces2[16]="A8";
+	arrPieces2[17]="B8";
+	arrPieces2[18]="C8";
+	arrPieces2[19]="D8";
+	arrPieces2[20]="E8";
+	arrPieces2[21]="F8";
+	arrPieces2[22]="G8";
+	arrPieces2[23]="H8";
+	arrPieces2[24]="A7";
+	arrPieces2[25]="B7";
+	arrPieces2[26]="C7";
+	arrPieces2[27]="D7";
+	arrPieces2[28]="E7";
+	arrPieces2[29]="F7";
+	arrPieces2[30]="G7";
+	arrPieces2[31]="H7";
+
+	CreatePieceExemplar();
+	var i;
+	for (i=0; i<arrPieces.length; i++)
+	{
+		objPiece = World.CreateInstance(arrPieces[i], "ChessPiece", User.Container);
+		objPiece.PositionXY = PieceX(arrPieces2[i]) + "," + PieceY(arrPieces2[i]);
+		objPiece.Home = arrPieces2[i];		
+	}
+} //end - CreatePieces	
+
+
+//////////////////////////////////////////////////////////////////////////
+//  Functions: 	PieceX and PieceY
+//  Purpose:  	To get the x or y coord from the home square
+//  Args:		strSquare - the home square of the piece
+//  Returns:	The X ro Y coord
+//////////////////////////////////////////////////////////////////////////
+function PieceX(strSquare)
+{
+return ((strSquare.substr(0,1).charCodeAt(0))-65)*numSquareX + numColAX;
+}
+
+function PieceY(strSquare)
+{
+return ((strSquare.substr(1,1)-1)*numSquareY) + numRow1Y;
+}
+</SCRIPT>
+   
+</head>
+
+<body onLoad="WinOnLoad();">
+<font face="verdana, arial" size=4>
+	<b>Create Chess World - JScript Version</b>
+</font>
+<br>
+<table width=400>
+	<tr>
+		<td width=300>
+			<font face="verdana, arial" size=2>
+				<b>Server & World Names:</b>
+			</font>
+		</td>
+		<td width=100>
+			<input id="txtWorld" type=text value="">
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<font face="verdana, arial" size=2>
+				<b>User Name:</b>
+			</font>
+		</td>
+		<td>
+			<INPUT ID="txtUser" type=text value="">
+		</td>
+	</tr>
+	<tr>
+		<td colspan=2>
+			<font face="verdana, arial" size=3>
+		  		Please enter a worldname and username for your sample world.  You will have to remember
+				these if you wish to log on from a separate client.  Note that the Virtual
+				Worlds server must be running either locally ("localhost") or remotely ("&lt;servername&gt;")
+				to create the world.			
+			</font>
+			<div align=center>
+				<input id=btnCreate type=button value="Create the World" onClick="CreateTheWorld()">
+			</div>
+		</td>
+	</tr>
+</table>
+<br>
+
+</body>
+</html>

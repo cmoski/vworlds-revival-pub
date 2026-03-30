@@ -1,0 +1,202 @@
+<html>
+<head>
+<TITLE>Simple World Wizard Example</TITLE>
+
+<!-- The VWorld Client object which connects to the VWorlds server -->
+<object id=theclient name="theclient" classid="clsid:D4898803-20EF-11D0-8A96-00A0C9082583" VIEWASTEXT></object>
+
+<SCRIPT LANGUAGE="VBScript">
+
+option explicit
+
+dim	World			' the world object we are going to create on the VWorlds server
+dim WizardAvatar	' the avatar object that will represent the user who is creating the world
+dim Room			' ptr to the initial room in the world; every world must have at least one room
+
+'	This page provides a UI for creating a Dynamic Questionnaire virtual world on a VWorlds server.
+'	Note: this sample does not create a 3-D world; it does not load the required multimedia dll's.
+'	The steps for creating the Questionnaire world are:
+
+'	Connect to a VWorlds server
+'	Create a wizard avatar
+'	Create a world object, which initially has nothing in it
+'	Create a room object in the new world
+'	Move the wizard avatar into the new room and make that room the default room;
+'		avatars subsequently created in the world will be moved into this room initially.
+'	Create exemplars for Question and Answer objects; these are custom objects whose properties
+'		and methods will provide the functionality for the Dynamic Questionnaire world.
+'	Open a Client page that provides a custom UI for the Dynamic Questionnaire world. 
+
+
+sub btnCreateClick 
+	' This sub runs when the Create World button is clicked.
+	' Connect the client to a VWorlds server and tell the server to create a world.
+	dim connection, serverName, worldName, username, password
+	' Connect the client object to the VWorlds server
+	on error resume next
+
+	serverName = mid(txtWorldLocation.value, 1, instr(txtWorldLocation.value,"/") - 1)
+	set connection = window.theclient.vwclient.ConnectToServer(serverName, True)
+	if err.number = 0 then
+		' Create a world on the VWorlds server
+		worldName = mid(txtWorldLocation.value, instr(txtWorldLocation.value,"/") + 1, 255)
+		set World = window.theclient.VWClient.CreateWorld(worldName)
+	end if
+	
+	if err.number = 0 then
+		' Connect the wizard avatar to the new world
+		username = txtUsername.value	' username becomes the name of the wizard avatar
+		password = ""					' we are not using passwords in this sample world
+		set wizardAvatar = World.Connect(username, password)
+	end if
+	
+	if err.number = 0 then
+		' Create a room in the new world. Every world must have at least one room.
+		set Room = World.CreateInstance("MainRoom", "Room")
+	end if
+	
+	if err.number = 0 then
+		' Move the wizard avatar into the new room; until this is done the wizard avatar has no Container.
+		' Make this room the default room; newly created avatars will be moved into this room 
+		' the first time their users connect.
+		wizardAvatar.MoveInto Room
+		World.global.defaultroom = Room
+
+	'	===========================================================
+	'	World-specific code to create exemplars, methods, object instances etc goes here
+
+		MakeWorldExemplars()
+
+	'	===========================================================
+
+		' Disconnect from the world and open the custom client page, which requires 2 parameters:
+		' world location and username.
+		world.Disconnect
+		window.moveTo 20,20
+		window.resizeTo 750,560
+		document.location = "DQclient.htm?" & txtWorldLocation.value & "&" & txtUsername.value
+	else 
+		handleClientError err.number, err.description
+		err.clear
+		window.event.returnValue = false
+		document.location = document.location
+	end if
+end sub
+
+sub handleClientError (errNum, errDescription)
+	select case errNum
+		case 0
+		case -2147220211
+			msgbox "Error " & errNum & ": Cannot connect to server " & txtWorldLocation.value & " -- is the server running? Close the browser, start the server and try again."
+		case -2147220476, -2147220926
+			msgbox "Error " & errNum & ": Cannot create world " & txtWorldLocation.value & "; world name is empty or contains invalid characters. Enter another world name."
+		case -2147220477
+			msgbox "Error " & errNum & ": Cannot create world " & txtWorldLocation.value & "; a world by that name already exists on that server. Enter another world name or server name."
+		case -2147220735, -2147220936
+			msgbox "Error " & errNum & ": Username " & txtUsername.value & " contains invalid characters; please choose a different username."
+		case else
+			msgbox "Error " & errNum & ": " & errDescription
+	end select
+end sub
+
+sub MakeWorldExemplars
+	' This procedure creates exemplars which will be used to create Question and Answer objects.
+
+	Dim ThingExemplar, QuestionExemplar, AnswerExemplar		' exemplar variables
+	Dim newMethod		' temp var to hold method objects as we create them
+	
+	' Add the Topic property, which describes the purpose of the individual questionnaire
+	world.Global.AddProperty "Topic", topicText.value, , world.PS_ALL_RWA
+	world.WorldDescription = "Dynamic Questionnaire World"
+	
+	' Get the Thing exemplar (the base exemplar for all VWorlds object types);
+	' the Question and Answer exemplars will be based on the Thing exemplar, inheriting its 
+	' properties and methods.
+	set ThingExemplar = world.Exemplar ("Thing")
+
+	'========================================================
+	' Create the Question exemplar from the Thing exemplar
+
+	set QuestionExemplar = world.CreateExemplar("Question", ThingExemplar)
+
+	' add Text property; to contain the text of the question, to be displayed by the UI
+	QuestionExemplar.AddProperty "Text", "", , world.PS_ALL_RWA
+
+	' add IsDeleted property; to contain a boolean value indicating deleted questions
+	QuestionExemplar.AddProperty "IsDeleted", false, , world.PS_ALL_RWA
+	
+	' add AnswerList property; to contain a property list containing pointers to
+	' Answer objects that pertain to the Question.
+	QuestionExemplar.AddProperty "AnswerList", world.CreatePropertyList(), , world.PS_ALL_RWA
+	
+	' add OnIsDeletedChanged method, which will fire when the value of the IsDeleted property is changed
+	dim strScriptCode
+	strScriptCode = "sub Question_OnIsDeletedChanged (hint, hintData) : " &_
+		"world.FireUIEvent this, ""QuestionIsDeletedPropertyChanged"", array(0) : " &_
+		"this.InvokeSuperMethod (array(hint, hintData)) : " &_
+		"end sub"
+	set newMethod = World.CreateInlineMethod (World.METHOD_CLIENT, "VBScript", "Question_OnIsDeletedChanged", strScriptCode)
+	QuestionExemplar.AddMethod "OnIsDeletedChanged", newMethod, , world.PS_ALL_E + world.PS_ALL_RWA
+	
+	'========================================================
+	' Create the Answer exemplar from the Thing exemplar
+
+	set AnswerExemplar = world.CreateExemplar("Answer", ThingExemplar)
+
+	' add Text property; to contain the text of the answer, to be displayed by the UI
+	AnswerExemplar.AddProperty "Text", "", , world.PS_ALL_RWA
+
+	' add Question property; to contain a ptr to the Question object that the Answer pertains to
+	AnswerExemplar.AddProperty "Question", null, , world.PS_ALL_RWA
+
+	' add ChosenByList property; to contain a property list containing pointers
+	' to the Avatars of users who have chosen the answer
+	AnswerExemplar.AddProperty "ChosenByList", world.CreatePropertyList(), , world.PS_ALL_RWA
+
+	' OnChosenByListChanged will fire when an avatar is added to or removed from the ChosenByList property list
+	strScriptCode = "sub Answer_OnChosenByListChanged (hint, hintData) : " &_
+		"world.FireUIEvent this, ""ChosenByListPropertyChanged"", array(0) : " &_
+		"this.InvokeSuperMethod (array(hint, hintData)) : " &_
+		"end sub"
+	set newMethod = World.CreateInlineMethod (World.METHOD_CLIENT, "VBScript", "Answer_OnChosenByListChanged", strScriptCode)
+	AnswerExemplar.AddMethod "OnChosenByListChanged", newMethod, , world.PS_ALL_E + world.PS_ALL_RWA
+
+end sub
+
+</SCRIPT>
+   
+</head>
+
+<body TOPMARGIN=20 LEFTMARGIN="40" BGCOLOR="#FFFFFF" LINK="#000066" VLINK="#666666" TEXT="#000000">
+<font FACE="verdana,arial,helvetica" SIZE="2">
+  
+<h2>Dynamic Questionnaire World Wizard</h2>
+
+<TABLE ID="connecttext">
+<TR>
+  <TD><font size=1><b>World server/name</b></font></TD>
+  <TD><INPUT ID="txtWorldLocation" TYPE=TEXT VALUE="localhost/<worldname>"></TD>
+</TR>
+<TR>
+  <TD><font size=1><b>Wizard avatar name</b></font></TD>
+  <TD><INPUT ID="txtUsername" TYPE=TEXT VALUE="<username>"></TD>
+</TR>
+<TR>
+  <TD><font size=1><b>Questionnaire topic</b></font></TD>
+  <TD><INPUT ID="topicText" TYPE=TEXT VALUE="<enter a topic>"></TD>
+</TR>
+<TR>
+   <TD></TD>
+   <TD>Please enter a worldname, username and topic for your sample Dynamic Questionnaire.  Other clients logging into
+       this world remotely will need to know the server and world names.  Before you build the world, you must be running a Virtual
+       Worlds server on the appropriate machine listed as the server ("localhost" for a server running on the same machine as the client).
+   </TD>
+<TR>
+  <TD>&nbsp;</TD>
+  <TD ALIGN=CENTER><INPUT ID=btnCreate TYPE=BUTTON VALUE="Create the World" ONCLICK=btnCreateClick></TD>
+</TR>
+</TABLE>
+
+</body>
+</html>
+

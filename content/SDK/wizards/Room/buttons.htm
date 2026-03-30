@@ -1,0 +1,147 @@
+<HTML>
+<HEAD>
+<LINK REL=STYLESHEET HREF=../../../client/shared/global.css>
+<SCRIPT LANGUAGE=VBS>
+
+option explicit
+
+sub DisableButton(btn)
+	btn.className="bDisabled"
+	btn.disabled="true"
+end sub
+
+sub EnableButton (btn)
+	btn.className="bEnabled"
+	btn.disabled="false"
+end sub
+
+sub window_OnLoad
+	DisableButton backbtn
+	DisableButton finishbtn
+end sub
+
+sub UpdateButtons
+'number of pages in wizard = 2
+	if top.page = 1 then
+		EnableButton nextbtn
+		DisableButton backbtn
+		DisableButton finishbtn
+	else
+		EnableButton backbtn
+		backbtn.focus
+		EnableButton finishbtn
+		DisableButton nextbtn
+	end if
+end sub
+
+sub OnHelp
+	dim helpstringsList
+	window.event.returnValue = false
+	set helpstringsList = top.goWorld.global.CreatePropertyList
+	helpstringsList.add "Authoring"
+	helpstringsList.add "wizards"
+	helpstringsList.add "new room"
+	helpstringsList.add cstr(top.page)
+	top.goWorld.FireUIEvent top.goUser, "Help", helpstringsList
+end sub
+
+sub OnCancel
+	top.close
+end sub
+
+sub OnBack
+	if top.page > 1 then
+		top.main = top.main.navigate(top.PageArray(top.page - 2))
+	end if
+end sub
+
+sub OnNext
+	if top.page < top.PageArraySize then
+		if (top.main.verify) then
+			top.main.navigate(top.PageArray(top.page))
+		end if
+	end if
+end sub
+
+sub OnFinish
+	DisableButton nextbtn
+	DisableButton backbtn
+	DisableButton finishbtn
+	top.Finish
+end sub
+
+sub NextButton(i, fForward)
+	do
+		if fForward then
+			i=i+1
+		else
+			i=i-1
+		end if
+		if document.all(i).tagname = "BUTTON" or document.all(i).tagname = "A" then
+			if document.all(i).tagname = "A" then
+					document.all(i).focus
+					exit do
+			else
+				if not document.all(i).disabled then
+					document.all(i).focus
+					exit do
+				end if
+			end if
+		end if
+	loop
+end sub
+
+sub document_onKeyPress()
+	Select Case window.event.keyCode
+	Case 27
+		OnCancel
+	Case 13
+		If window.event.srcElement.tagName <> "BUTTON" Then
+			If Not finishbtn.disabled Then
+				OnFinish
+			ElseIf Not nextbtn.disabled Then
+				OnNext
+			End If
+		End If
+	Case Else
+	End Select
+end sub
+
+sub document_OnMouseOver
+	select case window.event.srcElement.className
+	case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	case "vHelp"
+		imgHelp.src="..\..\..\client\shared\helpH.gif"
+	case else
+	end select
+end sub
+
+sub document_OnMouseOut
+	select case window.event.srcElement.className
+	case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	case "vHelp"
+		imgHelp.src="..\..\..\client\shared\help.gif"
+	case else
+	end select
+end sub
+
+</SCRIPT>
+</HEAD>
+<BODY>
+	<hr id=lnTop color=gray style=position:absolute;left:0;top:0;height:1;>
+	<hr id=lnBottom color=black style=position:absolute;left:0;top:1;height:1;>
+	<BUTTON class=bEnabled id=cancelbtn onclick=OnCancel style="left:250;top:10;">Cancel</BUTTON>
+	<BUTTON class=bEnabled id=backbtn onclick=OnBack style="left:320;top:10;">
+		< Back
+	</BUTTON>
+	<BUTTON class=bEnabled id=nextbtn onclick=OnNext style="left:390;top:10;">
+		&nbsp;Next >
+	</BUTTON>
+	<BUTTON class=bEnabled id=finishbtn onclick=OnFinish style="left:465;top:10;">Finish</BUTTON>
+	<a id=lnkHelp onclick=OnHelp href="">
+		<img src=../../../client/shared/help.gif id=imgHelp class=vHelp style=top:10;>
+	</a>
+</BODY>
+</HTML>

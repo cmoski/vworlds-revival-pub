@@ -1,0 +1,17 @@
+option explicit
+
+sub make_lesson_10 (lesson_10_box)
+	set lesson_10_box = world.createInstance("lesson_10","artifact")
+	lesson_10_box.initializegraphics "SDK\Library\Models\animal\ant.X" , 5 , -200 , 0 , 0,0,1
+   	dim vec
+	 set vec = world.createvector(8,8,8)
+	 lesson_10_box.scale = vec
+	lesson_10_box.moveinto home
+	lesson_10_box.renderquality = 3
+'	lesson_10_box.createandaddmethod World.METHOD_CLIENT, lesson_10_Module,  "ant_click"  , "OnLButtonDown"
+	lesson_10_box.positionduration = 8000
+	lesson_10_box.directionduration = 3000
+	lesson_10_box.IsNoticeable = true
+	world.global.addproperty "lesson_10" , lesson_10_box
+	lesson_10_box.description = "a scripting tutorial object"
+end sub    

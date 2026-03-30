@@ -1,0 +1,395 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//
+'//  File:			NoteSend.htm
+'//  Description:	Allows the user to send notes to others in the world.  
+'////////////////////////////////////////////////////////////////////////-->
+<html>
+<head>
+<title>Note Send</title>
+<link rel=stylesheet href=../shared/global.css>
+<style>
+.SurroundNote
+{
+	width:243;
+	height:372;
+	position:absolute;
+	top:50;
+	left:0;
+}
+</style>
+
+<!--Include scripts-->
+<script language="vbscript" src="../vbs/WordBreak.vbs">
+</script>
+<script language="vbscript" src="../vbs/document_OnSelectStart.vbs">
+</script>
+<script language="vbscript" src="../vbs/BuildAvSelList.vbs">
+</script>
+<script language="vbscript" src="../vbs/ShowDialog.vbs">
+</script>
+<!--end include scripts-->
+
+<script language=vbs>
+option explicit
+
+'//////////////////////////////////////////////////////////////////////////
+'////  Global constants and varbs (to this file)
+'//////////////////////////////////////////////////////////////////////////
+const strInitialText = "Type your note here."
+dim world, user, recipient, stationery
+dim curReceiver		' tracks the selected UserList item, for handling selection of the separator
+dim strFrom
+
+set world = top.ClientWorldPtr
+set user = top.ClientUserPtr
+curReceiver = 0
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		Window_OnLoad
+'//  Purpose:	Determine the recipient and whether we are sending a new note or a reply.
+'////////////////////////////////////////////////////////////////////////
+sub window_onload
+	' Tell the main client page to send UI events to this page
+	top.AddToEventList window
+
+	if top.CurrentVWObjectId > 0 then
+		' this page was invoked to reply to a note or gift
+		dim vwObject, strOrigMsg, strDate, strMsg, stationery 
+		top.getObjectById parent.getCurrentObjectId, vwObject
+		if not isEmpty(vwObject) then 
+			recipient = top.ClientUserPtr.container.findwithin(vwObject.from).id
+			refreshUserList
+			if vwObject.isValidProperty("stationery") then
+				SetStationery(vwObject.stationery)
+			else
+				SetStationery("NotePaper_Plain")
+			end if
+			strMsg = vbCRLF & vbCRLF & "-- Original Note --" & vbCRLF &_
+				"From: " & vwObject.from & vbCRLF &_
+				"Date: " & mid(vwObject.Date,5,2) & "/" & mid(vwObject.Date,7,2) & "/" & mid(vwObject.Date,1,4) & vbCRLF & vbCRLF &_
+				 vwObject.Message
+			NoteText.value = WordBreak(strMsg, 35)
+			PageHeading.innerHTML = "My Things"
+			PageHeadingRt.innerHTML = "Reply to " & vwObject.from
+		end if
+	else
+		' this page was invoked by clicking on a person; start a note to that person
+		recipient = parent.GetCurrentAvatarId
+		refreshUserList
+		selStationery.selectedIndex = 0
+		setStationery(NULL)
+		NoteText.innerText = strInitialText
+	end if
+	NoteText.focus
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		Window_OnUnload
+'//	 Purpose:	Tell the main client page to stop sending UI events to this page
+'////////////////////////////////////////////////////////////////////////
+sub window_onUnload
+	top.RemoveFromEventList window
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		CircularTab
+'//	 Purpose:	Capture the tab key and keep the focus on this page
+'//  Called by:	this is the OnKeyDown handler for the Send button
+'////////////////////////////////////////////////////////////////////////
+sub CircularTab
+	if (window.event.keyCode = 9) then		' tab key
+		window.event.returnValue = false
+		UserList.focus
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		SendButton_onKeyPress & ClearButton_onKeyPress
+'//	 Purpose:	If the button is highlighted, and the user presses return,
+'//				execute the button click		 
+'////////////////////////////////////////////////////////////////////////
+sub SendButton_onKeyPress
+	ButtonOnKeyPress(SendButton)
+end sub
+
+sub ClearButton_onKeyPress
+	ButtonOnKeyPress(ClearButton)
+end sub
+
+sub ButtonOnKeyPress(objButton)
+	if window.event.keycode = 13 then
+		objButton.click
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		NoteText_OnFocus
+'//	 Purpose:	if the default text is still in the msgbox then blank the box		 
+'////////////////////////////////////////////////////////////////////////
+sub NoteText_OnFocus
+	if Trim(NoteText.value) = strInitialText then
+		NoteText.value = "" 
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		RefreshUserList
+'//	 Purpose:	Rebuild the av list, from sub in inc file.
+'//  Called by:	window_onLoad
+'//				handleUIEvent, for the OnEnterWorld event
+'////////////////////////////////////////////////////////////////////////
+sub refreshUserList
+	BuildAvSelList(true) 'userlist
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		ClearNote
+'//	 Purpose:	Reset the note
+'//  Called by:	this is the onClick handler for the Clear button
+'////////////////////////////////////////////////////////////////////////
+sub ClearNote
+	NoteText.value = ""	
+	NoteText.focus()
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		SendNote
+'//	 Purpose:	Send the note to the selected users
+'//  Called by:	This is the onClick handler for the Send button
+'////////////////////////////////////////////////////////////////////////
+sub SendNote
+	if NoteText.value <> "" and NoteText.value <> strInitialText then
+		dim avList, avatar, receiverId, font
+		receiverId = userList.options(userList.selectedIndex).value
+		if userList.options(userList.selectedIndex).text = strAllFriends then
+			if user.profile.IsValid("Friends") then
+			
+				on error resume next			'if it sucks, don't use it
+				
+				set avList = user.profile.keyvalue("Friends")
+				for each avatar in avList
+					avatar.receiveNote "Note", world.user.name, NoteText.value, _
+					  selStationery.options.item(selStationery.selectedIndex).value 
+				next
+				
+				on error goto 0
+				
+			end if
+		else
+			set avatar = world.objectById(receiverId)
+
+			'check for max_length
+			const MAX_STR_LENTH = 16000
+			if len(NoteText.value) > MAX_STR_LENTH then
+				msgbox "The message is to large, please limit it to " & MAX_STR_LENTH & " characters."
+				exit sub
+			end if
+
+			avatar.receiveNote "Note", world.user.name, NoteText.value, _
+			  selStationery.options.item(selStationery.selectedIndex).value 
+		end if
+		PaneBody.style.display = "none"
+		SentNotif.innerText = "Your note was sent to " & userList.options(userList.selectedIndex).text & "."
+		SentNotif.style.display = "block"	
+	else
+		dim blnShowDialog	
+		blnShowDialog = false 
+		if DialogWin is nothing then
+			blnShowDialog = true
+		elseif DialogWin.Closed then
+			blnShowDialog = true
+		end if
+		if blnShowDialog = true then
+			dim strMsg
+			strMsg = "Please type a message before attmpting to send."
+			ShowDialog strMsg, ""					 
+		end if
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'// Sub:  		setStationery(strStat)
+'//	Purpose:	Set the stationary if they select one		 
+'//	Params:
+'//		strStat		- <str>	stationary id
+'// Called by:	window_onLoad
+'//				this is also the onChange handler for the selStationery SELECT tag
+'////////////////////////////////////////////////////////////////////////
+sub setStationery(strStat)
+	dim n
+	if IsNull(strStat) then
+		strStat = selStationery.options.item(selStationery.selectedIndex).value
+	else
+		for n = 0 to selStationery.options.length - 1
+			if selStationery.options.item(n).value = strStat then selStationery.selectedIndex = n
+		next
+	end if
+	msgCard.className = "NotePaper_" & strStat 
+	NoteText.className = "NotePaper_" & strStat 
+	NoteText.style.backgroundPositionY = -1000 
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		HandleUIEvent
+'//  Purpose:	React to events passed from the client control
+'//  Args:		who - the avatar that caused the event to happen
+'//				what - the name of the event
+'//				args - extra info passed as an array
+'//  Called by:	client.htm:theclient_OnUIEvent
+'////////////////////////////////////////////////////////////////////////
+sub HandleUIEvent(byval who, what, byval args)
+	select case What
+		case "OnEnterWorld"
+			refreshUserList
+	end select
+end sub
+
+</script>
+</head>
+
+<body bgcolor=#FFFFFF>
+
+<!--Start Heading Section-->
+<div id=bkgPageHeadingPatch
+	class=bkgPageHeadingPatch>
+</div>
+<div id=bkgPageHeading
+	class=bkgPageHeading>
+</div>
+
+<span id=PageHeading class=PageHeading>People</span>
+<span id=PageHeadingRt class=PageHeadingRt>Send a Note</span>
+<hr class=PageHeadingHR>
+
+<div id=SentNotif
+	class=ParaText
+	style="position:absolute;
+		top:35;
+		left:0;
+		display:none;">
+	Your note has been sent.	
+</div>
+<span id=PaneBody>
+
+
+<img src="../images/spacer.gif" width=263 height=372>
+<span id=SurroundNote class=SurroundNote>  
+
+<div id=msgCard2
+	style="position:absolute;
+		top:0;
+		left:0;
+		width:243;
+		height:362;">
+		
+</div>
+<div id=msgCard3
+	style="position:absolute;
+		top:0;
+		left:0;
+		width:263;
+		height:362;
+		background:white;">
+</div>
+
+<div id=msgCard
+	style="position:absolute;
+		top:0;
+		left:0;
+		width:263;
+		height:362;
+		filter:alpha(opacity=50);">
+</div>
+<TextArea id=NoteText
+	name=NoteText
+	tabIndex=3
+	style="position:absolute;
+		top:75;
+		left:15;		
+		width:233;
+		height:237;		
+		overflow-y:auto;"></TextArea>
+</div>
+<span id=Selects>
+	<span id=lblTo
+		class=ParaHeading
+		style="position:absolute;
+			top:15;
+			left:0;
+			height:30;
+			width:100;
+			text-align:right;
+			font-weight:bold;">
+		To:
+	</span>
+	<select id=userList
+		class=vInput
+		tabIndex=1
+		style="position:absolute;
+			top:15;
+			left:105;
+			height:30;
+			width:100;"
+			onChange=checkReceiver>
+	</select>
+	<span id=lblStat
+		class=ParaHeading
+		style="position:absolute;
+			top:45;
+			left:0;
+			width:100;
+			text-align:right;
+			font-weight:bold;">
+		Stationery:
+	</span>
+	<select id=selStationery
+		class=ClientTextBlack
+		tabIndex=2
+		style="position:absolute;
+			top:45;
+			left:105;
+			width:100;"
+		onChange=setStationery(NULL)>
+		<!-- see SetStationery (above) for stStyle fields -->
+
+		<option id=st0 value=plain>Plain
+		<option id=st1 value=floral>Floral
+		<option id=st2 value=painter>Painter
+		<option id=st3 value=clouds>Clouds
+		<option id=st4 value=sun>Sun
+	</select>	
+</span><!--id=Selects-->
+
+</span>
+	<button id=ClearButton
+		class=btnTeal
+		tabIndex=4
+		style="position:absolute;
+			top:385;
+			left:133;"
+		onclick=ClearNote()>
+		Clear
+	</button>
+	<button id=SendButton
+		class=btnTeal
+		tabIndex=5
+		style="position:absolute;
+			top:385;
+			left:193;"
+		onclick=SendNote()
+		onKeyDown=CircularTab>
+		Send
+	</button>		
+
+</span><!--id=PaneBody-->
+</BODY>
+</HTML>

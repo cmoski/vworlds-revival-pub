@@ -1,0 +1,82 @@
+<HTML>
+<HEAD>
+<TITLE>Add a room</TITLE>
+<LINK REL=StyleSheet HREF=../../../client/shared/vwclient.css TYPE="text/css" ID=VWClientStyle MEDIA=Screen>
+<OBJECT ID=helper WIDTH=0 HEIGHT=0 border=0 CLASSID="CLSID:7E3832CF-4F4E-11D0-89AB-00A0C9054129"></OBJECT>
+<script language=VBSCRIPT>
+
+' globals for button page
+Public page, PageArray, PageArraySize, WorldName, NewRoomName, NewRoomDesc
+Public Geometry, Quota, bNoPortal, bTeleport, fFirstTime
+Public fraButtons, fraMain
+
+fFirstTime = true
+
+' Default values
+bNoPortal = "False"
+bTeleport = "checked"
+
+'Variables to keep track of current type/style selection
+Public ObjectType			' type of object, in this case Room
+Public RoomType			' sub type of room, e.g. empty (set from the choose.htm page)
+Public RightFrameURL		' file to display in right-hand frame (set from the choose.htm page)
+Public StyleType			' type of style, e.g., high tech or corporate
+Public SelectedStyleIndex	' highlighted style index, 0 by default
+
+' Variables for world objects
+public goClient, goWorld, goUser
+set goClient = window.dialogArguments.theclient.VWClient
+set goWorld = goClient.world
+set goUser = goWorld.user
+
+ObjectType = "Room"
+SelectedStyleIndex = 0
+
+page = 0
+PageArray = Array("page1.htm", "page2.htm")
+PageArraySize = 2
+RoomType = ""
+
+sub window_OnLoad
+	Set fraButtons = document.frames("buttons")
+	Set fraMain = document.frames("main")
+	document.frames("buttons").location = "buttons.htm"
+	document.frames("main").location = "page1.htm"
+end sub
+
+sub toggle(e)
+	if e.style.visibility = "hidden" then
+		e.style.visibility = "visible"
+	else
+		e.style.visibility = "hidden"
+	end if
+end sub
+
+'Review: should be able to move "Finish" functionality in each kit script into this sub
+sub Finish
+	SendStatusToClient "Creating Room..."
+
+	' make sure that the last page gets loaded
+	if not page = PageArraySize then
+		if (document.frames("main").verify) then
+			document.frames("main").navigate(PageArray(PageArraySize - 1))
+		end if
+	else
+		document.frames("main").Finish
+	end if
+
+	'Close window
+	window.close
+end sub
+
+sub SendStatusToClient(msg)
+	window.dialogArguments.status = msg
+end sub
+
+</script>
+</head>
+<FRAMESET frameborder=no framespacing=0 rows=*,37>
+	<FRAME name=main src="" noresize scrolling=no>
+	<FRAME name=buttons src="" noresize scrolling=no>
+</FRAMESET>
+</HTML>

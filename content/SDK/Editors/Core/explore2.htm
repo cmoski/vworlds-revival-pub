@@ -1,0 +1,445 @@
+<html>
+<head>
+<title>Object Explorer</title>
+<link Rel=Stylesheet href=../../../client/shared/global.css>
+<object id=Popup classid=clsid:7E3832CD-4F4E-11D0-89AB-00A0C9054129></object>
+<object id=helper classid=clsid:7e3832cf-4f4e-11d0-89ab-00a0c9054129 VIEWASTEXT></object>
+<script language=vbs>
+
+public goTop, goClient, goWorld
+
+set goTop = helper.arg
+set goClient = goTop.theclient.VWClient
+set goWorld = goClient.world
+
+public editThing
+public editPropName
+private fShiftKey
+
+fShiftKey = false
+
+sub Window_OnLoad
+
+	window_onresize
+
+	'Enforce a tiny delay before the Lists are initialized to make sure that
+	'they're loaded and happy.
+	settimeout "InitializeLists", 0
+	
+end sub
+
+sub InitializeLists
+
+	Dim sellist, pSelected
+	
+	'Decide what the initialize selected object should be, default to user
+	set pSelected = goTop.objOEItem
+	if pSelected is nothing then set pSelected = goWorld.User
+	
+	' check to see if the Control Manager exists and if it does, use it
+	if goWorld.isvalidtool("ControlManager") then
+		set sellist = goWorld.tool("ControlManager").SelectionList
+	else
+		set sellist = nothing
+	end if
+
+	if (Not Sellist Is Nothing) Then
+		If (sellist.count > 0) Then
+			For Each obj In sellist
+				If (obj.IsStub = False) Then
+					If (obj.IsOfType("Thing")) Then
+						set pSelected = obj
+						Exit For
+					End If
+				End If
+			Next
+		End If
+	End If
+	
+	set Thing.vwclient = goClient
+	set Thing.targetobjectproperty = pSelected
+	Thing.SelectThing pSelected
+
+	set ListProp.vwclient=goClient
+	set ListProp.targetobjectproperty = pSelected
+	ListProp.RespondToSelectionEvents = true
+	
+	set MethodList.vwclient=goClient
+	set MethodList.targetobjectproperty = pSelected
+	MethodList.RespondToSelectionEvents = true
+	
+	Thing.DoFocus
+
+end sub
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+sub Window_OnUnLoad
+	set Thing.vwclient = nothing
+	set ListProp.vwclient = nothing
+	set MethodList.vwclient = nothing
+end sub
+
+sub ListProp_UserMessage(msg)
+	msgbox msg, vbExclamation, "Microsoft Virtual Worlds"
+end sub
+
+sub ListProp_EditValue(Thing, name)
+	dim prop
+	dim world
+	dim editorMap
+	dim editorHTML
+
+	on error resume next
+	prop = Thing.Property(name)
+	set prop = Thing.Property(name)
+	set world = goWorld
+	set editorMap = world.global.property("PropertyEditors")
+	editorHTML=""
+	dim proptype
+
+	if IsObject(prop) then
+		if not prop is Nothing then
+			if IsObject(editorMap) then
+				if editorMap.IsValid(prop.type) then
+					editorHTML = editorMap.property(prop.type)
+				else
+					proptype = world.global.GetTypeFromProperty(Thing, name)
+					if editorMap.IsValid(proptype) then
+						editorHTML = editorMap.property(proptype)
+					else
+						msgbox "Can not edit a property of that type.", vbExclamation, "Microsoft Virtual Worlds"
+					end if
+				end if
+			end if
+		else
+			proptype = world.global.GetTypeFromProperty(Thing, name)
+			if editorMap.IsValid(proptype) then
+				editorHTML = editorMap.property(proptype)
+			else
+				msgbox "Can not edit a property of that type", vbExclamation, "Microsoft Virtual Worlds"
+			end if
+		end if
+	else
+		'must be a string
+		'well, I can assume that for now
+		editorHTML = editorMap.property("string")
+	end if
+
+	if Len(EditorHTML) > 0 then
+		set editThing = Thing
+		editPropName = name
+		iWidth = 200
+		iHeight = 200
+		sTitle = "Unknown"
+		select case lcase(mid(editorHTML, instrrev(editorHTML, "/") + 1))
+		case "thing.htm"
+			iWidth = 235
+			iHeight = 291
+			sTitle = "Thing Selector"
+			sResize = "no"
+		case "string.htm"
+			iWidth = 368
+			iHeight = 265
+			sTitle = "Advanced Text Editor"
+			sResize = "no"
+		case "vector.htm"
+			iWidth = 330
+			iHeight = 155
+			sTitle = "Vector Editor"
+			sResize = "no"
+		case "menu.htm"
+			iWidth = 375
+			iHeight = 286
+			sTitle = "Menu Editor"
+		case "proplist.htm"
+			iWidth = 375
+			iHeight = 286
+			sTitle = "Property List Editor"
+		case "propmap.htm"
+			iWidth = 375
+			iHeight = 286
+			sTitle = "Property Map Editor"
+		case else
+		end select
+		select case lcase(mid(editorHTML, instrrev(editorHTML, "/") + 1))
+		case "thing.htm", "string.htm", "vector.htm"
+			window.showModelessDialog goWorld.ContentPath & editorHTML, Array(sTitle, window), "dialogHeight:" & iHeight & "px;dialogWidth:" & iWidth - 6 & "px;status:no;help:no;resizable:" & sResize & ";"
+		case "menu.htm", "proplist.htm", "propmap.htm"
+			Popup.ShowUrlEx sTitle, 0, editorHTML, sTitle, false, window, 30, 30, iWidth, iHeight
+		case else
+		end select
+	end if
+end sub
+
+sub ListProp_NewProperty(Thing)
+	set editThing = Thing
+	window.showModelessDialog "newprop.htm", window, "dialogHeight:217px;dialogWidth:254px;status:no;help:no;resizable:no;"
+end sub
+
+'sub ListProp_DeleteProperty(Thing, list)
+'	msgbox "delete properties"
+'end sub
+
+sub ListProp_Help(helpId)
+	top.DoHelp helpId
+end sub
+
+sub ListProp_KeyPressed(KeyCode)
+	select case KeyCode
+	case 9
+		if fShiftKey then
+			Thing.DoFocus
+		else
+			MethodList.DoFocus
+		end if
+	case 16
+		fShiftKey = true
+	case 27
+		' Hack to make sure windows has time to process the message before killing this one
+		window.setTimeout "helper.closewindow", 100
+	case else
+	end select
+end sub
+
+sub ListProp_vKeyUp(KeyCode)
+	select case KeyCode
+	case 16
+		fShiftKey = false
+	case else
+	end select
+end sub
+
+sub MethodList_KeyPressed(KeyCode)
+	select case KeyCode
+	case 9
+		if fShiftKey then
+			ListProp.DoFocus
+		else
+			btnClose.focus
+		end if
+	case 16
+		fShiftKey = true
+	case 27
+		' Hack to make sure windows has time to process the message before killing this one
+		window.setTimeout "helper.closewindow", 100
+	case else
+	end select
+end sub
+
+sub MethodList_vKeyUp(KeyCode)
+	select case KeyCode
+	case 16
+		fShiftKey = false
+	case else
+	end select
+end sub
+
+sub Thing_KeyPressed(KeyCode)
+	select case KeyCode
+	case 9
+		if fShiftKey then
+			lnkHelp.focus
+		else
+			ListProp.DoFocus
+		end if
+	case 16
+		fShiftKey = true
+	case 27
+		' Hack to make sure windows has time to process the message before killing this one
+		window.setTimeout "helper.closewindow", 100
+	case else
+	end select
+end sub
+
+sub Thing_vKeyUp(KeyCode)
+	select case KeyCode
+	case 16
+		fShiftKey = false
+	case else
+	end select
+end sub
+
+sub MethodList_UserMessage(msg)
+	msgbox msg, vbExclamation, "Microsoft Virtual Worlds"
+end sub
+
+sub MethodList_EditValue(Thing, name)
+	dim prop
+	dim editorMap
+	dim editorHTML
+	set prop = Thing.Method(name)
+	if IsObject(prop) then
+		set editorMap = goWorld.global.property("PropertyEditors")
+		if IsObject(editorMap) then
+			editorHTML = editorMap.property(prop.type)
+			set editThing = Thing
+			editPropName = name
+			window.showModelessDialog goWorld.ContentPath & editorHTML, window, "dialogHeight:400px;dialogWidth:494px;status:no;help:no;resizable:yes;"
+		end if
+	end if
+end sub
+
+sub MethodList_NewMethod(Thing)
+	set editThing = Thing
+	window.showModelessDialog "newmeth.htm", window, "dialogHeight:200px;dialogWidth:269px;status:no;help:no;resizable:no;"
+end sub
+
+sub Thing_NewThing()
+	window.showModalDialog goWorld.ContentPath & "sdk\wizards\object\main.htm", goTop, "dialogHeight:337px;dialogWidth:468px;help:no;status:no;"
+end sub
+
+sub Thing_LoadModule()
+	window.showModelessDialog "newmod.htm", window, "dialogHeight:169px;dialogWidth:292px;status:no;help:no;resizable:no;"
+end sub
+
+sub document_OnMouseOver
+	select case window.event.srcElement.className
+	case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	case "vHelp"
+		imgHelp.src="../../../client/shared/helpH.gif"
+	case else
+	end select
+end sub
+
+sub document_OnMouseOut
+	select case window.event.srcElement.className
+	case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	case "vHelp"
+		imgHelp.src="../../../client/shared/help.gif"
+	case else
+	end select
+end sub
+
+sub document_onkeypress
+	select case window.event.keyCode
+	case 27
+		helper.closewindow
+	case 9
+		fShiftKey = window.event.shiftkey
+		select case window.event.srcElement.id
+		case "btnClose"
+			if window.event.shiftkey = true then
+				MethodList.DoFocus
+			else
+				lnkHelp.focus
+			end if
+		case "lnkHelp"
+			if window.event.shiftkey = true then
+				btnClose.focus
+			else
+				Thing.DoFocus
+			end if
+		case else
+			if window.event.shiftkey = true then
+				btnClose.focus
+			else
+				Thing.DoFocus
+			end if
+		end select
+	case else
+	end select
+end sub
+
+sub window_onresize
+	bVal = 2	'this value is needed since adding borders to the ActiveX controls gives a different offset value
+	if document.body.offsetWidth - btnClose.offsetWidth - 18 > 550 then
+		newWidth = round((document.body.offsetWidth - Thing.offsetLeft * 3) * 0.3)
+		Thing.style.width = newWidth - bVal
+		lblListPropLeft.style.left = Thing.offsetLeft * 2 + newWidth
+		lblListPropRight.style.left = document.body.offsetWidth - Thing.offsetLeft - 253
+		ListProp.style.left = Thing.offsetLeft * 2 + newWidth
+		ListProp.style.width = document.body.offsetWidth - Thing.offsetLeft * 3 - newWidth - bVal
+		lblMethodListLeft.style.left = Thing.offsetLeft * 2 + newWidth
+		lblMethodListRight.style.left = document.body.offsetWidth - Thing.offsetLeft - 253
+		MethodList.style.left = Thing.offsetLeft * 2 + newWidth
+		MethodList.style.width = document.body.clientWidth - Thing.offsetLeft * 3 - newWidth - bVal
+		btnClose.style.left = document.body.offsetWidth - btnClose.offsetWidth - 18
+	else
+		Thing.style.width = 170
+		lblListPropLeft.style.left = 208
+		lblListPropRight.style.left = 357
+		ListProp.style.left = 208
+		ListProp.style.width = 400
+		lblMethodListLeft.style.left = 208
+		lblMethodListRight.style.left = 357
+		MethodList.style.left = 208
+		MethodList.style.width = 400
+		btnClose.style.left = 550
+	end if
+	if document.body.offsetHeight - btnClose.offsetHeight - 7 > 426 then
+		newHeight = document.body.offsetHeight - Thing.offsetTop - bVal - 10 - btnClose.offsetHeight - 7
+		Thing.style.height = newHeight
+		newHeight = (newHeight + bVal - ListProp.offsetTop) / 2 - bVal
+		ListProp.style.height = newHeight
+		lblMethodListLeft.style.top = ListProp.offsetTop + newHeight + bVal + lblListPropLeft.offsetTop
+		lblMethodListRight.style.top = ListProp.offsetTop + newHeight + bVal + lblListPropLeft.offsetTop
+		MethodList.style.top = ListProp.offsetTop * 2 + newHeight + bVal
+		MethodList.style.height = newHeight
+		btnClose.style.top = document.body.offsetHeight - btnClose.offsetHeight - 7
+		imgHelp.style.top = document.body.offsetHeight - imgHelp.offsetHeight - 7
+	else
+		Thing.style.height = 392
+		ListProp.style.height = 184
+		lblMethodListLeft.style.top = 215
+		lblMethodListRight.style.top = 215
+		MethodList.style.top = 230
+		MethodList.style.height = 184
+		btnClose.style.top = 426
+		imgHelp.style.top = 426
+	end if
+end sub
+
+sub DoHelp
+	Dim client, helpstringsList
+	window.event.returnValue = false
+	on error resume next
+	set client = goClient
+	set helpstringsList = client.world.global.CreatePropertyList
+	helpstringsList.add "Authoring"
+	helpstringsList.add "Object Explorer"
+	client.world.FireUIEvent client.world.user, "Help", helpstringsList
+end sub
+
+</script>
+</head>
+<body class=vBody>
+	<div id=lblThingLeft class=vH2 style=left:18;top:7;>
+		<nobr>Objects:</nobr>
+	</div>
+	<OBJECT classid="clsid:EF7D6571-0161-11D2-88BE-00C04FC32EF3" id=Thing style="BORDER-BOTTOM: black 1px solid; BORDER-LEFT: black 1px solid; BORDER-RIGHT: black 1px solid; BORDER-TOP: black 1px solid; HEIGHT: 392px; LEFT: 18px; TOP: 22px; WIDTH: 170px; POSITION: ABSOLUTE;" VIEWASTEXT></OBJECT>
+	<div id=lblListPropLeft class=vH2 style=left:208;top:7;>
+		<nobr>Properties:</nobr>
+	</div>
+	<div id=lblListPropRight class=vLabel style=left:357;top:7;>
+		<nobr>(Right-click or double-click on a field to edit)</nobr>
+	</div>
+	<OBJECT classid="clsid:EF7D655D-0161-11D2-88BE-00C04FC32EF3" id=ListProp style="BORDER-BOTTOM: black 1px solid; BORDER-LEFT: black 1px solid; BORDER-RIGHT: black 1px solid; BORDER-TOP: black 1px solid; HEIGHT: 184px; LEFT: 208px; TOP: 22px; WIDTH: 400px; POSITION: ABSOLUTE;" VIEWASTEXT></OBJECT>
+	<div id=lblMethodListLeft class=vH2 style=left:208;top:215;>
+		<nobr>Methods:</nobr>
+	</div>
+	<div id=lblMethodListRight class=vLabel style=left:357;top:215;>
+		<nobr>(Right-click or double-click on a field to edit)</nobr>
+	</div>
+	<OBJECT classid="clsid:EF7D6561-0161-11D2-88BE-00C04FC32EF3" id=MethodList style="BORDER-BOTTOM: black 1px solid; BORDER-LEFT: black 1px solid; BORDER-RIGHT: black 1px solid; BORDER-TOP: black 1px solid; HEIGHT: 184px; LEFT: 208px; TOP: 230px; WIDTH: 400px; POSITION: ABSOLUTE;" VIEWASTEXT></OBJECT>
+	<button class=bEnabled id=btnClose onclick=helper.closewindow style=left:550;top:426;>
+		<span style=position:relative;top:-1;>Close</span>
+	</button>
+	<a id=lnkHelp onclick=DoHelp href="">
+		<img src=../../../client/shared/help.gif id=imgHelp class=vHelp style=top:426;>
+	</a>
+</body>
+</html>

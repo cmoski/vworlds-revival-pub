@@ -1,0 +1,157 @@
+<html>
+<head>
+<title>Page 1</title>
+<link rel=stylesheet href=..\..\..\client\shared\global.css>
+<object id=lister CLASSID="CLSID:969AD685-5B00-11D1-88AE-00C04FC32EF4"></object>
+<script language=vbs>
+
+dim idLoadTimer
+dim curElement
+dim mouseClicked
+mouseClicked = true
+curElement=null
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+sub document_OnMouseOver
+	select case window.event.srcElement.className
+	case "vTab"
+		window.event.srcElement.className = "vTabHightlight"
+	case else
+	end select
+end sub
+
+sub document_OnMouseOut
+	select case window.event.srcElement.className
+	case "vTabHightlight"
+		window.event.srcElement.className = "vTab"
+	case else
+	end select
+end sub
+
+sub window_OnLoad
+	dim i, newElement, curName, nameList, SelectIt, TopVal, newHTML
+	lister.initialize "SDK\Wizards\Object\Core\*.htm"
+	nameList = lister.typeNames
+	SelectIt = " checked"
+	TopVal = 0
+	newHTML = "<nobr>"
+	if not IsEmpty(nameList) then
+		for i = 0 to ubound(nameList)
+			Separator = InStr(nameList(i), "|")
+			if Separator > 0 then
+				Name = Left(nameList(i), Separator - 5)
+			else
+				Name = nameList(i)
+			end if
+			Set newElement = document.createElement("OPTION")
+			newElement.text = Name & "|" & i
+			sortList.add newElement, PosInList(sortList, newElement.text)
+		next
+
+		for each curName in sortList.options
+			i = right(curName.text, len(curName.text) - InStr(curName.text, "|"))
+			Separator = InStr(nameList(i), "|")
+			if Separator > 0 then
+				Name = Left(nameList(i), Separator - 5)
+				Path = Mid(nameList(i), Separator + 3)
+				Drive = Mid(nameList(i), Separator + 1, 1)
+			else
+				Name = nameList(i)
+				Path = nameList(i) & ".htm"
+			end if
+			newHTML = newHTML & "<input type=radio name=menu id=opt" & replace(Name, " ", "_") & _
+								" style=position:absolute;left:-20;top:-20" & SelectIt & _
+								" navURL=""" & Path & """>" & _
+								"<div id=div" & replace(Name, " ", "_") &  _
+								" style=position:absolute;top:" & TopVal & ";width:129;left:0;padding-bottom:2;>" & _
+								"<label id=lbl" & replace(Name, " ", "_") & " class=vTab for=opt" & replace(Name, " ", "_") & _
+								" style=position:relative;left:7;>" & Name & "</label></div>"
+			SelectIt = ""
+			TopVal = TopVal + 17
+		next
+		newHTML = newHTML & "</nobr>"
+		divMenu.innerHTML = newHTML
+		document.all("desc").src = divMenu.all.tags("input")(0).navURL
+		SetHighlight divMenu.all.tags("label")(0)
+		document.all("opt" & mid(curElement.id, 4)).focus
+	end if
+end sub
+
+Function PosInList(tagName, sItem)
+	Dim i
+	PosInList = tagName.length
+	For i = 0 To tagName.length - 1
+		If StrComp(sItem, tagName.options.item(i).text, vbTextCompare) = -1 Then
+			PosInList = i
+			Exit For
+		End If
+	Next
+End Function
+
+sub window_OnUnLoad()
+end sub
+
+sub document_onClick
+	if window.event.srcElement.tagName = "INPUT" then
+		if not (document.all("lbl" & mid(window.event.srcElement.id, 4)) is curElement) then
+			if idLoadTimer <> 0 then
+				window.clearTimeout idLoadTimer
+			end if
+			idLoadTimer=window.setTimeout("window.open """ & window.event.srcElement.navURL & """,""desc"":idLoadTimer=0", 150)
+			SetHighlight document.all("lbl" & mid(window.event.srcElement.id, 4))
+		end if
+	end if
+end sub
+
+sub SetHighlight(el)
+	el.className = "vTabSelect"
+	el.parentElement.className = "vTabSelect"
+	if (IsObject(curElement)) then
+		if curElement.id <> el.id then
+			curElement.className = "vTab"
+			curElement.parentElement.className = ""
+		end if
+	end if
+	set curElement = el
+	'the lines below were added to work around an IE 5 bug
+	document.body.focus
+	document.all("opt" & mid(curElement.id, 4)).focus
+end sub
+
+sub document_onKeyPress
+	select case window.event.keycode
+	case 27
+		top.DoCancel
+	case 13
+		top.DoCreate
+	case else
+	end select
+end sub
+
+</script>
+</head>
+<body>
+	<select id=sortList style=display:none;></select>
+	<img src=..\..\..\client\shared\menuclouds.gif style=position:absolute;left:0;top:0;width:130;height:274;>
+	<div id=divTitle class=vH2 style=left:7;top:7;width:1;>
+		<nobr>Choose an object and customize its appearance</nobr>
+	</div>
+	<div class=vH2 style=left:7;top:40;>
+		Objects:
+	</div>
+	<div id=divMenu style=position:absolute;top:60;left:0;margin:0;padding:0></div>
+	<iframe name=desc src="" frameborder=no style=position:absolute;left:143;top:37;width:316;height:230;></iframe>
+</body>
+</html>

@@ -1,0 +1,302 @@
+<html>
+<head>
+<link rel=stylesheet href=../../../client/shared/global.css>
+<object id=helper classid=clsid:7E3832CF-4F4E-11D0-89AB-00A0C9054129></object>
+<script language=vbs>
+
+public editList
+public editIndex
+public client
+public pNameExt
+
+Public goWorld
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+sub Window_OnLoad
+	On error resume next
+	window_onresize
+	set client = helper.arg.goClient
+	set goWorld = client.World
+	set ListProp.vwclient=client
+	ListProp.PropertyName = helper.arg.editPropName
+	set ListProp.targetobjectproperty = helper.arg.editThing.property(helper.arg.editPropName)
+	divObject.innerText = helper.arg.editThing.name
+	divProperty.innerText = helper.arg.editPropName
+	ListProp.DoFocus
+	if ListProp.targetobjectproperty.count = 0 then
+		ListProp_NoSelections
+	elseif ListProp.targetobjectproperty.count < 2 then
+		DisableButton btnUp
+		DisableButton btnDown
+	else
+		DisableButton btnUp
+	end if
+end sub
+
+sub Window_OnUnload
+end sub
+
+sub DisableButton(btn)
+	btn.disabled=true
+	btn.className = "bDisabled"
+end sub
+
+sub EnableButton(btn)
+	btn.disabled=false
+	btn.className = "bEnabled"
+end sub
+
+sub ListProp_EditValue(list, index)
+	dim prop
+	dim world
+	dim editorMap
+	dim editorHTML
+
+	on error resume next
+	prop = list.Property(index)
+	set prop = list.Property(index)
+
+	set editorMap = goWorld.global.property("PropertyEditors")
+
+	editorHTML=""
+
+	if IsObject(prop) then
+		if not prop is Nothing then
+			if IsObject(editorMap) then
+				if editorMap.IsValid(prop.type) then
+					editorHTML = editorMap.property(prop.type)
+				else
+					editorHTML = editorMap.property("thing")
+				end if
+			end if
+		else
+			editorHTML = editorMap.property("thing")
+		end if
+	else
+		'must be a string
+		'well, I can assume that for now
+		editorHTML = editorMap.property("string")
+	end if
+
+	if Len(EditorHTML) > 0 then
+		set editList = list
+		editIndex = index
+		pNameExt = "(" & index & ")"
+		iWidth = 200
+		iHeight = 200
+		sTitle = "Unknown"
+		select case lcase(mid(editorHTML, instrrev(editorHTML, "/") + 1))
+		case "thing.htm"
+			iWidth = 235
+			iHeight = 291
+			sTitle = "Thing Selector"
+			sResize = "no"
+		case "string.htm"
+			iWidth = 368
+			iHeight = 265
+			sTitle = "Advanced Text Editor"
+			sResize = "no"
+		case "vector.htm"
+			iWidth = 330
+			iHeight = 155
+			sTitle = "Vector Editor"
+			sResize = "no"
+		case else
+		end select
+		window.showModelessDialog goWorld.ContentPath & editorHTML, Array(sTitle, window), "dialogHeight:" & iHeight & "px;dialogWidth:" & iWidth - 6 & "px;status:no;help:no;resizable:" & sResize & ";"
+	end if
+end sub
+
+sub ListProp_NewProperty(list)
+	set editList = list
+	window.showModelessDialog "newpropL.htm", window, "dialogHeight:157px;dialogWidth:274px;status:no;help:no;resizable:no;"
+end sub
+
+sub ListProp_UserMessage(msg)
+	msgbox msg, vbExclamation, "Microsoft Virtual Worlds"
+end sub
+
+sub ListProp_KeyPressed(KeyCode)
+	select case KeyCode
+	case 27
+		' Hack to make sure windows has time to process the message before killing this one
+		window.setTimeout "helper.closewindow", 100
+	case else
+	end select
+end sub
+
+sub ListProp_vKeyUp(KeyCode)
+	select case KeyCode
+	case else
+	end select
+end sub
+
+sub document_OnMouseOver
+	select case window.event.srcElement.className
+	case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	case "vHelp"
+		imgHelp.src="../../../client/shared/helpH.gif"
+	case else
+	end select
+end sub
+
+sub document_OnMouseOut
+	select case window.event.srcElement.className
+	case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	case "vHelp"
+		imgHelp.src="../../../client/shared/help.gif"
+	case else
+	end select
+end sub
+
+sub ListProp_NoSelections
+	DisableButton btnRemove
+	DisableButton btnUp
+	DisableButton btnDown
+end sub
+
+sub ListProp_ItemSelected
+	EnableButton btnRemove
+	if ListProp.targetobjectproperty.count > 1 then
+		if ListProp.SelectionList.count = 1 then
+			if ListProp.SelectionList.property(0) = 0 then
+				EnableButton btnDown
+				DisableButton btnUp
+			elseif ListProp.SelectionList.property(0) = ListProp.targetobjectproperty.count - 1 then
+				EnableButton btnUp
+				DisableButton btnDown
+			else
+				EnableButton btnUp
+				EnableButton btnDown
+			end if
+		else
+			DisableButton btnUp
+			DisableButton btnDown
+		end if
+	end if
+end sub
+
+sub document_onkeypress
+	select case window.event.keyCode
+	case 27
+		helper.closewindow
+	case else
+	end select
+end sub
+
+sub DoAdd
+	ListProp_NewProperty(ListProp.targetobjectproperty)
+end sub
+
+sub DoRemove
+	ListProp.RemoveSelectedProperty
+	btnAdd.focus
+	if ListProp.TargetObjectProperty.Count = 0 then
+		ListProp_NoSelections
+	end if
+end sub
+
+sub DoUp
+	ListProp.MoveSelectedPropertyUp
+	ListProp_ItemSelected
+	if btnUp.disabled and not btnDown.disabled then btnDown.focus
+end sub
+
+sub DoDown
+	ListProp.MoveSelectedPropertyDown
+	ListProp_ItemSelected
+	if btnDown.disabled and not btnUp.disabled then btnUp.focus
+end sub
+
+sub DoHelp
+	Dim helpstringsList
+	window.event.returnValue = false
+	on error resume next
+	set helpstringsList = goWorld.global.CreatePropertyList
+	helpstringsList.add "Authoring"
+	helpstringsList.add "Object Explorer"
+	helpstringsList.add "Property List Editor"
+	goWorld.FireUIEvent goWorld.user, "Help", helpstringsList
+end sub
+
+
+sub window_onresize
+	bVal = 2	'this value is needed since adding borders to the ActiveX controls gives a different offset value
+	if document.body.clientWidth - btnClose.offsetWidth - 18 > 285 then
+		btnClose.style.left = document.body.clientWidth - btnClose.offsetWidth - 18
+		btnAdd.style.left = document.body.clientWidth - btnAdd.offsetWidth - 18
+		btnRemove.style.left = document.body.clientWidth - btnRemove.offsetWidth - 18
+		btnUp.style.left = document.body.clientWidth - btnUp.offsetWidth - 18
+		btnDown.style.left = document.body.clientWidth - btnDown.offsetWidth - 18
+		imgHelp.style.left = document.body.clientWidth - imgHelp.offsetWidth - 28
+		ListProp.style.width = document.body.clientWidth - ListProp.offsetLeft - 93 - bVal
+	else
+		btnClose.style.left = 285
+		btnAdd.style.left = 285
+		btnRemove.style.left = 285
+		btnUp.style.left = 285
+		btnDown.style.left = 285
+		imgHelp.style.left = 295
+		ListProp.style.width = 250
+	end if
+	if document.body.clientHeight - ListProp.offsetTop - 7 - bVal > 200 then
+		ListProp.style.height = document.body.clientHeight - ListProp.offsetTop - 7 - bVal
+		imgHelp.style.top = document.body.clientHeight - imgHelp.offsetHeight - 7
+	else
+		ListProp.style.height = 200
+		imgHelp.style.top = 232
+	end if
+end sub
+
+</script>
+</head>
+<body class=vBody>
+	<div class=vLabel style=left:18;top:7;>Object:</div>
+	<div id=divObject class=vLabel style=left:80;top:7;></div>
+	<div class=vLabel style=left:18;top:25;>Property:</div>
+	<div id=divProperty class=vLabel style=left:80;top:25;></div>
+	<object classid=clsid:EF7D6565-0161-11D2-88BE-00C04FC32EF3
+					id=ListProp
+					style="border-color: black;
+								 border-style: solid;
+								 border-width: 1;
+								 height: 200;
+								 left: 18;
+								 position: absolute;
+								 top: 50;
+								 width: 250;">
+	</object>
+	<button class=bEnabled id=btnClose style=left:285;top:7; onclick=helper.closewindow>
+		<span style=position:relative;top:-1;>Close</span>
+	</button>
+	<button class=bEnabled id=btnAdd style=left:285;top:50; onclick=DoAdd>
+		<span style=position:relative;top:-1;>Add</span>
+	</button>
+	<button class=bEnabled id=btnRemove style=left:285;top:76; onclick=DoRemove>
+		<span style=position:relative;top:-1;>Remove</span>
+	</button>
+	<button class=bEnabled id=btnUp style=left:285;top:120; onclick=DoUp>
+		<span style=position:relative;top:-3;left:-3;><font face=Webdings style=position:relative;top:-1;left:-6;>5</font>Up</span>
+	</button>
+	<button class=bEnabled id=btnDown style=left:285;top:146; onclick=DoDown>
+		<span style=position:relative;top:-3;><font face=Webdings style=position:relative;top:-1;>6</font>Down</span>
+	</button>
+	<a id=lnkHelp onclick=DoHelp href="">
+		<img src=../../../client/shared/help.gif id=imgHelp class=vHelp style=left:295;top:232;>
+	</a>
+</body>
+</html>

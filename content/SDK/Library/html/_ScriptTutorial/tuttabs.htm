@@ -1,0 +1,315 @@
+<html>
+<head>
+<LINK Rel=Stylesheet href=..\..\..\..\client\shared\global.css>
+<style>
+	.selected{ font-family: Arial; font-size: 8pt;color:"#000000";font-weight:bold}
+	.tabStyle {cursor:hand; Font-Size: 8pt;Font-Family: verdana;Color: #336666;}
+	.Highlight {cursor:hand; Font-Size: 8pt;Font-Family: verdana;Color: white;font-weight:bold}
+	.vHighlightinput1 {Font-Size: 8pt;Font-Family: verdana;Color:#993300;cursor:hand}
+	.bHilite{Font-Size: 8pt;Font-Family: verdana;Color:white;cursor:hand;background-color:#336666}
+
+</style>
+<title>C:\PROGRA~1\MICROS~4\HTML\EDITORS\CORE\OBJTABS.HTM</title>
+<script language=vbs>
+
+dim curElement
+dim mouseClicked
+mouseClicked = false
+curElement=null
+
+sub document_OnMouseOver
+	select case window.event.srcElement.className
+	case "tabStyle"
+		if window.event.srcElement.tagName = "FONT" then
+			window.event.srcElement.parentElement.className = "vHighlightinput1"
+		else
+			if window.event.srcElement.children.length then
+				window.event.srcElement.children(0).className = "vHighlightinput1"
+			end if
+		end if
+		window.event.srcElement.className = "vHighlightinput1"
+	case else
+	end select
+end sub
+
+sub document_OnMouseOut
+	select case window.event.srcElement.className
+	case "vHighlightinput1"
+		if window.event.srcElement.tagName = "FONT" then
+			window.event.srcElement.parentElement.className = "tabStyle"
+		else
+			if window.event.srcElement.children.length then
+				window.event.srcElement.children(0).className = "tabStyle"
+			end if
+		end if
+		window.event.srcElement.className = "tabStyle"
+	case else
+	end select
+end sub
+
+sub HighlightItem(sItem)
+	if curElement.id <> "div" & sItem then
+		if document.all("div" & sItem).parentElement.style.display = "none" then
+			document.all("div" & sItem).parentElement.style.display = ""
+			document.all("div" & left(document.all("div" & sItem).parentElement.id, 6)).all.tags("font")(0).innerText = "6"
+		end if
+		SetHighlight document.all("div" & sItem)
+	end if
+end sub
+
+sub MenuAction(el)
+	if idLoadTimer <> 0 then
+		window.clearTimeout idLoadTimer
+	end if
+	if el.parentElement.style.display = "none" then
+		i = 0
+		select case document.all("div" & mid(el.id,4)).gPos
+		case "-1" 'first item in last group
+			if curElement.id = document.all("divGroup" & mid(el.parentElement.id, 6, 1)).id then i = 1
+		case "0"	'first item in group
+			i = 1
+		case else
+			'this will handle when gPos=1 which is set for the last item in group
+		end select
+		document.all("optGroup" & mid(el.parentElement.id, 6, 1) + i).checked = true
+		document.all("optGroup" & mid(el.parentElement.id, 6, 1) + i).focus
+		MenuAction document.all("optGroup" & mid(el.parentElement.id, 6, 1) + i)
+	else
+		idLoadTimer = window.setTimeout("top.frames(""tutorial"").location.href = """ & mid(el.id, 4) & ".htm"" : idLoadTimer = 0", 200)
+		SetHighlight document.all("div" & mid(el.id,4))
+	end if
+end sub
+
+sub SetHighlight(el)
+	el.className = "bHilite"
+	el.all.tags("label")(0).className = "bHilite"
+	if el.all.tags("label")(0).children.length then
+		el.all.tags("label")(0).children(0).className = "bHilite"
+	end if
+	if (IsObject(curElement)) then
+		if curElement.id <> el.id then
+			curElement.className = "tabStyle"
+			curElement.all.tags("label")(0).className = "tabStyle"
+			if curElement.all.tags("label")(0).children.length then
+				curElement.all.tags("label")(0).children(0).className = "tabStyle"
+			end if
+		end if
+	end if
+	set curElement = el
+end sub
+
+sub window_onload
+	SetHighlight divGroup0
+	window.settimeout "optGroup0.focus", 0, "vbs"
+end sub
+
+sub document_onMouseUp
+	mouseClicked = true
+end sub
+
+sub ShowHide
+
+	if (window.event.srcElement.id=null) then
+		exit sub
+	end if
+
+	select case mid(window.event.srcElement.id, 4, 5)
+	case "Group"
+		if document.all(mid(window.event.srcElement.id, 4) & "Children").style.display = "" then
+			document.all(mid(window.event.srcElement.id, 4) & "Children").style.display = "none"
+			document.all("div" & mid(window.event.srcElement.id, 4)).all.tags("font")(0).innerText = "4"
+		else
+			document.all(mid(window.event.srcElement.id, 4) & "Children").style.display = ""
+			document.all("div" & mid(window.event.srcElement.id, 4)).all.tags("font")(0).innerText = "6"
+		end if
+	case else
+	end select
+end sub
+
+sub document_ondblclick
+	if (window.event.srcElement.id=null) then
+		exit sub
+	end if
+
+	select case left(window.event.srcElement.id, 3)
+	case "div", "lbl"
+		ShowHide
+	case else
+	end select
+end sub
+
+sub document_onclick
+	if (window.event.srcElement.id=null) then
+		exit sub
+	end if
+
+	select case left(window.event.srcElement.id, 3)
+	case "opt", "div", "fnt"
+		MenuAction window.event.srcElement
+		if mouseClicked and left(window.event.srcElement.id, 3) = "fnt" then
+			ShowHide
+		end if
+		if document.body.clientHeight + document.body.scrollTop < curElement.offsetTop + curElement.offsetHeight then
+			curElement.scrollIntoView false
+		end if
+		mouseClicked = false
+	case else
+	end select
+
+end sub
+
+sub document_onkeypress
+	if (window.event.srcElement.id=null) then
+		exit sub
+	end if
+
+	select case left(window.event.srcElement.id, 8)
+	case "optGroup"
+		select case window.event.keycode
+		case 13
+			if document.all(mid(window.event.srcElement.id, 4) & "Children").style.display = "" then
+				document.all(mid(window.event.srcElement.id, 4) & "Children").style.display = "none"
+				document.all("div" & mid(window.event.srcElement.id, 4)).all.tags("font")(0).innerText = "4"
+			else
+				document.all(mid(window.event.srcElement.id, 4) & "Children").style.display = ""
+				document.all("div" & mid(window.event.srcElement.id, 4)).all.tags("font")(0).innerText = "6"
+			end if
+		case 45	'minus key
+			document.all(mid(window.event.srcElement.id, 4) & "Children").style.display = "none"
+			document.all("div" & mid(window.event.srcElement.id, 4)).all.tags("font")(0).innerText = "4"
+		case 43, 61	'plus or equal key
+			document.all(mid(window.event.srcElement.id, 4) & "Children").style.display = ""
+			document.all("div" & mid(window.event.srcElement.id, 4)).all.tags("font")(0).innerText = "6"
+		case else
+		end select
+	case else
+	end select
+end sub
+
+</script>
+</head>
+
+<body bgcolor=#f4f4e8 style=padding:0;margin:0;>
+	<img src=..\..\..\..\client\shared\green.gif style=position:absolute;left:0;top:0;width:100%;height:100%;z-index:-1>
+
+	<div style=margin-top:30>
+
+		<input type=radio name=menu id=optGroup0 style=position:absolute;left:-20;top:-20 checked></input>
+		<div id=divGroup0 class=tabStyle Style=width:144;padding-top:1;padding-bottom:2;>
+			<nobr>
+				<label id=lblGroup0 class=tabStyle for=optGroup0 style=position:relative;left:0;>
+					&nbsp;<font id=fntGroup0 class=tabStyle style=font-family:webdings;font-size:9pt;position:relative;top:-1;>4</font>Introduction
+				</label>
+			</nobr>
+		</div>
+		<div id=Group0Children style=display:none>
+			<input type=radio name=menu id=optget_started1 style=position:absolute;left:-20;top:-20;>
+			<div id=divget_started1 class=tabStyle Style=width:144;padding-top:1;padding-bottom:2; gPos=-1>
+				<nobr>
+					<label id=lblget_started1 class=tabStyle for=optget_started1 style=position:relative;left:12;>
+						1. Getting Started
+					</label>
+				</nobr>
+			</div>
+		</div>
+
+		<input type=radio name=menu id=optGroup1 style=position:absolute;left:-20;top:-20>
+		<div id=divGroup1 class=tabStyle Style=width:144;padding-top:1;padding-bottom:2;>
+			<nobr>
+				<label id=lblGroup1 class=tabStyle for=optGroup1 style=position:relative;left:0>
+					&nbsp;<font id=fntGroup1 class=tabStyle style=font-family:webdings;font-size:9pt;position:relative;top:-1;>4</font>User Interactions
+				</label>
+			</nobr>
+		</div>
+		<div id=Group1Children style=display:none>
+			<input type=radio name=menu id=optclick_objects1 style=position:absolute;left:-20;top:-20;>
+			<div id=divclick_objects1 class=tabStyle Style=width:144;padding-top:1;padding-bottom:2; gPos=0>
+				<nobr>
+					<label id=lblClickable class=tabStyle for=optclick_objects1 style=position:relative;left:12;>
+						2. Clickable Objects
+					</label>
+				</nobr>
+			</div>
+			<input type=radio name=menu id=optanim_objects1 style=position:absolute;left:-20;top:-20>
+			<div id=divanim_objects1 class=tabStyle Style=width:144;padding-top:1;padding-bottom:2;>
+				<nobr>
+					<label id=lblAnimating class=tabStyle for=optanim_objects1 style=position:relative;left:12>
+						3. Objects w/ Timers
+					</label>
+				</nobr>
+			</div>
+			<input type=radio name=menu id=optchat_objects1 style=position:absolute;left:-20;top:-20>
+			<div id=divchat_objects1 class=tabStyle Style=width:144;padding-top:1;padding-bottom:2;>
+				<nobr>
+					<label id=lblChat class=tabStyle for=optchat_objects1 style=position:relative;left:12>
+						4. Objects and Chat
+					</label>
+				</nobr>
+			</div>
+			<input type=radio name=menu id=optext_web1 style=position:absolute;left:-20;top:-20>
+			<div id=divext_web1 class=tabStyle Style=width:144;padding-top:1;padding-bottom:2;>
+				<nobr>
+					<label id=lblExternalWeb class=tabStyle for=optext_web1 style=position:relative;left:12>
+						5. External Web Pages
+					</label>
+				</nobr>
+			</div>
+			<input type=radio name=menu id=optcoll_det1 style=position:absolute;left:-20;top:-20>
+			<div id=divcoll_det1 class=tabStyle Style=width:144;padding-top:1;padding-bottom:2; gPos=1>
+				<nobr>
+					<label id=lblCollision class=tabStyle for=optcoll_det1 style=position:relative;left:12>
+						6. Collision Detection
+						<br>
+					</label>
+				</nobr>
+			</div>
+		</div>
+		<input type=radio name=menu id=optGroup2 style=position:absolute;left:-20;top:-20>
+		<div id=divGroup2 class=tabStyle Style=width:144;padding-top:1;padding-bottom:2;>
+			<nobr>
+				<label id=lblGroup2 for=optGroup2 style=position:relative;left:0>
+					&nbsp;<font id=fntGroup2 class=tabStyle style=font-family:webdings;font-size:9pt;position:relative;top:-1;>4</font>World Management
+				</label>
+			</nobr>
+		</div>
+		<div id=Group2Children style=display:none>
+			<input type=radio name=menu id=optentry_det1 style=position:absolute;left:-20;top:-20>
+			<div id=diventry_det1 class=tabStyle Style=width:144;padding-top:1;padding-bottom:2; gPos=1>
+				<nobr>
+					<label id=lblEntryExit class=tabStyle for=optentry_det1 style=position:relative;left:12>
+						7. Entry/Exit Detection
+					</label>
+				</nobr>
+			</div>
+			<input type=radio name=menu id=optdynamic_object1 style=position:absolute;left:-20;top:-20>
+			<div id=divdynamic_object1 class=tabStyle Style=width:144;padding-top:1;padding-bottom:2; gPos=1>
+				<nobr>
+					<label id=lblDynamicObj class=tabStyle for=optdynamic_object1 style=position:relative;left:12>
+						8. Dynamic Object <br>
+						&nbsp; &nbsp; Creation
+					</label>
+				</nobr>
+			</div>
+		</div>
+		<input type=radio name=menu id=optGroup3 style=position:absolute;left:-20;top:-20>
+		<div id=divGroup3 class=tabStyle Style=width:144;padding-top:1;padding-bottom:2;>
+			<nobr>
+				<label id=lblGroup3 class=tabStyle for=optGroup3 style=position:relative;left:0>
+					&nbsp;<font id=fntGroup3 class=tabStyle style=font-family:webdings;font-size:9pt;position:relative;top:-1;>4</font>Advanced Graphics
+				</label>
+			</nobr>
+		</div>
+		<div id=Group3Children style=display:none>		
+			<input type=radio name=menu id=optGraphicsAnim style=position:absolute;left:-20;top:-20>
+			<div id=divGraphicsAnim class=tabStyle Style=width:144;padding-top:1;padding-bottom:2; gPos=1>
+				<nobr>
+					<label id=lblAnimObj class=tabStyle for=optGraphicsAnim style=position:relative;left:12>
+						9. Animation and<br>
+						&nbsp; &nbsp; Lighting
+					</label>
+				</nobr>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

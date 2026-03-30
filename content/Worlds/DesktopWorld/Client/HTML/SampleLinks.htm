@@ -1,0 +1,161 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//
+'//  File:			sampleLinks.htm
+'//  Description:	This file hosts hosts the "destination" section's legend/menu.
+'//					It uses WriteSideLink.vbs to create the legend.  It also hosts the 
+'//					the web content iframe that resides in the right hand of the screen.
+'////////////////////////////////////////////////////////////////////////-->
+<html>
+<head>
+<title>SampleLinks</title>
+<link rel=stylesheet href=../shared/global.css>
+
+<!--include scripts-->
+<script language="vbscript" src="../vbs/WriteSideLink.vbs">
+</script>
+<script language="vbscript" src="../vbs/document_OnSelectStart.vbs">
+</script>
+<script language="vbscript" src="../vbs/MenuOnMouseDown.vbs">
+</script>
+<!--end include scripts-->
+
+
+<script language=VBScript>
+option explicit
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		window_Onload
+'//  Purpose:	Generate clickable links and load a page into the iframe.
+'//  Note:		Loads either top.ClientSamplePage or a default page into the iframe.
+'////////////////////////////////////////////////////////////////////////
+sub window_onload
+	if not top.isWorldLoaded then
+		window.setTimeout "window_onload", 500, "vbs"
+		exit sub
+	end if
+	top.AddToEventList window
+
+	dim strWebContentPath
+	strWebContentPath = top.ClientWorldPtr.WebContentPath
+	
+	' WriteSideLink id, className, linkWords, OnClick function, icon type
+    WriteSideLink "lnkOverview", "MenuI", "Overview", "LinkTo """ & strWebContentPath & "Overview.htm"", """" ", 1
+    WriteSideLink "lnkResourceDesk", "MenuI", "Resource Desk", "LinkTo """ & strWebContentPath & "ResourceDesk.htm"", ""ResourceDesk"" ", 1
+    WriteSideLink "lnkSeattleDesk", "MenuI", "Seattle Desk", "LinkTo """ & strWebContentPath & "SeattleDesk.htm"", ""SeattleDesk"" ", 1
+    WriteSideLink "lnkDiscussionArea", "MenuI", "Discussion Area", "LinkTo ""BBS.htm"", ""DiscussionArea"" ", 1
+    WriteSideLink "lnkGiftCarts", "MenuI", "Gift Carts", "LinkTo """ & strWebContentPath & "GiftCarts.htm"", ""GiftCarts"" ", 1
+	WriteSideLink "lnkGameArea", "MenuI", "Game Room", "LinkTo """ & strWebContentPath & "GameRoom.htm"", ""GameRoom"" ", 1
+    WriteSideLink "lnkMusicGarden", "MenuI", "Music Garden", "LinkTo """ & strWebContentPath & "MusicGarden.htm"", ""MusicGarden"" ", 1
+
+	dim innerPage
+	innerPage = top.ClientSamplePage
+	top.ClientSamplePage = ""
+	if innerPage = "" then
+		ClickLink ("Overview")
+	elseif InStr(innerPage,"http://") _
+	  and LCase(Left(innerPage,Len(strWebContentPath))) <> LCase(strWebContentPath) then
+		top.LinkTo innerPage
+	else
+		InfoIFrame.location = innerPage
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		ClickLink
+'//  Purpose:	Simulate a user click on a navigation link
+'//  Called by:	window_onLoad
+'//				handle_UIEvent, for the NavigateTo event
+'////////////////////////////////////////////////////////////////////////
+sub ClickLink (linkName)
+	MenuOnMouseDown (document.all.item("lnk" & linkName))
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		window_OnUnload
+'//  Purpose:	Remove from the event list
+'////////////////////////////////////////////////////////////////////////
+sub window_onUnload
+	top.RemoveFromEventList window
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		HandleUIEvent
+'//  Purpose:	To remove from the event list
+'//  Called by:	client.htm:theclient_OnUIEvent
+'////////////////////////////////////////////////////////////////////////
+sub HandleUIEvent(byval who, what, byval args)
+	select case What
+		case "NavigateTo"
+			ClickLink args
+	end select
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		LinkTo(URLto, placeto)
+'//  Purpose:	Navigate the browser pane to a URL, and optinally move the
+'//				user to a place in the world.  Valid placeto values are the
+'//				text following "_to_" in valid NavPath names, see area_functions.vbs
+'//	 Called by:	onClick handler for the clickable links.
+'////////////////////////////////////////////////////////////////////////
+sub LinkTo(URLto, placeto)
+	if not top.isWorldLoaded then
+		window.setTimeout "LinTo """ & URLto & """,""" & placeTo & """", 500, "vbs"
+		exit sub
+	end if
+	' auto-navigate the avatar to an area in the world, or just display a page
+	if len(placeto) > 0 then
+		if top.NavigationEnabled then
+			InfoIFrame.navigate URLto
+			top.NavigationEnabled = false
+			top.ClientUserPtr.path_start placeto
+		end if
+	else
+		InfoIFrame.navigate URLto
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		do_camera_overview
+'//  Purpose:	To change the view of the camera 
+'////////////////////////////////////////////////////////////////////////
+sub do_camera_overview
+	if top.ClientUserPtr.viewType = "inworld" then
+		top.ClientUserPtr.cameraHelper.flyout_start
+	else
+		top.ClientUserPtr.cameraHelper.flyin_start
+	end if
+end sub
+
+</script>
+</head>
+
+<body bgcolor=#FFFFFF>
+
+<span
+	style="position:absolute;
+	BACKGROUND-IMAGE:url(../Images/grntile2.gif);
+	width:115;
+	height:100%;">
+</span>
+<span id=SideLinks
+	class=SideLinks>
+</span>
+<iframe id=infoIFrame
+	name=infoIFrame 
+	style="HEIGHT:100%;
+		LEFT:131px;
+		POSITION:absolute;
+		TOP: 0px;
+		WIDTH:expression(document.body.clientWidth-130);
+		scrolling:auto;" 
+	 marginwidth=0
+	 marginheight=0
+	 frameborder=no></iframe>
+	
+</body>
+</HTML>

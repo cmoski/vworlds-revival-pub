@@ -1,0 +1,45 @@
+<html>
+<head>
+<link rel=stylesheet href=..\..\..\..\client\shared\global.css>
+<script language=vbs>
+
+top.newDesc = "Web Page"
+top.newType = "WebPage"
+top.newFile = "SDK\Library\models\shapes\HTML.x"
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+sub document_onKeyPress
+	select case window.event.keycode
+	case 27
+		top.DoCancel
+	case 13
+		top.DoCreate
+	case else
+	end select
+end sub
+
+</script>
+</head>
+<body class=vBody>
+<div class=vH1 align=center>
+	Web Page
+</div>
+<div class=vLabel Style=top:35;padding-right:5;>
+	Web page objects display either a message or a web page. You can type in a message to display or specify an URL. Web pages appear without the browser controls. You can set the size and position of the web page's window.
+	<p>Examples of web page objects include greetings, logos, newspapers, instructions, or hints.
+	<p>The default appearance of the web page object is a poster with an URL texture.
+</div>
+</body>
+</html>

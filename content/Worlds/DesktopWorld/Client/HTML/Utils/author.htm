@@ -1,0 +1,125 @@
+<html>
+
+<head>
+<link rel=stylesheet href=..\..\shared\global.css>
+<script language=vbs>
+option explicit
+
+' World variables
+dim goWorld
+dim goUser
+dim target
+dim gsContentPath
+
+' Variables for generating room names
+dim Rooms, RoomNames, RoomIDs
+
+sub Window_OnLoad
+	set goWorld = Top.theClient.VWClient.World
+	set goUser = goWorld.User
+	if strcomp(left(goWorld.ContentPath, 7), "file://", vbtextcompare) = 0  then
+		gsContentPath = right(goWorld.ContentPath, len(goWorld.ContentPath) - 7)
+	else
+		gsContentPath = goWorld.ContentPath
+	end if
+end sub
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+sub launchRoomWiz
+	set goWorld = Top.theClient.VWClient.World
+	set goUser = goWorld.User
+	window.showModalDialog gsContentPath & "sdk\wizards\room\main.htm", top, "dialogHeight:337px;dialogWidth:546px;help:no;status:no;"
+end sub
+
+sub launchObjWiz
+	set goWorld = Top.theClient.VWClient.World
+	set goUser = goWorld.User
+	window.showModalDialog gsContentPath & "sdk\wizards\object\main.htm", top, "dialogHeight:337px;dialogWidth:468px;help:no;status:no;"
+end sub
+
+sub launchScript
+	set goWorld = Top.theClient.VWClient.World
+	set goUser = goWorld.User
+	goWorld.FireUIEvent goUser, "vwScript", ""
+end sub
+
+sub launchOE
+	goWorld.fireUIEvent goUser, "vwLaunchOE", goUser
+end sub
+
+'-------------------------------
+sub document_onmouseover
+	select case window.event.srcElement.className
+	case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	case "vGo"
+		if not window.event.srcElement.disabled then
+			imgGo.src = "../Images/go1.gif"
+		else
+			imgGo.style.cursor = "default"
+		end if
+	case else
+	end select
+end sub
+
+sub document_onmouseout
+	select case window.event.srcElement.className
+	case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	case "vGo"
+		if not window.event.srcElement.disabled then
+			imgGo.src = "../Images/go2.gif"
+		else
+			imgGo.style.cursor = ""
+		end if
+	case else
+	end select
+end sub
+
+</script>
+</head>
+<body style=padding-left:10">
+
+	<!--Start Heading Section-->
+	<div id="bkgPageHeadingPatch" class="bkgPageHeadingPatch"> </div>
+
+	<div id="bkgPageHeading" class="bkgPageHeading" style="background-image:url(../../images/bkgOverview.gif);">
+	</div>
+
+	<span id="groupName" class="PageHeading" style=left:10;>Authoring Tools</span>
+	<span class="PageHeadingRt"></span>
+	<hr class="PageHeadingHR">
+	<!--End Heading Section-->
+
+	<div style=top:60;left:10; class=vH2>
+		Standard<hr color=#A7A795 style=position:absolute;top:7;left:61; size=1 width=92>
+	<button class=btnTeal id=btnObjWiz onclick=launchObjWiz style=position:absolute;left:27;top:25;width:120;>
+		Add an Object
+	</button>
+	<button class=btnTeal id=btnRoomWiz onclick=launchRoomWiz style=position:absolute;left:27;top:55;width:120;>
+		Add a Room
+	</button>
+	</div>
+	<div style=top:160;left:10; class=vH2>
+		Advanced<hr color=#A7A795 style=position:absolute;top:7;left:66; size=1 width=87>
+	<button class=btnTeal id=btnCmdWnd onclick=launchscript style=position:absolute;left:27;top:25;width:120;>
+		Command Window
+	</button>
+	<button class=btnTeal id=btnOE2 onclick=launchOE style=position:absolute;left:27;top:55;width:120;>
+		Object Explorer
+	</button>
+	</div>
+</body>
+</html>

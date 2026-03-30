@@ -1,0 +1,422 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//
+'//  File:			ShowPerson.htm
+'//  Description:	Shows other avatar's profile info and body.  
+'////////////////////////////////////////////////////////////////////////-->
+<html>
+<head>
+<title>Person Display</title>
+<link rel=stylesheet href=../shared/global.css>
+
+<script language="vbscript" src="../vbs/document_OnSelectStart.vbs">
+</script>
+<script language="vbscript" src="../vbs/HTMLFilter.vbs">
+</script>
+
+<script language=vbs>
+option explicit
+
+' This page is designed to work as an IFrame. It expects its parent window to
+' have a getCurrentAvatarId function that returns an avatar id.
+' If that avatar exists we display it.
+
+'////////////////////////////////////////////////////////////////////////
+'//  Global Constants and Variables: To this file
+'////////////////////////////////////////////////////////////////////////
+const strPrivate = "Not Available - Private"
+const strNotRecd = "Not Recorded"
+dim currentAvatar
+dim profile
+dim avatarModelName
+dim avatarGifPath
+avatarGifPath = top.ClientWorldPtr.ContentPath & "Worlds\DesktopWorld\Models\Lobby\"
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		window_onLoad
+'//  Purpose:  	To startup the page after all objects are instantiated
+'////////////////////////////////////////////////////////////////////////
+sub window_onLoad
+	dim avatar
+	dim avatarId
+	dim strGroup
+	if InStr(LCase(parent.document.location),"myprofile") then
+		document.all.item("bkgPageHeadingPatch").style.background = "#E7E7E7"
+		document.all.item("bkgPageHeading").style.backgroundImage = "url(../images/bkgMyProfile.gif)"	
+	end if
+
+	if parent.getCurrentAvatarId <> top.ClientUserPtr.id then
+		btnEdit.style.display = "none"
+	end if
+
+	strGroup = parent.getGroupName
+	groupName.innerHTML = Right(strGroup,Len(strGroup) - 1)
+	set currentAvatar = Nothing
+	avatarId = parent.getCurrentAvatarId
+	parent.clearCurrentAvatarId
+	if avatarId = 0 then
+		set currentAvatar = top.ClientUserPtr
+	else
+		for each avatar in top.ClientUserPtr.container.avatars
+			if avatar.Id = avatarId then 
+				set currentAvatar = avatar
+				exit for
+			end if
+		next
+	end if
+	if currentAvatar is Nothing then exit sub
+	set profile = currentAvatar.profile
+	showProfileInfo
+	showPicture
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		BreakWords
+'//  Purpose:  	Breaks a string into peices of x length
+'//	 Params:	strSource  - the source string
+'//	 Returns:	broken string, empty on failure
+'//  Called by:	showProfileValue
+'//	 Notes:		adds a "&shy" between every letter so it can scale.
+'////////////////////////////////////////////////////////////////////////
+Function BreakWords(strSource)
+	dim i, strBuff
+	for i = 1 to len(strSource)
+		strBuff = strBuff & mid(strSource, i, 1) & "&shy;"
+	next			
+	BreakWords = strBuff
+End Function
+
+'////////////////////////////////////////////////////////////////////////
+'//  Func:  	getProfileValue (theKey)
+'//  Purpose:  	Gets the profile value for a particular key
+'//  Args:		theKey - the name of the key
+'//  Returns:	The value for the key
+'//  Called by:	showProfileValue
+'////////////////////////////////////////////////////////////////////////
+function getProfileValue (theKey)
+	if profile.IsValid(theKey) then
+		getProfileValue = profile.keyvalue(theKey)
+	else
+		getProfileValue = ""
+	end if
+end function
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Func:  	getProfileAccess (theKey)
+'//  Purpose:  	Gets the profile access for a particular key
+'//  Args:		theKey - the name of the key
+'//  Returns:	The access integer for this user for that key
+'//  Called by:	showProfileValue
+'////////////////////////////////////////////////////////////////////////
+function getProfileAccess (theKey)
+	if profile.IsValid(theKey) then
+		getProfileAccess = profile.keyAccess(theKey)
+	else
+		getProfileAccess = 3
+	end if
+end function
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		ShowAllProfileValues
+'//  Purpose:  	debugging procedure; writes all profile values to the "dbg" span
+'//  Called by:	not called
+'////////////////////////////////////////////////////////////////////////
+sub ShowAllProfileValues
+	dim key
+	dim keyStr
+	for each key in profile.keys
+		if profile.isValid(key) then 
+			if IsObject(profile.keyvalue(key)) then
+				select case profile.keyvalue(key).type
+					case "Thing"
+						keyStr = profile.keyvalue(key).name
+					case "Property List", "Property Map"
+						keyStr = " count=" & profile.keyvalue(key).count
+					case else
+						keyStr = "?"
+				end select
+				dbg.insertAdjacentHTML "BeforeEnd", key & "(" & _
+					profile.keyvalue(key).type & "): " & keyStr & "<br>"
+			else
+				dbg.insertAdjacentHTML "BeforeEnd", key & ": " & profile.keyvalue(key) & "<br>"
+			end if
+		end if
+	next
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		checkFriendList (theUser, theAvatar, userOnFriendList)
+'//  Purpose:  	Checks to see if a user is on a particular avs friends list
+'//  Args:		theUser - this client's user
+'//				theAvatar - the particular avatar you are showing
+'//				userOnFriendList - true or false
+'//  Called by:	showProfileInfo
+'////////////////////////////////////////////////////////////////////////
+sub checkFriendList (theUser, theAvatar, userOnFriendList)
+	' find out if theUser is on theAvatar's friend list
+	dim friendList, member
+	set friendList = theAvatar.profile.keyvalue("Friends")
+	for each member in friendList
+		if member is theUser then
+			userOnFriendList = true
+			exit sub
+		end if
+	next
+	userOnFriendList = false
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		showProfileValue (itemName, profileKey, isFriend)
+'//  Purpose:  	displays data in html elem's from world data
+'//  Args:		
+'//		itemName	<str> last part of the html elem's id
+'//		profileKey	<str> key to the profile index, these are for "private" items 
+'//		isFriend	<bool> nullifies some security .?
+'//  Called by:	showProfileInfo
+'//				breakWords
+'////////////////////////////////////////////////////////////////////////
+sub showProfileValue (itemName, profileKey, isFriend)
+	dim securityLevel, profileValue
+
+	securityLevel = getProfileAccess(profileKey)
+	if (currentAvatar is top.ClientUserPtr) _
+	  or (securityLevel = 0) _
+	  or (isFriend and securityLevel < 2) then
+		profileValue = RTrim(getProfileValue(profileKey))
+
+		'make sure we don't spill over into the avatar image
+		profileValue = BreakWords(profileValue)
+		profileValue = replace(profileValue, chr(13) & "&shy;" & chr(10), "<br>")
+		
+		if isNull(profileValue) _
+		or (profileValue = "") _
+		or (lCase(profileValue = "n/a")) then
+			document.all("val" & itemName).innerHTML = strNotRecd
+		else
+			document.all("val" & itemName).innerHTML = profileValue
+		end if			
+	else
+		document.all("val" & itemName).innerHTML = strPrivate
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		showProfileInfo
+'//  Purpose:  	show's all [showable] profile data
+'//  Called by:	window_onLoad
+'////////////////////////////////////////////////////////////////////////
+sub showProfileInfo
+	dim isFriend
+	if currentAvatar is Nothing then exit sub
+	checkFriendList top.ClientUserPtr, currentAvatar, isFriend
+	hdrAvName.innerText = currentAvatar.name
+	document.all("valAvatarName").innerHTML = currentAvatar.Name
+	showProfileValue "RealName", "Real name", isFriend
+	showProfileValue "WhereFrom", "Where from", isFriend
+	showProfileValue "Email", "E-Mail alias", isFriend
+	showProfileValue "Comment", "Quote", isFriend
+	showProfileValue "Hobbies", "Hobbies", isFriend
+	showProfileValue "Birthday", "Birthday", isFriend
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		showPicture
+'//  Purpose:  	show's all body parts shoes to hair :)
+'//  Called by:	window_onLoad
+'////////////////////////////////////////////////////////////////////////
+sub showPicture
+	setupBodyPart(currentAvatar.Shoes)
+	setupBodyPart(currentAvatar.Pants)
+	setupBodyPart(currentAvatar.Shirt)
+	setupBodyPart(currentAvatar.Skin)
+	setupBodyPart(currentAvatar.Hair)
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		splitColor(hexColor, decimalRed, decimalGreen, decimalBlue)
+'//  Purpose:  	splits up a html hex color into rgb values
+'//  Args:	
+'//		hexColor		- <str> html style hex color (i.e. FFCB0C)
+'//		decimalRed		- <out int> red value
+'//		decimalGreen	- <out int> green value
+'//		decimalBlue		- <out int> blue value
+'//  Called by:	setupBodyPart
+'////////////////////////////////////////////////////////////////////////
+function splitColor(hexColor, decimalRed, decimalGreen, decimalBlue)
+	decimalRed = cint("&H" & mid(hexColor,1,2))
+	decimalGreen = cint("&H" & mid(hexColor,3,2))
+	decimalBlue = cint("&H" & mid(hexColor,5,2))
+end function
+
+ 
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		GetHex(TheValue,digits)
+'//  Purpose:  	converts an value to hex, adds digits buffering
+'//  Args:	
+'//		TheValue	- <int> the value to convert
+'//		digits		- <int> min number of digits the returned string can be
+'//  Return Value:
+'//		hex string of TheValue
+'//  Called by:	setupBodyPart
+'////////////////////////////////////////////////////////////////////////
+function GetHex(TheValue,digits)
+	GetHex = hex(TheValue)
+	' add leading 0's if too few digits
+	if len(GetHex) < digits then GetHex = string(digits-len(GetHex),"0") & GetHex
+	' swap first and last pairs of hex chars for a color value
+	if digits = 6 then GetHex = mid(GetHex,5,2) & mid(GetHex,3,2) & mid(GetHex,1,2)
+end function
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		setupBodyPart (vwBodyPart)
+'//  Purpose:  	colorizes a bodypart
+'//  Args:	
+'//		vwBodyPart	- <object> ref to the body part
+'//  Called by:	showPicture
+'////////////////////////////////////////////////////////////////////////
+sub setupBodyPart (vwBodyPart)
+	dim objHair, iSlash, iDot, graphic, partNum, gifName, red, green, blue
+	set objHair = currentAvatar.hair
+	iSlash = instrRev(objHair.GeometryName,"\")
+	iDot = instrRev(objHair.GeometryName,".")
+	avatarModelName = mid(objHair.GeometryName, iSlash+1, iDot - iSlash - 2)
+	select case vwBodyPart.partName
+		case "shoes"
+			partNum = 1
+		case "pants"
+			partNum = 2
+		case "shirt"
+			partNum = 3
+		case "skin"
+			partNum = 4
+		case "hair"
+			partNum = 5
+	end select
+	gifName = avatarGifPath & avatarModelName & partNum & "static.gif"
+	document.all.item("model" & partNum).src = gifName
+	splitColor GetHex(vwBodyPart.Color,6), red, green, blue
+	set graphic = document.all.item(vwBodyPart.partName & "Sampler")
+	graphic.filters.Light.addAmbient 255, 255, 255, 255
+	graphic.filters.Light.changeColor 0, red, green, blue, true
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		EditDetails
+'//  Purpose:  	To redirect the pane to the MyDetails page.
+'//  Called by:	this is the onClick handler for btnEdit
+'////////////////////////////////////////////////////////////////////////
+sub EditDetails
+	top.strPage_MyProfile = "MyDetails.htm"
+	top.ClientMainToolsIFrame.btnMyProfile.click
+end sub
+
+</script>
+</head>
+
+<body bgcolor=#FFFFFF>
+
+<!--Start Heading Section-->
+<div id=bkgPageHeadingPatch
+	class=bkgPageHeadingPatch
+	style="background:#F7F7F7;">
+</div>
+
+<div id=bkgPageHeading
+	class=bkgPageHeading
+	style=background-image:url(../images/bkgPeople.gif);>
+</div>
+
+<span id=groupName style="left:10;" class=PageHeading></span>
+<span class=PageHeadingRt><span id=hdrAvName></span>'s profile</span>
+<hr class=PageHeadingHR>
+<!--End Heading Section-->
+
+<div id=avatarSampler
+	style="position:absolute;
+		top:85;
+		left:expression(document.body.clientWidth - 130);
+		width:130;height:260;overflow-x:hidden;">
+<div id=HairSampler style="position:absolute;left:-40;width:100%;filter:light;clip:rect(2,150,192,70);">
+	<img id=model5 border=0>
+</div>		
+<div id=SkinSampler style="position:absolute;left:-40;width:100%;filter:light;clip:rect(2,150,192,70);">
+	<img id=model4 border=0>
+</div>		
+<div id=ShirtSampler style="position:absolute;left:-40;width:100%;filter:light;clip:rect(2,150,192,70);">
+	<img id=model3 border=0>
+</div>	
+<div id=PantsSampler style="position:absolute;left:-40;width:100%;filter:light;clip:rect(2,150,192,70);">
+	<img id=model2 border=0>
+</div>		
+<div id=ShoesSampler style="position:absolute;left:-40;width:100%;filter:light;clip:rect(2,150,192,70);">
+	<img id=model1 border=0>
+</div>
+<button id=btnEdit
+	class=btnTeal
+	onclick="EditDetails"
+		style="position:absolute;
+		top:240;
+		left:0;">
+	Edit
+</button>
+</div>
+
+<div id=avatarInfo
+	style="position:absolute;
+		top:0;
+		left:10;
+		width:expression(document.body.clientWidth - 130);"
+	Copyable=true>
+	<span class="ParaText" style="display:block;">
+	<span id=elemAvatarName class="ParaHeading" style="display:block;">Name:</span>
+	<span id=valAvatarName></span><br>
+	</span>
+
+	<span class="ParaText" style="display:block;">
+	<span id=elemRealName class="ParaHeading" style="display:block;">Real Name:</span>
+	<span id=valRealName></span><br>
+	</span>
+
+	<span class="ParaText"  style="display:block;">
+	<span id=elemWhereFrom class="ParaHeading" style="display:block;">Where I'm From:</span>
+	<span id=valWhereFrom></span><br>
+	</span>
+
+	<span class="ParaText" style="display:block;">
+	<span id=elemEmail class="ParaHeading" style="display:block;">Email Address:</span>
+	<span id=valEmail></span><br>
+	</span>
+
+	<span class="ParaText" style="display:block;">
+	<span id=elemComment class="ParaHeading" style="display:block;">Comment:</span>
+	<span id=valComment style="width:expression(document.body.clientWidth - 130);"></span><br>
+	</span>
+
+	<span class="ParaText" style="display:block;">
+	<span id=elemHobbies class="ParaHeading" style="display:block;">Hobbies:</span>
+	<span id=valHobbies></span><br>
+	</span>
+
+	<span class="ParaText" style="display:block;">
+	<span id=elemBirthday class="ParaHeading" style="display:block;">Birthday:</span>
+	<span id=valBirthday></span><br>
+	</span>
+	<pre>
+	</pre>
+</div>
+
+<div id=htmlFilter style="POSITION:absolute;LEFT:0px;TOP:0px;VISIBILITY:hidden">
+
+</body>
+</html>
+

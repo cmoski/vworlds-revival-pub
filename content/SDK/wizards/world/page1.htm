@@ -1,0 +1,117 @@
+<html>
+<head>
+<link rel=stylesheet href="..\..\..\client\shared\global.css">
+<script language="VBScript">
+
+option explicit
+
+public fMouseClicked
+
+sub window_OnLoad
+	top.page = 1
+	txtWorldName.value = top.worldName
+	txtServer.value = top.worldServerURL
+	txtWorldName.select
+	txtWorldName.focus
+end sub
+
+sub window_OnUnLoad()
+	top.worldName = txtWorldName.value
+	top.worldServerURL = txtServer.value
+end sub
+
+function verify()
+	'Initialize to be true, then if a check fails, set it to false
+	verify = true
+	dim NewWorldName
+	NewWorldName = txtWorldName.Value
+
+	' First, check that world name is filled in
+	if NewWorldName = "" then
+		verify = false
+		msgbox "Enter a name for the world.", vbInformation, "Microsoft Virtual Worlds"
+		txtWorldName.focus
+		exit function
+	' Now check that the WorldName is valid
+	elseif IsObject(top.World) then
+			dim retVal
+			retVal = Top.World.ValidateWorldName(NewWorldName)
+			if retVal = false then
+				verify = false
+				msgbox "A world name can not contain a file extension, a space, a tab, or any of the following characters:" & vbcrlf & " . : ? "" ' < > | & " & vbcrlf & "Also, the sum of the world name length, world path length, and file extension length cannot be more than 256 characters." & vbcrlf &  "Enter a new world name.", vbExclamation, "Microsoft Virtual Worlds"
+				txtWorldName.focus
+				txtWorldName.select
+				exit function
+			end if
+	end if
+
+	' Now do check for valid server name
+	if txtServer.value = "" then
+		verify = false
+		msgbox "Enter a Virtual Worlds server name.", vbInformation, "Microsoft Virtual Worlds"
+		txtServer.focus
+	end if
+end function
+
+sub document_onKeyPress
+	select case window.event.keycode
+	case 27
+		parent.frames(1).OnCancel
+	case 13
+		parent.frames(1).OnNext
+	case Else
+	end select
+end sub
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+Sub document_onmousedown
+	If window.event.srcElement.tagName = "INPUT" Then
+		fMouseClicked = True
+	End If
+End Sub
+
+Sub document_onmouseup
+	fMouseClicked = False
+End Sub
+
+Sub TxtFocus
+	If Not fMouseClicked Then
+		window.event.srcElement.select
+	End If
+End Sub
+
+</script>
+</HEAD>
+<BODY>
+	<div style=position:absolute;left:0;top:0;height:273;width:95;overflow:hidden;>
+		<img src=..\..\..\client\shared\menuclouds.gif>
+	</div>
+	<div class=vH2 style=left:18;top:9;>Enter your world name and server location</div>
+	<div class=vStepBackGround style=left:440;top:1;>=</div>
+	<div class=vStep style=left:452;top:9;>Step 1 of 4</div>
+	<div class=vH1 style=left:178;top:56;>Create a World Wizard</div>
+	<div class=vLabel style=left:20;top:110;>Name of the world:</div>
+	<input id=txtWorldName maxlength=255 class=vInput style=left:135;top:107;width:170; onfocus=TxtFocus>
+	<div class=vLabel style=left:20;top:140;>Server location:</div>
+	<input id=txtServer class=vInput style=left:135;top:137;width:255; onfocus=TxtFocus>
+	<div class=vLabelSmall style=left:135;top:160;width:350;>
+		(To create a world on your local machine you must<br>
+		first start the Microsoft Virtual Worlds Server.)
+	</div>
+	<div class=vLabelSmall style=left:135;top:252;width:350;>
+		Copyright &#169;1998-2000 Microsoft Corporation. All Rights Reserved.<br>
+	</div>
+</BODY>
+</HTML>

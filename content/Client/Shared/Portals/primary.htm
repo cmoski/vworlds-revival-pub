@@ -1,0 +1,100 @@
+<HTML>
+<HEAD>
+<link rel=stylesheet href=../global.css>
+<object id=Helper classid=clsid:7E3832CF-4F4E-11D0-89AB-00A0C9054129></object>
+<script language=vbs>
+
+Public Portal
+
+Set Portal = Helper.Arg
+
+Sub window_onload
+	lblTitle.innerText = Portal.name
+	lblTitle.style.left = (438 - 96 - lblTitle.offsetWidth) / 2 + 96
+	lblTitle.style.visibility = ""
+	fraDesc.document.body.innerText = Portal.Description
+	btnEnter.focus
+End Sub
+
+sub onCancel
+	Helper.closewindow
+end sub
+
+sub onEnter
+	on error resume next
+	Portal.Transport Portal.World.User
+	Helper.CloseWindow
+end sub
+
+Sub document_onmouseover
+	Select Case window.event.srcElement.className
+	Case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	Case Else
+	End Select
+End Sub
+
+Sub document_onmouseout
+	Select Case window.event.srcElement.className
+	Case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	Case Else
+	End Select
+End Sub
+
+Sub document_onkeypress
+	Select Case window.event.keyCode
+	Case 27
+		onCancel
+	Case 13
+		If window.event.srcElement.tagName <> "BUTTON" Then onEnter
+	Case 9
+		window.event.returnValue = False
+		Select Case window.event.srcElement.id
+		Case "btnEnter"
+			If window.event.shiftKey Then
+				fraDesc.document.body.focus
+			Else
+				btnCancel.focus
+			End If
+		Case "btnCancel"
+			If window.event.shiftKey Then
+				btnEnter.focus
+			Else
+				fraDesc.document.body.focus
+			End If
+		Case Else
+			btnEnter.focus
+		End Select
+	Case Else
+	End Select
+End Sub
+
+</script>
+</head>
+<body>
+	<img src=portal.gif style=position:absolute;left:0;top:0;width:96;height:112;>
+	<nobr>
+		<div id=lblTitle class=vH2 style=top:10;left:100;width:1;visibility:hidden;>
+			<script language=vbs>document.write Portal.name</script>
+		</div>
+	</nobr>
+	<iframe frameborder=no
+					id=fraDesc
+					name=fraDesc
+					src=primaryDesc.htm
+					style="height: 50;
+								 left: 114;
+								 position: absolute;
+								 top: 27;
+								 width: 320;
+								">
+	</iframe>
+	<button class=bEnabled id=btnEnter onclick=onEnter style=left:290;top:85;>
+		<span style=position:relative;top:-1;>Enter</span>
+	</button>
+	<button class=bEnabled id=btnCancel onclick=onCancel style=left:360;top:85;>
+		<span style=position:relative;top:-1;>Cancel</span>
+	</button>
+</BODY>
+</HTML>

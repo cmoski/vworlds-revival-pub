@@ -1,0 +1,44 @@
+<html>
+<head>
+<link rel=stylesheet href=..\..\..\..\client\shared\global.css>
+<script language=vbs>
+
+top.newDesc = "Interworld Portal"
+top.newType = "IWPortal"
+top.newFile = "SDK\Library\models\shapes\doorW.x"
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+sub document_onKeyPress
+	select case window.event.keycode
+	case 27
+		top.DoCancel
+	case 13
+		top.DoCreate
+	case else
+	end select
+end sub
+
+</script>
+</head>
+<body class=vBody>
+<div class=vH1 align=center>
+	Interworld Portal
+</div>
+<div class=vLabel Style=top:35;padding-right:5;>
+	Interworld portals are doorways between worlds. These objects can transport avatars between this world and another. You can specify the destination world and the look of this portal.
+	<p>The default appearance of the interworld portal is an open doorway with starry space showing beyond the door.
+</div>
+</body>
+</html>

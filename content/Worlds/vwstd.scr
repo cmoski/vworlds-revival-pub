@@ -1,0 +1,84 @@
+option explicit
+
+'-------------------------------------------------------------------
+' Global objects
+'-------------------------------------------------------------------
+
+' client and world objects
+Dim Client
+Dim World
+
+' initialize
+set Client = Nothing
+set World = Nothing
+
+'-------------------------------------------------------------------
+' sub CreateWorld( filename )
+'
+' Sets up an initial world database
+'
+' Parameters:
+'	filename	File to use for world database
+'-------------------------------------------------------------------
+sub CreateWorld( filename )
+
+	'On Error Resume Next
+
+	' Connect
+	set Client = XObject
+	set World = Client.ConnectLocal(filename)
+
+	' Set the Trace level for diagnostics
+	World.TraceLevel("*") = 4
+
+	World.Trace "Current V-Worlds version is " + World.Version
+
+	World.Trace "Creating System Exemplars..."
+
+	Dim multimediaModule
+	set multimediaModule = World.CreateCOMModule("Multimedia", "VWSYSTEM.MultimediaEx.1", World.MODULE_CLIENT + World.MODULE_SERVER)
+	World.Trace "Done Creating Multimedia"
+
+	Dim studioModule
+	set studioModule = World.CreateCOMModule("Studio", "VWSTUDIO.StudioEx.1", World.MODULE_CLIENT + World.MODULE_SERVER)
+	World.Trace "Done Creating Studio"
+
+	Dim foundationModule
+	set foundationModule = World.CreateCOMModule("Foundation", "VWEXEMP.FoundationExemplars.1", World.MODULE_CLIENT + World.MODULE_SERVER)
+	World.Trace "Done Creating Foundation Exemplars"
+
+	World.Trace "Done setting up world: " + filename
+
+	' setup global object
+	World.Global.DefaultSpriteFile = "default.spr"
+
+	' set avatar exemplar to defaults
+	World.Global.DefaultAvatarExemplar.InitializeSpriteGraphics World.Global.DefaultSpriteFile, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0
+
+	World.Trace "Done setting up global object properties"
+	World.Trace "Done with CreateWorld"
+
+end sub
+
+'-------------------------------------------------------------------
+' sub ConnectToWorld( url )
+'
+' Connects to server world database
+'
+' Parameters:
+'	url		URL to use for world database
+'-------------------------------------------------------------------
+sub ConnectToWorld( url )
+
+	'On Error Resume Next
+
+	' Connect
+	set Client = XObject
+	set World = Client.Connect(url)
+
+	' Set the Trace level for diagnostics
+	World.TraceLevel("*") = 4
+
+	World.Trace "Done connecting to world: " + url
+end sub
+

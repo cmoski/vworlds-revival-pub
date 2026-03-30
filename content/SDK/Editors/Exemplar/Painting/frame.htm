@@ -1,0 +1,61 @@
+<HTML>
+<HEAD>
+<TITLE>Document Title</TITLE>
+
+<SCRIPT LANGUAGE=VBScript>
+sub window_OnLoad
+	parent.page=2
+	parent.buttons.UpdateButtons
+	FrameComboBox.additem "http://vwg/Worlds/godzilla/gw1.gif"
+	FrameComboBox.additem "http://vwg/Worlds/ContentTesting/GamesPlaza/decorlt.gif"
+	FrameComboBox.additem "http://vwg/Worlds/ContentTesting/inventor/gear.gif"
+	FrameComboBox.additem "http://vwg/Worlds/ContentTesting/crossrds/Ccornice.gif"
+	FrameComboBox.additem "http://vwg/Worlds/kathtest/thinblak.gif"
+
+	frame1rep.src = parent.FrameSelection
+	frame2rep.src = parent.FrameSelection
+	frame3rep.src = parent.FrameSelection
+
+	FrameComboBox.value = parent.FrameSelection
+
+end sub
+
+sub window_OnUnload
+	parent.UpdateFrame
+end sub
+</SCRIPT>
+
+</HEAD>
+<BODY>
+<CENTER>
+<H1>
+Choose a new frame!
+</H1>
+Type in a URL, or choose from the list.<br><br>
+<OBJECT ID="FrameComboBox" WIDTH=350 HEIGHT=24
+ CLASSID="CLSID:8BD21D30-EC42-11CE-9E0D-00AA006002F3">
+    <PARAM NAME="VariousPropertyBits" VALUE="746604571">
+    <PARAM NAME="MaxLength" VALUE="150">
+    <PARAM NAME="DisplayStyle" VALUE="3">
+    <PARAM NAME="Size" VALUE="6456;635">
+    <PARAM NAME="MatchEntry" VALUE="1">
+    <PARAM NAME="ShowDropButtonWhen" VALUE="2">
+    <PARAM NAME="Value" VALUE="Pick from the list, or type in a new URL">
+    <PARAM NAME="FontCharSet" VALUE="0">
+    <PARAM NAME="FontPitchAndFamily" VALUE="2">
+    <PARAM NAME="FontWeight" VALUE="0">
+</OBJECT>
+
+<BR><br>
+<INPUT TYPE=button NAME=BtnUpdateFrame VALUE="Preview frame" onclick="parent.UpdateFrame">
+<BR><BR><BR><BR><BR>
+
+<TABLE HEIGHT=64 WIDTH=192 STYLE:"z-index:0" CELLPADDING=0 CELLSPACING=0><TR>
+<TD><IMG SRC="frame1.gif" ID="frame1rep" WIDTH=64 HEIGHT=64></TD>
+<TD><IMG SRC="frame1.gif" ID="frame2rep" WIDTH=64 HEIGHT=64></TD>
+<TD><IMG SRC="frame1.gif" ID="frame3rep" WIDTH=64 HEIGHT=64></TD>
+</TR></TABLE>
+<IMAGE STYLE="position: relative; top:-134px; left:16px; z-index:2" SRC="magnify.gif" ID="magnifier" HEIGHT=277 WIDTH=260>
+</CENTER>
+</BODY>
+</HTML>

@@ -1,0 +1,37 @@
+option explicit
+
+
+sub make_lesson_1 (lesson_1_graphics)
+	set lesson_1_graphics = world.createInstance("lesson_1","artifact")
+	lesson_1_graphics.initializegraphics "" , -8 , -200 , 8 , 0,0,1
+	world.global.addproperty "lesson_1" , lesson_1_graphics
+	lesson_1_graphics.moveinto home
+	lesson_1_graphics.IsNoticeable = true
+	lesson_1_graphics.description = "a scripting tutorial object"
+	
+	dim butterfly2
+	set butterfly2 = world.createInstance("blue_planet","artifact")
+	butterfly2.initializegraphics "SDK\library\models\_ScriptTutorial\blue_planet.3DS" , 1.3 , 0 , 0 , 0,0,1
+ 	dim mvec
+	set mvec = world.createvector(.5,.5,.5)
+	butterfly2.scale = mvec
+	butterfly2.moveinto lesson_1_graphics
+	butterfly2.renderquality = 1
+	butterfly2.IsNoticeable = true
+	
+	dim butterfly1
+	set butterfly1 = world.createInstance("yellow_planet","artifact")
+	butterfly1.initializegraphics "SDK\library\models\_ScriptTutorial\yellow_planet.3DS" , -1.3 , 0 , 0 , 0,0,1
+	butterfly1.scale = mvec
+	butterfly1.moveinto lesson_1_graphics
+	butterfly1.renderquality = 1
+	butterfly1.IsNoticeable = true
+	
+	dim butterfly3
+	set butterfly3 = world.createInstance("silver_planet","artifact")
+	butterfly3.initializegraphics "SDK\library\models\_ScriptTutorial\silver_planet.3DS" , 0 , .3 , 0 , 0,0,1
+	butterfly3.scale = mvec
+	butterfly3.moveinto lesson_1_graphics
+	butterfly3.renderquality = 1
+	butterfly3.IsNoticeable = true
+end sub

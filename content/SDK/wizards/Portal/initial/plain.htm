@@ -1,0 +1,134 @@
+<html>
+<head>
+<LINK Rel=Stylesheet href="..\..\..\..\shared\global.css">
+</head>
+<body topmargin=8 leftmargin=24 bgcolor="F4F4E8">
+<object id="elements" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83" width="0"
+height="0">
+  <param name="DataURL" value="plain.csv">
+  <param name="UseHeader" value="True">
+  <param name="TextQualifier" value="'">
+</object>
+<script language="VBSCRIPT">
+Dim MotionType
+MotionType = "Plain"
+dim rs
+dim ready
+
+ready = false
+
+sub elements_ondatasetcomplete
+	set rs = elements.recordset
+	fillin_select
+end sub
+
+function verify()
+	verify = ready
+end function
+
+sub fillin_select()
+	dim el
+
+	rs.MoveFirst
+	' interate on world templates
+	Do Until rs.EOF
+			set el = document.CreateElement("OPTION")
+			el.value = rs.Fields(0).value
+			el.text = rs.Fields(0).value
+			stylechoice.add el
+			rs.MoveNext
+	Loop
+
+	roomtitle.innerText = MotionType + " " + top.frames(0).ObjectType
+	stylechoice.SelectedIndex = top.frames(0).SelectedStyleIndex
+	choseName
+end sub
+
+sub choseName()
+	dim selected
+	selected = stylechoice.selectedIndex
+	
+	rs.MoveFirst
+	rs.Move selected
+	ready = true
+
+	top.frames(0).StyleType = rs.fields(0)
+end sub
+
+sub Finish()
+	if verify then
+		BuildPortal
+	end if
+end sub
+
+'---------------------------------------
+' BuildPortal
+' Uses:	NewPortalName, NewPortalDesc
+sub BuildPortal()
+	Dim client
+	Dim world
+	Dim user
+	Dim currentRoom
+	Dim newRoom
+
+	Dim newRoomName
+	Dim NewPortalName
+	Dim NewPortalDesc
+	Dim NewPortalBack
+	Dim NewPortalBackDesc
+
+	Dim p_curr_new
+	Dim p_new_curr
+
+	set client =  top.frames(0).helper.client
+	set world = client.world
+	set user = world.user
+	set currentRoom = user.container
+
+	NewRoomName = top.frames(0).NewRoomName
+	NewPortalName = top.frames(0).NewPortalName
+	NewPortalDesc = top.frames(0).NewPortalDesc
+	set newRoom = World.Global.Rooms.Property(NewRoomName)
+
+	set p_curr_new = World.CreateInstance(NewPortalName, "Portal")
+	set p_new_curr = World.CreateInstance("Back To " & NewPortalName, "Portal")
+
+	Select Case top.frames(0).StyleType
+		case "Plain"
+			p_curr_new.InitializeGraphics "shared\arch.x", 0.0, 0.0, 0.0, -1.0, 0.0, 0.0
+	End Select
+	p_curr_new.PrimaryDestination = p_new_curr
+	p_curr_new.EntryPoint = World.Global.CreateVector(0.0, 1.0, 0.0)
+	p_curr_new.EntryOrientation = World.Global.CreateVector(1.0, 0.0, 0.0)
+	p_curr_new.AddProperty "HTMLFile", ""
+	p_curr_new.MoveInto currentRoom
+
+	Select Case top.frames(0).StyleType
+		case "Plain"
+			p_new_curr.InitializeGraphics "shared\arch.x", 0.0, 0.0, 0.0, 1.0, 0.0, 0.0
+	End Select
+	p_new_curr.PrimaryDestination = p_curr_new
+	p_new_curr.AddProperty "HTMLFile", ""
+	p_new_curr.MoveInto newRoom
+
+	top.frames(0).helper.closewindow
+end sub
+
+</script>
+<div class=vworld align=center id="roomtitle"></div>
+<table width = 100% border=0>
+<tr>
+<td valign=top><div class="vinput1" style="top:45">Styles:</div><nobr>
+<select name="stylechoice" class="vinput1"
+        id="stylechoice" type="textarea" size="7" onchange="choseName" style="width:100">
+        </select>
+</td>
+<td ><div id="info" name="info" datafld="gifInfo" class="vinput1" datasrc="#elements"></div>
+<img datafld="previewGIF" datasrc="#elements" name="preview" id="preview"></img>
+</td>
+</tr>
+<tr><td colspan=2><div class=vworld2>Description of Plain Portal:</div></td></tr>
+<tr><td colspan="2"><div id="blah" name="blah" class=vinput1 datafld="description" datasrc="#elements"></div></td></tr>
+</table>
+</body>
+</html>

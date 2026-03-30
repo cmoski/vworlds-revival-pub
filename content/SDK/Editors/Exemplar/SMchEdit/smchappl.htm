@@ -1,0 +1,62 @@
+<HTML>
+<TITLE>Select One</TITLE>
+<STYLE>
+	INPUT {font: bold 8pt MS Sans Serif; position: relative; top: 2px}
+</STYLE>
+<BODY BGCOLOR="ACTIVEBORDER">
+
+<OBJECT id="Helper" classid="clsid:7E3832CF-4F4E-11D0-89AB-00A0C9054129"
+		border="0" width="0" height="0">
+</OBJECT>
+
+<CENTER>
+<INPUT TYPE="BUTTON" STYLE="{width: 110}" VALUE="Add Say" ONCLICK="VBScript:SelectSay"><BR>
+<INPUT TYPE="BUTTON" STYLE="{width: 110}" VALUE="Add Move" ONCLICK="VBScript:SelectMove"><BR>
+<INPUT TYPE="BUTTON" STYLE="{width: 110}" VALUE="Add Set State" ONCLICK="VBScript:SelectSetState">
+<INPUT TYPE="BUTTON" STYLE="{width: 110}" VALUE="Add Do Gesture" ONCLICK="VBScript:SelectDoGesture">
+<INPUT TYPE="BUTTON" STYLE="{width: 110}" VALUE="Add Show HTML" ONCLICK="VBScript:SelectShowHTML">
+<INPUT TYPE="BUTTON" STYLE="{width: 110}" VALUE="Add Show URL" ONCLICK="VBScript:SelectShowURL">
+</CENTER>
+
+<SCRIPT LANGUAGE="VBScript">
+
+sub SelectSay
+	Helper.arg.DoAppendTemplate "' Have the state machine says something" & vbNewline & _
+								"this.Say ""what to say"""
+	helper.closewindow
+end sub
+
+sub SelectMove
+	Helper.arg.DoAppendTemplate "' Move to the (x, y, z) coordinates given" & vbNewline & _
+								"' Then generate an OnActionDone event" & vbNewLine & _
+								"this.MoveTo 0.0, 0.0, 0.0, this"
+	helper.closewindow
+end sub
+
+sub SelectSetState
+	Helper.arg.DoAppendTemplate "' Put the state machine into a new state" & vbNewline & _
+								"this.SetState ""new state"""
+	helper.closewindow
+end sub
+
+sub SelectDoGesture
+	Helper.arg.DoAppendTemplate "' Perform an SPR file gesture" & vbNewline & _
+								"this.DoGesture 1"
+	helper.closewindow
+end sub
+
+sub SelectShowHTML
+	Helper.arg.DoAppendTemplate "' Display some DHTML in a pop-up window" & vbNewline & _
+								"this.ShowHTML ""Window Title"", ""<H1>The HTML</H1>"""
+	helper.closewindow
+end sub
+
+sub SelectShowURL
+	Helper.arg.DoAppendTemplate "' Display a URL in a pop-up window" & vbNewline & _
+								"this.ShowURL ""Window Title"", ""http://www.microsoft.com"""
+	helper.closewindow
+end sub
+
+</SCRIPT>
+</BODY>
+</HTML>

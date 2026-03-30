@@ -1,0 +1,2 @@
+style_name:STRING,description:STRING,previewGIF:STRING,gifInfo:STRING,geometry:STRING
+'Plain','This is a Plain Portal, with a simple, unchanging graphic.','plain.gif','View of plain portal:','plazas\commons\hotelp.3ds'

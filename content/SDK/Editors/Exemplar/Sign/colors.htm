@@ -1,0 +1,302 @@
+<HTML>
+<HEAD>
+<TITLE>Document Title</TITLE>
+
+<SCRIPT LANGUAGE=VBScript>
+sub window_OnLoad
+	parent.page=2
+	parent.buttons.UpdateButtons
+
+	SampleStuff.style.fontsize = Cstr(parent.PointSizeSelection) + "pt"
+	if parent.ShadowSelection = True then
+		SampleStuff.style.filter = "dropshadow(Color=#000000, OffX=1, OffY=1, Positive=1, enabled=1)"
+	else
+		SampleStuff.style.filter = ""
+	end if
+	SampleStuff.style.color = parent.FontColorSelection
+	SampleTable.bgcolor = parent.BGColorSelection
+
+	RedScroll.Value = parent.FontRSelection
+	GreenScroll.Value = parent.FontGSelection
+	BlueScroll.Value = parent.FontBSelection
+	BGRedScroll.Value = parent.BGRSelection
+	BGGreenScroll.Value = parent.BGGSelection
+	BGBlueScroll.Value = parent.BGBSelection
+	UpdateFontVals
+	UpdateBGVals
+end sub
+
+sub window_OnUnload
+	parent.UpdateColors
+end sub
+
+Sub RedScroll_Change()
+   RedDec.Text=RedScroll.Value
+   UpdateFontVals
+End Sub
+
+Sub GreenScroll_Change()
+   GreenDec.Text=GreenScroll.Value
+   UpdateFontVals
+End Sub
+
+Sub BlueScroll_Change()
+   BlueDec.Text=BlueScroll.Value
+   UpdateFontVals
+End Sub
+
+Sub RedDec_Change()
+   RedScroll.Value=RedDec.Text
+   UpdateFontVals
+End Sub
+
+Sub GreenDec_Change()
+   GreenScroll.Value=GreenDec.Text
+   UpdateFontVals
+End Sub
+
+Sub BlueDec_Change()
+   BlueScroll.Value=BlueDec.Text
+   UpdateFontVals
+End Sub
+
+Sub BGRedScroll_Change()
+   BGRedDec.Text=BGRedScroll.Value
+   UpdateBGVals
+End Sub
+
+Sub BGGreenScroll_Change()
+   BGGreenDec.Text=BGGreenScroll.Value
+   UpdateBGVals
+End Sub
+
+Sub BGBlueScroll_Change()
+   BGBlueDec.Text=BGBlueScroll.Value
+   UpdateBGVals
+End Sub
+
+Sub BGRedDec_Change()
+   BGRedScroll.Value=BGRedDec.Text
+   UpdateBGVals
+End Sub
+
+Sub BGGreenDec_Change()
+   BGGreenScroll.Value=BGGreenDec.Text
+   UpdateBGVals
+End Sub
+
+Sub BGBlueDec_Change()
+   BGBlueScroll.Value=BGBlueDec.Text
+   UpdateBGVals
+End Sub
+
+Sub UpdateFontVals
+   ColorTextBox.Backcolor = RGB(RedScroll.Value, GreenScroll.Value, BlueScroll.Value)
+End Sub
+
+Sub UpdateBGVals
+   BGColorTextBox.Backcolor = RGB(BGRedScroll.Value, BGGreenScroll.Value, BGBlueScroll.Value)
+End Sub
+
+sub window_OnUnload
+	parent.UpdateColors
+end sub
+
+</SCRIPT>
+
+</HEAD>
+<BODY>
+<B>Step 2: Choose a text color:</B><BR><BR>
+
+<CENTER>
+<TABLE BORDER=0 CELLSPACING=0>
+<TR><TD colspan=2 align=right height=28>
+Red &nbsp; &nbsp;&nbsp;
+<OBJECT ID="RedScroll" WIDTH=171 HEIGHT=21 ALIGN=CENTER
+ CODEBASE="http://activex.microsoft.com/controls/mspert10.cab" 
+ CLASSID="CLSID:DFD181E0-5E2F-11CE-A449-00AA004A803D">
+    <PARAM NAME="Size" VALUE="4516;564">
+    <PARAM NAME="Max" VALUE="255">
+    <PARAM NAME="LargeChange" VALUE="51">
+    <PARAM NAME="Orientation" VALUE="1">
+</OBJECT>
+</TD>
+<TD>
+<OBJECT ID="RedDec" WIDTH=41 HEIGHT=21
+  CODEBASE="http://activex.microsoft.com/controls/mspert10.cab"
+  CLASSID="CLSID:8BD21D10-EC42-11CE-9E0D-00AA006002F3">
+    <PARAM NAME="VariousPropertyBits" VALUE="679495707">
+    <PARAM NAME="Size" VALUE="1094;564">
+    <PARAM NAME="Value" VALUE="0">
+    <PARAM NAME="FontCharSet" VALUE="0">
+    <PARAM NAME="FontPitchAndFamily" VALUE="2">
+    <PARAM NAME="FontWeight" VALUE="0">
+</OBJECT>
+</TD>
+<TD ROWSPAN=3>
+<OBJECT ID="ColorTextBox" WIDTH=30 HEIGHT=79
+  CODEBASE="http://activex.microsoft.com/controls/mspert10.cab"
+  CLASSID="CLSID:8BD21D10-EC42-11CE-9E0D-00AA006002F3">
+    <PARAM NAME="VariousPropertyBits" VALUE="746604571">
+    <PARAM NAME="Size" VALUE="2505;2081">
+    <PARAM NAME="FontCharSet" VALUE="0">
+    <PARAM NAME="FontPitchAndFamily" VALUE="2">
+    <PARAM NAME="FontWeight" VALUE="0">
+</OBJECT>
+</TD></TR>
+<TR><TD colspan=2 align=right height=28>
+Green  &nbsp; &nbsp;&nbsp;
+<OBJECT ID="GreenScroll" WIDTH=171 HEIGHT=21 ALIGN=CENTER
+  CODEBASE="http://activex.microsoft.com/controls/mspert10.cab"
+CLASSID="CLSID:DFD181E0-5E2F-11CE-A449-00AA004A803D">
+    <PARAM NAME="Size" VALUE="4516;564">
+    <PARAM NAME="Max" VALUE="255">
+    <PARAM NAME="LargeChange" VALUE="51">
+    <PARAM NAME="Orientation" VALUE="1">
+</OBJECT>
+</TD>
+<TD>
+<OBJECT ID="GreenDec" WIDTH=41 HEIGHT=21
+  CODEBASE="http://activex.microsoft.com/controls/mspert10.cab"
+CLASSID="CLSID:8BD21D10-EC42-11CE-9E0D-00AA006002F3">
+    <PARAM NAME="VariousPropertyBits" VALUE="679495707">
+    <PARAM NAME="Size" VALUE="1094;564">
+    <PARAM NAME="Value" VALUE="0">
+    <PARAM NAME="FontCharSet" VALUE="0">
+    <PARAM NAME="FontPitchAndFamily" VALUE="2">
+    <PARAM NAME="FontWeight" VALUE="0">
+</OBJECT>
+</TD>
+<TD>
+</TD></TR>
+<TR><TD colspan=2 align=right height=28>
+Blue  &nbsp; &nbsp;&nbsp;
+<OBJECT ID="BlueScroll" WIDTH=171 HEIGHT=21 ALIGN=CENTER
+  CODEBASE="http://activex.microsoft.com/controls/mspert10.cab"
+CLASSID="CLSID:DFD181E0-5E2F-11CE-A449-00AA004A803D">
+    <PARAM NAME="Size" VALUE="4516;564">
+    <PARAM NAME="Max" VALUE="255">
+    <PARAM NAME="LargeChange" VALUE="51">
+    <PARAM NAME="Orientation" VALUE="1">
+</OBJECT>
+</TD>
+<TD>
+<OBJECT ID="BlueDec" WIDTH=41 HEIGHT=21
+  CODEBASE="http://activex.microsoft.com/controls/mspert10.cab"
+  CLASSID="CLSID:8BD21D10-EC42-11CE-9E0D-00AA006002F3">
+    <PARAM NAME="VariousPropertyBits" VALUE="679495707">
+    <PARAM NAME="Size" VALUE="1094;564">
+    <PARAM NAME="Value" VALUE="0">
+    <PARAM NAME="FontCharSet" VALUE="0">
+    <PARAM NAME="FontPitchAndFamily" VALUE="2">
+    <PARAM NAME="FontWeight" VALUE="0">
+</OBJECT>
+</TD>
+<TD>
+</TD></TR>
+</TABLE>
+<BR>
+<BR>
+</CENTER>
+<B>Step 3: Choose a background color:</B><BR><BR>
+
+<CENTER>
+<TABLE BORDER=0 CELLSPACING=0>
+<TR><TD colspan=2 align=right height=28>
+Red &nbsp; &nbsp;&nbsp;
+<OBJECT ID="BGRedScroll" WIDTH=171 HEIGHT=21 ALIGN=CENTER
+ CODEBASE="http://activex.microsoft.com/controls/mspert10.cab" 
+ CLASSID="CLSID:DFD181E0-5E2F-11CE-A449-00AA004A803D">
+    <PARAM NAME="Size" VALUE="4516;564">
+    <PARAM NAME="Max" VALUE="255">
+    <PARAM NAME="LargeChange" VALUE="51">
+    <PARAM NAME="Orientation" VALUE="1">
+</OBJECT>
+</TD>
+<TD>
+<OBJECT ID="BGRedDec" WIDTH=41 HEIGHT=21
+  CODEBASE="http://activex.microsoft.com/controls/mspert10.cab"
+  CLASSID="CLSID:8BD21D10-EC42-11CE-9E0D-00AA006002F3">
+    <PARAM NAME="VariousPropertyBits" VALUE="679495707">
+    <PARAM NAME="Size" VALUE="1094;564">
+    <PARAM NAME="Value" VALUE="0">
+    <PARAM NAME="FontCharSet" VALUE="0">
+    <PARAM NAME="FontPitchAndFamily" VALUE="2">
+    <PARAM NAME="FontWeight" VALUE="0">
+</OBJECT>
+</TD>
+<TD ROWSPAN=3>
+<OBJECT ID="BGColorTextBox" WIDTH=30 HEIGHT=79
+  CODEBASE="http://activex.microsoft.com/controls/mspert10.cab"
+  CLASSID="CLSID:8BD21D10-EC42-11CE-9E0D-00AA006002F3">
+    <PARAM NAME="VariousPropertyBits" VALUE="746604571">
+    <PARAM NAME="Size" VALUE="2505;2081">
+    <PARAM NAME="FontCharSet" VALUE="0">
+    <PARAM NAME="FontPitchAndFamily" VALUE="2">
+    <PARAM NAME="FontWeight" VALUE="0">
+</OBJECT>
+</TD></TR>
+<TR><TD colspan=2 align=right height=28>
+Green  &nbsp; &nbsp;&nbsp;
+<OBJECT ID="BGGreenScroll" WIDTH=171 HEIGHT=21 ALIGN=CENTER
+  CODEBASE="http://activex.microsoft.com/controls/mspert10.cab"
+CLASSID="CLSID:DFD181E0-5E2F-11CE-A449-00AA004A803D">
+    <PARAM NAME="Size" VALUE="4516;564">
+    <PARAM NAME="Max" VALUE="255">
+    <PARAM NAME="LargeChange" VALUE="51">
+    <PARAM NAME="Orientation" VALUE="1">
+</OBJECT>
+</TD>
+<TD>
+<OBJECT ID="BGGreenDec" WIDTH=41 HEIGHT=21
+  CODEBASE="http://activex.microsoft.com/controls/mspert10.cab"
+CLASSID="CLSID:8BD21D10-EC42-11CE-9E0D-00AA006002F3">
+    <PARAM NAME="VariousPropertyBits" VALUE="679495707">
+    <PARAM NAME="Size" VALUE="1094;564">
+    <PARAM NAME="Value" VALUE="0">
+    <PARAM NAME="FontCharSet" VALUE="0">
+    <PARAM NAME="FontPitchAndFamily" VALUE="2">
+    <PARAM NAME="FontWeight" VALUE="0">
+</OBJECT>
+</TD>
+<TD>
+</TD></TR>
+<TR><TD colspan=2 align=right height=28>
+Blue  &nbsp; &nbsp;&nbsp;
+<OBJECT ID="BGBlueScroll" WIDTH=171 HEIGHT=21 ALIGN=CENTER
+  CODEBASE="http://activex.microsoft.com/controls/mspert10.cab"
+CLASSID="CLSID:DFD181E0-5E2F-11CE-A449-00AA004A803D">
+    <PARAM NAME="Size" VALUE="4516;564">
+    <PARAM NAME="Max" VALUE="255">
+    <PARAM NAME="LargeChange" VALUE="51">
+    <PARAM NAME="Orientation" VALUE="1">
+</OBJECT>
+</TD>
+<TD>
+<OBJECT ID="BGBlueDec" WIDTH=41 HEIGHT=21
+  CODEBASE="http://activex.microsoft.com/controls/mspert10.cab"
+  CLASSID="CLSID:8BD21D10-EC42-11CE-9E0D-00AA006002F3">
+    <PARAM NAME="VariousPropertyBits" VALUE="679495707">
+    <PARAM NAME="Size" VALUE="1094;564">
+    <PARAM NAME="Value" VALUE="0">
+    <PARAM NAME="FontCharSet" VALUE="0">
+    <PARAM NAME="FontPitchAndFamily" VALUE="2">
+    <PARAM NAME="FontWeight" VALUE="0">
+</OBJECT>
+</TD>
+<TD>
+</TD></TR>
+</TABLE>
+<BR>
+<INPUT TYPE=button NAME=BtnUpdateColors VALUE="Preview sample sign" onclick="parent.UpdateColors">
+<BR><BR>
+
+<TABLE ID="SampleTable" BORDER=0 BGCOLOR=000000><TR><TD ALIGN=CENTER VALIGN=MIDDLE>
+<DIV ID="SampleStuff" style="color:#FFFFFF; font-weight:bold; font-size:40pt; filter:dropshadow(Color=#000000, OffX=1, OffY=1, Positive=1, enabled=1); width:90; height:5">
+AaBbCcDd
+</DIV>
+</TD></TR></TABLE>
+</CENTER>
+
+</BODY>
+</HTML>

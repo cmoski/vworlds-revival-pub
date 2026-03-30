@@ -1,0 +1,782 @@
+<html>
+<head>
+<TITLE>VWorlds Dynamic Questionnaire Sample</TITLE>
+
+<!--
+This is the VWorlds Client object. Its purpose is to connect us to the VWorlds server,
+maintain the local copy of world data, and handle events sent by the server.
+-->
+<object id=theclient name="theclient" classid="clsid:D4898803-20EF-11D0-8A96-00A0C9082583" VIEWASTEXT></object>
+
+<!-- Styles for different elements of the questionnaire -->
+<STYLE>
+BODY		{ font-family:Tahoma;font-size:8pt;font-weight:normal;background-color:lightCyan; }
+.mainhead	{ font-weight:bold;font-size:16pt;font-style:italic;color:SlateBlue; }
+.subhead	{ font-size:10pt;font-weight:bold;color:white;background-color:indigo;line-height:20px;padding-left:5px; }
+.subhead2	{ font-size:8pt;font-weight:normal;color:white;background-color:indigo;line-height:20px;padding-left:5px; }
+.subhead3	{ font-size:8pt;font-weight:bold;color:white;background-color:indigo;line-height:20px;padding-left:5px; }
+.question	{ position:relative;height:20px;color:black;line-height:18px;padding-left:5px; }
+.answer		{ position:relative;height:20px;color:black;line-height:18px; }
+.userName	{ position:relative;height:14px;color:black	;font-weight:bold;line-height:16px; }
+.smallText	{ font-family:Tahoma;font-size:8pt;font-weight:normal;color:black;background-color:white;
+				border:1px solid black;overflow-y:scroll;padding-left:3px; }
+.txtEntry	{ font-family:Tahoma;font-size:8pt;font-weight:normal;color:black;background-color:white;
+				border:1px solid black;padding-left:5px; }
+.chkAnswer	{ color:black; }
+.btnText	{ font-family:Tahoma;font-size:9pt;font-weight:bold;color:black;text-align:center; }
+</STYLE>
+
+<SCRIPT LANGUAGE="VBScript">
+
+'=================================================================================
+'
+' Name: DQclient.htm
+' Purpose: Dynamic Questionnaire Sample client.
+' 
+' Loaded by DQwizard.htm right after the world is created,
+' and by DQlogin.htm when a user connects to the world. 
+'	
+' This page is made up of several sections:
+'	
+' 	Header:		the topic of the questionnaire
+'
+' 	Questions:	a list of questions with a count of how many answers have been checked for each.
+'
+' 	Answers:	a list of the answers to the currently selected question, with a count of how
+' 				many times each answer has been checked and a percentage for each.
+'
+' 	Chat:		a text entry box, history window and user list providing basic chat functions.
+'
+' The page requires 2 parameters in the search string of the URL:
+'
+' 	1) the world location (serverName/worldName)
+' 	2) the avatar name
+'
+' The first thing this page does is connect to the world and set 2 globals, which are objects:
+'
+'	world	the world to which the client is connected.
+'	user	the current user's avatar.
+'	
+' The dynamic questionnaire world contains Avatar, Question and Answer objects. 
+' Each Question object has a property list called "AnswerList" containing pointers to 
+' Answer objects that apply to that Question. 
+' Each Answer object has a pointer to the Question object it applies to, and a property list 
+' called "ChosenByList" containing pointers to Avatars that have checked off that Answer.
+' Question objects have an IsDeleted property (true/false) that is initially false.
+'
+' Generally the way a VWorlds client page works is as follows:
+' 1. The user's actions on the web page run script code on the page that calls methods on objects
+' in the world or modifies their data in some way. This is accomplished through the VWClient object
+' embedded in this page. 
+' 2. The VWClient object sends property changes to the VWorlds server, which remotes the changes 
+' to all connected client objects.
+' 3. Every client object (every user logged into the world) then updates its local copy of the
+' world data, and fires any client-side OnPropertyChanged methods that exist on the objects whose
+' data has changed. 
+' 4. The OnPropertyChanged methods can fire UI events which send data to the web page that
+' contains the client object.
+' 5. The UI events are received by the client object's OnUIEvent handler on the page, 
+' which can then update the page content using DHTML.
+'
+' In this sample client page the user interacts with the world by adding and deleting questions 
+' and answers, by checking and un-checking answers, and by chatting.
+' Two DIV blocks (divQuestions and divAnswers) display information about Question objects in the
+' world, and about the Answer objects in the currently selected Question object's AnswerList.
+' Adding a question creates a new Question object in the world. 
+' Adding an answer creates an Answer object in the world and adds it to the currently selected
+' Question object's AnswerList.
+' Checking an answer adds a pointer to the user's Avatar to that Answer object's ChosenByList;
+' un-checking the answer removes the Avatar pointer from that Answer object's ChosenByList.
+' Deleting a Question sets the IsDeleted property = True on the Question object.
+'
+' When a Question or Answer is created and moved into the same room (container) as the user's Avatar,
+' the VWorlds client object fires a UI event called "OnContentEnter". 
+' This event has one parameter: the Question or Answer object entering the room.
+' The client object's OnUIEvent sub (see below) handles this event by checking the type of object
+' that entered the room and updating the content on the page.
+'
+' The chat section uses built-in methods "Say" and "Emote" to send text strings from avatar objects
+' to all clients. The Say method is used to send user-entered chat text; the Emote method is used to
+' send status messages when a user connects or disconnects. The Say and Emote methods both fire a
+' built-in "OnTell" UI event to pass the message as a text string to the client object. The client 
+' object's OnUIEvent sub handles the OnTell event by displaying the text in the chat history.
+'
+' When a user connects or disconnects, the VWorlds client object fires UI events "OnEnterWorld" and
+' "OnLeaveWorld". These are handled by the client object's OnUIEvent sub, which updates the user list
+' and displays a message in the chat history.
+'
+' If the "Show Events" checkbox is checked, the ShowEvent sub displays a chat message for every UI
+' event. This feature can be used to better understand what is going on internally in this sample.
+
+
+option explicit
+
+dim world				' the world object to which the client is connected
+dim userAvatar			' the user's avatar object
+dim currentQuestion		' the question currently selected
+dim bShowEvents			' set by the Show Events checkbox; if true then display UI events in chat 
+
+' initially do not display UI events in chat
+bShowEvents = false
+
+dim defaultChatText		' default value for chat text entry field 
+
+CONST colorBkgHigh = "lightCyan"	' background color for highlighting the current question
+CONST colorBkgNormal = "white"		' normal background color for questions
+
+' values of the mode parameter for the "OnTell" event; these are VWorlds values
+CONST modeSay = 0
+CONST modeEmote = 1
+
+sub window_onLoad
+	' This sub is called after all the HTML for the page has been rendered
+
+	' Get the world name and user avatar name from the URL of this page
+	dim strWorldLocation, strAvatarname
+	getConnectionParameters strWorldLocation, strAvatarname
+	' Connect the VWorlds client to the specified world; if successfull this returns a pointer to the World object
+	on error resume next
+	set World = window.theclient.VWClient.Connect(strWorldLocation)
+	' Note: Since this sample consists of one web page, we can Connect to the world in window_OnLoad.
+	' However, if we were using multiple pages in frames or iframes we might want to connect inline
+	' (i.e. using code within a SCRIPT block but outside of any sub). This is because the window_OnLoad 
+	' subs of the individual frame pages would execute BEFORE this one, which would cause problems
+	' if code in those frames tried to access the world before the client was connected.
+
+	dim password
+	if err.number = 0 then
+		' Log the user into the world using the specified avatar name;
+		' if successful, this returns a pointer to the user's avatar object in the world
+		password = ""		' in this sample world we are not using passwords
+		set userAvatar = World.Connect(strAvatarname, password)
+	end if
+	if err.number = 0 then
+	else
+		handleClientError err.number, err.description
+		err.clear
+		document.location = "DQLogin.htm"
+	end if
+end sub
+
+sub getConnectionParameters (strWorldLocation, strAvatarname)
+	' Get world location and avatar name from the URL search string (the part of the URL following "?")
+	dim args
+	args = split(mid(document.location.search,2,255), "&")
+	if uBound(args) < 1 then
+		msgbox "Missing world location or username parameter; cannot connect to world"
+		strWorldLocation = " "
+		strAvatarname = " "
+	else
+		' if the world name and avatar name contain blanks, they will have been converted to "%20"
+		' when passed as parameters in the URL, and must be converted back to normal blanks.
+		strWorldLocation = replace(args(0), "%20", " ")
+		strAvatarname = replace(args(1), "%20", " ")
+	end if
+end sub
+
+sub handleClientError (errNum, errDescription)
+	select case errNum
+		case 0
+		case -2147219965
+			' this error indicates that the world we tried to connect to does not exist
+			msgbox "World does not exist; please choose another world location"
+		case else
+			' an unexpected error occurred
+			msgbox "Error " & errNum & ": " & errDescription
+	end select
+end sub
+
+sub initializePage
+	' Display the page content
+	
+	' make sure this world is a dynamic questionnaire world; it should have an IsDQWorld property
+	if world.WorldDescription = "Dynamic Questionnaire World" then
+
+		' display a connection message in the chat history
+		insertChatMsg userAvatar, "(you) connected to world <b>" & world.WorldName & "</b>", modeEmote
+
+		' Display the questionnaire topic, which is a property of the world
+		txtTopic.innerHTML = world.Topic
+
+		' insert default text into the chat text entry field;
+		' this default value is defined as a var so the code can check if the field contains it later
+		defaultChatText = "To speak, type here and press [Enter] "
+
+		txtChatEntry.value = defaultChatText
+
+		' Display all Question objects by iterating the contents of the user's container,
+		' which will be the Room the questions and answers are in.
+		btnDeleteQuestion.disabled = true
+		btnAddAnswer.disabled = true
+		dim vwObject
+		for each vwObject in userAvatar.container.contents
+			if vwObject.type = "Question" then showQuestion vwObject
+		next
+		' If there are any questions, select the first question (and display its answers)
+		if divQuestions.children.length > 0 then
+			pickQuestion divQuestions.firstChild
+		end if
+
+		' The chat section displays a list of connected users. We empty this list and reload it 
+		' by calling HandleAvatarEnterWorld for each avatar currently connected to the world.
+		' (HandleAvatarEnterWorld is also called by theClient_OnUIEvent when an OnEnterWorld event 
+		' occurs, which happens when an avatar enters the world, dynamically updating the user list.)
+		' An avatar object remains in the room even after the avatar's user disconnects from the world.
+		' A room has a property list called Avatars that contains a list of avatars that are in the 
+		' room's contents. To distinguish between avatars whose users are connected and those that 
+		' are not, we check each avatar's IsConnected property, which is only defined for avatars 
+		' whose users are connected at that moment.
+		dim avatar, element
+		for each element in divUserList.children
+			element.removeNode true
+		next
+		for each avatar in userAvatar.container.avatars
+			if avatar.isValidProperty("isConnected") then
+				' add an entry to the user display (see sub HandleAvatarEnterWorld below)
+				HandleAvatarEnterWorld avatar
+			end if
+		next
+	else
+		msgbox World.WorldName & " is not a Dynamic Questionnaire world; cannot use this page to view this world."
+		window.navigate ("DQLogin.htm")
+	end if
+
+end sub
+
+sub showQuestion (question)
+	' Add a question to divQuestions. To identify HTML elements for each question we use
+	' the question.id (the question object's internal VWorlds object id number).
+	' For the question text we create a DIV element with id = "question" + question.id;
+	' for the count of answers checked for the question we create a DIV with id = "total" + question.id.
+	' The count totals are initially 0 and will be filled in by the UpdatePage sub (below).
+	' When the user clicks on one of these DIV elements, the question is highlighted and
+	' the answers for that question are displayed in the divAnswers block. 
+	' Click functionality for these dynamically created question elements is handled by document_onClick.
+	dim questionBlock, element
+	' The Question's "IsDeleted" property status value indicates whether or not the question has been deleted.
+	' This feature is not used; all questions have status = statusActive.
+	if question.IsDeleted = false then
+		' display the question
+		set questionBlock = document.createElement("DIV")
+		questionBlock.innerHTML = question.Text
+		divQuestions.insertAdjacentElement "BeforeEnd", questionBlock
+		questionBlock.id = "question" & question.id
+		questionBlock.className = "question"
+		' create a div to hold the count of answers checked
+		set element = document.createElement("DIV")
+		questionBlock.insertAdjacentElement "BeforeEnd", element
+		element.id = "total" & question.id
+		element.style.position = "absolute"
+		element.style.left = "300px"
+		element.style.width = "20px"
+		element.style.textAlign = "right"
+		element.innerHTML = "0"
+		btnDeleteQuestion.disabled = false
+		btnAddAnswer.disabled = false
+	end if 
+end sub
+
+sub showAnswer (answer)
+	' Add an answer to divAnswers. To identify HTML elements for each answer we use
+	' the answer.id (the answer object's internal VWorlds object id number).
+	' For the answer text we create a DIV element with id = "answer" + answer.id;
+	' for the checkbox for that answer we create a CHECKBOX element with id = "check" + answer.id;
+	' for the count of people who checked that answer we create a DIV with id = "count" + answer.id;
+	' for the percentage this represents of all answers checked for the question,
+	' we create a DIV with id = "percent" + answer.id.
+	' The count and percent values are initially 0 and will be filled in by the UpdatePage sub (below).
+	' When the user clicks a checkbox all the statistics on the page are updated; this is handled by
+	' document_onClick.
+	dim answerBlock, element
+	' the block itself with the answer text
+	set answerBlock = document.createElement("DIV")
+	divAnswers.insertAdjacentElement "BeforeEnd", answerBlock
+	answerBlock.id = "answer" & answer.id
+	answerBlock.className = "answer"
+	answerBlock.innerHTML = answer.Text
+	' insert a checkbox before the answer text
+	set element = document.createElement("INPUT")
+	element.type = "CHECKBOX"
+	answerBlock.insertAdjacentElement "AfterBegin", element
+	element.id = "check" & answer.id
+	element.className = "chkAnswer"
+	' check this box if the user is on the list of people who checked it
+	if answer.ChosenByList.find(userAvatar) > -1 then
+		element.checked = true
+	end if	
+	' insert a div for the count after the answer text
+	set element = document.createElement("DIV")
+	answerBlock.insertAdjacentElement "BeforeEnd", element
+	element.id = "count" & answer.id
+	element.style.position = "absolute"
+	element.style.left = "255px"
+	element.style.width = "30px"
+	element.style.textAlign = "right"
+	element.innerHTML = "0"
+	' insert the percentage div at the end of the line
+	set element = document.createElement("DIV")
+	answerBlock.insertAdjacentElement "BeforeEnd", element
+	element.id = "percent" & answer.id
+	element.style.position = "absolute"
+	element.style.left = "285px"
+	element.style.width = "35px"
+	element.style.textAlign = "right"
+	element.innerHTML = "0%"
+end sub
+
+sub clickAddQuestion
+	dim vwObject, question, questionText
+	questionText = inputBox("Enter question text", "")
+	if questionText > "" then
+		' verify that the question is not a duplicate
+		for each vwObject in userAvatar.container.contents
+			if vwObject.type = "Question" then
+				if not vwObject.isDeleted then
+					if lcase(trim(vwObject.text)) = lcase(trim(questionText)) then
+						msgbox "Your question is already listed"
+						' make the duplicate question the current question
+						pickQuestion  divQuestions.all("question" & vwObject.id)
+						exit sub
+					end if
+				end if 
+			end if
+		next
+		' Create a Question object in the room (i.e. in the user's container).
+		' The first parameter of CreateInstance is the name we are giving the new object instance;
+		' the second parameter is the name of the exemplar the world should use to create the object.
+		' In this case they are the same because we are not giving names to individual questions.
+		' Multiple object instances in a world can have the same name.
+		set question = world.CreateInstance ("Question", "Question")
+		' Set the question text
+		question.text = questionText
+		question.moveInto userAvatar.container
+	end if
+end sub
+
+sub clickAddAnswer
+	dim vwObject, answer, answerText
+	answerText = inputBox("Enter answer text", "")
+	if answerText > "" then
+		' verify that the answer is not a duplicate
+		for each vwObject in userAvatar.container.contents
+			if vwObject.type = "Answer" then
+				if vwObject.question is currentQuestion then
+					if lcase(trim(vwObject.text)) = lcase(trim(answerText)) then
+						msgbox "Your answer is already listed"
+						exit sub
+					end if
+				end if 
+			end if
+		next
+		' Create an Answer object in the room (i.e. in the user's container).
+		' The first parameter of CreateInstance is the name we are giving the new object instance;
+		' the second parameter is the name of the exemplar the world should use to create the object.
+		' In this case they are the same because we are not giving names to individual answers.
+		' Multiple object instances in a world can have the same name.
+		set answer = world.CreateInstance ("Answer", "Answer")
+		' Set the answer text
+		answer.text = answerText
+		' Set the question this answer applies to
+		set answer.question = currentQuestion
+		answer.moveInto userAvatar.container
+		currentQuestion.AnswerList.add answer
+	end if
+end sub
+
+sub clickDeleteQuestion
+	' mark a question deleted and hide it on the page;
+	if not (currentQuestion is Nothing) then
+		if msgbox ("Are you sure you want to delete this question and its answers?", vbOkCancel) = vbOk then
+			currentQuestion.IsDeleted = true
+		end if
+	end if
+end sub
+
+sub pickQuestion (element)
+	' Get a question object from the world, represented by an HTML element;
+	' make that question the current question, highlight it and display all its answers.
+	dim questionId
+	on error resume next
+	if IsObject(currentQuestion) then
+		' unhighlight the current question
+		divQuestions.children("question" & currentQuestion.id).style.backgroundColor = colorBkgNormal
+	end if
+	' get the selected question from the world using the question's internal VWorlds object id
+	' and make it the current question. The HTML elements for questions have id = "questionN" where
+	' N = question id, so the question id starts at the 9th position of the element id.
+	' HTML element id, so we must convert it to a Long before passing it to the ObjectById method.
+	questionId = CLng(mid(element.id,9,255))
+	set currentQuestion = world.ObjectById(questionId)
+	btnDeleteQuestion.disabled = false
+	btnAddAnswer.disabled = false
+	element.focus
+	element.style.backgroundColor = colorBkgHigh
+	' display the question text in the header above the answers block and reload the answers block
+	divQuestionHead.innerHTML = "<b>" & currentQuestion.Text & "<DIV" & "</b>"
+	showAnswersToCurrentQuestion
+end sub
+
+sub showAnswersToCurrentQuestion
+	' clear the answers block and reload it with the answers to currentQuestion
+	dim answer, element
+	for each element in divAnswers.children
+		element.removeNode true
+	next
+
+	' display every answer for the current Question, 
+	' i.e. every answer in the currentQuestion object's AnswerList
+	for each answer in currentQuestion.AnswerList
+		showAnswer answer
+	next
+	
+	' compute answer counts and percentages
+	UpdatePage
+end sub
+
+sub pickAnswer (element)
+	' Toggle the state of the checkbox for the answer element, and update the ChosenByList
+	' of the Answer object in the world. If the box is checked, add the user to the ChosenByList,
+	' else remove the user from the ChosenByList. Either operation will cause the Answer object's
+	' OnChosenByListChanged method to run, which will fire a UI event "ChosenByListPropertyChanged",
+	' which is handled by theClient_OnUIEvent on this page, which updates the statistics on the page.
+	dim answer, isOnChosenByList, answerId
+	' Get the answer object from the world using the id, which is the chars following "answer" 
+	' in the element id. The element is a checkbox; the element id is "check" + the answer id.
+	' We must convert the answer id to Long to pass as a param to ObjectById
+	answerId = CLng(mid(element.id,6,255))
+	set answer = world.ObjectById(answerId)
+	' see whether the user is on the ChosenBy list or not
+	isOnChosenByList = (answer.ChosenByList.find(userAvatar) >= 0)
+	if element.checked and (not isOnChosenByList) then 
+		answer.ChosenByList.add userAvatar
+	elseif (not element.checked) and isOnChosenByList then
+		answer.ChosenByList.remove userAvatar
+	end if
+end sub
+
+' Chat related subs
+
+sub insertChatMsg(speaker, msg, mode)
+	' Display a spoken or emoted msg in the chat history
+	dim element
+	set element = document.createElement("DIV")
+	if mode = modeSay then	' Say
+		element.innerHTML = "<b>" & speaker.name & ":</b>&nbsp;""" & msg & """"
+	else					' Emote
+		element.innerHTML = "<b>" & speaker.name & "</b>&nbsp;" & msg
+	end if
+	divChatHistory.insertAdjacentElement "BeforeEnd", element
+	element.scrollIntoView
+	if (mode = modeSay) and (speaker is userAvatar) then 
+		txtChatEntry.value = ""
+	end if
+end sub
+
+sub showEvent (who, what, args)
+	' for illustrative purposes; display information about a UI event in the chat pane
+	if isObject(args) then
+		if args.IsOfType("Thing") then
+			insertChatMsg who, "UI event " & what & ": " & args.name, modeEmote
+		else
+			insertChatMsg who, "UI event " & what & ": [" & args.type & "]", modeEmote
+		end if
+	else
+		insertChatMsg who, "UI event " & what & ": [" & typeName(args) & "]", modeEmote
+	end if
+end sub
+
+sub theClient_OnUIEvent (who, what, byval args)
+	' UI events are fired by various object methods in the world to communicate back to the client.
+	' Some UI events are fired by VWorlds itself; for example the built-in "OnTell" UI event is fired
+	' by the built-in "Say" method. In this sample world, custom OnPropertyChanged methods fire
+	' custom UI events to notify the client when specific object properties have changed.
+	' The Who parameter contains the value passed in the first parameter of the FireUIEvent call.
+	' The What parameter contains the name of the UI event (a string).
+	' The Args parameter is an array whose content depends on the event.
+
+	if bShowEvents then showEvent who, what, args
+	select case what
+		case "OnEnterWorld"
+			' An avatar has connected to the world.
+			if who is userAvatar then 
+				' the user's avatar has connected; initialize the web page content;
+				' it is a good idea to wait for this UI event before accessing objects in the world,
+				' because the event fires after the server has remoted all world data to the client.
+				InitializePage
+			else
+				' somebody else's avatar has connected; display a chat msg and add to the user list
+				HandleAvatarEnterWorld who
+			end if
+		case "OnLeaveWorld"
+			if not (who is userAvatar) then
+				HandleAvatarLeaveWorld who
+			end if
+		case "OnContentEnter"
+		  if who is userAvatar.container then
+			' args is a ptr to the new question object in the world
+			select case args.type
+				case "Question"
+					HandleAddQuestion args
+				case "Answer"
+					HandleAddAnswer args
+'				case "Avatar"
+					' This happens only the first time an user connects a given avatar to this world.
+					' Since this world only has one room, each avatar enters the room only once; 
+					' the avatar object never actually leaves the room, even when the user disconnects.
+'					HandleAvatarEnterWorld args
+			end select
+		  end if
+		case "ChosenByListPropertyChanged"
+			' a user (not necessarily the current user) checked or unchecked a box on an answer;
+			' who is the answer that was checked or unchecked.
+			' show the answer if it applies to the current question, and update the stats for the page.
+			HandleChosenByListChanged who
+		case "QuestionIsDeletedPropertyChanged"
+			' Delete the question if its IsDeleted property was set true; un-deleting is not implemented in this sample
+			if who.IsDeleted then
+				HandleDeleteQuestion who
+			end if
+		case "OnTell"
+			' The Client object fires the "OnTell" UI event after a Say or Emote method executes.
+			' There are 4 values in the args array:
+			' 0: speaker (the object that did the Say or Emote)
+			' 1: hearers list (a proplist of avatars who should hear the msg),
+			' 2: msg (text string said)
+			' 3: mode (0=Say, 1=Emote) -- to control formatting, as in 'Bob: "Hello"' vs 'Bob waves'
+			' In this simple chat client everything said is public so we can ignore the Hearers list;.
+			insertChatMsg args.property(0), args.property(2), args.property(3)
+	end select
+end sub
+
+sub HandleAvatarEnterWorld (avatar)
+	' add a user to the user list display; called with someone connects
+	dim element
+	set element = document.createElement("DIV")
+	element.innerHTML = "<b>" & avatar.Name & "</b><br>"
+	divUserList.insertAdjacentElement "BeforeEnd", element
+	element.id = "avatar" & avatar.Name
+	element.className = "userName"
+	element.scrollIntoView
+	if not (avatar is userAvatar) then insertChatMsg avatar, "is here!", modeEmote
+end sub
+
+sub HandleAvatarLeaveWorld(avatar)
+	' remove a user from the userlist; called when someone disconnects
+	dim element
+	set element = divUserList.children("avatar" & avatar.Name)
+	element.removeNode true
+	insertChatMsg avatar, "has left the building.", modeEmote
+end sub
+
+sub HandleAddQuestion (question)
+	' Display the new question in divQuestions;
+	' called by HandleUIEvent in response to a "QuestionsChanged" event,
+	' i.e. whenever anybody adds a question. 
+	showQuestion question
+	' if we entered this question make it the current question and go to the add answer field
+	if (question.owner is userAvatar) or not isObject(currentQuestion) then
+		pickQuestion divQuestions.all("question" & question.id)
+	end if
+end sub
+
+sub HandleAddAnswer (answer)
+	' Display a newly added answer in divAnswers if it applies to the current question;
+	' called by HandleUIEvent in response to a "AnswersChanged" event,
+	' i.e. whenever anybody adds an answer.
+	if answer.question is currentQuestion then
+		showAnswer answer
+	end if
+end sub
+
+sub HandleDeleteQuestion (question)
+	' Hide the question on the page
+	dim element
+	if question.IsDeleted then
+		' hide the question
+		divQuestions.all("question" & question.id).removeNode true
+		if question is currentQuestion then
+			' undisplay the deleted question's answers and related header displays
+			divQuestionHead.innerHTML = ""
+			divAnswerCount.innerHTML = ""
+			set currentQuestion = Nothing
+			btnDeleteQuestion.disabled = true
+			btnAddAnswer.disabled = true
+			for each element in divAnswers.children
+				element.removeNode true
+			next
+		end if
+	end if
+end sub
+
+sub HandleChosenByListChanged (answer)
+	if answer.question is currentQuestion then showAnswersToCurrentQuestion
+	UpdatePage
+end sub
+
+sub document_onClick
+	' handle clicks on dynamically created objects which cannot have their own handlers assigned
+	dim element
+	set element = window.event.srcElement
+	select case element.className
+		case "question"
+			pickQuestion element
+		case "chkAnswer"
+			pickAnswer element
+	end select
+end sub
+
+sub sayChat
+	' Tell the avatar to Say the text the user typed in the chat text entry field.
+	' The VWorlds server broadcasts this text to the client objects of everybody in the room.
+	' The client object will fire an "OnTell" UI event, which the client's OnUIEvent sub (see above) 
+	' will handle by displaying the text in the chat history.
+	if txtChatEntry.value <> defaultChatText then
+		userAvatar.Say txtChatEntry.value
+	end if
+end sub
+
+sub document_onKeyDown
+	' This implements automatic button clicks, and arrow key navigation between divQuestions elements.
+	dim element
+	if window.event.srcElement.className = "question" then
+		select case window.event.keyCode
+			case 38		' arrow up
+				set element = document.activeElement.previousSibling
+			case 40		' arrow down
+				set element = document.activeElement.nextSibling
+		end select
+		if isObject(element) then
+			if not (element is Nothing) then
+				if element.className = "question" then
+					pickQuestion element
+				end if
+			end if
+		end if
+	else
+		if window.event.keyCode = 13 then
+			select case window.event.srcElement.id
+				case "txtChatEntry"
+					SayChat
+			end select
+		end if
+	end if
+end sub
+
+sub UpdatePage
+	' refresh all statistics on the page
+	dim element
+
+	' zero all the answer counts
+	for each element in divQuestions.all
+		if mid(element.id,1,5) = "total" then element.innerHTML = "0"
+	next
+	for each element in divAnswers.all
+		if mid(element.id,1,5) = "count" then element.innerHTML = "0"
+		if mid(element.id,1,7) = "percent" then element.innerHTML = "0%"
+	next
+
+	' count the ChosenBy list members for all answers to each question; display total for each question
+	dim question, answer, questionId
+	for each element in divQuestions.all
+		if mid(element.id,1,8) = "question" then
+			' get the question object in the world using its object id, which follows "question" in the element id
+			questionId = CLng(mid(element.id,9,255))
+			set question = world.ObjectById(questionId)
+			divQuestions.all("total" & questionId).innerHTML = "0"
+			for each answer in question.AnswerList
+				' add up the ChosenBy counts for each answer for this question
+				divQuestions.all("total" & questionId).innerHTML = CStr(CInt(divQuestions.all("total" & questionId).innerHTML) + answer.ChosenByList.count)
+			next
+		end if
+	next
+	
+	for each element in divAnswers.all
+		if mid(element.id,1,6) = "answer" then
+			' get the ChosenBy count from the answer object in the world 
+			' using the object id, which follows "answer" in the element id
+			set answer = world.ObjectById(mid(element.id,7,255))
+			divAnswers.all("count" & answer.id).innerHTML = CStr(answer.ChosenByList.count)
+		end if
+	next
+
+	' display total answer count for the current question in the header above the Answers section
+	dim answerTotal, answerPct
+	answerTotal = divQuestions.all("total" & currentQuestion.id).innerHTML
+	divAnswerCount.innerHTML = answerTotal
+	
+	' display percentages for every answer in currentQuestion
+	for each answer in currentQuestion.AnswerList
+		if answerTotal = 0 then
+			answerPct = 0
+		else
+			answerPct = Int((CInt(divAnswers.all("count" & answer.id).innerHTML) * 100 / answerTotal))
+		end if
+		divAnswers.all("percent" & answer.id).innerHTML = answerPct & "%"
+	next
+end sub
+
+sub chkShowEventsClick
+	bShowEvents = (chkShowEvents.checked)
+end sub
+
+sub txtChatEntry_OnFocus
+	if txtChatEntry.value = defaultChatText then txtChatEntry.value = ""
+	txtChatEntry.select
+end sub
+
+sub window_onUnload
+	' Disconnect properly from the world when the page is unloaded.
+	' Note: if you Refresh the page window_onUnload fires, which logs you out of the world,
+	' then window_OnLoad logs you back in.
+	if isObject(world) then
+		if not (world is nothing) then
+			world.Disconnect
+		end if
+	end if
+end sub
+
+</SCRIPT>
+
+</head>
+
+<body>
+
+<div id=divHeader style="position:absolute;top:0;left:8;width:100%;height:50;">
+	<div class=mainHead style="position:absolute;top:-1;left:400;width:300;height:30;text-align:right;">Dynamic Questionnaire</div>	
+	<div style="position:absolute;top:2;left:0;width:100%;height:20;font-size:12pt;font-weight:bold;"><span>Topic: </span>
+	<span id=txtTopic></span></div>
+	<div class=subHead style="position:absolute;top:25;left:0;width:350;height:20;">Questions</div>
+	<div class=subHead2 style="position:absolute;top:25;left:290;width:20;height:20;">Answers</div>
+	<div class=subHead style="position:absolute;top:25;left:354;width:350;height:40;">Answers</div>
+	<div class=subHead3 id=divQuestionHead style="position:absolute;top:45;left:354;width:250;height:20;"></div>
+	<div class=subHead3 id=divAnswerCount style="position:absolute;top:45;left:634;width:30;height:20;"></div>
+	<div class=subHead2 style="position:absolute;top:25;left:620;width:20;height:20;">Count/Percent</div>
+</div>
+
+<div id=divQuestions class=smallText
+	style="position:absolute;top:45;left:8;height:170;width:350;"></div>
+<input id=btnAddQuestion type=BUTTON class=btnText value="Add Question" onclick=clickAddQuestion
+	style="position:absolute;top:220;left:40;width:100;height:25;">
+<input id=btnDeleteQuestion type=BUTTON class=btnText value="Delete Current Question" onclick=clickDeleteQuestion
+	style="position:absolute;top:220;left:150;width:170;height:25;">
+
+<div id=divAnswers class=smallText 
+	style="position:absolute;top:65;left:362;height:150;width:350;"></div>
+<input id=btnAddAnswer type=BUTTON class=btnText value="Add Answer" onclick=clickAddAnswer
+	style="position:absolute;top:220;left:470;width:100;height:25;">
+
+<!-- chat section -->
+<div id=divChatHistory class=smallText style="position:absolute;top:250;left:8;height:150;width:550;"></div>
+<div style="position:absolute;top:406;left:8;height:20;width:40;">&nbsp;Chat:</div>
+<input id=txtChatEntry type=TEXT class=txtEntry value="" style="position:absolute;top:404;left:50;width:490;height:20;">
+<div class=subHead style="position:absolute;top:250;left:562;width:150;height:20;">Who is Here</div> 
+<div id=divUserList class=smallText style="position:absolute;top:270;left:562;width:150;height:130;border:1px solid black;"></div>
+
+<!-- showEvents checkbox -->
+<div id=divInfo style=position:absolute;top:405;left:600;width:120;height:20;">
+<input type=CHECKBOX id=chkShowEvents onClick=chkShowEventsClick>&nbsp;Show UI events
+</div> 
+
+</body>
+</html>
+

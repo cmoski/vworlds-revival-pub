@@ -1,0 +1,1391 @@
+<html>
+<head>
+
+<title>Microsoft Virtual Worlds</title>
+<LINK REL=StyleSheet HREF=../shared/global.css>
+
+<object id="theclient" classid="clsid:D4898803-20EF-11D0-8A96-00A0C9082583"></object>
+<object id="htmlpopup" classid="clsid:7E3832CD-4F4E-11D0-89AB-00A0C9054129"></object>
+
+<SCRiPT LANGUAGE="VBScript">
+option explicit
+
+' hack for now
+Dim AvatarControl
+Dim RenderControl
+Dim RenderPage
+Dim HistoryPage
+Dim bIntentionalDisconnect
+Dim bForcedLogOffByHost
+Dim TextEntryFrame
+Dim UserTab
+Dim direct  ' name of the directory window
+Dim bFirstTime
+Dim ControlManager
+set ControlManager = nothing
+
+Public sstrWorldURL
+
+Public objOEItem
+Set objOEItem = Nothing
+
+Public blnAppClosing
+blnAppClosing = False
+
+Public sobjMoreAbout, sobjScript, sobjTutorial, sobjCamera, sarrWhisper, sobjProfile
+
+Set sobjMoreAbout = Nothing
+Set sobjScript = Nothing
+Set sobjTutorial = Nothing
+Set sobjCamera = Nothing
+Set sobjProfile = Nothing
+sarrWhisper = Array()
+
+'=======================
+' GLOBAL PREFERENCES
+'
+Dim sUser					'If both sUser and sWorld as set in cookie, login is skipped.
+Dim sPassword
+Dim sWorld
+Dim sLogoffURL	'set in cookie so we know what launched us
+Dim	iDrawFastWhenMoving
+Dim iColorModel
+Dim iUseHWAcceleration
+Dim bForceBackBuffering
+Dim bAutoDownloadAvatars
+Dim bShowThumbnailsOnly
+Dim bPlaySoundFX
+Dim bShowGestures
+Dim bShowEvents
+Dim bShowSysMsgs
+
+Dim iReadyCount
+Dim bTopValid
+Dim bLoggedIn
+
+sub ChildReady(theWin)
+	if theWin.name = "login" then    'MM WAS: theWin.name = "login"
+		bTopValid = true
+	end if
+
+	iReadyCount = iReadyCount + 1
+	if (iReadyCount >= 2) then
+		iReadyCount = 2
+		if bTopValid = true then
+			bTopValid = false
+			window.setTimeOut "InitPanes", 100, "VBScript"
+		end if
+	end if
+end sub
+
+sub LoadPrefs
+	' 1) Set the defaults
+	iUseHWAcceleration = -1
+	bForceBackBuffering = false
+	iDrawFastWhenMoving = -1
+	iColorModel = -1
+	bAutoDownloadAvatars = true
+	bShowThumbnailsOnly = false
+	bPlaySoundFX = true
+	bShowGestures = true
+	bShowEvents = true
+	bShowSysMsgs = false
+
+	' 2) Try to load the cookie file
+	LoadPrefsFromCookie()
+end sub
+
+sub SavePrefs
+	SavePrefsToCookie()
+end sub
+
+
+sub SetTextEntryFrame(ef)
+	set TextEntryFrame = ef
+end sub
+
+sub SetAvatarControl(ac)
+
+	set AvatarControl = ac
+
+end sub
+
+sub SetRenderControl(rc)
+
+	set RenderControl = rc
+
+end sub
+
+dim wantsEventsList
+dim ownedWindowList
+
+'====================================
+' InitGlobalEventLists
+' initializes the global event lists
+
+sub InitGlobalEventList()
+
+	'dim curglobal
+	'set curglobal = theclient.VWClient.World.global
+
+	' no initial value for these lists, but they are orphaned
+	if (typename(wantsEventsList) = "Empty") Then
+		wantsEventsList = Array() 'curWorld.global.CreatePropertyList(, true)
+	end if
+
+	if (typename(ownedWindowList) = "Empty") Then
+		ownedWindowList = Array() 'curWorld.global.CreatePropertyList(, true)
+	end if
+
+end sub
+
+'====================================
+' AddToArray
+' Array helper function
+
+sub AddToArray(pArray, byval val)
+
+	Dim nUB
+
+	nUB = UBound(pArray)
+
+	ReDim Preserve pArray( nUB + 1 )
+
+	set pArray(nUB + 1) = val
+
+end sub
+
+
+'====================================
+' RemoveFromArray
+' Array helper function
+
+sub RemoveFromArray(pArray, byval val)
+
+	Dim i, nUB, bFound
+
+	nUB = UBound(pArray)
+	bFound = false
+	if (nUB < 0) then
+		exit sub
+	end if
+	If (Not IsObject(val)) Then
+		Exit Sub
+	End If
+
+	for i = 0 to nUB
+
+		If (IsObject(pArray(i))) Then
+			if (bFound) Then
+				If (i < nUB) Then set pArray(i) = pArray(i+1)
+			Elseif pArray(i) Is val then
+				If (i < nUB) Then set pArray(i) = pArray(i+1)
+				bFound = true
+			end if
+		End If
+	next
+
+	ReDim Preserve pArray( nUB - 1)
+
+end sub
+
+'====================================
+' AddOwnedWindow
+' Adds the item to the ownedWindowList
+
+Public sub AddOwnedWindow(byVal newWindow)
+	if (typename(ownedWindowList) = "Empty") Then
+		InitGlobalEventList
+	End If
+
+	AddToArray ownedWindowList, newWindow
+end sub
+
+'====================================
+' RemoveOwnedWindow
+' Removes the item from the ownedWindowList
+Public sub RemoveOwnedWindow(byVal oldWindow)
+
+	if typename(ownedWindowList) = "Empty" then
+		exit sub
+	end if
+	RemoveFromArray ownedWindowList, oldWindow
+
+end sub
+
+'====================================
+' AddToEventList
+' Adds the item to the event list
+
+sub AddToEventList(byVal newWindow)
+	on error resume next
+
+	if (typename(wantsEventsList) = "Empty") Then
+		InitGlobalEventList
+	End If
+
+	AddToArray wantsEventsList, newWindow
+
+end sub
+
+'====================================
+' RemoveFromEventList
+' Removes the item from the specified event list
+
+sub RemoveFromEventList(byVal oldWindow)
+
+	if typename(wantsEventsList) = "Empty" then
+		exit sub
+	end if
+
+	RemoveFromArray wantsEventsList, oldWindow
+
+end sub
+
+'====================================
+' UpdateAvatarProfile
+' Updates the profile of the current avatar
+' by saving their most recent world
+
+sub UpdateAvatarProfile(worldURL)
+	dim user
+	dim worldlist
+	dim foundit
+	dim i
+	dim listcount
+
+	' set the "LastWorld" key to this world
+	set user = window.theClient.vwclient.world.user
+
+	user.profile.KeyValue("LastWorld") = worldURL
+
+	' also, add this to the recent world list if it isn't already there
+	set worldlist = user.profile.KeyValue("RecentWorlds")
+	foundit = 0
+	listcount = worldlist.count
+
+	if worldlist.count > 0 then
+		for i = 0 to worldlist.count - 1
+			if worldURL = worldList.property(i) then
+				foundit = 1
+				exit for
+			end if
+		next
+	end if
+
+	if foundit = 0 then
+		worldlist.Add worldURL
+		user.profile.KeyValue("RecentWorlds") = worldList
+	end if
+
+end sub
+
+
+function GetRenderControl()
+
+	if not IsEmpty(RenderControl) then
+		set GetRenderControl = RenderControl
+	else
+		set GetRenderControl = Nothing
+	end if
+
+end function
+
+'====================================
+'window_OnLoad
+'Initialize, get last username cookie, then pop up login window
+dim lastAvatar
+
+sub InitPanes()
+	on error resume next
+
+	' Start the chain-initialization.
+	HistoryPane.UpdateFromPrefs
+
+	if (sUser <> "" AND sWorld <> "") Then
+		if window.screen.width < 800 or window.screen.height < 600 then
+			msgbox "This Virtual Worlds client may not display properly at resolutions less than 800x600.", vbOkOnly + vbInformation, "Microsoft Virtual Worlds"
+		end if
+	End If
+
+	frames(0).Initialize
+	' try to set the focus to the text input
+	TextEntryFrame.TextBox.focus
+end sub
+
+
+sub DoAutoLogin
+	on error resume next
+
+	Dim bLoginResult, sFriendly
+
+	If (InStr(sWorld, "/")) Then
+		sFriendly = Mid(sWorld, InStr(sWorld, "/") + 1)
+	Else
+		sFriendly = sWorld
+	End If
+
+	window.status = "Logging into " & sFriendly & " as " & sUser & "..."
+
+	'Make sure we're not connected
+	bIntentionalDisconnect = true
+	window.theclient.vwclient.Disconnect
+
+	Err.Clear
+
+	bLoginResult = Logon(sUser, sPassword, sWorld)
+	sstrWorldURL = sWorld
+	sPassword = ""
+	if bLoginResult = false then
+		window.status = ""
+	end if
+
+End Sub
+
+sub window_onload
+
+	InitGlobalEventList
+
+	sPassword = ""
+	iReadyCount = 0
+	bTopValid = false
+	bLoggedIn = false
+	bFirstTime = true
+	bForcedLogOffByHost = false
+
+	' initialize helper control
+	htmlpopup.Initialize window.theclient.vwclient
+	LoadPrefs
+
+	bIntentionalDisconnect = false
+
+	If ( sUser <> "" AND sWorld <> "") Then
+		bTopValid = true
+		ChildReady(window)
+		document.body.all("mainwin").style.display = "none"
+		logonMessge.style.display = ""
+		InitPanes		'Call this manually since it wont' be called by ChildReady (no logon)
+						'This will be cleaned when splash screen is in effect.
+		window.setTimeout "DoAutoLogin", 100, "VBScript"
+	Else
+		sLogoffURL = "client.htm"
+		document.body.all("mainwin").style.display = ""
+		logonMessge.style.display = "none"
+		window.mainwin.location.href = "vwstart.htm"
+		ChildReady(window)
+	End If
+
+
+end sub
+
+
+sub DoShutdown
+
+	' shutdown html windows
+	htmlpopup.CloseAll
+
+	' close all owned windows
+	dim wind
+	for each wind in ownedWindowList
+		wind.Close
+	next
+
+	if Not window.theClient.VWClient.World Is Nothing then
+
+		bIntentionalDisconnect = true
+		' disconnect from avatar
+		window.theClient.VWClient.World.Disconnect
+
+		' disconnect from server
+		window.theClient.VWClient.Disconnect
+	end if
+
+	' zap
+	SetAvatarControl Nothing
+	SetRenderControl Nothing
+
+	SavePrefs
+
+end sub
+
+public fShowLogon
+fShowLogon = false
+
+sub window_OnUnload()
+	on error resume next
+
+	'webhelper.RestoreBrowserAdornments
+
+	blnAppClosing = True
+	if fShowLogon then
+		if left(top.sLogoffURL, 7) = "vwStart" then
+			if instr(top.sLogoffURL, "SDK") > 0 then
+				window.open "vwStart.htm", "VirtualWorldsStart", _
+					"toolbar=no,location=no,status=no,menubar=no,resizable=no,width=520,height=475,top=" & _
+					(screen.availHeight - 475) / 2 & ",left=" & (screen.availWidth - 520) / 2
+			else
+				window.open "vwStart.htm", "VirtualWorldsStart", _
+					"toolbar=no,location=no,status=no,menubar=no,resizable=no,width=520,height=405,top=" & _
+					(screen.availHeight - 405) / 2 & ",left=" & (screen.availWidth - 520) / 2
+			end if
+		end if
+	end if
+
+	DoShutdown
+end sub
+
+sub window_OnBeforeUnload()
+	if (bLoggedIn) and (not bForcedLogOffByHost) and (not fShowLogon) then
+		window.event.returnValue = "You will be logged out of Microsoft Virtual Worlds if you leave."
+	end if
+end sub
+
+sub DoHelp(helpId)
+
+	msgbox "HELP!"
+
+end sub
+
+function LogonFromDS(vws_url)
+	LogonFromDS = window.frames(0).OnConnectFromDS(vws_url)
+end function
+
+function logon(name, password, vws_url)
+
+'       VWT_VERBOSE = 0
+'       VWT_DUMP = 1
+'       VWT_METHOD = 2
+'       VWT_IMPORTANT = 3
+'       VWT_ERROR = 4
+'       VWT_NONE = 5
+
+	dim world
+	dim user
+	dim errNum, errMsg
+
+	' disable error trapping
+	on error resume next
+
+	' start up client OC
+	if asc(vws_url) = 13 then
+		vws_url = right(vws_url, len(vws_url)-2)
+	end if
+	err.Clear
+	set world = window.theclient.VWClient.Connect(vws_url)
+	errNum = err.number
+	errMsg = err.description
+	if VarType(world) = vbEmpty or (world is nothing) then
+		select case errNum
+		case -2147220901
+			MsgBox "Failed to connect to " & vws_url & ".  The Virtual Worlds Server is running a different version than the Virtual Worlds client.", vbCritical, "Microsoft Virtual Worlds"
+		Case -2147220472
+			MsgBox "Maximum number of users has been reached for the server containing """ & vws_url & """.  Try again later.", vbOkOnly + vbCritical, "Microsoft Virtual Worlds"
+		Case -2147467259
+			MsgBox "You do not have permission to access the server containing """ & vws_url & """.  Contact the adminstrator for this server.", vbOkOnly + vbCritical, "Microsoft Virtual Worlds"
+		Case Else
+			MsgBox "The world " & vws_url & " is currently unavailable. It may be offline, mispelled, or not exist. If the problem persists, contact the server administrator to verify the status of this world.", vbCritical, "Microsoft Virtual Worlds"
+		end select
+		logon = FALSE
+		if left(sLogoffURL, 7) = "vwStart" then
+			fShowLogon = true
+			window.close
+		else
+			top.navigate top.sLogoffURL
+		end if
+	else
+		' log the user in
+		err.Clear
+		set user = world.Connect(name, password)
+		errNum = err.number
+		errMsg = err.description
+
+		if typename(user) <> "IThing" then
+			if err.number = -2147220949 then
+				MsgBox "Connection attempt failed.  This avatar is already connected to the world.", vbExclamation, "Microsoft Virtual Worlds"
+			elseif err.number = -2147220917 then
+				MsgBox "Connection attempt canceled.", vbExclamation, "Microsoft Virtual Worlds"
+			else
+				MsgBox "Connection attempt failed: " & errMsg & ".", vbCritical, "Microsoft Virtual Worlds"
+			end if
+			bIntentionalDisconnect = true
+			window.theclient.VWClient.Disconnect
+			logon = FALSE
+			if left(sLogoffURL, 7) = "vwStart" then
+				fShowLogon = true
+				window.close
+			else
+				top.navigate top.sLogoffURL
+			end if
+		else
+			' set trace level to minimize noise
+			world.TraceLevel("*") = 4
+
+			' disable trace for speed
+			world.EnableTrace False
+
+			' navigate windows to right spot
+			world.Synchronize
+			updateAvatarProfile vws_url
+
+			if (sUser = "" AND sWorld = "") Then
+				Login.close
+			End If
+
+			'Manny's hack: force initialization of htmlpopup
+			htmlpopup.Initialize window.theclient.vwclient
+
+			logonMessge.style.display = "none"
+			document.body.all("mainwin").style.display = ""
+
+			iReadyCount = 1
+			bTopValid = true
+			if instr(1, window.mainwin.location.href, "body.htm", 1) = 0 then
+				window.mainwin.location.href = "body.htm"
+			end if
+			logon = TRUE
+			bIntentionalDisconnect = false
+
+			bLoggedIn = true
+		end if
+	end if
+end function
+
+sub OnShowHTML(name, html, title, bSafe, arg, x, y, cx, cy)
+
+	htmlpopup.ShowHTMLEx name, 0, html, title, bSafe, arg, x, y, cx, cy
+
+end sub
+
+sub OnShowURL(winname, bPopup, url, wintitle, bSafe, arg, x, y, cx, cy)
+	dim features
+	if (not bPopup) and (not bSafe) then
+		features = "toolbar=no, top=" & CStr(y) & ", left=" & CStr(x) & ",width=" & CStr(cx) & ", height=" & CStr(cy)
+		window.open url, "", features, false
+	else
+		htmlpopup.ShowURLEx winname, 0, url, wintitle, bSafe, arg, x, y, cx, cy
+	end if
+
+end sub
+
+' stub event handlers to prevent exceptions in IE
+
+sub theclient_OnUserReconnect(NewClient, NewWorld, NewAvatar)
+	on error resume next
+
+	' re-initialize helper control
+	htmlpopup.Initialize NewClient
+
+	' clear out the ControlManager Pointer
+	set ControlManager = nothing
+
+	dim wind
+	' now fire the event to each window
+	for each wind in wantsEventsList
+		wind.HandleOnConnect NewWorld
+		wind.HandleUserConnect NewAvatar
+	next
+	bLoggedIn = true
+	dim strNewWorld
+	strNewWorld = ""
+	strNewWorld = NewWorld.servername & "/" & NewWorld.worldName
+	if strNewWorld <> "" then
+		UpdateAvatarProfile(strNewWorld)
+		document.cookie = "sWorld=" & strNewWorld & ";path=/;expires=Fri, 1 Jan 2038 00:00:00 GMT"
+	end if
+end sub
+
+sub theclient_OnDisconnect(theworld)
+	on error resume next
+	Dim wind
+
+	' clear out the ControlManager Pointer
+	set ControlManager = nothing
+	htmlpopup.CloseAll
+	if bIntentionalDisconnect = false then
+		if top.theclient.vwclient.isConnected = false then
+			bIntentionalDisconnect = true
+			MsgBox "The connection to the server has been unexpectedly terminated. To reconnect login as usual.", vbOKOnly + vbCritical, "Microsoft Virtual Worlds"
+			for each wind in wantsEventsList
+				wind.HandleUIEvent theworld, "vwCloseAllDialogs", ""
+			next
+			if left(sLogoffURL, 7) = "vwStart" then
+				fShowLogon = true
+				window.close
+			else
+				top.navigate top.sLogoffURL
+			end if
+		end if
+	else
+		bIntentionalDisconnect = false
+'		if (sUser <> "" AND sWorld <> "") Then 'If this was an login.htm-less login, don't do OnBeforeUnload
+'			bLoggedIn = false
+'
+'		end if
+	end if
+
+	bLoggedIn = false
+	bFirstTime = true
+end sub
+
+sub theclient_OnUserConnect(theUser)
+	on error resume next
+	dim wind
+	for each wind in wantsEventsList
+		wind.HandleUserConnect theUser
+	next
+end sub
+
+sub theclient_OnUserDisconnect(theUser)
+	on error resume next
+	dim wind, intUB
+	for each wind in wantsEventsList
+		If Not blnAppClosing Then
+			wind.HandleUserDisconnect theUser
+		End If
+	next
+	if theUser is theclient.vwclient.world.user then
+		intUB = UBound(sarrWhisper)
+		If intUB > -1 Then
+			For Each wind In sarrWhisper
+				wind.close
+			Next
+			sarrWhisper = Array()
+		End If
+		if not sobjProfile is nothing then
+			sobjProfile.close
+			Set sobjProfile = Nothing
+		end if
+		if not sobjCamera is nothing then
+			sobjCamera.close
+			Set sobjCamera = Nothing
+		end if
+		if not sobjMoreAbout is nothing then
+			sobjMoreAbout.close
+			Set sobjMoreAbout = Nothing
+		end if
+		if not sobjScript is nothing then
+			sobjScript.close
+			Set sobjScript = Nothing
+		end if
+		if not sobjTutorial is nothing then
+			sobjTutorial.close
+			Set sobjTutorial = Nothing
+		end if
+	end if
+end sub
+
+sub theclient_OnConnect(theWorld)
+	on error resume next
+	dim wind
+
+	if typename(wantsEventsList) = "Empty" then
+		InitGlobalEventList
+	end if
+	if bLoggedIn = false then
+		for each wind in wantsEventsList
+			wind.HandleOnConnect theWorld
+		next
+	end if
+end sub
+
+sub theclient_OnTrace(theStr)
+	on error resume next
+	dim wind
+	for each wind in wantsEventsList
+		If Not blnAppClosing Then
+			wind.HandleTrace theStr
+		End If
+	next
+end sub
+
+sub theclient_OnReport(strMsg, lType)
+	on error resume next
+	dim wind
+	for each wind in wantsEventsList
+		If Not blnAppClosing Then
+			wind.HandleReport strMsg, lType
+		End If
+	next
+end sub
+
+sub theclient_OnGeometryChanged(what)
+end sub
+
+'------------------------
+' theclient_OnUIEvent
+' who :
+' what:
+' args:
+
+sub theclient_OnUIEvent(who, what, args)
+	on error resume next
+	dim windCnt, strWelcomeURL, world, count, sContentPath, blnFound, intUB, intCount, blnEditProfile
+
+	windCnt = ubound(wantsEventsList)
+	if window.theClient.vwclient.world Is Nothing then
+		' shouldn't keep going w/o a world, right?
+		exit sub
+	end if
+
+	set world = window.theclient.vwclient.world
+
+	' if empty or error (optional arg)
+	count = 1
+	if IsEmpty(args) or vartype(args) = 10 then
+		count = 0
+	elseif IsArray(args) then
+		count = UBound(args)+1
+	elseif IsObject(args) then
+		if (args is Nothing) then
+			count = 0
+		else
+			if TypeName(args) = "IPropertyList" then
+				count = args.Count
+			end if
+		end if
+	end if
+
+	if strcomp(left(theClient.VWClient.World.ContentPath, 7), "file://", vbtextcompare) = 0  then
+		sContentPath = right(theClient.VWClient.World.ContentPath, len(theClient.VWClient.World.ContentPath) - 7)
+	else
+		sContentPath = theClient.VWClient.World.ContentPath
+	end if
+
+	Select Case what
+	Case "OnLeaveRoom"
+		If Not sobjMoreAbout Is Nothing Then
+			sobjMoreAbout.close
+			Set sobjMoreAbout = Nothing
+		End if
+	Case "Help"
+		HandleHelp who, what, args
+	Case "OnProfileChanged"
+		' profile changed event
+		if who is world.user then
+			HandleUserProfileChanged
+		end if
+	Case "SetCamera"
+		DoSetCamera who, args
+	Case "SetCameraOr"
+		DoSetCameraWOrient who, args
+	Case "OnReconnect"
+		bIntentionalDisconnect = True
+	Case "ConnectFromDS"
+		LogonFromDS args
+	' ShowDialog: Used by web page exemplar to display HTML pages
+	Case "OnShowDialog"
+		if count = 4 then
+			window.open args.Property(2).HTMLURL
+'Right now the only use for this UI Event is with the web page exemplar.
+'This exemplar will show a web page in a new IE window so the code below is commented out.
+'If you do use this call to show a dialog for other purposes you will need to make modifications accordingly.
+'			if args.Property(0) = True then
+'				window.ShowModalDialog args.Property(1), args.Property(2), args.Property(3)
+'			else
+'				window.ShowModelessDialog args.Property(1), args.Property(2), args.Property(3)
+'			end if
+		else
+			World.Trace "Show dialog arguments are incorrect (should be bIsModal, bstrURL, pArgument, bstrWindowFeatures)"
+		end if
+
+	Case "ShowHTML"
+		if count = 9 then
+			OnShowHTML args.Property(0), args.Property(1), args.Property(2), _
+				args.Property(3), args.Property(4), args.Property(5), _
+				args.Property(6), args.Property(7), args.Property(8)
+		else
+			world.trace "ShowHTML args incorrect"
+		end if
+	Case "ShowURL"
+		if count = 10 then
+			OnShowURL args.Property(0), args.Property(1), args.Property(2), _
+				args.Property(3), args.Property(4), args.Property(5), _
+				args.Property(6), args.Property(7), args.Property(8), _
+				args.Property(9)
+		else
+			world.trace "ShowURL args incorrect"
+		end if
+	Case "OnStartSceneComposite"
+		window.status = "Loading room...  Please wait..."
+	Case "OnFinishSceneComposite"
+		window.status = ""
+		If Not world.User.IsValidProperty("SeenWelcome") Then
+			world.User.AddProperty "SeenWelcome", True
+			strWelcomeURL = world.Global.WelcomeURL
+			blnEditProfile = window.showModalDialog(strWelcomeURL, top, "dialogHeight:170px;dialogWidth:325px;status:no;help:no;resizable:no;")
+			If blnEditProfile Then
+				window.setTimeout "theclient.vwclient.world.User.EditProfile", 250, "vbs"
+			End If
+		End If
+	Case "EventRequest"
+		AddToEventList args
+		exit sub
+	Case "EventRequestCancel"
+		RemoveFromEventList args
+		exit sub
+	Case "OnCenterCameraOnObject"
+		DoCenterCameraOnObject(args)
+	Case "vwCameraClose"
+		Set sobjCamera = Nothing
+	Case "vwShowCamera"
+		If sobjCamera Is Nothing Then
+			Set sobjCamera = window.showModelessDialog("camera.htm", top, "dialogHeight:285px;dialogWidth:350px;status:no;help:no")
+		Else
+			sobjCamera.document.body.focus
+		End If
+	Case "vwTutorialClose"
+		Set sobjTutorial = Nothing
+	Case "vwTutorial"
+		If Not sobjTutorial Is Nothing Then
+			sobjTutorial.close
+			Set sobjTutorial = Nothing
+		End If
+		window.settimeout "Set sobjTutorial = window.showModelessDialog(""" & sContentPath & "sdk\library\html\_ScriptTutorial\tutindex.htm"", top, ""dialogHeight:500px;dialogWidth:820px;help:no;status:no;resizable:yes;"")", args, "vbs"
+	Case "vwScriptClose"
+		Set sobjScript = Nothing
+	Case "vwScript"
+		If sobjScript Is Nothing Then
+			Set sobjScript = window.showModelessDialog(sContentPath & "client\html\script.htm", top, "dialogHeight:337px;dialogWidth:468px;help:no;status:no;resizable:yes;")
+		Else
+			sobjScript.document.all("txtCommand").focus
+		End If
+	Case "vwMoreAboutClose"
+		Set sobjMoreAbout = Nothing
+	Case "OnMoreAbout"
+		If Not sobjMoreAbout Is Nothing Then
+			sobjMoreAbout.close
+			Set sobjMoreAbout = Nothing
+		End If
+		Set sobjMoreAbout = window.ShowModelessDialog("MoreAbout.htm", Array(top, who), "dialogHeight:110px;dialogWidth:325px;status:no;help:no;resizable:yes;")
+	Case "OnEditObject"
+		world.ShowURLEx "Object Properties: " & who.Name, "Object Properties: " & who.Name, "sdk/editors/core/objedit.htm", who, (top.document.body.clientWidth - 491) / 2, (top.document.body.clientHeight - 300) / 2, 491, 300
+	Case "OnShowProfile"
+		window.showModalDialog "ShowProfile.htm", Array(top, who), "dialogWidth:454px;dialogHeight:317px;status:no;help:no;resizable:no;"
+	Case "vwProfileClose"
+		Set sobjProfile = Nothing
+	Case "OnEditProfile"
+		If sobjProfile Is Nothing Then
+			Set sobjProfile = window.showModelessDialog("EditProfile.htm", Array(top, who), "dialogWidth:454px;dialogHeight:317px;status:no;help:no;resizable:no;")
+		Else
+			sobjProfile.document.body.focus
+		End If
+	Case "vwWhisperClose"
+		blnFound = False
+		If TypeName(sarrWhisper) <> "Empty" Then
+			intUB = UBound(sarrWhisper)
+			If intUB > -1 Then
+				For intCount = 0 To intUB
+					If blnFound Then
+						If intCount < intUB Then Set sarrWhisper(intCount) = sarrWhisper(intCount + 1)
+					ElseIf sarrWhisper(intCount) Is args Then
+						If intCount < intUB Then Set sarrWhisper(intCount) = sarrWhisper(intCount + 1)
+						blnFound = True
+					End If
+				Next
+				If blnFound then
+					If intUB = 1 Then
+						sarrWhisper = Array()
+					Else
+						ReDim Preserve sarrWhisper(intUB - 1)
+					End If
+				End If
+			End If
+		End If
+	Case "OnWhisper"
+		intUB = UBound(sarrWhisper) + 1
+		ReDim Preserve sarrWhisper(intUB)
+		Set sarrWhisper(intUB) = window.showModelessDialog("Whisper.htm", Array(top, who), "dialogWidth:350px;dialogHeight:325px;status:no;help:no;resizable:yes;")
+	' Host logoff events
+	Case "OnShowLogoffDialog"
+		window.ShowModalDialog "LogOff.htm", Array(top, args), "dialogWidth:277px;dialogHeight:174px;status:no;help:no;resizable:no;"
+	Case "OnLogOff"
+		HandleLogOff args.property(0), args.property(1), args.property(2)
+	' Portal intersection
+	Case "OnShowTransportDialog"
+		window.showModalDialog "Portal.htm", Array(top, who), "dialogHeight:137px;dialogWidth:450px;status:no;help:no;resizable:no;"
+	Case "OnAllowFriendship"
+		If MsgBox("Allow " & args.Property(1).Name & " to make you a friend?", vbYesNo + vbQuestion, "Microsoft Virtual Worlds") = vbYes Then
+			args.Property(1).FinalizeFriend args.Property(0), True
+		Else
+			args.Property(1).FinalizeFriend args.Property(0), False
+		End If
+	Case "OnPendingFriendship"
+'		window.ShowModelessDialog "../exemplar/avatar/PendingFriendship.htm", args,"dialogHeight:110px;dialogWidth:325px;status:no;help:no;resizable:yes;"
+	Case "OnDeclineFriendship"
+		MsgBox args.Name & " doesn't want to be your friend!", vbOkOnly + vbInformation, "Microsoft Virtual Worlds"
+	Case "Befriended"
+		MsgBox args.Name & " has been added to your Friends List. See your Profile to manage the list.", vbOkOnly + vbInformation, "Microsoft Virtual Worlds"
+	Case "vwLaunchOE"
+		Set objOEItem = args
+		world.ShowURLEx "Object Explorer", "Object Explorer", "sdk\editors\core\explore2.htm", top, (top.document.body.clientWidth - 640) / 2, (top.document.body.clientHeight - 480) / 2, 640, 480
+	Case Else
+		'stop
+	End Select
+
+	' send the event to other interested pages..
+	dim wind, i, bDispatchEvent
+	bDispatchEvent = bLoggedIn
+	if bDispatchEvent = false then
+		bDispatchEvent = IsCriticalEvent(what)
+	end if
+	if bDispatchEvent = true then
+		for i = 0 to windCnt
+			If Not blnAppClosing Then
+				set wind = wantsEventsList(i)
+				wind.HandleUIEvent who, what, args
+			End If
+		next
+	end if
+end sub
+
+
+sub HandleOnWelcome
+	dim strWelcomeURL
+	strWelcomeURL = window.theClient.VWClient.World.Global.WelcomeURL
+	window.ShowModelessDialog "Welcome.htm", nothing, "dialogHeight:110px;dialogWidth:325px;status:no;help:no;resizable:yes;"
+end sub
+
+function IsCriticalEvent(theEvent)
+	select case theEvent
+		case "OnEnterRoom", "OnEnterWorld"
+			IsCriticalEvent = true
+		case "OnFinishSceneComposite"
+			IsCriticalEvent = true
+		case else
+			IsCriticalEvent = false
+	end select
+end function
+
+
+sub HandleLogOff(Host, Target, Reason)
+	dim HostName
+	dim MsgString
+	dim User, wind
+
+	HostName = Host.Name
+	set User = top.theclient.vwclient.world.user
+
+	if  User is Target then
+			bForcedLogOffByHost = true
+			MsgString = "Host " & HostName & " is logging you off for the following reason:  " & Reason
+			MsgBox MsgString, vbInformation, "Microsoft Virtual Worlds"
+			for each wind in wantsEventsList
+				wind.HandleUIEvent user, "vwCloseAllDialogs", ""
+			next
+			if left(sLogoffURL, 7) = "vwStart" then
+				fShowLogon = true
+				window.close
+			else
+				top.navigate top.sLogoffURL
+			end if
+	end if
+end sub
+
+sub CloseWindow(windowName)
+	On Error Resume Next
+	htmlpopup.Close windowName
+	Err.Clear
+
+end sub
+
+sub SetFocusToTextEntry
+
+end sub
+
+sub SendKeyToTextEntry(theChar)
+	if theChar = 13 then
+		TextEntryFrame.DoSay
+	else
+		TextEntryFrame.InsertChar(theChar)
+	end if
+end sub
+
+
+sub DoCenterCameraOnObject(what)
+
+	dim rctrl
+	dim renderroot
+	dim camera
+	dim geom
+	dim viewmode
+
+	set rctrl = GetRenderControl()
+
+	rctrl.CenterViewOnObject what, false
+
+end sub
+
+sub DoSetCamera(who,arg)
+	dim rctrl
+	dim renderroot
+	dim camera
+	dim geom
+	dim viewmode
+
+	set rctrl = GetRenderControl()
+	set renderroot = rctrl.renderroot
+	rctrl.setcamera who
+	set camera = renderroot.camera
+	set geom = who.getframe
+	viewmode = rctrl.ViewMode
+
+	'Test if make sure we're in perspective mode
+	if (viewmode = 0) Then
+		camera.SetPositionEx geom, arg(0), arg(1), arg(2)
+	Else
+		camera.SetPositionEx geom, CSng(arg(0)), CSng(500.0), CSng(arg(2))
+	End If
+
+end sub
+
+
+sub DoSetCameraWOrient(who,arg)
+	' done in two separate routines because of bug in finding length of args
+	dim rctrl
+	dim renderroot
+	dim camera
+	dim geom
+	dim viewmode
+
+	set rctrl = GetRenderControl()
+	viewmode = rctrl.ViewMode
+
+	'Test if make sure we're in perspective mode
+	if (CLng(viewmode) = 0) Then
+		set renderroot = rctrl.renderroot
+		rctrl.setcamera who
+		set camera = renderroot.camera
+		set geom = who.getframe
+		camera.SetPositionEx geom, arg(0), arg(1), arg(2)
+		camera.SetOrientationEx geom, arg(3), arg(4), arg(5), 0.0, 1.0, 0.0
+	End If
+end sub
+
+'===========================================
+' HandleUserProfileChanged
+' handles updating the geometry and quote
+
+sub HandleUserProfileChanged
+	on error resume next
+	dim user
+	dim profile
+	set user = window.theclient.vwclient.world.user
+	set profile = user.profile
+	if user.geometryname <> profile.keyvalue("SpriteGeometry") then
+		user.geometryname = profile.keyvalue("SpriteGeometry")
+	end if
+	frames(0).HandleUserProfileChanged
+end sub
+
+'===========================================
+' HandleUpdateOptions
+' handles updating the render view & history
+
+sub HandleUpdateOptions
+	on error resume next
+	SavePrefsToCookie()
+	RenderPage.UpdateFromPrefs
+	HistoryPage.UpdateFromPrefs
+end sub
+
+sub HandleHelp(who, what, arg)
+	' arg is an IPropertyList
+	Dim HelpString
+	HelpString = "vworlds.chm::/sdkintro.htm>sdkall"
+	Dim BaseString
+	BaseString = "vworlds.chm::/UIRef/"
+
+	dim global
+	set global = window.theClient.vwclient.world.global
+
+	if IsObject(arg) then
+		if arg.Count > 0 then
+			Select Case arg.Property(0)
+				Case "client"
+					select case arg.property(1)
+						case "camera"
+							HelpString = BaseString & "cliels/camera.htm>sdkall"
+						case "directory"
+							'the line below has been moved to the calling file
+							'HelpString = BaseString & "cliels/dirserv.htm>sdkall"
+						case "emblem"
+							HelpString = BaseString & "cliels/descrip.htm>sdkall"
+						case "login"
+							'the line below has been moved to the calling file
+							'HelpString = BaseString & "cliels/loginscr.htm>sdkall"
+						case "options"
+							'the line below has been moved to the calling file
+							'HelpString = BaseString & "cliels/options.htm>sdkall"
+						case "profile"
+							HelpString = BaseString & "cliels/avprof.htm>sdkall"
+					end select
+				Case "host"
+					if arg.Count > 1 then
+						Select Case arg.Property(1)
+							Case "logoff"
+								HelpString = BaseString & "cliels/logoff.htm>sdkall"
+						end select
+					end if
+				Case "Authoring"
+					if arg.Count > 1 then
+						Select Case arg.Property(1)
+							Case "Object Explorer"
+								if arg.Count > 2 then
+									Select Case arg.Property(2)
+										Case "New Property"
+											HelpString = BaseString & "objexpl/newprop.htm>sdkall"
+										Case "New Method"
+											HelpString = BaseString & "objexpl/newmet.htm>sdkall"
+										Case "New Module"
+											HelpString = BaseString & "objexpl/newmodu.htm>sdkall"
+										Case "Menu Editor"
+											HelpString = BaseString & "objexpl/menued.htm>sdkall"
+										Case "Vector Editor"
+											HelpString = BaseString & "objexpl/vected.htm>sdkall"
+										Case "Method Editor"
+											HelpString = BaseString & "objexpl/inlinmth.htm>sdkall"
+											if arg.Count > 3 then
+												' this is a bogus string placeholder for the menu item
+												' creator in the method editor
+												HelpString = BaseString & "objexpl/newmenu.htm>sdkall"
+											end if
+										Case "String Editor"
+											HelpString = BaseString & "objexpl/texted.htm>sdkall"
+										Case "Thing Editor"
+											HelpString = BaseString & "objexpl/thinpick.htm>sdkall"
+										Case "Property Map Editor"
+											HelpString = BaseString & "objexpl/propmap.htm>sdkall"
+											if arg.Count > 3 then
+												HelpString = BaseString & "objexpl/mapitem.htm>sdkall"
+											end if
+										Case "Property List Editor"
+											HelpString = BaseString & "objexpl/proplist.htm>sdkall"
+											if arg.Count > 3 then
+												HelpString = BaseString & "objexpl/listitem.htm>sdkall"
+											end if
+										Case Else
+											HelpString = BaseString & "objexpl/intrface.htm>sdkall"
+									End Select
+								Else
+									HelpString = BaseString & "objexpl/intrface.htm>sdkall"
+								End if
+							Case "Geometry Editor"
+								HelpString = BaseString & "geomed/intrface.htm>sdkall"
+							Case "Boundary Editor"
+								HelpString = BaseString & "boundary/intrface.htm>sdkall"
+							Case "Boundary Browser"
+								HelpString = BaseString & "boundary/bbrowser.htm>sdkall"
+							Case "wizards"
+								if arg.Count > 2 then
+									Select Case arg.Property(2)
+										Case "new object"
+											HelpString = BaseString & "objwiz/objwiz.htm>sdkall"
+										case "new room"
+											select case arg.property(3)
+												case 1
+													HelpString = BaseString & "roomwiz/roomwiz1.htm>sdkall"
+												case 2
+													HelpString = BaseString & "roomwiz/roomwiz2.htm>sdkall"
+											end select
+										case else
+											HelpString = BaseString & "objexpl/intrface.htm>sdkall"
+									End Select
+								else
+									HelpString = BaseString & "objexpl/intrface.htm>sdkall"
+								end if
+							Case "editors"
+								if arg.Count > 2 then
+									Select Case arg.Property(2)
+										Case "description"
+											HelpString = BaseString & "proppage/descrip.htm>sdkall"
+										Case "geometry"
+											HelpString = BaseString & "proppage/geometry.htm>sdkall"
+										Case "texture"
+											HelpString = BaseString & "proppage/texture.htm>sdkall"
+										Case "motion"
+											HelpString = BaseString & "proppage/motion.htm>sdkall"
+										Case "approach"
+											HelpString = BaseString & "proppage/approach.htm>sdkall"
+										Case "Host"
+											HelpString = BaseString & "proppage/wizard.htm>sdkall"
+										case "exemplar"
+											HelpString = arg.property(3)
+										case else
+											HelpString = BaseString & "vworlds.chm::/client/gxprimer.htm>sdkall"
+									end select
+								else
+									HelpString = BaseString & "objexpl/intrface.htm>sdkall"
+								end if
+							Case Else
+								HelpString = BaseString & "objexpl/intrface.htm>sdkall"
+						End Select
+					Else
+						HelpString = "vworlds.chm::/client/auint.htm>sdkall"
+					End If
+				Case Else
+					HelpString = "vworlds.chm::/sdkintro.htm>sdkall"
+			End Select
+		else
+			HelpString = "vworlds.chm::/sdkintro.htm>sdkall"
+		end if
+	else
+		HelpString = "vworlds.chm::/sdkintro.htm>sdkall"
+	end if
+
+	if global.IsValidProperty("HelpPath") then
+		HelpString = "mk:@MSITStore:" & global.HelpPath & HelpString
+	else
+		' should ask the user to locate the help file
+		HelpString = "mk:@MSITStore:" & HelpString
+	end if
+	window.ShowHelp(HelpString)
+end sub
+
+sub ShowDirectory
+	dim sDSPage, retDlg
+	sDSPage = ""
+	dim world
+	set world = top.theclient.vwclient.world
+	if typename(world) = "IWorld" then
+		if world.global.isvalidproperty("DirectoryServicePage") = true then
+			sDSPage = world.global.DirectoryServicePage
+		end if
+	end if
+	if sDSPage <> "" then
+		retDlg = window.showModalDialog(sDSPage, window, "dialogHeight:327px;dialogWidth:512px;status:no;help:no")
+	else
+		msgbox "Directory services are not enabled in this Virtual Worlds client.", vbInformation, "Microsoft Virtual Worlds"
+	end if
+end sub
+
+
+
+'===========================================
+' ClearSelectList
+' clears any old select tag of options
+
+sub ClearSelectList(theObj)
+	dim i, listLen
+
+	listLen = theObj.length
+
+	for i = 0 to listLen
+		theObj.remove(0)
+	next
+end sub
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE="JScript">
+//===========================================
+// Cookie functions
+// parseCookie: This function from InsideDHTML, by Scott Isaacs
+// Will make it easy to add more cookies and place in array
+function parseCookie()
+{
+	// Separate each cookie.
+	var cookieList = document.cookie.split("; ");
+
+	// Array for each cookie in cookieList
+	var cookieArray = new Array();
+	for (var i = 0; i < cookieList.length; i++)
+	{
+		// Separate name-value pairs.
+		var name = cookieList[i].split("=");
+		// Decode and add to cookie array.
+		cookieArray[unescape(name[0])] = unescape(name[1]);
+	}
+
+	return cookieArray;
+}
+
+
+// This function sets a cookie when the user connects to a world
+function SavePrefsToCookie()
+{
+	// First check if cookies are turned on
+	if (navigator.cookieEnabled)
+	{
+		document.cookie = "iUseHWAcceleration=" + iUseHWAcceleration + ";path=/;expires=Fri, 1 Jan 2038 00:00:00 GMT;"
+		document.cookie = "bForceBackBuffering=" + bForceBackBuffering + ";path=/;expires=Fri, 1 Jan 2038 00:00:00 GMT;"
+		document.cookie = "iDrawFastWhenMoving=" + iDrawFastWhenMoving + ";path=/;expires=Fri, 1 Jan 2038 00:00:00 GMT;"
+		document.cookie = "iColorModel=" + iColorModel + ";path=/;expires=Fri, 1 Jan 2038 00:00:00 GMT;"
+		document.cookie = "bAutoDownloadAvatars=" + bAutoDownloadAvatars + ";path=/;expires=Fri, 1 Jan 2038 00:00:00 GMT;"
+		document.cookie = "bShowThumbnailsOnly=" + bShowThumbnailsOnly + ";path=/;expires=Fri, 1 Jan 2038 00:00:00 GMT;"
+		document.cookie = "bPlaySoundFX=" + bPlaySoundFX + ";path=/;expires=Fri, 1 Jan 2038 00:00:00 GMT;"
+		document.cookie = "bShowGestures=" + bShowGestures + ";path=/;expires=Fri, 1 Jan 2038 00:00:00 GMT;"
+		document.cookie = "bShowEvents=" + bShowEvents + ";path=/;expires=Fri, 1 Jan 2038 00:00:00 GMT;"
+		document.cookie = "bShowSysMsgs=" + bShowSysMsgs + ";path=/;expires=Fri, 1 Jan 2038 00:00:00 GMT;"
+	}
+}
+
+// This function gets the cookies when the page is first loaded
+function LoadPrefsFromCookie()
+{
+	// First check if cookies are turned on
+	if (navigator.cookieEnabled)
+	{
+		var cookieArray = parseCookie();
+
+		if (IsValidCookie(cookieArray.iUseHWAcceleration))
+			iUseHWAcceleration = cookieArray.iUseHWAcceleration;
+		if (IsValidCookie(cookieArray.bForceBackBuffering))
+			bForceBackBuffering = eval(cookieArray.bForceBackBuffering);
+		if (IsValidCookie(cookieArray.iDrawFastWhenMoving))
+			iDrawFastWhenMoving = cookieArray.iDrawFastWhenMoving;
+		if (IsValidCookie(cookieArray.iColorModel))
+			iColorModel = cookieArray.iColorModel;
+		if (IsValidCookie(cookieArray.bAutoDownloadAvatars))
+			bAutoDownloadAvatars = cookieArray.bAutoDownloadAvatars;
+		if (IsValidCookie(cookieArray.bShowThumbnailsOnly))
+			bShowThumbnailsOnly = cookieArray.bShowThumbnailsOnly;
+		if (IsValidCookie(cookieArray.bPlaySoundFX))
+			bPlaySoundFX = cookieArray.bPlaySoundFX;
+		if (IsValidCookie(cookieArray.bShowGestures))
+			bShowGestures = cookieArray.bShowGestures;
+		if (IsValidCookie(cookieArray.bShowEvents))
+			bShowEvents = cookieArray.bShowEvents;
+		if (IsValidCookie(cookieArray.bShowSysMsgs))
+			bShowSysMsgs = cookieArray.bShowSysMsgs;
+
+		//New skip-login cookies
+		if (IsValidCookie(cookieArray.sUser))
+			sUser = cookieArray.sUser;
+		if (IsValidCookie(cookieArray.sPassword))
+		{
+			sPassword = cookieArray.sPassword;
+			// don't keep the password cookie around, it is only for logging in from wizard
+			document.cookie = "sPassword=" + ";path=/;expires=Fri, 1 Jan 2038 00:00:00 GMT;"
+		}
+		if (IsValidCookie(cookieArray.sWorld))
+			sWorld = cookieArray.sWorld;
+		if (IsValidCookie(cookieArray.sLogoffURL))
+			sLogoffURL = cookieArray.sLogoffURL;
+	}
+}
+
+//---------------------------------------------------------
+// IsValidCookie
+// Check that cookie hasn't gotten messed up as a result
+// of a crash in VWorlds [reena]
+
+function IsValidCookie(cookie)
+{
+	if ((typeof(cookie) !=" undefined") && (cookie != "undefined") && (cookie != null))
+		return true;
+	else
+		return false;
+}
+</SCRIPT>
+
+</head>
+
+<BODY>
+<div id=logonMessge align="center" style="top:50;width:100%;" class="vH1">Loading the world...</div>
+<IFRAME HSPACE=0 BORDER=0 FRAMESPACING=0 VSPACE=0 MARGINHEIGHT=0 MARGINWIDTH=0 name="mainwin" scrolling="no" noresize height=100% width=100% frameborder="no" style="display:none" >
+</IFRAME>
+<object id="webhelper" tabindex=-1 style="position: absolute; left: 0; right: 0; z-index: -100"
+	classid="clsid:7886A636-606B-11d1-BB36-00C04FC2CAB1" border="0"	width="0" height="0">
+</object>
+</BODY>
+</html>

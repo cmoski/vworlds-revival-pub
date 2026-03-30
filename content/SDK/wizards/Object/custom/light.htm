@@ -1,0 +1,67 @@
+<html>
+<head>
+<LINK Rel=Stylesheet href="..\..\..\..\shared\global.css">
+
+<STYLE>
+.bStyle {width:110;height:18;cursor:hand;text-align:center;border-color: #747466; border-width: 2px; 
+		 border-style: solid; Font-Size: 8pt;Font-Family: Arial;Color: #000000;background-color:#FFFFFF}
+</STYLE>
+
+<script language="VBSCRIPT">
+
+
+dim Client
+dim World
+dim User
+
+Sub window_OnLoad
+	set client = top.frames(0).helper.client
+	set world = client.world
+	set user = world.user
+	
+	top.frames(0).page=1
+
+	
+End Sub
+
+function GetPath( filename )
+	' Test for a relative path, and make necessary correction to point to local content instead of html
+	select case Left (filename, 4) 
+		case "http"
+			GetPath = filename
+		case "file"
+			GetPath = filename
+		case else
+			GetPath = World.Global.ContentPath + filename
+	end select
+end function
+
+Sub Finish
+	Dim Artifact1
+	Dim vec
+
+	set Artifact1 = World.CreateInstanceByType("new artifact", "artifact", World.User)
+	Artifact1.Description = "a new artifact"
+	Artifact1.GeometryName = "media\models\basics\col2.x"
+	World.User.Drop Artifact1
+
+	World.Synchronize
+
+	Artifact1.editobject	
+
+	'MsgBox("Finished Making Artifact. Right-click to adjust properties.")
+
+End Sub
+
+
+
+</script>
+</head>
+<body link="#555A47" vlink="#555A47" alink="555A47" bgcolor="F4F4E8">
+
+
+<!-- Banner text -->
+<div class="vtitle" Style="position:absolute;left: 78;top:10">Light</div>
+<div class="vlabel" Style="position:absolute;left: 15;top:35; z-index=0">Description of Lights and their best uses.</div>
+
+</body></html>

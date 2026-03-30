@@ -1,0 +1,398 @@
+<html>
+<head>
+<LINK Rel=Stylesheet href=../../../../client/shared/global.css>
+<style>
+	.note {font-family:Webdings;color:#cc6600;font-size:14pt;}
+	.task {font-family:Webdings;color:#009900;font-size:14pt;}
+	.alert {font-family:Webdings;color:#cc0000;font-size:14pt;}
+	.helplink {font-family:Verdana;color:#3300cc;cursor:hand;font-size:8pt;font-weight:bold;}
+	.scriptlink {font-family:Verdana;color:#3300cc;cursor:hand;font-size:9pt;font-weight:bold;}
+</style>
+<title>Welcome to Entry and Exit Detection Script Tutorial!</title>
+<script language=vbs src=ComVBScript.htm></script>
+<script LANGUAGE="VBScript">
+
+dim world
+
+sub Window_OnLoad
+	window.settimeout "top.frames(""Btns"").BuildButtons(theBody.MaxSteps)", 0, "vbs"
+	window.settimeout "top.frames(""Tabs"").HighlightItem mid(window.location, instrRev(window.location, ""/"") + 1, len(window.location) - instrRev(window.location, ""/"") - 4)", 0, "vbs"
+	set world = top.goWorld
+	world.tutorial.start_lesson 7
+	world.fireUIEvent world.user, "EventRequest", window
+end sub
+
+Sub window_onunload
+    world.fireUIEvent world.user, "EventRequestCancel", window
+End sub
+
+</script>
+</head>
+</head>
+
+<body id=theBody class=vBody CurrentStep=1 MaxSteps=4>
+	<div class=vh1 Style=position:absolute;left:0;top:10; id=heading>
+		Entry/Exit Detection
+	</div>
+	<div class=vweb style=position:absolute;left:340;top:1; id=circle>=</div>
+
+<!-- Step 1 -->
+<div id=Step1 style=position:absolute;width:99%;left:0;top:44;>
+	<nobr>
+		<div class=vstep Style=position:absolute;left:351;top:-35; id=divSteps>
+			Step 1 of 4
+		</div>
+	</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step One: Objects and Containers
+		</div>
+	<div class=vtext id=body style=position:absolute;left:0;top:30;width:99%;>
+		<p>When an object has another one inside it, it is said to be a <span class=helplink HelpString="vworlds.chm::/API Reference/Thing/Container.htm" TITLE="Help">container</span> of the inner object. For example, the room object is the container of all the objects inside it, which in turn may contain other objects (as is the case for many of the lessons).
+
+		<p>Objects can receive events from the world telling them that an object has changed its container. There are <span class=helplink HelpString="vworlds.chm::/API Reference/Events/Event Handlers.htm" TITLE="Help">events</span> that Virtual Worlds sends to every object that mark when an object leaves a container and when it enters a container, but usually objects do not have the event-handling methods added to them to make use of the events.
+		<table class=vtext cellspacing=3>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>For this lesson we go into a different room in the tutorial. You should see a door appear in the 3-D view.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Right-click that door and select the menu command <b>Go Through</b> on it. You should see a spinning cube and be transported into a new room.</td></tr>
+			<tr><td valign=top><span class=note>$</span></td>
+			<td>Notice that the <span class=helplink HelpString="vworlds.chm::/UIREF/objexpl/intrface.htm" TITLE="Help">Object Explorer</span> list has changed to indicate the content hierarchy of this new room. There should also be another portal visible. This is a portal back to the main lesson room.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Go through the portal and watch the <span class=helplink HelpString="vworlds.chm::/UIREF/cmdwin/cwinintf.htm" TITLE="Help">Command Window</span> to see if the scripts on these portals detect that your avatar passes out of the sub-room container and into the main lesson room container, and then go on to the next step.</td></tr>
+	</table>
+	</div>
+</div>
+
+<!-- Step 2 -->
+<div id=Step2 style=position:absolute;left:0;top:44;width:99%;display:none;>
+	<nobr>
+		<div class=vstep Style=position:absolute;left:351;top:-35; id=divSteps>
+			Step 2 of 4
+		</div>
+	</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step Two: Changing Containers
+		</div>
+<div class=vtext id=body2 style=position:absolute;left:0;top:30;width:99%;height:100%;>
+		<p>Below is some of the script found in the file <b>lesson_7_entry_and_exit.vbs</b>. It contains two subroutines that override the event handlers <span class=helplink HelpString="vworlds.chm::/API Reference/Events/OnEnter.htm" TITLE="Help">OnPeerEnter</span> and <span class=helplink HelpString="vworlds.chm::/API Reference/Events/OnLeave.htm" TITLE="Help">OnPeerLeave</span>.
+		<table class=vtext cellspacing=3>
+			<tr><td valign=top><span class=alert>~</span></td>
+			<td>It is important to note that these are <b>not</b> the names of the subroutines, but of the object methods with which you are associating the subroutines; the names of the subroutines are unimportant. In this example, they are called <b>object_enters</b> and <b>object_leaves</b>.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Open the <b>Object Explorer</b> and look at the object <b>lesson_7_portal</b>. (You must be in the tutorial main room to see it.)</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Look at the lists of methods for the object for these two subroutines, and verify that they come from a script module, <b>lesson_7</b>, which points to this file.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Change rooms to <b>lesson_7_sub_room</b>, and then look at the method list for its portal, named <b>sub_room_portal</b>.
+			<tr><td valign=top><span class=note>$</span></td>
+			<td>Notice that its methods <b>OnPeerEnter</b> and <b>OnPeerLeave</b> have exactly the same module and subroutines as the portal in the previous room, yet the two portals end up with slightly different behavior.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Examine the two subroutines below to see how each of them checks for the Virtual Worlds object type that is changing containers, and that they both call a custom method on their object under certain conditions.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Go on to <b>Step 3</b>. </td></tr>
+		</table>
+		<p>&nbsp;</p>
+	</div>
+	<div style=position:absolute;left:0;top:330;>
+	<table style=background-color:white;vertical-align:top;padding-left:7;padding-right:5;padding-top:5;width:610;height:98%;>
+		<tr>
+   			 <td valign=top><font face=verdana size=2>option explicit</font></td>
+   			 <td>&nbsp;</td>
+  		</tr>
+	<tr>
+   		 <td valign=top><font face=verdana size=2>dim portal_counter</font></td>
+   		 <td valign=top>
+			<span CLASS="Outline" ID="Out1" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out1d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>'we need a global to keep track of how<br>
+					'many times this user<br>
+					'has entered or exited certain portals<br>
+					'during this Virtual Worlds session.<br>
+				</div></td>
+  		</tr>
+		<tr>
+  		  <td width="45%" valign=top><font face=verdana size=2>portal_counter = 0</font></td>
+			<td width="55%" valign=top><span CLASS="Outline" ID="Out2" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out2d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>'we can initialize a value for the variable<br>
+				'before using it (this will happen only<br>
+				'once the first time a script sub in<br>
+				'this script file is run).<br>
+				</div></td>
+		</tr>
+		<tr>
+  			<td width="100%" colspan=2><font face=verdana size=2>sub object_enters (the_container, the_object)<br>
+			<img src="Images/spacer.gif" width=32 height=4>world.trace "sub object_enters called on object "&this.name<br>
+			<img src="Images/spacer.gif" width=32 height=4>world.trace "the sub was passed the object "&the_object.name&" _<br>
+			<img src="Images/spacer.gif" width=48 height=4>and the container it entered..."<br>
+			<img src="Images/spacer.gif" width=32 height=4>world.trace "the container 									"&the_object.<span class=scriptlink HelpString="vworlds.chm::/API Reference/Thing/Name.htm" TITLE="Help">Name</span>&" just entered is _
+			<img src="Images/spacer.gif" width=48 height=4>"&the_container.name</font></td>
+		</tr>
+		<tr>
+		<td width="45%">&nbsp;</td>
+		<td  width="55%" valign=top><span CLASS="Outline" ID="Out3" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out3d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+				'the next line checks to see if the object<br>
+				'that entered the same space as the<br>
+				'portal is an avatar. the object was<br>
+				'passed in as the local variable <br>
+				' "the_object". This is how we can<br>
+				'tell the difference between an avatar<br>
+				'coming in or leaving and someone<br>
+				'dropping or taking an object, since<br>
+				'they are both objects and can cause<br>
+				'the same methods to be called.<br>
+				</div></td>
+		</tr>
+		<tr>
+  			<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>if the_object.exemplar.<span class=helplink HelpString="vworlds.chm::/API Reference/Base Class/IsOfType.htm" TITLE="Help">IsOfType</span>("avatar") then</font></td>
+		</tr>
+		<tr>
+			<td width="45%">&nbsp;</td>
+			<td  width="55%" valign=top><span CLASS="Outline" ID="Out4" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out4d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>'now we know it is an avatar that has<br>
+					'entered the room!<br>
+				</div></td>
+		</tr>
+		<tr>
+  		  <td width="45%" valign=top><font face=verdana size=2><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>portal_counter = portal_counter + 1</font></td>
+<td  width="55%" valign=top><span CLASS="Outline" ID="Out5" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out5d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>'increment our global counter.<br>
+				</div></td>
+		</tr>
+		<tr>
+  			<td width="100%" colspan=2><font face=verdana size=2><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>world.trace "a portal has been accessed "&portal_counter&" _<br>
+			<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=48 height=4>times in this session..."</font></td>
+		</tr>
+		<tr>
+			<td width="45%">&nbsp;</td>
+			<td  width="55%" valign=top><span CLASS="Outline" ID="Out6" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out6d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>'why do we need this if<br>
+					'statement below?<br>
+				</div></td>
+		</tr>
+		<tr>
+  			<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>if world.Current_Lesson = 7 then</font></td>
+		</tr>
+		<tr>
+			<td width="55%" valign=top><font face=verdana size=2><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=48 height=4>this.do_surprise the_object</font></td>
+			<td  width="45%" valign=top><span CLASS="Outline" ID="Out7" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out7d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>'we can send a variable with a Virtual Worlds<br>
+					'object inside it to another method<br>
+					'so that method can use the objects<br>
+					'properties (name,positition, etc.)<br>
+					'to do things.<br>
+				</div></td>
+		</tr>
+		<tr>
+  			<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>end if</font></td>
+		</tr>
+		<tr>
+			<td width="45%">&nbsp;</td>
+			<td  width="55%" valign=top><span CLASS="Outline" ID="Out8" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out8d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>'we need it because this script will<br>
+					'detect you, the tutorial taker, when<br>
+					'you first come into the main room.<br>
+					'We don't want the surprise to happen<br>
+					'then because it will be out of the<br>
+					'context of the lesson.<br>
+					'for your own scripts you won't need<br>
+					'this condition checker.<br>
+				</div></td>
+		</tr>
+		<tr>
+  			<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>else<br>
+			<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>world.trace this.name&" knows that "&the_object.name&" is not an avatar."</font></td>
+		</tr>
+		<tr>
+			<td width="45%">&nbsp;</td>
+			<td width="55%" valign=top><span CLASS="Outline" ID="Out9" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out9d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>'we decide to do nothing special here,<br>
+					'but you could use this area to<br>
+					'put artifacts away when they are<br>
+					'dropped by avatars, or trigger<br>
+					'other events.<br>
+				</div></td>
+		</tr>
+		<tr>
+  			<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>end if<br><br>
+
+		<img src="Images/spacer.gif" width=32 height=4>dim result<br>
+		<img src="Images/spacer.gif" width=32 height=4>result = this.invokesupermethod(Array(the_container, the_object))<br><br>
+
+			end sub</font></td>
+		</tr>
+		<tr>
+  			<td width="100%" colspan=2><font face=verdana size=2>sub object_leaves (the_container, the_object)<br><br>
+			<img src="Images/spacer.gif" width=32 height=4>world.trace "sub object_leaves called on object "&this.name<br>
+		<img src="Images/spacer.gif" width=32 height=4>wworld.trace "the sub was passed the object "&the_object.name<br>
+		<img src="Images/spacer.gif" width=32 height=4>wworld.trace "the object is in container "&the_object.<span class=scriptlink HelpString="vworlds.chm::/API Reference/Thing/Container.htm" TITLE="Help">Container</span>.name<br>
+		<img src="Images/spacer.gif" width=32 height=4>wworld.trace "the container just left is "&the_container.name<br></font></td>
+		</tr>
+		<tr>
+  			<td width="100%" colspan=2><font face=verdana size=2>if the_object.<span class=scriptlink HelpString="vworlds.chm::/API Reference/Thing/Exemplar.htm" TITLE="Help">Exemplar</span>.<span class=scriptlink HelpString="vworlds.chm::/API Reference/Base Class/IsOfType.htm" TITLE="Help">IsOfType</span>("avatar") then</font></td>
+		</tr>
+		<tr>
+			<td width="45%">&nbsp;</td>
+			<td width="55%" valign=top><span CLASS="Outline" ID="Out10" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out10d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>'to be neat, we can clean up the<br>
+					'surprise so it can happen again<br>
+					'the same way for another avatar.<br>
+				</div></td>
+		</tr>
+		<tr>
+  			<td width="100%" colspan=2><font face=verdana size=2><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>this.end_surprise<br>
+		<img src="Images/spacer.gif" width=32 height=4>else<br>
+			<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>world.trace this.name&" knows that "&the_object.name&" is not an avatar."<br>
+		<img src="Images/spacer.gif" width=32 height=4>end if<br>
+end sub<br></font></td>
+		</tr>
+	</table>
+	</div>
+</div>
+
+<!-- Step 3 -->
+<div id=Step3 style=position:absolute;left:0;top:44;width:99%;display:none;>
+	<nobr>
+		<div class=vstep Style=position:absolute;left:351;top:-35; id=divSteps>
+			Step 3 of 4
+		</div>
+	</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step Three: Generic and Specialized Methods
+		</div>
+	<div class=vtext id=body2 style=position:absolute;left:0;top:30;width:99%;height:100%;>
+		<p>In the next step, we take a look at the custom methods <b>do_surprise</b> and <b>end_surprise</b> that have been added to the two portals used in the example.
+		<table class=vtext cellspacing=3>
+			<tr><td valign=top><span class=note>$</span></td>
+			<td>You see four distinct subroutines in the code.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Examine each of the portals of both rooms in the <b>Object Explorer</b>.</td></tr>
+			<tr><td valign=top><span class=note>$</span></td>
+			<td>Both have methods called <b>do_surprise</b> and <b>end_surprise</b> that come from the same module, but notice that their script subroutines for these methods are different.</td></tr>
+			<tr><td valign=top><span class=note>$</span></td>
+			<td>This is to show you that you can have one method, such as <span class=helplink HelpString="vworlds.chm::/API Reference/Events/OnEnter.htm" TITLE="Help">OnPeerEnter</span>, that contains script common to many objects (the portals run the same script at this point), and that this method can, in turn, call a more specialized behavior specific to a need.</td></tr>
+			<tr><td valign=top><span class=note>$</span></td>
+			<td>If we wanted the portals to behave wildly differently from each other, we could place entirely different code in their respective subroutines for the <b>do_surprise</b> and <b>end_surprise</b> methods.</td></tr>
+			<tr><td valign=top><span class=note>$</span></td>
+			<td>If we had a hundred objects, we could make 90 of them use the same scripts for their responses to a particular event, give 10 of them totally distinct scripts, and only need to write about 22 subroutines instead of 400.</td></tr>
+			<tr><td valign=top><span class=alert>~</span></td>
+			<td>All we would have to ensure is that each portal had some kind of <b>do_surprise</b> and <b>end_surprise</b> methods, even if only a few were made specialized by pointing them at individualized subroutines.</td></tr>
+		</table>
+	</div>
+</div>
+
+<!-- Step 4 -->
+<div id=Step4 style=position:absolute;left:0;top:44;width:99%;display:none;>
+	<nobr>
+		<div class=vstep Style=position:absolute;left:351;top:-35; id=divSteps>
+			Step 4 of 4
+		</div>
+	</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step Four: Detecting Taking and Dropping
+		</div>
+	<div class=vtext id=body2 style=position:absolute;left:0;top:30;width:99%;height:100%;>
+<p> The scripts we examined before used a conditional statement to make sure that they ran the custom "surprise" methods only when the object that changed was an avatar.
+		<table class=vtext cellspacing=3>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>To verify this, navigate your avatar through the <b>Lesson_7_portal</b> into the sub-room.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>You should find an object called "key" listed in the room's <b>Contents Tab</b>. (You can find that under the tab marked with a house, in the top right of the Virtual Worlds window.)</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>While watching the <b>Command Window</b>, click on the word "key" in the list and select <span class=helplink HelpString="vworlds.chm::/API Reference/Exemplars/Thing/Take.htm" TITLE="Help">Take</span> from the sub-list of options that expands below it. You have now moved the object out of its container (the room) and into a new container (you!).</td></tr>
+			<tr><td valign=top><span class=note>$</span></td>
+			<td>The portal script detects that something has left its container, but it has no particular behavior associated with that action. You could use the same mechanism to detect when objects are picked up or dropped in your world, so that you can make special things happen in response.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Try dropping the key object from your contents, and picking it up, to see the code at work. With the key in your contents, switch back to the main room and <span class=helplink HelpString="vworlds.chm::/API Reference/Exemplars/Thing/Drop.htm" TITLE="Help">Drop</span> it there. The same code functions just as well in this room, making it possible to track a special object anywhere in a world.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Now take a look at the scripts that will run if the object that is being sent to the scripts passed the test that checks whether it is an avatar.</td></tr>
+			<tr><td valign=top><span class=note>$</span></td>
+			<td>They do not contain much special code at the moment, but they do move the avatar to a set point and trace into the <b>Command Window</b>.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Try to think about how you might customize them further, to do things like invoking methods on other objects so that they interact with the avatar.</td></tr>
+		</table>
+	</div>
+	<div style=position:absolute;left:0;top:360;>
+	<table style=background-color:white;vertical-align:top;padding-left:7;padding-right:5;padding-top:5;width:610;height:98%;>
+		<tr>
+			<td width="45%">&nbsp;</td>
+			<td width="55%" valign=top><span CLASS="Outline" ID="Out11" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out11d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+			 		'the next subroutines implement the<br>
+					'do_surprise and end_surprise methods<br>
+					'for each of the 2 portals--but note<br>
+					'that the subroutines "object_enters"<br>
+					'and "object_leaves" written above<br>
+					'do not know which portal is calling<br>
+					'the OnPeerEnter/leave methods -- <br>
+					'the same script methods are attached<br>
+					'to BOTH portals in separate rooms,<br>
+					'even though we might want to get them<br>
+					'to behave differently.<br>
+					'we can get different behaviors for<br>
+					'the portals and edit them independently<br>
+					if we use the "this" object to call the<br>
+					'right "do_surprise" or "end_surprise"<br>
+					'method for the right portal<br>
+			</td>
+		</tr>
+		<tr>
+  			<td width="100%" colspan=2><font face=verdana size=2>sub tutorial_portal_do_surprise (the_object)<br>
+			<img src="Images/spacer.gif" width=32 height=4>world.trace "sub tutorial_portal_do_surprise called on object "&this.name<br>
+			<img src="Images/spacer.gif" width=32 height=4>this.say "hello, "&the_object.name&", welcome to "&this.<span class=scriptlink HelpString="vworlds.chm::/API Reference/Thing/Container.htm" TITLE="Help">Container</span>.name&"!"<br>
+			</font></td>
+		</tr>
+		<tr>
+			<td width="45%">&nbsp;</td>
+			<td width="55%" valign=top></td>
+		</tr>
+		<tr>
+  			<td width="100%" colspan=2><font face=verdana size=2>end sub<br>
+			</font></td>
+		</tr>
+		<tr>
+  			<td width="100%" colspan=2><font face=verdana size=2>sub tutorial_portal_end_surprise<br>
+			<img src="Images/spacer.gif" width=32 height=4>world.trace "sub tutorial_portal_end_surprise called on object "&this.name<br>
+			end sub<br><br>
+			</font></td>
+		</tr>
+		<tr>
+  			<td width="100%" colspan=2><font face=verdana size=2>sub subroom_portal_do_surprise (the_object)<br>
+			<img src="Images/spacer.gif" width=32 height=4>world.trace "sub subroom_portal_do_surprise 		called on object "&this.name<br>
+			<img src="Images/spacer.gif" width=32 height=4>this.say "hi there, "&the_object.name&", 	you're 	now in "&this.container.name&"!"<br>
+			end sub<br><br>
+			</font></td>
+		</tr>
+		<tr>
+  			<td width="100%" colspan=2><font face=verdana size=2>sub subroom_portal_end_surprise<br>
+			<img src="Images/spacer.gif" width=32 height=4>world.trace "sub subroom_portal_end_surprise called on object "&this.name<br>
+			end sub<br><br>
+			</font></td>
+		</tr>
+		<tr><td width="100%" colspan=2><font face=verdana size=2>
+sub transport(the_object, the_index)<br>
+	<img src="Images/spacer.gif" width=32 height=4>world.trace "transport called on object "&this.name<br>
+	<img src="Images/spacer.gif" width=32 height=4>dim i<br>
+	<img src="Images/spacer.gif" width=32 height=4>dim keyfound<br>
+	<img src="Images/spacer.gif" width=32 height=4>keyfound = false<br>
+	<img src="Images/spacer.gif" width=32 height=4>for i = 0 to world.user.contents.count - 1<br>
+		<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>if world.user.contents.<span class=scriptlink HelpString="vworlds.chm::/API Reference/PropertyList/Property.htm" TITLE ="Help">Property</span>(i).name = "key" then<br>
+			<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>this.say "ahh, you have the key, go on in!"<br>
+			<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>this.invokesupermethod (Array(the_object, 0))<br>
+			<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>keyfound = true<br>
+			<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>exit for<br>
+		<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>end if<br>
+	<img src="Images/spacer.gif" width=32 height=4>next<br>
+	<img src="Images/spacer.gif" width=32 height=4>if keyfound = false then<br>
+		<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>this.say "Normally, I wouldn't let you go through" & _<br>
+		<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=48 height=4>"until you have an object 'key' in your contents..."<br>
+		<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>this.say "but just this once..."<br>
+		<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>this.invokesupermethod (Array(the_object))<br>
+	<img src="Images/spacer.gif" width=32 height=4>end if<br>
+end sub<br>
+		</td></tr>
+	</table>
+	</div>
+	</div>
+</div>
+</body>
+</html>

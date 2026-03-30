@@ -1,0 +1,37 @@
+option explicit
+
+
+sub make_lesson_7 (lesson_7_box)
+	window.status = "in 7.a."
+	set lesson_7_box = world.createInstance("lesson_7 portal","portal")
+	lesson_7_box.initializegraphics "SDK\library\models\_ScriptTutorial\door 1.x" , -10 , -200 ,  10 , 0,0,1
+	dim myvec
+	set myvec = world.createvector(2,2,2)
+	lesson_7_box.scale = myvec
+	lesson_7_box.moveinto home
+	window.status = "in 7.e."
+	lesson_7_box.createandaddmethod World.METHOD_CLIENT, Lesson_7_Module,  "object_enters" , "OnPeerEnter"
+	lesson_7_box.createandaddmethod World.METHOD_CLIENT, Lesson_7_Module,  "object_leaves" , "OnPeerLeave"
+	lesson_7_box.createandaddmethod World.METHOD_CLIENT, Lesson_7_Module,  "tutorial_portal_do_surprise" , "do_surprise"
+	lesson_7_box.createandaddmethod World.METHOD_CLIENT, Lesson_7_Module,    "tutorial_portal_end_surprise" ,"end_surprise"
+	world.global.addproperty "lesson_7" , lesson_7_box
+	lesson_7_box.IsNoticeable = true
+	lesson_7_box.description = "a scripting tutorial object"
+	
+	Dim fromlesson7
+	Set fromlesson7 = World.CreateInstance ("Sub-Room Portal","Portal")
+	fromlesson7.initializegraphics "SDK\library\models\_ScriptTutorial\door 1.x" , 0 , 1 ,0 , 0,0,1
+	fromlesson7.Destinations.Add lesson_7_box
+	fromlesson7.Descriptions.Add "To main room (other lessons)"
+	fromlesson7.MoveInto subroom
+	fromlesson7.createandaddmethod World.METHOD_CLIENT, Lesson_7_Module, "object_enters" , "OnPeerEnter"
+	fromlesson7.createandaddmethod World.METHOD_CLIENT, Lesson_7_Module, "object_leaves" , "OnPeerLeave"
+	fromlesson7.createandaddmethod World.METHOD_CLIENT, Lesson_7_Module, "subroom_portal_do_surprise" , "do_surprise"
+	fromlesson7.createandaddmethod World.METHOD_CLIENT, Lesson_7_Module, "subroom_portal_end_surprise" ,"end_surprise"
+	fromlesson7.createandaddmethod World.METHOD_CLIENT, Lesson_7_Module, "transport", "transport"
+	fromlesson7.IsNoticeable = true
+	window.status = "in 7.e."
+	lesson_7_box.Destinations.Add fromlesson7
+ 	lesson_7_box.Descriptions.Add "To lesson 7 SubRoom"
+	fromlesson7.description = "a scripting tutorial object"
+end sub

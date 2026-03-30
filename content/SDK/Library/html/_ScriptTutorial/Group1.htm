@@ -1,0 +1,67 @@
+<HTML>
+<HEAD>
+<LINK Rel=Stylesheet href=../../../../client/shared/global.css>
+<style>
+	.note {font-family:Webdings;color:#cc6600;font-size:14pt;}
+	.task {font-family:Webdings;color:#009900;font-size:14pt;}
+	.alert {font-family:Webdings;color:#cc0000;font-size:14pt;}
+	.helplink {font-family:Verdana;color:#3300cc;cursor:hand;font-size:8pt;font-weight:bold;}
+	.scriptlink {font-family:Verdana;color:#3300cc;cursor:hand;font-size:9pt;font-weight:bold;}
+</style>
+<TITLE>Introduction: User Interactions</TITLE>
+<script language=vbs src=ComVBScript.htm></script>
+<script language=vbs>
+
+dim world
+
+sub Window_OnLoad
+	set World = top.goWorld
+	if top.frames("Btns").document.readyState = "complete" then
+		top.frames("Btns").BuildButtons(0)
+	end if
+end sub
+
+sub document_onmouseover
+	if (window.event.srcElement.className = "vwMenu") then
+		window.event.srcElement.className = "vwMenuHighlight"
+	end if
+end sub
+
+sub document_onmouseout
+	if (window.event.srcElement.className = "vwMenuHighlight") then
+		window.event.srcElement.className = "vwMenu"
+	end if
+end sub
+
+</script>
+</HEAD>
+<BODY class=vBody>
+	<div class=vH1 style=position:absolute;width:98%;left:10;top:10>
+		User Interactions
+	</div>
+	<div class=vtext style=position:absolute;width:98%;left:10;top:45;padding-left:10;padding-right:10;>
+		<p>The <b>User Interactions</b> lessons offer a preliminary look at how user interfaces function within a virtual world, and how you can create objects that users can interact with.
+		<table class=vtext cellspacing=3>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>We will look at methods that receive input from users by their navigation in three-dimensional space, their use of the mouse, their text input, and their interactions with external web pages.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>We will also look at how to make objects react to user input with scripts.</td></tr>
+		</table>
+
+<P>At this stage, you can use scripts to write simple methods that can receive messages from world users, and alter the properties of an object. By using VBScript or Jscript/javascript, a world scripter can manipulate any object in the virtual world in real time.
+If you need a more detailed description of objects, please see the
+<nobr><span class=helplink HelpString="vworlds.chm::/Programmer's guide/objects/object_model_overview.htm" TITLE="Help">Object Model Overview</span></nobr> topic in Virtual Worlds Help. If you would like to read further about object methods, please see the <nobr><span class=helplink HelpString="vworlds.chm::/Programmer's guide/methods/Virtual Worlds Methods.htm" TITLE="Help">Virtual Worlds Methods</span></nobr>
+ topic in the Help."
+		<p><nobr><a href="click_objects1.htm" class=vwMenu style=font-size:10pt;>2. Clickable Objects</a></nobr>
+			<br>How to use mouse clicks to trigger the behavior of objects in the world.
+		<p><nobr><a href="anim_objects1.htm" class=vwMenu style=font-size:10pt;>3. Objects with Timers</a></nobr>
+			<br>How to use timers in Virtual Worlds to create animations and time-limited behavior.
+		<p><nobr><a href="chat_objects1.htm" class=vwMenu style=font-size:10pt;>4. Objects and Chat</a></nobr>
+			<br>How to set up user-triggered object behaviors by causing objects to "listen" to text that is typed into the chat window.
+		<p><nobr><a href="ext_web1.htm" class=vwMenu style=font-size:10pt;>5. External Web Pages</a></nobr>
+			<br>How to have your web pages "talk" to the world, alter themselves dynamically from incoming world data, and trigger (and respond to) your custom Virtual Worlds methods.
+		<p><nobr><a href="coll_det1.htm" class=vwMenu style=font-size:10pt;>6. Collision Detection</a></nobr>
+			<br>How to dynamically use three-dimensional navigation boundaries as a form of user input, and to trigger user feedback and object behaviors.
+	</div>
+</BODY>
+</HTML>

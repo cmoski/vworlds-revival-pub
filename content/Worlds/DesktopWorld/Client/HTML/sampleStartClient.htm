@@ -1,0 +1,29 @@
+<!--'////////////////////////////////////////////////////////////////////
+'//  File:			sampleStartClient.htm
+'//  Description:	This file hosts uses the helper control to close the current
+'//					window and launch a new toolbar free broser window
+'//  System:		Desktop World 
+'////////////////////////////////////////////////////////////////////////-->
+<html>
+<head>
+<title>Desktop World Starting...</title>
+<!-- magic to close the current window without getting a prompt -->
+<object id=helper classid=clsid:7E3832CF-4F4E-11D0-89AB-00A0C9054129></object>
+
+<script language="vbscript" src="../vbs/pathnames.vbs"></script>
+<script language=vbs>
+option explicit
+
+dim DesktopPath
+DesktopPath = left(document.location.pathname, instrRev(document.location.pathname,"\"))
+window.open loginServer & "/website/login/login.asp?clientPath=" & DesktopPath, "DesktopWorldStart", _
+	"toolbar=no,location=no,status=no,menubar=no,resizable=no,width=495,height=370,top=" & _
+	(screen.availHeight - 370) / 2 & ",left=" & (screen.availWidth - 495) / 2
+
+' window.close would give you a prompt, because the window was not opened programmatically
+helper.CloseWindow
+</script>
+</head>
+<body bgcolor="#FFFFFF" >
+</body>
+</html>

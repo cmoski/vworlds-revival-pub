@@ -1,0 +1,38 @@
+<HTML>
+<HEAD>
+<style>
+.head {font-family: Arial;font-size:12pt;color:"#67675D";font-weight:bold}</style>
+</HEAD>
+<BODY BGCOLOR="#F4F4E8" LEFTMARGIN=19 TOPMARGIN=12>
+<div class="head" align="center">Boundary List</div><br>
+<OBJECT id="helper" classid="clsid:7E3832CF-4F4E-11D0-89AB-00A0C9054129"
+		border="0" width="0" height="0">
+</OBJECT>
+<SCRIPT LANGUAGE="VBScript">
+On error resume next
+
+dim string
+
+sub Window_OnLoad
+end sub
+
+sub Window_OnUnload
+end sub
+
+sub OnOk
+	helper.CloseWindow()
+end sub
+
+sub OnCancel
+	helper.CloseWindow()
+end sub
+
+document.writeln "Object: " + helper.arg.editThing.name + "<br>"
+document.writeln "Property: " + helper.arg.editPropName + "<br>"
+</SCRIPT>
+
+<h2>We do not currently support editing Boundary Lists</h2>
+<br>
+<INPUT TYPE="BUTTON" NAME="cancel" ID="cancel" size="30" VALUE="Cancel" ONCLICK="OnCancel" LANGUAGE="VBScript">
+</BODY>
+</HTML>

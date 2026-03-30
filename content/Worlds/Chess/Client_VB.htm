@@ -1,0 +1,715 @@
+<HTML>
+<HEAD>
+<TITLE>Chess World Client - VBScript Version</TITLE>
+
+<!-- This style sheet sets the sizes for all of the squares and pieces
+     and contains the link to the "Moveable" behavior file that allows
+	 the pieces to drag around the board-->
+<link rel=stylesheet href="Styles.css">
+
+<!-- VWorld Client control which connects to the VWorlds server -->
+<object id=objClientCtrl name="objClientCtrl" classid="clsid:D4898803-20EF-11D0-8A96-00A0C9082583"></object>
+
+<SCRIPT LANGUAGE="VBScript">
+option explicit
+
+'//////////////////////////////////////////////////////////////////////////
+'////  Global constants (to this file)
+'//////////////////////////////////////////////////////////////////////////
+const numVWRow1Y = 350 		' the worlds Y position value for row 1
+const numVWColAX = 0  		' the worlds X position value for col A
+const numVWRow8Y = 0 		' the worlds y position value for row 8
+const numVWColHX = 350 		' the worlds x position value for col H
+const intAscA = 65 			' the ascii val for the char "A"
+const numPieceFloat = 4 	' the level at which pieces will float once discarded
+const intColsCt = 8 		' the number of cols on the board
+const intRowsCt = 12 		' the number of rows on the board
+const intMoveDiv = 8 		' the divisor for breaking a piece move into several moves
+const numVWSquareX = 50		' the width of a world square; calc as (numVWColHX-numVWColAX)/7
+const numVWSquareY = 50		' the height of a world square; calc as (numVWRow1Y-numVWRow8Y)/7
+
+'//////////////////////////////////////////////////////////////////////////
+'////  Global Variables (to this file)
+'//////////////////////////////////////////////////////////////////////////
+dim World		' the client control's "World" object
+dim User		' the client control's "User" object
+dim strStatus	' the login status message
+dim blnLogin	' true if login is complete
+dim intZind 	' the current max zindex 
+dim intSquareWd ' the current size of a side of a board square
+dim blnSwapped	' has the board been turned 180*
+dim objEventElem ' the window.event.srcElement
+dim numLastX 	' the last object clicked down on x cood
+dim numLastY 	' the last object clicked down on y cood
+
+intZInd = 0
+intSquareWd = 40
+blnSwapped = false
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  	Window_OnLoad
+'////////////////////////////////////////////////////////////////////////
+sub Window_OnLoad
+	' connect to the server and world
+	ConnectToWorld
+	divFeedback.innerHTML = strStatus
+	' if the login is successful
+	if blnLogin then
+		SyncPieces
+		divPieces.style.display = "block"
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  	window_OnUnload
+'//  Purpose:	To disconnect from the world when the user leaves this page
+'////////////////////////////////////////////////////////////////////////
+sub window_OnUnload
+	' if the login was successful
+	if blnLogin then
+		World.Disconnect
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  	document_OnClick()
+'//  Purpose:  	Push the img to the back of the pieces zorder
+'////////////////////////////////////////////////////////////////////////
+sub document_OnClick
+	dim objEventElem
+	set objEventElem = window.Event.srcElement
+	' reset the zindex to the next negative
+	if IsPiece(objEventElem) then
+		objEventElem.style.zIndex = intZInd
+	    intZInd = intZInd - 1 
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  	document_OnMouseDown
+'//  Purpose:  	Record the former coordinates for future use, to test to 
+'//             see if the img actually moved.
+'////////////////////////////////////////////////////////////////////////
+sub document_OnMouseDown
+	set objEventElem = window.Event.srcElement
+	' just set the current position of the piece for eval when mouse is up
+	if IsPiece(objEventElem) then
+		numLastX = objEventElem.style.pixelLeft
+		numLastY = objEventElem.style.pixelTop
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  	document_OnMouseUp
+'//  Purpose:  	Move the inworld piece to match the web piece
+'////////////////////////////////////////////////////////////////////////
+sub document_OnMouseUp
+	dim numX	' current X of the obj
+	dim numY	'  " " " Y
+	dim objVWPiece	' the world piece object
+	dim intTopOff 	' the offset caused by being on different ends of the board
+
+	if IsPiece(objEventElem) then
+		numX = objEventElem.style.pixelLeft
+		numY = objEventElem.style.pixelTop
+		' if off the board, move to it's discard home
+		if numY < intSquareWd _
+		or numY > (10*intSquareWd) then
+			intTopOff = 0
+			if objEventElem.className = "PieceBlk" then
+				intTopOff = intColsCt
+			else
+				intTopOff = intRowsCt
+			end if
+			' find the coord that corresponds to the home given, based on col and rows
+			numX = (asc(Left(objEventElem.home,1))-intAscA)*intSquareWd
+			numY = (intTopOff-Right(objEventElem.home,1))*intSquareWd
+			'if the board has been swapped around, also swap these new coordinates to send to the world
+			if blnSwapped then
+				numX = SwapX(numX) 
+				numY = SwapY(numY)
+			end if
+			objEventElem.style.pixelLeft = numX
+			objEventElem.style.pixelTop	= numY	
+		end if
+		' if it didn't move exit sub
+		if numX = numLastX and numY = numLastY then exit sub		
+		' convert the coords to world coords
+		numX = ToVWCoordX(numX)
+		numY = ToVWCoordY(numY)
+		' find and set the web piece's corresponding world piece
+		set objVWPiece = user.container.findwithin(objEventElem.id)
+		' set the world piece's position and Mover properties
+		objVWPiece.Mover = user
+		objVWPiece.PositionXY = numX & "," & numY
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  	document_OnSelectStart
+'//  Purpose:   To prevent the user from selecting/highlighting any objects
+'///////////////////////////////////////////////////////////////////////
+sub document_OnSelectStart()
+	window.event.returnValue = false
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  	ConnectToWorld
+'//  Purpose:   To connect the logged in user to an existing world
+'//  Arguments:	Uses two query string arguments passed from the previous page
+'//		ServerName/WorldName
+'//		UserName
+'////////////////////////////////////////////////////////////////////////
+sub ConnectToWorld
+	dim strWorld	' the world name
+	dim strUser	' the user name 
+	dim arrArgs	' the arguments array, built from the query string
+
+	' get parameters from the query string portion of the URL
+	arrArgs = split(mid(document.location.search,2,255), "&")
+	if uBound(arrArgs) < 1 then
+		' need both the world location and the username
+		strStatus = "Missing world location or username parameter; cannot connect to world"
+		exit sub
+	else
+		' unescape the strings using JScript (turns "%20" back into " ")		
+		strWorld = JSUnescape(arrArgs(0))
+		strUser = JSUnescape(arrArgs(1))
+	end if
+	
+	' error handling below 
+	on error resume next
+
+	' create the world object by connecting to the client control with the connect cmd
+	set World = window.objClientCtrl.VWClient.Connect(strWorld)
+	if Err.Number = 0 then
+		' log the User into the world
+		set User = World.Connect(strUser, "")
+		if Err.Number = 0 then
+			strStatus = "You are connected to world <B>" & World.WorldName &_
+				"</B> as user <B>" & user.Name & "</B>."
+				blnLogin = true
+			exit sub	
+		else
+			HandleError "login in user","" 
+		end if
+	else
+		HandleError "connect to world", strWorld
+	end if	
+end sub
+
+
+'//////////////////////////////////////////////////////////////////////////
+'//  Sub:	HandleError(strArea,varExtra)
+'//  Purpose:  	To set the default values for the inputs
+'//  Inputs:	strArea - the general area of the code, for errors that are
+'//			handled in the case else below.
+'//		varExtra - extra args used in specific cases; variant subtypes vary
+'//////////////////////////////////////////////////////////////////////////
+sub HandleError(strGenArea, varExtra)
+	'err is global object, no need to pass it in as an arg
+	dim intErr		' an error num	
+	dim strErr		' an error message
+	intErr = Err.Number
+	strErr = Err.Description
+	select case intErr
+	case -2147220211
+		strErr = "Error: Cannot connect to the " & varExtra & _
+		" -- is the server running? Close the browser, start the server and try again."	
+	case -2147219965
+		' the world does not exist
+		strErr = "Error connecting to " & varExtra & ".  World does not exist."
+	case -2147220949
+		' description already set
+	case else
+		strErr = "There was an error in the " & strGenArea & _
+		" process.  Please attempt to correct the problem and try again."
+	end select
+	msgbox strErr
+	Err.Clear	
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Function:	IsPiece(objElement)
+'//  Purpose:  	To see if the object is a chess piece
+'//  Arguments:	objElement - the object in question
+'//  Returns:	true or false
+'////////////////////////////////////////////////////////////////////////
+function IsPiece(objElement)
+	if objElement.ClassName = "PieceBlk" _
+	or objElement.ClassName = "PieceWht" then
+		IsPiece = true
+	else
+		IsPiece = false
+	end if
+end function
+
+
+'//////////////////////////////////////////////////////////////////////////
+'//  Function:	ToVWCoordX and ToVWCoordY
+'//  Purpose:  	To convert the web coords to World coords
+'//  Args:	numCoord - web coordinate in numeric form
+'//  Returns:	The world equivalent 
+'//////////////////////////////////////////////////////////////////////////
+function ToVWCoordX(numCoord)
+	' if this board is swapped then unswap coords before sending
+	if blnSwapped then
+		numCoord = SwapX(numCoord)
+	end if
+	ToVWCoordX = numVWColAX + (((numCoord)/intSquareWd)*numVWSquareX)
+end function
+
+function ToVWCoordY(numCoord)
+	if blnSwapped then
+		numCoord = SwapY(numCoord)
+	end if
+	ToVWCoordY = numVWRow8Y - 2*numVWSquareY + (((numCoord)/intSquareWd)*numVWSquareY)			
+end function
+
+
+'//////////////////////////////////////////////////////////////////////////
+'//  Function:	PosX(strXY) and PosY(strXY)
+'//  Purpose:  	To extract the X or Y coord from the complete string
+'//  Args:	strXY - the string from the objects PositionXY property
+'//  Returns:	The X or Y coordinate 
+'//////////////////////////////////////////////////////////////////////////
+function PosX(strXY)
+	PosX = Left(strXY,InStr(strXY,",")-1)
+end function
+
+function PosY(strXY)
+	PosY = Right(strXY,Len(strXY)-InStr(strXY,","))
+end function
+
+
+'//////////////////////////////////////////////////////////////////////////
+'//  Functions:	ToWebCoordX and ToWebCoordY
+'//  Purpose:  	To convert the World coords to web coords
+'//  Args:	numCoord - World coordinate in numeric form
+'//  Returns:	The web X or Y coord 
+'//////////////////////////////////////////////////////////////////////////
+function ToWebCoordX(numCoord)
+	ToWebCoordX = Cint(intSquareWd*((CInt(10*numCoord)/10 - numVWColAX)/numVWSquareX))
+	' if this board is swapped then unswap before sending
+	if blnSwapped then
+		ToWebCoordX = SwapX(ToWebCoordX)
+	end if
+end function
+
+function ToWebCoordY(numCoord)
+	ToWebCoordY = Cint(((((CInt(10*numCoord)/10) - numVWRow8Y + 2*numVWSquareY)/numVWSquareY)*intSquareWd))
+	if blnSwapped then
+		ToWebCoordY = SwapY(ToWebCoordY)
+	end if
+end function
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:	SyncPieces()
+'//  Purpose:  	To set all the pieces up as they are in the world
+'////////////////////////////////////////////////////////////////////////
+sub SyncPieces()
+	dim objPiece
+	' for each web piece, find it's corresponding world piece, and relocate the web piece to match 
+	for each objPiece in document.all
+		if IsPiece(objPiece) then
+			' because we are catching errs below
+			on error resume next
+			dim objVWPiece
+			set objVWPiece = user.container.findwithin(objPiece.id)
+			' error could be caused by not being moved into the container/room quite yet
+			' if errors then try again in a few millisecs
+			if err.number > 0 then
+				window.setTimeout "SyncPieces", 50
+				exit sub
+			end if				
+			objPiece.style.pixelLeft = ToWebCoordX(PosX(objVWPiece.PositionXY))
+			objPiece.style.pixelTop = ToWebCoordY(PosY(objVWPiece.PositionXY))
+		end if			
+	next
+end sub
+
+
+'//////////////////////////////////////////////////////////////////////////
+'//  Functions: SwapX and SwapY
+'//  Purpose:  	To convert coords to mirror across both axis
+'//  Args:	numCoord - the x or y coordinate
+'//  Returns:	The swapped x or y coord
+'//////////////////////////////////////////////////////////////////////////
+function SwapX(numCoord)
+	' intColsCt or intRowsCt measures the number of rows or cols on the board,
+	' including the discard area
+	SwapX = intSquareWd*intColsCt - intSquareWd * (numCoord/intSquareWd) - intSquareWd
+end function
+
+function SwapY(numCoord)
+	SwapY = intSquareWd*intRowsCt - intSquareWd * (numCoord/intSquareWd) - intSquareWd
+end function
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:	SwapSides
+'//  Purpose:  	To simulate turning the board and pieces 180*
+'////////////////////////////////////////////////////////////////////////
+sub SwapSides
+	' bln to record the current swapped state
+	if blnSwapped = 1 then
+		blnSwapped = 0
+	else 
+		blnSwapped = 1
+	end if
+	dim objElem
+	' for every piece, swap the coords to simulate moving the board 180*
+	for each objElem in document.all
+		if IsPiece(objElem) then
+			objElem.style.pixelLeft = SwapX(objElem.style.pixelLeft)
+			objElem.style.pixelTop = SwapY(objElem.style.pixelTop)
+		end if
+	next
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:	HandleUIEvent
+'//  Purpose:  	To handle the movement of pieces from other clients
+'//  Args:	who  - which piece
+'//		what - "onPieceMove" is what we are looking for here
+'//		arrXtras(0): the mover
+'//		arrXtras(1): new world coords as "x,y"
+'////////////////////////////////////////////////////////////////////////
+sub objClientCtrl_OnUIEvent(who, what, arrXtras)
+	' "PieceMoved" is the only client event we care about
+	if what = "PieceMoved" then
+		dim objMover		' the mover's user/avatar object 
+		dim strMover		' the mover's name
+		set objMover = arrXtras(0)	
+		strMover = objMover.Name
+		' if the mover is not the user
+		if strMover <> user.name then
+			dim objPiece	' the web piece to move
+			dim objVWPiece	' the world piece that already moved
+			dim intX		' the current X coord
+			dim intY		' " " " Y
+			dim intDiffX	' the difference between current X and new X
+			dim intDiffY	' " " " Y
+			set objPiece = document.all.item(who.name)
+			set objVWPiece = user.container.findwithin(objPiece.id)
+	
+			'/////////////////////////////////////////////////////////
+			'// Note: could have simply set the new coords, but decided
+			'//	to slide into place instead by breaking the move 
+			'//	into multiple parts over several millisecs.
+			'// objPiece.style.PixelLeft = ToWebCoordX(PosX(arrArgs(1)))
+			'// objPiece.style.PixelTop = ToWebCoordY(PosY(arrArgs(1)))
+			'/////////////////////////////////////////////////////////
+	
+			intX = objPiece.style.pixelLeft
+			intY = objPiece.style.pixelTop
+			intDiffX = ToWebCoordX(PosX(arrXtras(1)))
+			intDiffY = ToWebCoordY(PosY(arrXtras(1)))			
+			' this adjusts for negative moves
+			if intX >= intDiffX then 
+			 	intDiffX = -(intX - intDiffX)/intMoveDiv
+			else			
+				intDiffX = (intDiffX - intX)/intMoveDiv
+			end if
+			if intY >= intDiffY then 
+				intDiffY = -(intY - intDiffY)/intMoveDiv
+			else
+				intDiffY = (intDiffY - intY)/intMoveDiv
+			end if
+			dim i
+			' do this multiple times, and increment the move by total move/moves 
+			for i = 1 to intMoveDiv
+				window.setTimeout "MovePiece " & objPiece.id & "," & (intX+i*intDiffX) & _
+				"," & (intY+i*intDiffY), 100*i
+			next			
+		else
+			strMover = "You"
+		end if
+		' record the move in the display box
+		divFeedback.innerHTML = strMover & " moved the " & who.name & "."			
+	end if
+end sub
+
+
+'//////////////////////////////////////////////////////////////////////////
+'//  Sub:	MovePiece
+'//  Purpose:  	Move the piece from where it is to the new coords
+'//  Arguments:	objPiece - the piece to move
+'//		intNewX - the new X coord
+'//		intNewY - the new Y coord
+'//////////////////////////////////////////////////////////////////////////
+sub MovePiece(objPiece,intX,intY)
+	objPiece.style.pixelLeft = intX
+	objPiece.style.pixelTop = intY
+end sub	
+</script>
+
+<script language="jscript">
+//////////////////////////////////////////////////////////////////////////
+//  Function: 	JSUnescape
+//  Purpose:  	To convert escaped non alphnum chars back to alphanum chars
+//  Args:	strIn - the escaped string
+//  Returns:	The unescaped string
+//////////////////////////////////////////////////////////////////////////
+function JSUnescape(strIn)
+{
+	return unescape(strIn);
+}
+</script>
+</head>
+
+<body bgcolor=#FFFFFF>
+
+<!--Start Heading Section-->
+
+<!--Pieces-->
+<div id=divPieces
+	style="position:absolute;
+		top:0;
+		z-index:1;
+		display:none;">
+<img id=BQRook class=PieceBlk src="Images/imgChRook2.gif" home=A8>
+<img id=BQKnight class=PieceBlk src="Images/imgChKnight2.gif" home=B8>
+<img id=BQBishop class=PieceBlk src="Images/imgChBishop2.gif" home=C8>
+<img id=BQueen class=PieceBlk src="Images/imgChQueen2.gif" home=D8>
+<img id=BKing class=PieceBlk src="Images/imgChKing2.gif" home=E8>
+<img id=BKBishop class=PieceBlk src="Images/imgChBishop2.gif" home=F8>
+<img id=BKKnight class=PieceBlk src="Images/imgChKnight2.gif" home=G8>
+<img id=BKRook class=PieceBlk src="Images/imgChRook2.gif" home=H8>
+
+<img id=BQRPawn class=PieceBlk src="Images/imgChPawn2.gif" home=A7>
+<img id=BQNPawn class=PieceBlk src="Images/imgChPawn2.gif" home=B7>
+<img id=BQBPawn class=PieceBlk src="Images/imgChPawn2.gif" home=C7>
+<img id=BQPawn class=PieceBlk src="Images/imgChPawn2.gif" home=D7>
+<img id=BKPawn class=PieceBlk src="Images/imgChPawn2.gif" home=E7>
+<img id=BKBPawn class=PieceBlk src="Images/imgChPawn2.gif" home=F7>
+<img id=BKNPawn class=PieceBlk src="Images/imgChPawn2.gif" home=G7>
+<img id=BKRPawn class=PieceBlk src="Images/imgChPawn2.gif" home=H7>
+
+<img id=WQRPawn class=PieceWht src="Images/imgChPawn.gif" home=A2>
+<img id=WQNPawn class=PieceWht src="Images/imgChPawn.gif" home=B2>
+<img id=WQBPawn class=PieceWht src="Images/imgChPawn.gif" home=C2>	
+<img id=WQPawn class=PieceWht src="Images/imgChPawn.gif" home=D2>
+<img id=WKPawn class=PieceWht src="Images/imgChPawn.gif" home=E2>
+<img id=WKBPawn class=PieceWht src="Images/imgChPawn.gif" home=F2>
+<img id=WKNPawn class=PieceWht src="Images/imgChPawn.gif" home=G2>
+<img id=WKRPawn class=PieceWht src="Images/imgChPawn.gif" home=H2>
+
+<img id=WQRook class=PieceWht src="Images/imgChRook.gif" home=A1>
+<img id=WQKnight class=PieceWht src="Images/imgChKnight.gif" home=B1>
+<img id=WQBishop class=PieceWht src="Images/imgChBishop.gif" home=C1>
+<img id=WQueen class=PieceWht src="Images/imgChQueen.gif" home=D1>
+<img id=WKing class=PieceWht src="Images/imgChKing.gif" home=E1>
+<img id=WKBishop class=PieceWht src="Images/imgChBishop.gif" home=F1>
+<img id=WKKnight class=PieceWht src="Images/imgChKnight.gif" home=G1>
+<img id=WKRook class=PieceWht src="Images/imgChRook.gif" home=H1>
+</div>
+<table id=tblChessBd
+	cellspacing=0
+	cellpadding=0
+	style="position:absolute;
+		top:0;
+		z-index:-1000;">
+<tr id=Row9 style="z-index:-1000;"><td colspan=8 bgcolor=#000000><img class=Square4 src="Images/spacer.gif"></td></tr>
+<tr id=Row8 style="z-index:-1000;">
+	<td id=A8 class=Square1>
+		<img class=Square3 src="Images/spacer.gif">
+	</td>
+	<td id=B8 class=Square2>
+		<img class=Square3 src="Images/spacer.gif">
+	</td>
+	<td id=C8 class=Square1>
+		<img class=Square3 src="Images/spacer.gif">
+	</td>
+	<td id=D8 class=Square2>
+		<img class=Square3 src="Images/spacer.gif">
+	</td>
+	<td id=E8 class=Square1>
+		<img class=Square3 src="Images/spacer.gif">
+	</td>
+	<td id=F8 class=Square2>
+		<img class=Square3 src="Images/spacer.gif">
+	</td>
+	<td id=G8 class=Square1>
+		<img class=Square3 src="Images/spacer.gif">
+	</td>
+	<td id=H8 class=Square2>
+		<img class=Square3 src="Images/spacer.gif">	
+	</td>	
+</tr>
+<tr id=Row7 style="z-index:-1000;">
+	<td id=A7 class=Square2>
+	</td>
+	<td id=B7 class=Square1>			
+	</td>
+	<td id=C7 class=Square2>	
+	</td>
+	<td id=D7 class=Square1>			
+	</td>
+	<td id=E7 class=Square2>		
+	</td>
+	<td id=F7 class=Square1>		
+	</td>
+	<td id=G7 class=Square2>		
+	</td>	
+	<td id=H7 class=Square1>		
+	</td>
+</tr>
+<tr id=Row6 style="z-index:-1000;">
+	<td id=A6 class=Square1>		
+	</td>
+	<td id=B6 class=Square2>
+	</td>
+	<td id=C6 class=Square1>		
+	</td>
+	<td id=D6 class=Square2>		
+	</td>
+	<td id=E6 class=Square1>		
+	</td>
+	<td id=F6 class=Square2>		
+	</td>
+	<td id=G6 class=Square1>		
+	</td>
+	<td id=H6 class=Square2>		
+	</td>
+</tr>
+<tr id=Row5 style="z-index:-1000;">
+	<td id=A5 class=Square2>
+	</td>
+	<td id=B5 class=Square1>
+	</td>
+	<td id=C5 class=Square2>
+	</td>
+	<td id=D5 class=Square1>
+	</td>
+	<td id=E5 class=Square2>
+	</td>
+	<td id=F5 class=Square1>
+	</td>
+	<td id=G5 class=Square2>
+	</td>
+	<td id=H5 class=Square1>
+	</td>	
+</tr>
+<tr id=Row4 style="z-index:-1000;">
+	<td id=A4 class=Square1>
+	</td>
+	<td id=B4 class=Square2>
+	</td>
+	<td id=C4 class=Square1>
+	</td>
+	<td id=D4 class=Square2>
+	</td>
+	<td id=E4 class=Square1>
+	</td>
+	<td id=F4 class=Square2>
+	</td>
+	<td id=G4 class=Square1>
+	</td>
+	<td id=H4 class=Square2>
+	</td>	
+</tr>
+<tr id=Row3 style="z-index:-1000;">
+	<td id=A3 class=Square2>
+	</td>
+	<td id=B3 class=Square1>
+	</td>
+	<td id=C3 class=Square2>
+	</td>
+	<td id=D3 class=Square1>
+	</td>
+	<td id=E3 class=Square2>
+	</td>
+	<td id=F3 class=Square1>
+	</td>
+	<td id=G3 class=Square2>
+	</td>
+	<td id=H3 class=Square1>
+	</td>	
+</tr>
+<tr id=Row2 style="z-index:-1000;">
+	<td id=A2 class=Square1>		
+	</td>
+	<td id=B2 class=Square2>		
+	</td>
+	<td id=C2 class=Square1>		
+	</td>
+	<td id=D2 class=Square2>		
+	</td>
+	<td id=E2 class=Square1>				
+	</td>
+	<td id=F2 class=Square2>		
+	</td>
+	<td id=G2 class=Square1>		
+	</td>
+	<td id=H2 class=Square2>		
+	</td>	
+</tr>
+<tr id=Row1 style="z-index:-1000;">
+	<td id=A1 class=Square2>		
+	</td>
+	<td id=B1 class=Square1>
+	</td>
+	<td id=C1 class=Square2>		
+	</td>
+	<td id=D1 class=Square1>		
+	</td>
+	<td id=E1 class=Square2>		
+	</td>
+	<td id=F1 class=Square1>		
+	</td>
+	<td id=G1 class=Square2>		
+	</td>
+	<td id=H1 class=Square1>		
+	</td>	
+</tr>
+<tr id=Row9 style="z-index:-1000;"><td colspan=8 bgcolor=#000000><img class=Square4 src="Images/spacer.gif"></td></tr>
+</table>
+<div style="position:absolute;
+		top:expression(intSquareWd*12+2);
+		width:expression(intSquareWd*8);
+		font-family:verdana;
+		font-size:8pt;">
+<div id=divBar
+	style="position:absolute;
+		width:expression(intSquareWd*8);
+		height:36;
+		background:#85643A;
+		z-index:-1003;">
+</div>
+<div id=divFeedback
+	align=center
+	style="position:absolute;
+		background:white;
+		border:2 solid #533111;
+		left:5;
+		top:3;	
+		height:30;
+		width:expression(intSquareWd*8-92);">
+</div>
+<button id=btnTurn180
+	style="position:absolute;
+		width:75;
+		height:25;
+		top:5;
+		left:expression(intSquareWd*8-80);
+		background:#533111;
+		color:white;"
+	onclick=SwapSides>Turn Board		
+</button>
+</div>
+
+</body>
+</html>
+
+

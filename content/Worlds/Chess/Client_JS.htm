@@ -1,0 +1,849 @@
+<html>
+<head>
+<TITLE>Chess World Client - JScript Version</TITLE>
+
+<!-- This style sheet sets the sizes for all of the squares and pieces
+     and contains the link to the "Moveable" behavior file that allows
+	 the pieces to drag around the board-->
+<link rel=stylesheet href="Styles.css">
+
+<!-- VWorld Client object which connects to the VWorlds server -->
+<object id=objClientCtrl name="objClientCtrl" classid="clsid:D4898803-20EF-11D0-8A96-00A0C9082583">
+</object>
+
+<script language="jscript" for=objClientCtrl event="OnUIEvent(who, what, arrXtra2)">
+//////////////////////////////////////////////////////////////////////////
+//  Function:	OnUIEvent
+//  Purpose:  	To handle the movement of pieces from other clients
+//  Args:		who  - which piece
+//				what - "onPieceMove" is what we are looking for here
+//				arrArgs - arrArgs(0): the mover
+//				arrArgs(1): new World x,y coords
+//////////////////////////////////////////////////////////////////////////
+{
+	// "PieceMoved" is the only event("what") being handled 
+	if (what == "PieceMoved")
+	{
+		var objMover;	// the avatar who last moved the object 
+		var strMover;	// the name of the avatar who last moved the object
+		var arrXtras; 	// the array of extra arguments passed in
+		arrXtras = new VBArray(arrXtra2);	// the array is passed in in vb format
+		arrXtras = arrXtras.toArray();		// switch from vbarray to reg js array
+		objMover = arrXtras[0];				// the mover is stored in element 0 of array
+		strMover = objMover.name;			// the name property of the mover
+		
+		// if the mover is not this user
+		if (strMover != User.name)		
+		{
+			var objPiece = document.all.item(who.name);					// get a handle on the web piece
+			var objVWPiece = User.container.findwithin(objPiece.id);	// get a handle on the equiv world piece
+			var i;
+			var j = arrPieces.length+1;
+
+			for (i=0; i < j; i++)
+			{
+				if (arrPieces[i] == who.name)
+				{
+					arrPiecesAt[i] = objPiece.style.pixelLeft + "," + objPiece.style.pixelTop;
+					arrPiecesTo[i] = ToWebCoordX(PosX(arrXtras[1])) +  "," + ToWebCoordY(PosY(arrXtras[1]));
+					i = j + 1;					
+				}
+				if (arrPieces[i] == null)
+				{
+					arrPieces[i] = who.name;
+					arrPiecesAt[i] = objPiece.style.pixelLeft + "," + objPiece.style.pixelTop;
+					arrPiecesTo[i] = ToWebCoordX(PosX(arrXtras[1])) +  "," + ToWebCoordY(PosY(arrXtras[1]));
+					i = j + 1;					
+				}
+				else
+				{
+					if ((i+1)==j)
+					{
+						arrPieces[i] = who.name;
+						arrPiecesAt[i] = objPiece.style.pixelLeft + "," + objPiece.style.pixelTop;
+						arrPiecesTo[i] = ToWebCoordX(PosX(arrXtras[1])) +  "," + ToWebCoordY(PosY(arrXtras[1]));
+						i = j + 1;					
+					}
+				}
+			}
+		}
+		// for events where the mover is the local user
+		else
+		{
+			strMover = "You"
+		}
+		// record the move in the feedback box
+		if (strMover == "You")
+		{
+			divFeedback.innerHTML = "You moved the " + who.name + ".";			
+		}
+		else
+		{
+			divFeedback.innerHTML = strMover + " moves the " + who.name + ".";			
+		}
+	}
+}
+</script>
+
+<script language="jscript">
+
+//////////////////////////////////////////////////////////////////////////
+//  Global Constant Variables (local to this file)
+//////////////////////////////////////////////////////////////////////////
+var numVWRow1Y = 350;	// the World Y position value for row 1
+var numVWColAX = 0;		// the World X position value for col A
+var numVWRow8Y = 0;		// the World Y position value for row 8
+var numVWColHX = 350;	// the Worlds X position value for col H
+var intAscA = 65;		// the ascii val for the char "A"
+var intWeb10Y = 0;		// the y value for row 10
+var intWebAX = 0;		// the x val for col A
+var intColsCt = 8;		// the number of columns
+var intRowsCt= 12;		// the number of rows
+var intSquareWd = 40;	// the current size of a side of a board square
+var intTickCtr = 0;		//
+var intTickMil = 50;
+var intMoveDiv = 10;
+
+//////////////////////////////////////////////////////////////////////////
+//  Global Variables (local to this file)
+//////////////////////////////////////////////////////////////////////////
+var World;		// the world object in the client control
+var User;		// the current user's object in the world
+var strStatus;	// the initial status message of the login
+var blnLogin;	// was the login successful?
+var intZInd = 0;		// the current max zindex for objects on the board 
+var blnSwapped = false;	// has the board been turned 180*
+var objEventElem; 		// the window.event.srcElement
+var numLastX; 			// the x cood of last object clicked down on
+var numLastY; 			// the y cood of last object clicked down on
+var numVWSquareX = (numVWColHX-numVWColAX)/7;	// the width of a square in world
+var numVWSquareY = (numVWRow1Y-numVWRow8Y)/7;	// the height of a square in world
+var arrPieces = new Array();	// the list of pieces to move
+var arrPiecesAt = new Array();		// the location of where Pieces to move are
+var arrPiecesTo = new Array();		// the location of pieces to move are going
+
+//////////////////////////////////////////////////////////////////////////
+//  Function:  	WinOnLoad
+//////////////////////////////////////////////////////////////////////////
+function WinOnLoad()
+{
+	// assigning functions to specific document events
+	document.onclick = DocumentOnClick; // no parens when assigning functions
+	document.onmouseup = DocumentOnMouseUp;
+	document.onmousedown = DocumentOnMouseDown;
+	document.onselectstart = DocumentOnSelectStart;
+	btnTurn180.onclick = SwapSides;
+	// call the function to login to the world
+	ConnectToWorld();
+	// if the login was successful synch and display pieces.
+	// if not don't bother
+	if (blnLogin)
+	{
+		SyncPieces();
+		divPieces.style.display = "block";
+	}
+	Tick();	
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+//  Function:  	WinOnUnload
+//  Purpose:	To logoff from the world
+//////////////////////////////////////////////////////////////////////////
+function WinOnUnload()
+{
+	if (blnLogin)
+	{
+		World.Disconnect();
+	}
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+//  Function:  	DocumentOnClick()
+//  Purpose:  	Push the img to the back of the pieces zorder
+//////////////////////////////////////////////////////////////////////////
+function DocumentOnClick()
+{
+	var objElem = window.event.srcElement;	// the object that was clicked on
+	// if it is a piece, reset the zindex to the next negative
+	if (IsPiece(objElem))
+	{
+		objElem.style.zIndex = intZInd;
+	    intZInd = intZInd - 1;
+	}
+}
+ 
+
+//////////////////////////////////////////////////////////////////////////
+//  Function:  	DocumentOnMouseDown
+//  Purpose:  	Record the former coordinates for future use, to test to 
+// 	            see if the img actually moved.
+//////////////////////////////////////////////////////////////////////////
+function DocumentOnMouseDown()
+{
+	if (IsPiece(window.event.srcElement))	// the object that was clicked down on
+	{
+		objEventElem = window.event.srcElement;		
+		for (i=0; i < arrPieces.length; i++)
+		{
+			if (arrPieces[i] == objEventElem.id)
+			{
+				return false;
+			}
+		}
+		// if it is a piece, record the coords, for use later  
+		numLastX = objEventElem.style.pixelLeft;
+		numLastY = objEventElem.style.pixelTop;
+	}
+	else
+	{
+		objEventElem = null;
+	}
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+//  Function:  	Tick and DoTick
+//  Purpose:   	
+//  Arguments:	
+//////////////////////////////////////////////////////////////////////////
+function Tick()
+{
+	if (intTickCtr++ >= intMoveDiv)
+	{
+		intTickCtr = 0;
+		if (objEventElem != null)
+		{
+			SetPosition(objEventElem);
+		}
+	}
+	if (arrPieces.length > 0)
+	{
+		var i;
+		for (i=0; i < arrPieces.length; i++)
+		{
+			if (arrPieces[i] != null)
+			{
+				var intX;			// the current x coord
+				var intY;			// the current y coord
+				var intDiffX;		// the difference between the former and new X positions
+				var intDiffY;		// " " " " Y positions
+				var objPiece = document.all.item(arrPieces[i]);		// get a handle on the web piece
+			
+				intX = parseInt(PosX(arrPiecesAt[i])); 
+				intY = parseInt(PosY(arrPiecesAt[i])); // the current Y position of the web piece
+				intToX = PosX(arrPiecesTo[i]);
+				intToY = PosY(arrPiecesTo[i]); 	
+				MovePiece(objPiece,((intX+parseInt((intToX-intX)*(intTickCtr/intMoveDiv)))),((intY+parseInt((intToY-intY)*(intTickCtr/intMoveDiv)))));
+				if ((objPiece.style.pixelLeft == PosX(arrPiecesTo[i])) &&
+					(objPiece.style.pixelTop == PosY(arrPiecesTo[i])))
+				{
+					arrPieces[i] = null;
+					arrPiecesAt[i] = null;
+					arrPiecesTo[i] = null;
+				}			
+			}
+		}
+	}
+	window.setTimeout("Tick();", intTickMil);
+}
+
+function DocumentOnSelectStart()
+{
+ 	window.event.returnValue = false;
+	return false;
+}
+
+//////////////////////////////////////////////////////////////////////////
+//  Function:  	ConnectToWorld
+//  Purpose:   	To connect the logged in User to an existing World
+//  Arguments:	Uses two query string arguments passed from the previous page
+//				World location (serverName/WorldName)
+//				UserName
+//////////////////////////////////////////////////////////////////////////
+function ConnectToWorld()
+{
+	var intError = 0;	// the error number, initialized at 0
+	var strError;		// the error text
+	var strWorld;		// the world name
+	var strUser;		// the user name
+	var arrArgs;		// the query string, split into an array
+	
+	// get parameters from the query string portion of the URL
+	arrArgs = window.location.search;	// get the query string
+	arrArgs = arrArgs.split("&");		// split the arguments
+	
+	// if there was less than one arg (2 expected)
+	if (arrArgs.length < 1)	
+	{
+		// need both the World location and the Username
+		strStatus = "Missing World location or Username parameter; cannot connect to World";
+		divFeedback.innerHTML = strStatus;
+		return false;
+	}
+	// if there are 2
+	else
+	{
+		strWorld = arrArgs[0];		
+		strWorld = strWorld.substr(1,strWorld.length-1); 	// grab the world name
+		strUser = arrArgs[1];								// grab the user name
+	}
+	// try connecting to the World on the server
+	try
+	{
+		World = window.objClientCtrl.VWClient.Connect(strWorld);
+	}
+	// if there are errors
+	catch(objErr)
+	{
+		intError = objErr.number;
+		strError = objErr.description;
+	}
+	// if there are no errors, connection was a success
+	if (intError == 0)
+	{
+		//log the User into the World
+		User = World.Connect(strUser, "");
+		if (User==null)
+		{ 
+			strStatus = "Error: " + strWorld + " exists but could not log in User.";
+		}
+		else
+		{
+			strStatus = "You are connected to World <B>" + World.WorldName +
+			"</B> as User <B>" + User.Name + "</B>.";
+			blnLogin = true;
+		}	
+	}
+	else
+	{
+		if (intError == -2147219965)
+		{
+			//the World does not exist
+			strStatus = "Error connecting to " + strWorld + ": World does not exist.";
+		}
+		else
+		{
+			strStatus = "Error " + intError + " connecting to " + strWorld + ". " + strError;
+		}
+	}
+	divFeedback.innerHTML = strStatus;
+} //end function ConnectToWorld
+
+
+function DocumentOnMouseUp()
+{
+	var numX;		// the old X coord
+	var numY;		// the old Y coord
+	var strEndPos;	// the 
+	var objElem;	// the 
+	var objVWPiece; // the world equivalent piece
+	var numLeft;	// the new 
+	var numTop;		// the new
+	
+	if (IsPiece(objEventElem))
+	{
+		numX = objEventElem.style.pixelLeft;
+		numY = objEventElem.style.pixelTop;
+
+		// if off the board, and it is not called from the tick
+		// move to its discard home
+		if ((numY < intSquareWd)
+		|| (numY > (10*intSquareWd)))
+		{
+			var intTopOff; 		//the offset caused by being on different ends of the board
+			var intLeftOff; 	//the offset caused by being on different ends of the board
+			intTopOff = 0;
+			if (objEventElem.className == "PieceBlk")
+			{
+				intTopOff = intColsCt;
+			}
+			else
+			{
+				intTopOff = intRowsCt;
+			}			
+			// find the coord that corresponds to the home given, based on col and rows
+			numX = ((objEventElem.home.substr(0,1).charCodeAt(0))-65)*intSquareWd;
+			numY = (intTopOff-objEventElem.home.substr(1,1))*intSquareWd;
+						
+			//if the board has been swapped around, also swap these new coordinates to send to the World
+			if (blnSwapped)
+			{
+				numX = SwapX(numX); 
+				numY = SwapY(numY);
+			}
+			objEventElem.style.pixelLeft = numX;
+			objEventElem.style.pixelTop	= numY;	
+		}		
+		SetPosition(objEventElem);		
+	}
+	objEventElem = null;
+} // end function DocumentOnMouseUp
+
+
+function SetPosition(objIn)
+{
+		// convert the coords to World coords
+		numX = ToVWCoordX(objIn.style.pixelLeft);
+		numY = ToVWCoordY(objIn.style.pixelTop);
+		// find the web piece's twin in the World
+		objVWPiece = User.container.findwithin(objIn.id);	
+		// set the Mover and the World piece's position
+		objVWPiece.Mover = User;
+		objVWPiece.PositionXY = numX + "," + numY;
+}
+
+//////////////////////////////////////////////////////////////////////////
+//  Function:  	IsPiece
+//  Purpose:  	Tests whether or not an element is a piece or not
+//  Arguments:	objElement - the object in question
+//	Returns:	true or flase
+//////////////////////////////////////////////////////////////////////////
+function IsPiece(objElement)
+{
+	if (objElement) 
+	{
+		if ((objElement.className == "PieceBlk")
+		|| (objElement.className == "PieceWht"))
+		{
+			return true;	
+		}
+	}
+	return false;
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+//  Function:  	MovePiece
+//  Purpose:  	Move the piece from where it is to the new coords
+//  Arguments:	objPiece - the piece to move
+//				intNewX - the new X coord
+//				intNewY - the new Y coord
+//////////////////////////////////////////////////////////////////////////
+function MovePiece(objPiece,intNewX,intNewY)
+{
+	objPiece.style.pixelLeft = intNewX;
+	objPiece.style.pixelTop = intNewY;
+}			
+
+
+//////////////////////////////////////////////////////////////////////////
+//  Function:		ToVWCoordX and ToVWCoordY
+//  Purpose:  	To convert the web coords to World coords
+//  Args:			numCoord - web coordinate in numeric form
+//  Returns:		The world equivalent 
+//////////////////////////////////////////////////////////////////////////
+function ToVWCoordX(numCoord)
+{
+	if (blnSwapped)
+	{
+		numCoord = SwapX(numCoord);		
+	}
+	return numVWColAX + (((numCoord)/intSquareWd)*numVWSquareX);
+} 
+
+function ToVWCoordY(numCoord)
+{
+	if (blnSwapped)
+	{
+		numCoord = SwapY(numCoord);
+	}
+	return numVWRow8Y - 2*numVWSquareY + (((numCoord)/intSquareWd)*numVWSquareY);				
+} 
+
+
+//////////////////////////////////////////////////////////////////////////
+//  Function:		PosX(strXY) and PosY(strXY)
+//  Purpose:  	To extract the X or Y coord from the complete string
+//  Args:			strXY - the string from the objects PositionXY property
+//  Returns:		The X or Y coordinate 
+//////////////////////////////////////////////////////////////////////////
+function PosX(strXY)
+{
+	return strXY.substr(0,strXY.indexOf(","));
+}
+
+function PosY(strXY)
+{
+	return strXY.substr(strXY.indexOf(",")+1,strXY.length);
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+//  Functions:	ToWebCoordX and ToWebCoordY
+//  Purpose:  	To convert the World coords to web coords
+//  Args:		numCoord - World coordinate in numeric form
+//  Returns:	The web X or Y coord 
+//////////////////////////////////////////////////////////////////////////
+function ToWebCoordX(numCoord)
+{
+	var numWebCoord;
+	numCoord = parseInt(numCoord);
+	numWebCoord = intSquareWd*((Math.round(numCoord) - numVWColAX)/numVWSquareX);
+	if (blnSwapped)
+	{
+		numWebCoord = SwapX(numWebCoord);
+	}
+	return parseInt(numWebCoord);
+}
+
+function ToWebCoordY(numCoord)
+{
+	var numWebCoord;
+	numCoord = parseInt(numCoord);
+	numWebCoord = (((Math.round(numCoord) - numVWRow8Y + 2*numVWSquareY)/numVWSquareY)*intSquareWd);
+	if (blnSwapped)
+	{
+		numWebCoord = SwapY(numWebCoord);
+	}
+	return parseInt(numWebCoord);
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+//  Function:	SyncPieces()
+//  Purpose:  	To set all the web pieces up as they are in the World
+//////////////////////////////////////////////////////////////////////////
+function SyncPieces()
+{
+	var objPiece; 
+	var i;
+	// for each web piece, find its World twin and relocate the web twin to match 
+    for (i=0; i<document.all.length; i++)
+	{
+		objPiece = document.all(i);		
+		if (IsPiece(objPiece))
+		{
+			var objVWPiece;
+			try
+			{
+				objVWPiece = User.container.findwithin(objPiece.id);
+			}
+			catch(objErr)
+			{
+				if (objErr.number != 0)
+				{
+					window.setTimeout("SyncPieces()",50);
+					return;
+				}
+			}
+			objPiece.style.pixelLeft = ToWebCoordX(PosX(objVWPiece.PositionXY));
+			objPiece.style.pixelTop = ToWebCoordY(PosY(objVWPiece.PositionXY));			
+		}			
+	}
+} //end function SyncPieces
+
+
+//////////////////////////////////////////////////////////////////////////
+//  Functions: 	SwapX and SwapY
+//  Purpose:  	To convert coords to mirror across both axis
+//  Args:		numCoord - the x or y coordinate
+//  Returns:	The swapped x or y coord
+//////////////////////////////////////////////////////////////////////////
+function SwapX(numCoord)
+{
+	// this offset measures the number of rows or cols on the board,
+	// including the discard area
+	var intOffset = intColsCt;
+	// parseInt makes sure it is a number that we return
+	return parseInt(intSquareWd*intOffset - intSquareWd * (numCoord/intSquareWd) - intSquareWd)
+}
+function SwapY(numCoord)
+{
+	// this offset measures the number of rows or cols on the board,
+	// including the discard area
+	var intOffset = intRowsCt;
+	// parseInt makes sure it is a number that we return
+	return parseInt(intSquareWd*intOffset - intSquareWd * (numCoord/intSquareWd) - intSquareWd)
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+//  Function:	SwapSides
+//  Purpose:  	To simulate turning the board and pieces 180*
+/////////////////////////////////////////////////////////////////////////
+function SwapSides()
+{
+	for (i=0; i < arrPieces.length; i++)
+	{
+		if (arrPieces[i] != null)
+		{
+			alert("Pieces must not be moving in order to turn the board around.");
+			return false;
+		}
+	}
+	// bln to record the new swapped state
+	if (blnSwapped == 1)
+	{
+		blnSwapped = 0
+	}
+	else 
+	{
+		blnSwapped = 1
+	}
+	var objPiece;
+	var i;
+	// for each web piece, find it's World twin and relocate the web twin to match 
+    for (i=0; i<document.all.length; i++)
+	{
+		objPiece = document.all(i);
+		if (IsPiece(objPiece))
+		{
+			// SwapX/SwapY switches the piece to 180* opposite spot on the board 
+			objPiece.style.pixelLeft = SwapX(objPiece.style.pixelLeft);
+			objPiece.style.pixelTop = SwapY(objPiece.style.pixelTop);
+		}
+	}
+}
+</script>
+
+</head>
+
+<body bgcolor=#FFFFFF onLoad="WinOnLoad();" onUnload="WinOnUnload();">
+
+<!--Start Heading Section-->
+
+<!--Pieces-->
+<div id=divPieces
+	style="position:absolute;
+		top:0;
+		z-index:1;
+		display:none;">
+<img id=BQRook class=PieceBlk src="Images/imgChRook2.gif" home=A8>
+<img id=BQKnight class=PieceBlk src="Images/imgChKnight2.gif" home=B8>
+<img id=BQBishop class=PieceBlk src="Images/imgChBishop2.gif" home=C8>
+<img id=BQueen class=PieceBlk src="Images/imgChQueen2.gif" home=D8>
+<img id=BKing class=PieceBlk src="Images/imgChKing2.gif" home=E8>
+<img id=BKBishop class=PieceBlk src="Images/imgChBishop2.gif" home=F8>
+<img id=BKKnight class=PieceBlk src="Images/imgChKnight2.gif" home=G8>
+<img id=BKRook class=PieceBlk src="Images/imgChRook2.gif" home=H8>
+
+<img id=BQRPawn class=PieceBlk src="Images/imgChPawn2.gif" home=A7>
+<img id=BQNPawn class=PieceBlk src="Images/imgChPawn2.gif" home=B7>
+<img id=BQBPawn class=PieceBlk src="Images/imgChPawn2.gif" home=C7>
+<img id=BQPawn class=PieceBlk src="Images/imgChPawn2.gif" home=D7>
+<img id=BKPawn class=PieceBlk src="Images/imgChPawn2.gif" home=E7>
+<img id=BKBPawn class=PieceBlk src="Images/imgChPawn2.gif" home=F7>
+<img id=BKNPawn class=PieceBlk src="Images/imgChPawn2.gif" home=G7>
+<img id=BKRPawn class=PieceBlk src="Images/imgChPawn2.gif" home=H7>
+
+<img id=WQRPawn class=PieceWht src="Images/imgChPawn.gif" home=A2>
+<img id=WQNPawn class=PieceWht src="Images/imgChPawn.gif" home=B2>
+<img id=WQBPawn class=PieceWht src="Images/imgChPawn.gif" home=C2>	
+<img id=WQPawn class=PieceWht src="Images/imgChPawn.gif" home=D2>
+<img id=WKPawn class=PieceWht src="Images/imgChPawn.gif" home=E2>
+<img id=WKBPawn class=PieceWht src="Images/imgChPawn.gif" home=F2>
+<img id=WKNPawn class=PieceWht src="Images/imgChPawn.gif" home=G2>
+<img id=WKRPawn class=PieceWht src="Images/imgChPawn.gif" home=H2>
+
+<img id=WQRook class=PieceWht src="Images/imgChRook.gif" home=A1>
+<img id=WQKnight class=PieceWht src="Images/imgChKnight.gif" home=B1>
+<img id=WQBishop class=PieceWht src="Images/imgChBishop.gif" home=C1>
+<img id=WQueen class=PieceWht src="Images/imgChQueen.gif" home=D1>
+<img id=WKing class=PieceWht src="Images/imgChKing.gif" home=E1>
+<img id=WKBishop class=PieceWht src="Images/imgChBishop.gif" home=F1>
+<img id=WKKnight class=PieceWht src="Images/imgChKnight.gif" home=G1>
+<img id=WKRook class=PieceWht src="Images/imgChRook.gif" home=H1>
+</div>
+<table id=tblChessBd
+	cellspacing=0
+	cellpadding=0
+	style="position:absolute;
+		top:0;
+		z-index:-1000;">
+<!--setting these style z-indexes to -1000 ensures that pieces will not fall behind the board-->
+<tr id=Row9 style="z-index:-1000;"><td colspan=8 bgcolor=#000000><img class=Square4 src="Images/spacer.gif"></td>
+</tr>
+<tr id=Row8 style="z-index:-1000;">
+	<td id=A8 class=Square1>
+<!--These spacers ensure that the board will maintain its full shape despite the width of
+the browser being smaller than the board-->
+		<img class=Square3 src="Images/spacer.gif">
+	</td>
+	<td id=B8 class=Square2>
+		<img class=Square3 src="Images/spacer.gif">
+	</td>
+	<td id=C8 class=Square1>
+		<img class=Square3 src="Images/spacer.gif">
+	</td>
+	<td id=D8 class=Square2>
+		<img class=Square3 src="Images/spacer.gif">
+	</td>
+	<td id=E8 class=Square1>
+		<img class=Square3 src="Images/spacer.gif">
+	</td>
+	<td id=F8 class=Square2>
+		<img class=Square3 src="Images/spacer.gif">
+	</td>
+	<td id=G8 class=Square1>
+		<img class=Square3 src="Images/spacer.gif">
+	</td>
+	<td id=H8 class=Square2>
+		<img class=Square3 src="Images/spacer.gif">	
+	</td>	
+</tr>
+<tr id=Row7 style="z-index:-1000;">
+	<td id=A7 class=Square2>
+	</td>
+	<td id=B7 class=Square1>			
+	</td>
+	<td id=C7 class=Square2>	
+	</td>
+	<td id=D7 class=Square1>			
+	</td>
+	<td id=E7 class=Square2>		
+	</td>
+	<td id=F7 class=Square1>		
+	</td>
+	<td id=G7 class=Square2>		
+	</td>	
+	<td id=H7 class=Square1>		
+	</td>
+</tr>
+<tr id=Row6 style="z-index:-1000;">
+	<td id=A6 class=Square1>		
+	</td>
+	<td id=B6 class=Square2>
+	</td>
+	<td id=C6 class=Square1>		
+	</td>
+	<td id=D6 class=Square2>		
+	</td>
+	<td id=E6 class=Square1>		
+	</td>
+	<td id=F6 class=Square2>		
+	</td>
+	<td id=G6 class=Square1>		
+	</td>
+	<td id=H6 class=Square2>		
+	</td>
+</tr>
+<tr id=Row5 style="z-index:-1000;">
+	<td id=A5 class=Square2>
+	</td>
+	<td id=B5 class=Square1>
+	</td>
+	<td id=C5 class=Square2>
+	</td>
+	<td id=D5 class=Square1>
+	</td>
+	<td id=E5 class=Square2>
+	</td>
+	<td id=F5 class=Square1>
+	</td>
+	<td id=G5 class=Square2>
+	</td>
+	<td id=H5 class=Square1>
+	</td>	
+</tr>
+<tr id=Row4 style="z-index:-1000;">
+	<td id=A4 class=Square1>
+	</td>
+	<td id=B4 class=Square2>
+	</td>
+	<td id=C4 class=Square1>
+	</td>
+	<td id=D4 class=Square2>
+	</td>
+	<td id=E4 class=Square1>
+	</td>
+	<td id=F4 class=Square2>
+	</td>
+	<td id=G4 class=Square1>
+	</td>
+	<td id=H4 class=Square2>
+	</td>	
+</tr>
+<tr id=Row3 style="z-index:-1000;">
+	<td id=A3 class=Square2>
+	</td>
+	<td id=B3 class=Square1>
+	</td>
+	<td id=C3 class=Square2>
+	</td>
+	<td id=D3 class=Square1>
+	</td>
+	<td id=E3 class=Square2>
+	</td>
+	<td id=F3 class=Square1>
+	</td>
+	<td id=G3 class=Square2>
+	</td>
+	<td id=H3 class=Square1>
+	</td>	
+</tr>
+<tr id=Row2 style="z-index:-1000;">
+	<td id=A2 class=Square1>		
+	</td>
+	<td id=B2 class=Square2>		
+	</td>
+	<td id=C2 class=Square1>		
+	</td>
+	<td id=D2 class=Square2>		
+	</td>
+	<td id=E2 class=Square1>				
+	</td>
+	<td id=F2 class=Square2>		
+	</td>
+	<td id=G2 class=Square1>		
+	</td>
+	<td id=H2 class=Square2>		
+	</td>	
+</tr>
+<tr id=Row1 style="z-index:-1000;">
+	<td id=A1 class=Square2>		
+	</td>
+	<td id=B1 class=Square1>
+	</td>
+	<td id=C1 class=Square2>		
+	</td>
+	<td id=D1 class=Square1>		
+	</td>
+	<td id=E1 class=Square2>		
+	</td>
+	<td id=F1 class=Square1>		
+	</td>
+	<td id=G1 class=Square2>		
+	</td>
+	<td id=H1 class=Square1>		
+	</td>	
+</tr>
+<tr id=Row9 style="z-index:-1000;"><td colspan=8 bgcolor=#000000><img class=Square4 src="Images/spacer.gif"></td></tr>
+</table>
+<div style="position:absolute;
+		top:expression(intSquareWd*12+2);
+		width:expression(intSquareWd*8);
+		font-family:verdana;
+		font-size:8pt;">
+<div id=divBar
+	style="position:absolute;
+		width:expression(intSquareWd*8);
+		height:36;
+		background:#85643A;
+		z-index:-1003;">
+</div>
+<div id=divFeedback
+	align=center
+	style="position:absolute;
+		background:white;
+		border:2 solid #533111;
+		left:5;
+		top:3;	
+		height:30;
+		width:expression(intSquareWd*8-92);">
+</div>
+<button id=btnTurn180
+	style="position:absolute;
+		width:75;
+		height:25;
+		top:5;
+		left:expression(intSquareWd*8-80);
+		background:#533111;
+		color:white;">Turn Board
+</button>
+</div>
+</body>
+</html>
+
+

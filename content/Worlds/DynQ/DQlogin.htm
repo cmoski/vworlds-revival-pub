@@ -1,0 +1,47 @@
+<html>
+<head>
+<TITLE>VWorlds Dynamic Questionnaire Sample Login</TITLE>
+
+<!-- VWorld Client object which connects to the VWorlds server -->
+<SCRIPT LANGUAGE="VBScript">
+
+option explicit
+
+CONST maxAvatarNameLength = 20		' max characters to allow in an avatar name; an arbitrary limit
+
+'============================================================
+'btnConnectClick -- Connect the client to the world and login the user
+sub btnConnectClick
+	' open the Dynamic Questionnaire world client page, which requires 2 parameters:
+	' world location and username
+	window.moveTo 20,20
+	window.resizeTo 750,560
+	document.location = "DQclient.htm?" & worldText.value & "&" & userText.value
+end sub
+
+</SCRIPT>
+
+</head>
+
+<body TOPMARGIN=20 LEFTMARGIN="40" BGCOLOR="#FFFFFF" TEXT="#000000">
+<font FACE="verdana,arial" SIZE="2">
+
+<h2>Dynamic Questionnaire Login</h2>
+
+<TABLE>
+<TR>
+  <TD><font size=1><b>World server/name</b></font></TD>
+  <TD><INPUT ID="worldText" TYPE=TEXT VALUE="localhost/"></TD>
+</TR>
+<TR>
+  <TD><font size=1><b>Avatar name</b></font></TD>
+  <TD><INPUT ID="userText" TYPE=TEXT VALUE=""></TD>
+</TR>
+<TR>
+  <TD>&nbsp;</TD>
+  <TD ALIGN=CENTER><INPUT ID=btnConnect TYPE=BUTTON VALUE="Connect" ONCLICK=btnConnectClick></TD>
+</TR>
+</TABLE>
+
+</body>
+</html>

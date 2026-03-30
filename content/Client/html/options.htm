@@ -1,0 +1,341 @@
+<html>
+<head>
+<title>Options</title>
+<link rel=stylesheet href=..\shared\global.css>
+<script language=vbs>
+
+option explicit
+
+public oTopWnd
+
+sub document_OnMouseOver
+	select case window.event.srcElement.className
+	case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	case "vHelp"
+		imgHelp.src="..\shared\helpH.gif"
+	case else
+	end select
+end sub
+
+sub document_OnMouseOut
+	select case window.event.srcElement.className
+	case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	case "vHelp"
+		imgHelp.src="..\shared\help.gif"
+	case else
+	end select
+end sub
+
+sub window_onload
+	set oTopWnd = window.dialogArguments
+	if oTopWnd.name = "VirtualWorldsStart" then
+		document.body.style.backgroundcolor = "white"
+	Else
+		oTopWnd.AddToEventList window
+	end if
+	UpdateWindowFromPrefs
+	chkSndFX.focus
+end sub
+
+sub window_OnUnload
+	if oTopWnd.name <> "VirtualWorldsStart" then
+		If Not oTopWnd.blnAppClosing Then
+			oTopWnd.RemoveFromEventList window
+		end If
+	end if
+end sub
+
+'======================================
+' Name: HandleUIEvent
+' Desc: Fires when the client gets a Handle UI event
+'--------------------------------------
+Sub HandleUIEvent(objFrom, strEventName, vntArgs)
+	Select Case strEventName
+	Case "vwCloseAllDialogs"
+			window.close
+	Case Else
+	End Select
+End Sub
+'======================================
+
+sub DoCancel
+	window.close
+end sub
+
+sub DoOK
+	UpdatePrefsFromWindow
+	DoCancel
+end sub
+
+sub OnHelp
+	dim helpString
+	window.event.returnValue = false
+	helpString = "mk:@MSITStore:" & oTopWnd.theclient.vwclient.world.global.HelpPath
+	helpString = helpString & "vworlds.chm::/UIRef/cliels/options.htm>sdkall"
+	window.showhelp helpString
+end sub
+
+sub UpdateWindowFromPrefs
+	if CInt(oTopWnd.iUseHWAcceleration) = 0 then
+		chkTurnOffHW.checked = true
+		if not oTopWnd.GetRenderControl is Nothing then
+			if oTopWnd.GetRenderControl.EditMode = 2 then
+				' Boundary edit mode always switches off fast mode.
+				chkDrawFast.checked = false
+				chkDrawFast.disabled = true
+				draw.style.color = "gray"
+			else
+				chkDrawFast.checked = true
+				if CInt(oTopWnd.iDrawFastWhenMoving) = 0 then
+					chkDrawFast.checked = false
+				end if
+			end if
+		else
+			chkDrawFast.checked = true
+			if CInt(oTopWnd.iDrawFastWhenMoving) = 0 then
+				chkDrawFast.checked = false
+			end if
+		end if
+		optPerformance.checked = TRUE
+		if CInt(oTopWnd.iColorModel) = 2 then
+			optGraphics.checked = TRUE
+		end if
+		chkForceBB.checked=False
+		chkForceBB.disabled=TRUE
+		ForceBB.style.color = "gray"
+	else
+		chkTurnOffHW.checked = false
+		chkDrawFast.checked=FALSE
+		chkDrawFast.disabled=TRUE
+		draw.style.color = "gray"
+		optGraphics.checked = TRUE
+		optPerformance.disabled=TRUE
+		lblPerformance.style.color = "gray"
+		optGraphics.disabled=TRUE
+		lblGraphics.style.color = "gray"
+		lblOptimize.style.color = "gray"
+		chkForceBB.checked=oTopWnd.bForceBackBuffering
+		if not oTopWnd.GetRenderControl is Nothing then
+			if oTopWnd.GetRenderControl.EditMode = 2 then
+				' Don't allow back buffer forcing in boundary edit mode.
+				chkForceBB.disabled=TRUE
+				ForceBB.style.color = "gray"
+			else
+				chkForceBB.disabled=FALSE
+				ForceBB.style.color = "black"
+			end if
+		else
+			chkForceBB.disabled=FALSE
+			ForceBB.style.color = "black"
+		end if
+	end if
+	chkAutoDl.checked = oTopWnd.bAutoDownloadAvatars
+	chkSndFX.checked = oTopWnd.bPlaySoundFX
+	chkShowGest.checked = oTopWnd.bShowGestures
+	chkShowMsg.checked = oTopWnd.bShowSysMsgs
+	chkShowEvent.checked = oTopWnd.bShowEvents
+end sub
+
+sub UpdatePrefsFromWindow
+	dim DoDrawFast
+	on error resume next
+	if chkTurnOffHW.checked = false then
+		oTopWnd.iUseHWAcceleration = 1
+		' Don't allow back buffer forcing in boundary edit mode.
+		if not oTopWnd.GetRenderControl is Nothing then
+			if oTopWnd.GetRenderControl.EditMode <> 2 then
+				oTopWnd.bForceBackBuffering = chkForceBB.checked
+			end if
+		else
+			oTopWnd.bForceBackBuffering = chkForceBB.checked
+		end if
+	else
+		oTopWnd.iUseHWAcceleration = 0
+		DoDrawFast = true
+		if not oTopWnd.GetRenderControl is Nothing then
+			if oTopWnd.GetRenderControl.EditMode = 2 then
+				' Boundary edit mode always switches off fast mode.
+				DoDrawFast = false
+			end if
+		end if
+		if DoDrawFast then
+			if chkDrawFast.checked = true then
+				oTopWnd.iDrawFastWhenMoving = 1
+			else
+				oTopWnd.iDrawFastWhenMoving = 0
+			end if
+		end if
+		if optGraphics.checked = true then
+			oTopWnd.iColorModel = 2
+		else
+			oTopWnd.iColorModel = 1
+		end if
+	end if
+	oTopWnd.bAutoDownloadAvatars = chkAutoDl.checked
+	oTopWnd.bPlaySoundFX = chkSndFX.checked
+	oTopWnd.bShowGestures = chkShowGest.checked
+	oTopWnd.bShowEvents = chkShowEvent.checked
+	oTopWnd.bShowSysMsgs = chkShowMsg.checked
+	oTopWnd.HandleUpdateOptions
+end sub
+
+sub drawenable
+	dim DoDrawFast
+	If chkTurnOffHW.checked = true then
+		DoDrawFast = true
+		if not oTopWnd.GetRenderControl is Nothing then
+			if oTopWnd.GetRenderControl.EditMode = 2 then
+				' Boundary edit mode always switches off fast mode.
+				DoDrawFast = false
+			end if
+		end if
+		if DoDrawFast then
+			chkDrawFast.disabled=FALSE
+			draw.style.color = "black"
+		end if
+		optPerformance.disabled=FALSE
+		lblPerformance.style.color = "black"
+		optGraphics.disabled=FALSE
+		lblGraphics.style.color = "black"
+		lblOptimize.style.color = "black"
+		chkForceBB.disabled=TRUE
+		ForceBB.style.color = "gray"
+		' Leave ForceBB at original state in boundary edit mode.
+		if not oTopWnd.GetRenderControl is Nothing then
+			if oTopWnd.GetRenderControl.EditMode <> 2 then
+				chkForceBB.checked=False
+			end if
+		else
+			chkForceBB.checked=False
+		end if
+	else
+		chkDrawFast.checked=False
+		chkDrawFast.disabled=TRUE
+		draw.style.color = "gray"
+		optGraphics.checked=TRUE
+		optPerformance.disabled=TRUE
+		lblPerformance.style.color = "gray"
+		optGraphics.disabled=TRUE
+		lblGraphics.style.color = "gray"
+		lblOptimize.style.color = "gray"
+		if not oTopWnd.GetRenderControl is Nothing then
+			if oTopWnd.GetRenderControl.EditMode = 2 then
+				' Don't allow back buffer forcing in boundary edit mode.
+				chkForceBB.disabled=TRUE
+				ForceBB.style.color = "gray"
+			else
+				chkForceBB.disabled=FALSE
+				ForceBB.style.color = "black"
+			end if
+		else
+			chkForceBB.disabled=FALSE
+			ForceBB.style.color = "black"
+		end if
+	end if
+end sub
+
+sub document_onkeypress
+	select case window.event.keyCode
+	case 27
+		DoCancel
+	case 13
+		if window.event.srcElement.tagName <> "BUTTON" then DoOK
+	case else
+	end select
+end sub
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+</script>
+</head>
+<body>
+	<div style=top:7;left:18; class=vH2>
+		Audio<hr color=#A7A795 Style=position:absolute;top:7;left:39; size=1 width=325>
+	</div>
+	<div style=position:absolute;top:27;left:12;>
+		<input type=checkbox id=chkSndFX style=position:relative;left:6;>
+		<label class=vInputLbl for=chkSndFX>
+			&nbsp;Play sound effects&nbsp;
+		</label>
+	</div>
+	<div style=top:53;left:18; class=vH2>
+		Text History Display<hr color=#A7A795 Style=position:absolute;top:7;left:134; size=1 width=230>
+	</div>
+	<div style=position:absolute;top:73;left:12;>
+		<input type=checkbox id=chkShowGest checked style=position:relative;left:6;>
+		<label class=vInputLbl for=chkShowGest>
+			&nbsp;Show gestures&nbsp;
+		</label>
+	</div>
+	<div style=position:absolute;top:93;left:12;>
+		<input type=checkbox id=chkShowEvent checked style=position:relative;left:6;>
+		<label class=vInputLbl for=chkShowEvent>
+			&nbsp;Show events&nbsp;
+		</label>
+	</div>
+	<div style=position:absolute;top:113;left:12;>
+		<nobr><input type=checkbox id=chkShowMsg style=position:relative;left:6;>
+		<label class=vInputLbl for=chkShowMsg>
+			&nbsp;Show system messages&nbsp;
+		</label></nobr>
+	</div>
+	<div style=top:139;left:18; class=vH2>
+		Performance<hr color=#A7A795 Style=position:absolute;top:7;left:86; size=1 width=278>
+	</div>
+	<div style=position:absolute;top:160;left:12;>
+		<input type=checkbox id=chkAutoDl style=position:relative;left:6;>
+		<label class=vInputLbl for=chkAutoDl>
+			&nbsp;Auto download new avatar graphics&nbsp;
+		</label>
+	</div>
+	<div style=position:absolute;top:180;left:12;>
+		<input type=checkbox onClick=drawenable id=chkTurnOffHW style=position:relative;left:6;>
+		<label class=vInputLbl for=chkTurnOffHW>
+			&nbsp;Turn off hardware acceleration&nbsp;
+		</label>
+	</div>
+	<div style=position:absolute;top:200;left:12;>
+		<input type=checkbox onClick=drawenable id=chkForceBB style=position:relative;left:6;>
+		<label id=ForceBB class=vInputLbl for=chkForceBB>
+			&nbsp;Force back buffering&nbsp;
+		</label>
+	</div>
+	<div style=position:absolute;top:220;left:12;>
+		<input type=checkbox id=chkDrawFast style=position:relative;left:6;>
+		<label id=draw class=vInputLbl for=chkDrawFast>
+			&nbsp;Switch to lower resolution when moving&nbsp;
+		</label>
+	</div>
+	<div id=lblOptimize style=position:absolute;top:245;left:20; class=vLabel>
+		Optimize for:
+	</div>
+	<div style=position:absolute;top:262;left:12;>
+		<input type=radio name=Optimize id=optGraphics style=position:relative;left:6;>
+		<label class=vInputLbl id=lblGraphics for=optGraphics>
+			&nbsp;Best graphics quality&nbsp;
+		</label>
+		<input type=radio id=optPerformance name=Optimize style=position:relative;left:6;>
+		<label class=vInputLbl id=lblPerformance for=optPerformance>
+			&nbsp;Best performance&nbsp;
+		</label><br>
+	</div>
+	<button class=bEnabled id=btnOK onclick=DoOK style="position:absolute;top:300;left:252;">OK</button>
+	<button class=bEnabled id=btnCancel onclick=DoCancel style="position:absolute;top:300;left:322;">Cancel</button>
+	<a id=lnkHelp onclick=OnHelp href="">
+		<img src=../shared/help.gif id=imgHelp class=vHelp style=top:300;>
+	</a>
+</body>
+</html>

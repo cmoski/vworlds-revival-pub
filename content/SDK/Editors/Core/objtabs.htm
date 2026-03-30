@@ -1,0 +1,189 @@
+<html>
+<head>
+<link rel=stylesheet href=..\..\..\client\shared\global.css>
+<script language=vbs>
+
+Option Explicit
+
+Public ctlBottom, ctlTop, curElement, fMouseClicked, idLoadTimer
+
+fMouseClicked = True
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+Sub window_onload
+	Dim tabCnt, tabItem, editMenu, i, posVert
+	' Iterate through the map, creating tabs
+	tabCnt = 1
+	posVert = 20
+	Set editMenu = parent.editMap
+	For i = 0 To editMenu.count-1
+		tabItem = editMenu.property(i)
+		If Len(tabItem) > 0 Then
+			WriteTab tabItem, tabCnt, posVert
+		End If
+	Next
+	document.body.insertAdjacentHTML "beforeEnd", _
+		"<button class=bEnabled id=btnAdvanced style=left:13;top:205;width:70;>" & _
+		"<span style=position:relative;top:-1;>Advanced</span></button>"
+	set curElement = document.all("optTab1")
+	Set ctlTop = document.all("optTab1")
+	Set ctlBottom = btnAdvanced
+	SetHighlight document.all("lblTab1")
+	window.open document.all("optTab1").tabURL, "Property"
+End Sub
+
+Sub WriteTab(tabItem, tabCnt, posVert)
+	Dim tabEntry, tabTitle, titleOffset, nameOffset, tabRest, tabURL
+	nameOffset = InStr(tabItem, "|")
+	If nameOffset > 0 Then
+		tabEntry = Left(tabItem, nameOffset - 1)
+		tabRest = Mid(tabItem, nameOffset + 1)
+		' Parse the name/title
+		titleOffset = InStr(tabRest, "|")
+		If titleOffset > 0 Then
+			tabTitle = Left(tabRest, titleOffset - 1)
+			tabURL = Mid(tabRest, titleOffset + 1)
+			' Write out a tab
+			document.body.insertAdjacentHTML "beforeEnd", _
+				"<input type=radio name=tab id=optTab" & tabCnt & _
+				" style=position:absolute;left:-20;top:-20 tabURL=" & tabURL & ">" & _
+				"<div style=position:absolute;top:" & posVert & ";width:94;padding-bottom:2;>" & "<label id=lblTab" & tabCnt & " class=vTab for=optTab" & tabCnt & _
+				" style=position:relative;left:9; title=""" & tabTitle & """>" & tabEntry & "</label></div>"
+			tabCnt = tabCnt + 1
+			posVert = posVert + 20
+		End If
+	End If
+End Sub
+
+Sub LaunchOE
+	dim world
+	set world = parent.helper.client.world
+	world.fireUIEvent world.user, "vwLaunchOE", parent.helper.arg
+End Sub
+
+Sub document_onmouseup
+	fMouseClicked = True
+End Sub
+
+Sub document_onclick
+	Dim fVerified
+	If window.event.srcElement.tagName = "INPUT" Then
+		' Deselect the old
+		If Not document.all("lbl" & Mid(window.event.srcElement.id, 4)) Is curElement Then
+			If idLoadTimer <> 0 Then
+				window.clearTimeout idLoadTimer
+			End If
+			fVerified = True
+			If parent.fraProperty.document.readyState = "complete" Then
+				fVerified = parent.Property.verify
+			End If
+			If fVerified Then
+				idLoadTimer = window.setTimeout("parent.TabChange : window.open """ & _
+					window.event.srcElement.tabURL & """, ""Property"" : idLoadTimer = 0", 150)
+				SetHighlight document.all("lbl" & Mid(window.event.srcElement.id, 4))
+				Set ctlTop = window.event.srcElement
+			End If
+		Else
+			fMouseClicked = False
+		End If
+	Else
+		If window.event.srcElement.id = "btnAdvanced" Then
+			LaunchOE
+		End If
+	End If
+End Sub
+
+Sub document_OnMouseOver
+	Select Case window.event.srcElement.className
+	Case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	Case "vTab"
+		window.event.srcElement.className = "vTabHightlight"
+	Case Else
+	End Select
+End Sub
+
+Sub document_onmouseout
+	Select Case window.event.srcElement.className
+	Case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	Case "vTabHightlight"
+		window.event.srcElement.className = "vTab"
+	Case Else
+	End Select
+End Sub
+
+Sub SetHighlight(el)
+	el.className = "vTabSelect"
+	el.parentElement.className = "vTabSelect"
+	If IsObject(curElement) Then
+		If curElement.id <> el.id Then
+			curElement.className = "vTab"
+			curElement.parentElement.className = ""
+		End If
+	End If
+	Set curElement = el
+End Sub
+
+Function GetCurrentTab
+	GetCurrentTab = Trim(curElement.innerText)
+End Function
+
+Sub document_onkeypress
+	Select Case window.event.keyCode
+	Case 27
+		parent.btnCancel.click
+	Case 13
+		If window.event.srcElement.tagName <> "BUTTON" Then parent.btnCancel.click
+	Case 9
+		Select Case window.event.srcElement.id
+		Case "btnAdvanced"
+			If window.event.shiftKey Then
+				ctlTop.focus
+			Else
+				parent.Property.ctlTop.focus
+				If parent.Property.ctlTop.tagName = "INPUT" Then
+					If parent.Property.ctlTop.type = "text" Then
+						parent.Property.ctlTop.select
+					End If
+				ElseIf parent.Property.ctlTop.tagName = "TEXTAREA" Then
+					parent.Property.ctlTop.select
+				End If
+			End If
+		Case Else
+			If Left(window.event.srcElement.id, 6) = "optTab" Then
+				If window.event.shiftKey Then
+					parent.ctlBottom.focus
+				Else
+					btnAdvanced.focus
+				End If
+			Else
+				If window.event.shiftKey Then
+					btnAdvanced.focus
+				Else
+					ctlTop.focus
+				End If
+			End If
+		End Select
+	Case Else
+	End Select
+End Sub
+
+</script>
+</head>
+<body>
+	<img src=..\..\..\client\shared\menuclouds.gif style=position:absolute;left:0;top:0;height:100%;width:95;>
+</body>
+</html>

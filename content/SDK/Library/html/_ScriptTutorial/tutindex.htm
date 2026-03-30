@@ -1,0 +1,35 @@
+<html>
+<head>
+<title>
+Scripting Tutorial
+</title>
+<script language=vbs>
+option explicit
+
+public goTop, goWorld, goUser
+set goTop = window.dialogArguments
+set goWorld = goTop.theclient.VWClient.world
+set goUser = Nothing
+set goUser = goWorld.user
+
+sub window_onunload
+	'The code below will reload the tutorial screen if it is closed.
+	'Comment out all the lines below to disable this feature.
+
+	if not goUser is Nothing then
+		goWorld.fireUIEvent goUser, "vwTutorialClose", ""
+		goWorld.FireUIEvent goUser, "vwTutorial", 200
+	end if
+end sub
+
+
+</script>
+</head>
+<frameset cols="160,*" frameborder="no" framespacing="0">
+	<frame src="tuttabs.htm" name="Tabs" scrolling=auto>
+	<frameset rows="*,38">
+		<frame src="Group0.htm" name="Tutorial" scrolling="auto">
+		<frame src="tutbtns.htm" name="Btns" scrolling="no">
+	</frameset>
+</frameset>
+</html>

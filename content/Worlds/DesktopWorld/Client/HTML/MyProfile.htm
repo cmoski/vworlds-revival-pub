@@ -1,0 +1,614 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//
+'//  File:			MyProfile.htm
+'//  Description:	This file allows the user to manipulate the chess pieces in the
+'//					game room.  It takes care of all func except for the movable
+'//					behavior is taken care of by Movable.htc.  The is no limit to the
+'//					number of players by design.
+'////////////////////////////////////////////////////////////////////////-->
+<html>
+<head>
+<link rel=stylesheet href=../shared/global.css>
+<meta http-equiv="Expires" content="0">
+<title>My Profile</title>
+
+<!--include scripts-->
+<script language="vbscript" src="../vbs/WriteSideLink.vbs">
+</script>
+<!--
+<script language="vbscript" src="../vbs/document_OnSelectStart.vbs">
+</script>
+-->
+<script language="vbscript" src="../vbs/MenuOnMouseDown.vbs">
+</script>
+<!--end include scripts-->
+
+<script language="VBScript">
+option explicit
+
+'////////////////////////////////////////////////////////////////////////
+'//  Global Consts and Varbs (to this file)
+'////////////////////////////////////////////////////////////////////////
+const colorHilite = "#4977F9"
+const colorNormal = "#587f7e"
+dim currentObjectId		' for Show<object>.htm
+dim currentAvatarId		' for ShowPerson.htm
+dim groupName			' for ShowPerson.htm
+dim user
+dim PeopleBlock		' used for either the Friends block or the Ignoring block
+dim BehaviorElem
+set user = top.ClientUserPtr	
+currentObjectId = 0
+
+
+'/////////////////////////// NOTE ///////////////////////////////////////
+'//	The menu system used on this page is the result of several developers adding 
+'//	functionality over a period of months, and may be somewhat difficult to understand.
+'//
+'//	The page consists of a narrow menu pane at the left and a larger iframe containing a web page.
+'// The menu area is populated with vwObjectBlocks. 
+'//	A vwObjectBlock is a dynamically generated element that displays information about an 
+'// in-world object. It has a custom attribute "vwObjectId" whose value can be used to retrieve
+'//	the actual object from the world.
+'//	The vwObjectBlock contains a vwThumbnail element, which shows an image representing the object;
+'//	a vwInfo element that shows who sent the object and when, and a vwMenu element.
+'//	The vwMenu element contains a series of vwMenuItem elements. These are elements generated
+'//	from the object's right-click menu, which execute the object's methods when clicked.
+'//	This lets the user execute VWorlds object methods directly from the UI.
+'//	When some object methods such as Ignore/UnIgnore change the state of an object, they
+'//	fire UI events. These are processed by the HandleUIEVent sub (below), which dynamically
+'//	updates the page.
+'////////////////////////////////////////////////////////////////////////
+
+
+
+dim lngSelectedItemId			'currently selected item id
+const SEL_COLOR = "#78fe8b"
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		window_Onload
+'//  Purpose:	Generate the highest-level menu items and load a page into the iframe
+'////////////////////////////////////////////////////////////////////////
+sub window_onload
+	top.AddToEventList window
+	WriteSideLink "lnkMyAppearance", "MenuI", "My Appearance", "doMyAppearance", 1
+	WriteSideLink "lnkMyDetails", "MenuI", "My Details", "doMyDetails", 1 
+	WriteSideLink "lnkMyFriends", "MenuI", "My Friends", "makePeopleBlock " & """Friends""", 2
+	WriteSideLink "lnkMyIgnoring", "MenuI", "My Ignored", "makePeopleBlock " & """customIgnoreList""", 2
+
+	isNavigationOk = true
+	
+	if top.strPage_MyProfile = "MyDetails.htm" then
+		MenuOnMouseDown (document.all.item("lnkMyDetails"))
+		top.strPage_MyProfile = ""
+	else
+		MenuOnMouseDown (document.all.item("lnkMyAppearance"))
+	end if
+	currentAvatarId = top.currentAvatarId
+	top.CurrentAvatarId = 0
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		window_OnUnload
+'//  Purpose:	To remove from the event list
+'////////////////////////////////////////////////////////////////////////
+sub window_onUnload
+	top.RemoveFromEventList window
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		document_OnClick
+'//  Purpose:	lock the current item into a highlight mode
+'////////////////////////////////////////////////////////////////////////
+sub document_OnClick
+	dim objTempElm
+	
+	set objTempElm = window.event.srcElement
+	if instr(objTempElm.id, "vwInfo") <> 1 then
+		exit sub
+	end if
+	objTempElm.style.color = SEL_COLOR			'color from help menu
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		document_OnMouseOut
+'//  Purpose:	un-highlight the moused over item
+'////////////////////////////////////////////////////////////////////////
+sub document_OnMouseOut
+	dim objTempElm
+	
+	set objTempElm = window.event.srcElement
+	if instr(objTempElm.id, "vwInfo") <> 1 then
+		exit sub
+	end if
+
+	if lngSelectedItemId <> objTempElm.id then
+		objTempElm.style.color = "white"
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		document_OnMouseDown
+'//  Purpose:	highlight the moused over item
+'////////////////////////////////////////////////////////////////////////
+sub document_OnMouseDown
+	dim objTempElm, objLoopElem
+
+	set objTempElm = window.event.srcElement
+	if instr(objTempElm.id, "vwInfo") <> 1 then
+		exit sub
+	end if
+
+	lngSelectedItemId = objTempElm.id
+	for each objLoopElem in document.all
+		if left(objLoopElem.id, len("vwInfo")) = "vwInfo" and objLoopElem.id <> lngSelectedItemId then  
+			objLoopElem.style.color = "white"
+		end if
+	next
+	
+	objTempElm.style.color = SEL_COLOR
+	
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		document_onClick
+'//  Purpose:	Detect and handle clicks on menu items
+'////////////////////////////////////////////////////////////////////////
+sub document_onClick
+	dim elem, vwObjectId, vwObject, avatarId, avatar 
+	dim menu, menuItem, menuItemId
+	dim menuBlock, objectBlock
+	dim underscore
+	dim n,m
+
+	dim btnFunc
+	set elem = window.event.srcElement
+
+	set elem = window.event.srcElement
+	do while (elem.className <> "vwObjectBlock") _
+		and (elem.className <> "vwMenuItem") _
+		and (elem.className <> "MenuII") _
+		and (elem.className <> "MenuIII") _
+		and (elem.className <> "avatarBlock") _
+		and (elem.tagname <> "BODY")
+		set elem = elem.parentElement
+	loop
+	if elem.className = "MenuI" then
+		hideMenus
+		vwObjectId = elem.getAttribute("vwObjectId")
+		top.getObjectById vwObjectId, vwObject
+		if vwObject is Nothing then exit sub
+		' generate the object's menu
+		makeObjectMenu vwObject.Id
+		currentObjectId = vwObject.Id
+		vwObject.IsOpened = true
+		document.all.item("vwThumbnailImg" & vwObject.Id).src = vwObject.thumbnailOpen
+		' display the object's web page in the iframe
+		if vwObject.IsValidProperty("showPage") then
+			document.all.infoIFrame.src = vwObject.showPage
+		else
+			document.all.infoIFrame.src = "showgeneric.htm"
+		end if
+	elseif elem.className = "MenuII" then
+		hideMenus
+		avatarId = elem.getAttribute("vwObjectId")
+		currentAvatarId = elem.getAttribute("vwObjectId")
+
+		top.getObjectById avatarId, avatar
+		
+		if not (avatar is Nothing) then
+			' generate the avatar's menu
+			makeAvatarMenuBlock avatar.Id
+			currentAvatarId = avatar.Id
+			' display the object's web page in the iframe
+			groupName = peopleBlock.getAttribute("groupName")
+			document.all.infoIFrame.src = "showPerson.htm"
+		end if
+	elseif elem.className = "MenuIII" then
+		' since we are essentially displaying avatar's right-click menu in the UI,
+		' wake up the avatar as a right-click in the 3d view would do.
+		top.wakeUp
+		set menuBlock = elem.parentElement
+		set objectBlock = menuBlock.parentElement
+		vwObjectId = objectBlock.getAttribute("vwObjectId")	
+		top.getObjectById vwObjectId, vwObject
+
+		if not (vwObject is Nothing) then
+			' Execute an action from the object's in-world menu
+			if elem.innerText = "-Send Note" then
+				document.frames(0).location = "NoteSend.htm"
+			else
+				currentObjectId = vwObject.Id
+				menuItemId = mid(elem.id,instrRev(elem.id, "_")+1,255)
+				set menu = vwObject.GetMenuList
+				set menuItem = menu.property(menuItemId)
+				menuItem.Execute
+				' Refresh the MyThings block after allowing time for the world to change
+				window.setTimeout "makeObjectMenu currentObjectId", 100
+			end if
+		end if
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		GetCurrentAvatarId
+'//  Purpose:	called by ShowPerson.htm to determine whom to display
+'////////////////////////////////////////////////////////////////////////
+function GetCurrentAvatarId
+	GetCurrentAvatarId = currentAvatarId
+end function
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		ClearCurrentAvatarId
+'//  Purpose:	called by ShowPerson.htm to determine whom to display
+'////////////////////////////////////////////////////////////////////////
+sub ClearCurrentAvatarId
+	currentAvatarId = 0
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		getGroupName
+'//  Purpose:	called by ShowPage.htm to display as a heading
+'////////////////////////////////////////////////////////////////////////
+function getGroupName
+	getGroupName = groupName
+end function
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		hideMenus
+'//  Purpose:	undisplay any current visible object before switching to a different object
+'//  Called by: document_onClick
+'////////////////////////////////////////////////////////////////////////
+sub hideMenus
+	dim elem
+	for each elem in document.all
+		if elem.className = "vwMenu" then elem.style.display = "none"
+	next
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		hideLists
+'//  Purpose:	hides the list of My Friends or My Ignored, if one exists
+'//  Called by: DoMyAppearance, DoMyDetails, makePeopleBlock
+'////////////////////////////////////////////////////////////////////////
+sub hideLists
+	on error resume next
+	PeopleBlock.removeNode true
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		makeObjectMenu()
+'//  Purpose:	Generate a HTML version of the object's right-click menu
+'//				and insert it in the objectBlock
+'//	 Params:
+'//		vwObjectId	<int>	object's id
+'//  Called by: document_onClick
+'////////////////////////////////////////////////////////////////////////
+sub makeObjectMenu (vwObjectId)
+	dim vwObject, objectBlock, menu, menuItem, menuItemCount, menuBlock, elem, n
+	dim userHasObject
+	top.getObjectById vwObjectId, vwObject
+	' verify that the object we are operating on still exists in the user's contents
+	for each vwObject in user.contents
+		if vwObject.Id = vwObjectId then 
+			userHasObject = true
+			exit for
+		end if
+	next
+	if not userHasObject then exit sub
+
+	' insert menu block
+	set objectBlock = document.all.item("vwObject" & vwObject.Id)
+	if objectBlock is Nothing then exit sub
+	set menuBlock = document.createElement ("SPAN")
+	menuBlock.id = "vwMenu" & vwObject.Id
+	menuBlock.classname = "vwMenu"
+	menuBlock.style.display = "none"
+	menuBlock.style.marginleft = 20
+	objectBlock.InsertAdjacentElement "BeforeEnd", menuBlock
+
+	set menu = vwObject.GetMenuList
+	menuItemCount = 0
+	for n = 0 to menu.count - 1
+		set menuItem = menu.property(n)
+		if menuItem.menuText > "" and instr(1,menuItem.menuText,"Profile") = 0 and menuItem.Flags <> top.ClientWorldPtr.MI_INVISIBLE then
+			menuItemCount = menuItemCount + 1
+			set elem = document.createElement("SPAN")
+			elem.className = "MenuIII"
+			' set the id so we can get the object id and the menu item id
+			elem.id = "vwMenuItem" & vwObject.id & "_" & n
+			elem.setAttribute "menuItemId",n
+			elem.innerHTML = menuItem.menuText
+			menuBlock.InsertAdjacentElement "BeforeEnd", elem
+		end if
+		set menuItem = Nothing
+	next
+	set menu = Nothing
+
+	if menuItemCount > 0 then menuBlock.style.display = "block"
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		doMyAppearance()
+'//  Purpose:	handler for when the user clicks on "my appearance"
+'//  Called by: onClick handler for the "My Appearance" link
+'////////////////////////////////////////////////////////////////////////
+sub doMyAppearance
+	hideLists
+	infoIFrame.location = "MyAppearance.htm"
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		doMyDetails()
+'//  Purpose:	handler for when the user clicks on "my details"
+'//  Called by: onClick handler for the "My Details" link
+'////////////////////////////////////////////////////////////////////////
+sub doMyDetails
+	hideLists
+	infoIFrame.navigate "MyDetails.htm"
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		makePeopleBlock (group)
+'//  Purpose:	Generate a sorted group of HTML elements for avatars.
+'//				Group is the name of a proplist in the user's profile.
+'//				If the current user is in the group, put that element first.
+'//				If CurrentAvatarId > 0 then expand that person, else expand the first one in the group.
+'//				If the group is empty, show a list-empty page.
+'//	 Params:
+'//		group	- <str> either "Friends" or "Ignored"
+'//  Called by: onClick handler for the "My Friends" and "My Ignoring" links,
+'//				and by HandleUIEvent for 
+'////////////////////////////////////////////////////////////////////////
+sub makePeopleBlock (group)
+	dim avatar, elem, targetAvatarId, avList, child
+	hideLists
+	
+	if user.profile.keyvalue(group).count = 0 then
+		if group = "Friends" then
+			groupName = "My Friends"
+		else 
+			groupName = "My Ignored"
+		end if 
+		infoIFrame.location = "NoMyProfile.htm"		
+		exit sub
+	end if		
+
+	if group = "Friends" then
+		set PeopleBlock = SideLinks.insertBefore (document.createElement("DIV"), lnkMyIgnoring)
+		PeopleBlock.setAttribute "groupName", lnkMyFriends.innerText
+	else
+		set PeopleBlock = SideLinks.insertAdjacentElement ("BeforeEnd", document.createElement("DIV"))
+		PeopleBlock.setAttribute "groupName", lnkMyIgnoring.innerText
+	end if
+	' Inserting the PeopleBlock into the document before inserting avatar elements is necessary
+	' so we can apply color filters to the avatar thumbnails as they are generated; filters cannot
+	' be applied to elements until they are part of a document.
+	PeopleBlock.id = "PeopleBlock"
+	PeopleBlock.className = "MenuBlock"
+	
+	' Make an avatar block for each person in the group.
+	if user.profile.IsValid(group) then
+		set avList = user.profile.keyvalue(group)
+		for each avatar in avList
+			if not (avatar is nothing) then
+				if not avatar.isStub then
+					makeAvatarBlock avatar
+				end if
+			end if
+		next		
+	end if
+	
+	' If we have no current avatar, select the first one in the group
+	if currentAvatarId = 0 then
+		set elem = PeopleBlock.firstChild
+	else
+		set elem = nothing
+		for each child in PeopleBlock.children
+			if child.id = "Avatar" & currentAvatarId then
+				set elem = child
+				exit for
+			end if
+		next
+	end if
+	if not (elem is nothing) then 
+		if left(elem.id, len("avatar")) = "Avatar" then
+			lngSelectedItemId = "vwInfo" & mid(elem.id, len("avatar")+1, len(elem.id) - len("avatar"))
+		end if
+		elem.click
+		MenuOnMouseDown(document.all.item(elem.id))
+	end if
+	set elem = nothing
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		makeAvatarBlock(avatar)
+'//  Purpose:	Generate a clickable Avatar Block containing a Thumbnail Block with the image and
+'//				an Info Block with the name.
+'//				Clicking generates a Menu Block from the avatar's menu (see document_onclick).
+'//	 Params:
+'//		avatar	-	<object> reference to a vworlds avatar object
+'//  Called by:	makePeopleBlock
+'/////////////////////////////////////////////////////////////////////////
+sub makeAvatarBlock (avatar)
+	dim gif
+	dim category
+	dim sortKey, insertBeforeId
+	dim avatarBlock, thumbnailBlock, infoBlock, menuBlock
+	dim avatarDate
+	dim n, elem, img, newHTML, newElem
+	
+	' don't do anything if the People block is not visible
+	if IsEmpty(PeopleBlock) then exit sub
+	if PeopleBlock is Nothing then  exit sub
+
+	' generate a sortkey value for the object
+	if avatar.id = top.clientUserPtr.id then
+		sortKey = " "
+	else
+		sortKey = avatar.Name
+	end if
+				
+	' generate a block of HTML code for the object, id="avatarN" where N = object ID
+	set avatarBlock = document.createElement ("SPAN")
+	avatarBlock.id = "Avatar" & avatar.Id
+	avatarBlock.className = "MenuII"	
+	avatarBlock.setAttribute "sortKey", sortKey
+	avatarBlock.setAttribute "vwObjectId", avatar.id
+	avatarBlock.style.display = "block"
+
+	' Insert avatarBlock into the page.
+	' We have to do this now, rather than making sure avatarBlock is non-empty first,
+	' because insertThumbnailElement only works if avatarBlock is part of the document.
+	insertBeforeId = ""
+	for each elem in PeopleBlock.children
+		if elem.className = "avatarBlock" then
+			if elem.getAttribute("sortKey") >= sortKey then
+				insertBeforeId = elem.Id
+				exit for
+			end	if
+		end if
+	next
+	if insertBeforeId > "" then
+		PeopleBlock.insertBefore avatarBlock, document.all.item(insertBeforeId)
+	else
+		PeopleBlock.insertAdjacentElement "BeforeEnd", avatarBlock
+	end if
+	' insert thumbnail block
+	dim tnailBlock
+	set tnailBlock = document.createElement ("SPAN")
+	tnailBlock.id = "tnail" & avatar.Id
+	tnailBlock.className = "MenuII_tnail"
+
+	avatarBlock.InsertAdjacentElement "BeforeEnd", tnailBlock
+	
+	' insert the thumbnail image into the block
+	top.insertThumbnailElement avatar, document, tnailBlock
+
+	' insert an item info block next to the image
+	set infoBlock = document.createElement ("SPAN")
+	infoBlock.id = "vwInfo" & avatar.Id
+  	dim strAvName 
+	if Len(avatar.Name) > 8 then
+		strAvName = Left(avatar.Name,9) & "..."
+	else
+		strAvName = avatar.Name	
+	end if
+	infoBlock.innerHTML = strAvName
+	infoBlock.className = "MenuII_Title"
+	infoBlock.setAttribute "origClass", "MenuII_Title"
+	infoBlock.setAttribute "clickClass", "MenuII_Title_CLK"
+	infoBlock.setAttribute "hoverClass", "MenuII_Title_MO"
+	avatarBlock.InsertAdjacentElement "BeforeEnd", infoBlock
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		makeAvatarMenuBlock (avatarId)
+'//  Purpose:	Generate a menu based on the object's menu and insert it in the avatarBlock
+'//	 Params:
+'//		avatarid	-	<int> vworlds avatar id
+'//  Called by: document_onClick (when the user clicks on an avatar)
+'/////////////////////////////////////////////////////////////////////////
+sub makeAvatarMenuBlock (avatarId)
+	dim avatar, avatarBlock, menu, menuItem, menuItemCount, menuBlock, elem, n
+	dim avatarExists
+	top.getObjectById avatarId, avatar
+	' verify that the avatar we are operating still exists
+	for each avatar in user.container.avatars
+		if avatar.Id = avatarId then 
+			avatarExists = true
+			exit for
+		end if
+	next
+	if not avatarExists then exit sub
+	
+	' insert menu block
+	set avatarBlock = document.all.item("avatar" & avatar.Id)
+	if avatarBlock is Nothing then exit sub
+	set menuBlock = document.createElement ("SPAN")
+	menuBlock.id = "vwMenu" & avatar.Id
+	menuBlock.classname = "vwMenu"
+	avatarBlock.InsertAdjacentElement "BeforeEnd", menuBlock
+
+	set menu = avatar.GetMenuList
+	menuItemCount = 0
+	for n = 0 to menu.count - 1
+		set menuItem = menu.property(n)
+		if menuItem.menuText > "" and menuItem.menuText <> "Profile" and menuItem.Flags <> top.ClientWorldPtr.MI_INVISIBLE then
+			menuItemCount = menuItemCount + 1
+			set elem = document.createElement("SPAN")
+			elem.className = "MenuIII"
+			' set the id so we can get the object id and the menu item id
+			elem.id = "vwMenuItem" & avatar.id & "_" & n
+			elem.setAttribute "menuItemId",n
+			dim menuText
+			menuText = ""
+			menuText = menuItem.menuText
+			if LCase(menuText) = "send a note" then menuText = "Send Note"
+			if LCase(menuText) = "make a friend" then menuText = "Make Friend"
+			elem.innerHTML = "-" & menuText
+			menuBlock.InsertAdjacentElement "BeforeEnd", elem
+		end if
+		set menuItem = Nothing
+	next
+	set menu = Nothing
+	
+	' add some bottom padding into the menu
+	set elem = document.createElement("SPAN")
+	elem.className = "MenuIII_BtmPad"
+	elem.innerHTML = "&nbsp;"
+	menuBlock.InsertAdjacentElement "BeforeEnd", elem
+	
+	if menuItemCount <> 0 then menuBlock.style.display = "block"
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:	 	HandleUIEvent
+'//  Purpose:  	update the menus if certain events happen
+'//	 Args:		who  - user 
+'//				what - <str> event id
+'//				args - <array> various args
+'//  Called by:	client.htm:theclient_OnUIEvent
+'////////////////////////////////////////////////////////////////////////
+sub HandleUIEvent(byval who, what, byval args)
+	dim avatar
+	select case What
+		case "IgnoredUser", "UnignoredUser", "MakeFriendRequest", "YouRemovedFriend", "FriendRequestReturned", "FriendRequestCancelled", "IgnoredByUser", "UnignoredByUser"
+			' these are events that affect the state of the avatar menu, so refresh the menu;
+			' give it a half second to make sure all data is stable
+			if isObject(PeopleBlock) then
+				if mid(PeopleBlock.getAttribute("groupName"),2,255) = "My Friends" then
+					currentAvatarId = who.id
+					window.setTimeout "makePeopleBlock ""Friends""", 500, "VBScript"
+				elseif mid(PeopleBlock.getAttribute("groupName"),2,255) = "My Ignored" then
+					currentAvatarId = who.id
+					window.setTimeout "makePeopleBlock ""customIgnoreList""", 500, "VBScript"
+				end if
+			end if
+	end select
+end sub
+
+</script>
+</head>
+
+<body bgcolor=#ffffff>
+
+<span style="BACKGROUND-IMAGE: url(../Images/grntile2.gif); HEIGHT: 100%; WIDTH: 115px">
+</span>
+<div id=bkg style="BACKGROUND: #e7e7e7; HEIGHT: 41px; LEFT: 115px; POSITION: absolute; TOP: 0px; WIDTH: 16px">
+</div>
+<span id=SideLinks
+	 class=SideLinks>
+</span>
+<iframe id=InfoIFrame
+	name=InfoIFrame
+	class=InfoIFrame
+	marginwidth=0 
+	marginheight=0 
+	frameborder=no></iframe>	
+</body>
+</HTML>
+

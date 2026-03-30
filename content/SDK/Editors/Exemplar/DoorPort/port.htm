@@ -1,0 +1,79 @@
+<HTML>
+
+<HEAD>
+<SCRIPT LANGUAGE=VBScript>
+dim oldPortalDestination
+dim isportal
+dim newPortalDestination
+
+sub Window_OnLoad
+	On Error Resume Next
+	oldPortalDestination = parent.Helper.Arg.DestinationWorld
+	PortalForm.PortalDestination.value = oldPortalDestination
+	if parent.Helper.Arg.DestinationWorld <> "" then
+		PortalCheckbox.checked = True
+		PortalForm.style.visibility = "visible"
+		isportal = True
+	else
+		isportal = False
+		PortalForm.style.visibility = "hidden"
+	end if
+end sub
+
+sub DoChanges()
+	if PortalCheckbox.checked then
+		PortalForm.style.visibility = "visible"
+		isportal = True
+	else
+		PortalForm.style.visibility = "hidden"
+		isportal = False
+		newPortalDestination = PortalForm.PortalDestination.value
+	end if
+end sub
+
+sub Window_OnUnload
+	On Error Resume Next
+
+	newPortalDestination = PortalForm.PortalDestination.value
+	if isportal = False then
+		parent.Helper.Arg.DestinationWorld = ""
+	else
+		if newPortalDestination <> oldPortalDestination then
+			if Len(PortalForm.PortalDestination.value) > 255 then
+				msgbox "The portal destination can not be longer than 255 letters, re-using the old portal destination.", vbInformation, "Microsoft Virtual Worlds"
+				parent.Helper.Arg.DestinationWorld = oldPortalDestination
+				PortalForm.PortalDestination.value = oldPortalDestination
+				newPortalDestination = oldPortalDestination
+			else
+				parent.Helper.Arg.DestinationWorld = newPortalDestination
+				parent.Helper.Arg.Geometry = newPortalDestination
+			end if
+		end if
+	end if
+end sub
+
+function GetHelpURL
+	GetHelpURL = "porthelp.htm"
+end function
+
+function verify
+	verify = true
+end function
+
+</SCRIPT>
+</HEAD>
+
+<BODY BGCOLOR="ACTIVEBORDER" LEFTMARGIN=7 TOPMARGIN=7>
+
+<INPUT TYPE=CHECKBOX NAME=PortalCheckbox onclick="DoChanges()">This door is a portal.<BR>
+<BR><BR>
+
+
+<FORM NAME=PortalForm style="visibility:hidden">
+<TABLE><TR>
+<TD>Portal Destination:</TD><TD><INPUT TYPE="TEXT" NAME="PortalDestination"></TD>
+</TR></TABLE>
+</FORM>
+
+</BODY>
+</HTML>

@@ -1,0 +1,220 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//
+'//  File:			ShowNote.htm
+'//  Description:	Displays graphics and text for a note object from the world.
+'//					The Reply opens NoteSend.htm, passing it info to compose a reply.
+'////////////////////////////////////////////////////////////////////////-->
+<HTML>
+<HEAD>
+<link rel=stylesheet href=../shared/global.css>
+<TITLE>Display Note</TITLE>
+<!--Include scripts-->
+<script language="vbscript" src="../vbs/WordBreak.vbs">
+</script>
+<script language="vbscript" src="../vbs/Document_OnSelectStart.vbs">
+</script>
+<script language="vbscript" src="../vbs/HTMLFilter.vbs">
+</script>
+<!--End include scripts-->
+
+<style>
+.SurroundNote
+{
+	filter:shadow(color=gray,direction=135);
+	width:550;
+	height:550;
+	position:absolute;
+	top:50;
+	left:0;
+	width:expression(NoteWd()+10);
+	height:expression(NoteHt()+10);
+}
+</style>
+<script language=VBScript>
+
+option explicit
+
+'////////////////////////////////////////////////////////////////////////
+'//  Global Constants and Variables: To this file
+'////////////////////////////////////////////////////////////////////////
+class CFakeUser
+	dim name
+end class
+
+dim vwObject, whoFrom
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		window_onLoad
+'//  Purpose:  	To startup the page after all objects are instantiated
+'////////////////////////////////////////////////////////////////////////
+sub window_onload
+	on error resume next
+	dim stationery
+	dim strOrigMsg
+	dim strMsg
+
+	top.getObjectById parent.getCurrentObjectId, vwObject
+	
+	if isEmpty(vwObject) then 
+		msgbox "Error: Invalid user"
+	end if
+	
+	set whoFrom = top.ClientUserPtr.container.findwithin(vwObject.from)
+	if whofrom is nothing then
+		set whofrom = new CFakeUser
+		whoFrom.name = vwObject.from
+		ReplyButton.disabled = true
+	end if
+				
+	strOrigMsg = vwObject.Message
+	strMsg = ParseURLs(HTMLFilter(strOrigMsg))
+	strMsg = Replace(strMsg,vbCrLf, "<br>")
+	msgText.innerHTML = msgText.innerHTML & WordBreak(strMsg, 15)
+	PageHeadingRt.innerHTML = "From " & whoFrom.name
+	msgCard.className = "NotePaper_" & vwObject.stationery
+	msgText.style.fontFamily = msgCard.currentStyle.fontFamily
+	msgText.style.fontSize = msgCard.currentStyle.fontSize
+	msgText.style.fontStyle = msgCard.currentStyle.fontStyle
+	msgText.style.fontWeight = msgCard.currentStyle.fontWeight
+	
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		ReplyToNote
+'//  Purpose:  	Set up the note send page to reply to a note
+'//  Called by:	this is the onClick handler for the Reply button
+'////////////////////////////////////////////////////////////////////////
+sub ReplyToNote
+	if not isEmpty(vwObject) then
+		top.CurrentAvatarId = whoFrom.id
+		top.CurrentVWObjectId = vwObject.id
+		location = "NoteSend.htm?" & vwObject.id & "&" & whoFrom.id
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		CloseNote
+'//  Purpose:  	Open MyThings.htm with no current object;
+'//				this will cause it to display a default page.
+'//  Called by:	this is the onClick handler for the Close button
+'////////////////////////////////////////////////////////////////////////
+sub CloseNote
+	top.LinkToObject 0
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Functions:	NoteWd and NoteHt
+'//  Purpose:  	To set the note area's ht and wd properties
+'//  Called by:	IE sizing/positioning expressions in various HTML elements (see below)
+'////////////////////////////////////////////////////////////////////////
+function NoteWd()
+	NoteWd = document.body.offsetWidth - 40
+end function
+
+function NoteHt()
+	' size the note area 100px shorter than the window, but no shorter than 100px
+	dim docHt
+	docHt = document.body.offsetHeight
+	if docHt > 200 then
+		NoteHt = docHt - 100
+	else
+		NoteHt = 100
+	end if
+end function
+
+</script>
+</HEAD>
+<body bgcolor=#FFFFFF>
+
+<!--Start Heading Section-->
+
+<!--
+<div id=bkgPageHeadingPatch
+	class=bkgPageHeadingPatch>
+</div>
+-->
+
+<div id=bkgPageHeading style="width:expression(NoteWd());"
+	class=bkgPageHeading>
+</div>
+
+<span id=groupName style="position:absolute; left:10;" style="width:expression(NoteWd());" class=PageHeading>My Notes</span>
+<span id=PageHeadingRt style="width:expression(NoteWd());" class=PageHeadingRt>Note</span>
+<hr class=PageHeadingHR style="left:10; width:expression(NoteWd());">
+
+<!--End Heading Section-->
+
+<div id=shadowRight
+	style="filter:shadow(color=gray,direction=135);
+		position:absolute;
+		top:50;
+		left:expression(NoteWd()+9);
+		width:10;
+		height:expression(NoteHt()-1);">
+	<div style="position:absolute;
+		top:0;
+		left:0;
+		width:1;
+		height:expression(NoteHt()-20);
+		background:white;">
+	</div>
+</div>
+
+<div id=shadowBottom 
+	style="filter:shadow(color=gray,direction=135);
+		position:absolute;
+		top:expression(NoteHt()+30);
+		left:10;
+		width:expression(NoteWd()+10);
+		height:30;">
+	<div style="position:absolute;
+		top:0;
+		left:0;
+		width:expression(NoteWd());
+		height:1;
+		background:white;">
+	</div>
+</div>
+
+<div id=msgCard
+	style="position:absolute;
+		top:50;
+		left:10;
+		width:expression(NoteWd());
+		height:expression(NoteHt());
+		filter:alpha(opacity=50);">
+		</div>
+	<span id=msgText name=msgText
+		style="position:absolute;
+		top:65;
+		left:16;		
+		width:expression(NoteWd()-5);
+		height:expression(NoteHt()-16);
+		overflow:auto;
+		copyable=true;">
+	</span>
+	<button id=CloseButton
+		class=btnTeal
+		style="position:absolute;
+			top:expression(NoteHt()+60);
+			left:expression(NoteWd()-110);"
+		onclick=CloseNote()>
+		Close
+	</button>
+	<button id=ReplyButton
+		class=btnTeal
+		style="position:absolute;
+			top:expression(NoteHt()+60);
+			left:expression(NoteWd()-50);"
+		onclick=ReplyToNote()>
+		Reply
+	</button>
+
+<div id=htmlFilter style="POSITION:absolute;LEFT:0px;TOP:0px;VISIBILITY:hidden">
+</div>
+</BODY>
+</HTML>

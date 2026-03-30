@@ -1,0 +1,98 @@
+<html>
+<head>
+<LINK Rel=Stylesheet href="..\..\..\client\shared\global.css">
+<script language="VBSCRIPT">
+
+option explicit
+
+sub window_OnLoad()
+	top.page=4
+	top.buttons.UpdateButtons
+end sub
+
+sub window_OnUnLoad()
+end sub
+
+function verify()
+	verify = kit.verify()
+end function
+
+sub document_onKeyPress
+	select case window.event.keycode
+	case 27
+		parent.frames(1).OnCancel
+	case 13
+		parent.frames(1).OnFinish
+	case Else
+	end select
+end sub
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+sub Finish()
+	if verify then
+		' build the world
+		kit.buildworld()
+		' top.client.disconnect()
+		if not top.FailedToBuild then
+			StatusMsg "Done Creating World"
+		else
+			StatusMsg "Error: Unable to Create World"
+		end if
+	end if
+end sub
+
+Sub StatusMsg(msg)
+'	document.frames(2).document.body.innerText = msg
+End Sub
+</script>
+</head>
+<body>
+	<div style=position:absolute;left:0;top:0;height:273;width:95;overflow:hidden;>
+		<img src=..\..\..\client\shared\menuclouds.gif>
+	</div>
+	<div class=vH2 style=left:18;top:9;>Choose a world type and select a style</div>
+	<div class=vStepBackGround style=left:440;top:1;>=</div>
+	<div class=vStep style=left:452;top:9;>Step 4 of 4</div>
+	<iframe frameborder=no
+					name=contents
+					target=kit
+					src="picker.htm"
+					scrolling=auto
+					style=position:absolute;left:0;top:38;width:108;height:235;>
+	</iframe>
+	<iframe frameborder=no
+					name=kit
+					src="empty.htm"
+					scrolling=auto
+					style=position:absolute;left:108;top:38;width:432;height:235;>
+	</iframe>
+<!--
+This frame is the same as the one above except for the height value. It was changed to workd the frame below it.
+	<iframe frameborder=no
+					name=kit
+					src="empty.htm"
+					scrolling=auto
+					style=position:absolute;left:108;top:38;width:432;height:218;>
+	</iframe>
+This frame was supposed to be an attempt at a status bar but it doesn't update until all the script finishes.
+	<iframe frameborder=no
+					name=status
+					src="empty.htm"
+					scrolling=no
+					style=position:absolute;left:108;top:256;width:432;height:17;>
+	</iframe>
+-->
+</body>
+</html>

@@ -1,0 +1,207 @@
+<html>
+<head>
+<title>v-World client button bar!</title>
+<link rel=stylesheet href=..\shared\global.css>
+<script language=vbs>
+
+option explicit
+
+dim bBarNeedsRefresh
+
+bBarNeedsRefresh = false
+
+sub Initialize()
+	top.webhelper.HideBrowserAdornments
+end sub
+
+sub RefreshBar()
+	on error resume next
+	if bBarNeedsRefresh = true then
+		dim curWorld, curUser, curCont
+		dim sWorldName, sRoomName
+		set curWorld = Nothing
+		set curUser = Nothing
+		set curCont = Nothing
+		sWorldName = "!ERR!"
+		sRoomName = "!ERR!"
+		set curWorld = top.theclient.vwclient.world
+		if typename(curWorld) <> "Nothing" then
+			set curUser = curWorld.user
+			if typename(curUser <> "Nothing") then
+				set curCont = curUser.container
+				if typename(curCont <> "Nothing") then
+					sRoomName = cstr(curCont.name)
+					sWorldName = cstr(curWorld.worldname)
+					if sRoomName <> "!ERR!" and sWorldName <> "!ERR!" then
+						divWorldRoom.innerHTML = "<nobr>" & sWorldName & " : " & sRoomName & "</nobr>"
+						divWorldRoom.title = "Current world is " & top.theclient.vwclient.world.worldname & ", " & vbcrlf & "Current room is " & top.theclient.vwclient.world.user.container.name
+						bBarNeedsRefresh = false
+					end if
+				end if
+			end if
+		end if
+	end if
+	if bBarNeedsRefresh = true then
+		window.setTimeout "RefreshBar", 1000, "VBScript"
+	end if
+end sub
+
+sub ForceBarRefresh()
+	bBarNeedsRefresh = true
+	window.setTimeout "RefreshBar", 100, "VBScript"
+end sub
+
+sub window_OnLoad
+	parent.ChildReady(window)
+	top.addToEventList window
+end sub
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+sub window_onunload
+	on error resume next
+	top.webhelper.RestoreBrowserAdornments
+	top.removeFromEventList window
+end sub
+
+sub HandleUIEvent(byVal who, what, byVal arg)
+	dim sWorldName, sRoomName, user
+	select case what
+		case "OnEnterRoom"
+			if top.theclient.vwclient.world.user is arg then
+				ForceBarRefresh
+			end if
+		case "OnNameChanged"
+			if top.theclient.vwclient.world.user.container is who then
+				ForceBarRefresh
+			end if
+		case else
+	end select
+end sub
+
+sub HandleUserConnect(byVal someUser)
+	dim world, sWorldName, sRoomName
+	set world = top.theclient.vwclient.world
+	if typename(world) <> "Nothing" then
+		if someUser is world.user then
+			ForceBarRefresh
+		end if
+	end if
+end sub
+
+sub document_onmouseover
+	if window.event.srcElement.className = "vMainEnabled" then
+		window.event.srcElement.className = "vMainHighlight"
+		window.status = window.event.srcElement.statusText
+	end if
+end sub
+
+sub document_onmouseout
+	if window.event.srcElement.className = "vMainHighlight" then
+		window.event.srcElement.className = "vMainEnabled"
+		window.status = ""
+	end if
+end sub
+
+sub MenuClick
+	dim retDlg
+	window.event.returnValue = false
+	select case window.event.srcElement.name
+	case "divLogoff"
+		if left(top.sLogoffURL, 7) = "vwStart" then
+			if msgbox("Do you want to log off Microsoft Virtual Worlds?", vbQuestion + vbYesNo, "Microsoft Virtual Worlds") = vbYes then
+				top.fShowLogon = true
+				top.close
+			end if
+		else
+			top.navigate top.sLogoffURL
+		end if
+	case "divDir"
+		top.showdirectory
+	case "divCam"
+		dim world
+		set world = top.theclient.vwclient.world
+		if (world.global.isvalidproperty("editingmode")) Then
+			if (world.global.editingmode) Then
+				Msgbox "The camera settings can not be modified while in editing mode.", vbInformation, "Microsoft Virtual Worlds"
+				Exit Sub
+			End If
+		End If
+		world.FireUIEvent world.User, "vwShowCamera", True
+	case "divOpt"
+		retDlg = window.showModalDialog("options.htm", top, "dialogHeight:354px;dialogWidth:412px;status:no;help:no")
+	case "divHelp"
+		'top.theclient.vwclient.world.FireUIEvent top.theclient.vwclient.world.user, "Help"
+		dim helpstringsList, myworld
+
+		helpstringsList = null
+		set myworld = top.theclient.vwclient.world
+
+		if (myworld.global.isvalidproperty("editingmode")) Then
+			if (myworld.global.editingmode = 1) Then
+				set helpstringsList = myworld.global.CreatePropertyList
+				helpstringsList.add "Authoring"
+				helpstringsList.add "Geometry Editor"
+			Elseif (myworld.global.editingmode = 2) Then
+				set helpstringsList = myworld.global.CreatePropertyList
+				helpstringsList.add "Authoring"
+				helpstringsList.add "Boundary Editor"
+			End If
+		End If
+
+		myworld.FireUIEvent myworld.user, "Help", helpstringsList
+	case else
+	end select
+end sub
+
+</script>
+</head>
+<body style=background-color:#003366;>
+	<div id=divWorldRoom class=vH2 style=left:0;width:100%;top:4;color:lightblue;text-align:right;padding-right:10;>
+		<script language=vbs>
+			if top.theclient.vwclient.world.user.container Is Nothing then
+				document.write "<nobr>" & top.theclient.vwclient.world.worldname & "</nobr>"
+			else
+				document.write "<nobr>" & top.theclient.vwclient.world.worldname & " : " & _
+					top.theclient.vwclient.world.user.container.name & "</nobr>"
+			end if
+		</script>
+	</div>
+	<script language=vbs>
+		if top.theclient.vwclient.world.user.container Is Nothing then
+			divWorldRoom.title = "Current world is " & top.theclient.vwclient.world.worldname
+		else
+			divWorldRoom.title = "Current world is " & top.theclient.vwclient.world.worldname & ", " & vbcrlf & "Current room is " & top.theclient.vwclient.world.user.container.name
+		end if
+	</script>
+	<div style=position:absolute;left:0;top:0;width:315;height:22;background-color:#003366;></div>
+	<div style=position:absolute;left:0;top:0;width:315;>
+		<div style=position:absolute;left:10;>
+			<a name=divLogoff href="" class=vMainEnabled onclick=MenuClick statusText="Log off this world and return to the logon screen">&nbsp;Log Off&nbsp;</a>
+		</div>
+		<div style=position:absolute;left:70;>
+			<a name=divDir href="" class=vMainEnabled onclick=MenuClick statusText="Display a list of available worlds">&nbsp;Worlds&nbsp;</a>
+		</div>
+		<div style=position:absolute;left:128;>
+			<a name=divCam href="" class=vMainEnabled onclick=MenuClick statusText="Display the Camera control dialog">&nbsp;Camera&nbsp;</a>
+		</div>
+		<div style=position:absolute;left:191;>
+			<a name=divOpt href="" class=vMainEnabled onclick=MenuClick statusText="Displays the Options dialog">&nbsp;Options&nbsp;</a>
+		</div>
+		<div style=position:absolute;left:253;>
+			<a name=divHelp href="" class=vMainEnabled onclick=MenuClick statusText="Display Virtual Worlds Help">&nbsp;Help&nbsp;</a>
+		</div>
+	</div>
+</body>
+</html>

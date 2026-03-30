@@ -1,0 +1,158 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>Creating a server for DesktopWorld</title>
+</head>
+
+<body>
+
+<h1>Creating a server for DesktopWorld</h1>
+<h2>To run the Virtual Worlds Server, you will need the following components:</h2>
+<blockquote>
+Windows 95, Windows 98, Windows NT 4, or Windows 2000.<br>
+Personal Web Server 4.0 or Internet Information Services 4.0 or better. (Download from <a href="http://www.microsoft.com/windows/ie/pws">http://www.microsoft.com/windows/ie/pws</a>.)<br>
+Microsoft Data Access Components 2.0 or better. (Download from <a href="http://www.microsoft.com/data/download.htm">http://www.microsoft.com/data/download.htm</a>.)
+<p>These instructions assume you are using WinNT or Win2K and IIS.</p>
+</blockquote>
+<ol>
+<li>
+<h2>Virtual Worlds Installation</h2>
+</li>
+Install the Virtual Worlds core files and DesktopWorld application to the server.<br>
+Right-click on "My Computer" and select "Properties", then select the "Network Identification" tab.<br>
+Note the name of your server, then close the Properties dialog. This is the name used in steps <b>3.A</b>, <b>3.B</b>, and <b>8.A</b>.
+<p>
+<li><h2>Directory Creation</h2></li>
+We recommend using the default directories for the BBS, user pages, and website. If you choose to use different directories, make sure to edit the path names in steps 3 and 4.
+<ol type=A>
+<li>Create a directory for the BBS database, such as &quot;<i>C:\DesktopWorld\Database</i>&quot;.</li>
+Move the BBS database (BBS.mdb) from &quot;<i>C:\Program Files\Microsoft Virtual Worlds\Local Content\Worlds\DesktopWorld\External Content\Database</i>&quot; to this directory.
+<li>Create a directory for the user pages database, such as &quot;<i>C:\DesktopWorld\Database</i>&quot;.</li>
+For convenience, we used the same directory for both databases, but they could be separately located.<br>
+Move the user pages database (UserPages.mdb) from &quot;<i>C:\Program Files\Microsoft Virtual Worlds\Local Content\Worlds\DesktopWorld\External Content\Database</i>&quot; to this directory.
+<li>Create a Website directory for external content files, such as &quot;<i>C:\DesktopWorld\Website</i>&quot;.</li>
+Move the files and directories from &quot;<i>C:\Program Files\Microsoft Virtual Worlds\Local Content\Worlds\DesktopWorld\External Content\Website</i>&quot; to this directory.
+</ol>
+<p>
+<li><h2>Editing Paths</h2></li>
+<ol type=A>
+<li>Edit the file "vbs\pathnames.vbs" located in the Website directory (see step <b>2.C</b>).
+<ol type=1>
+<li>Set <b> strWebContentPath</b> to the location of the external content files (see step <b>2.C</b>).</li>
+<li>Set <b> worldLocation</b> to the name of the world you are going to create (see step <b>6.B</b>).</li>
+<li>Set <b>worldCount</b> to the number of worlds you want to run on your
+  server. This sample supports multiple worlds using the same base name, such as
+  <i>dtw1</i>, <i>dtw2</i>, etc.</li>
+<li>Set <b> userImagesPath</b> to the directory where you want to store any uploaded data.</li>
+<li>Set <b> strBBSServer</b> to the server hosting the BBS (see step <b>1.A</b>).</li>
+<li>Set <b> strUserPagesServer</b> to the server hosting your user pages database (see step <b>1.B</b>).</li>
+<li>Set <b> strUserPagesPath</b> to the directory location of the ASP files for user pages (see step <b>2.C</b>).</li>
+(In our sample, these locations are all on the same computer. You may wish to locate them separately.)
+</ol>
+<li>Edit the file "vbs\pathnames.vbs" located in the SDK directory (<i>C:\Program Files\Microsoft Virtual Worlds\Local Content\SDK\wizards\world\Kits\DesktopWorld</i>).</li>
+<ol type=1>
+<li>Set <b> strWebContentPath</b> to the location of the external content files (see step <b>2.C</b>).</li>
+<li>Set <b> worldLocation</b> to the name of the world you are going to create (see step <b>6.B</b>).</li>
+<li>Set <b> userImagesPath</b> to the directory where you want to store any uploaded data.</li>
+<li>Set <b> strBBSServer</b> to the server hosting the BBS (see step <b>1.A</b>).</li>
+<li>Set <b> strUserPagesServer</b> to the server hosting your user pages database (see step <b>1.B</b>).</li>
+<li>Set <b> strUserPagesPath</b> to the directory location of the ASP files for user pages (see step <b>2.C</b>).</li>
+(In our sample, these locations are all on the same computer. You may wish to locate them separately.)
+</ol>
+</ol>
+<p>
+<li><h2>Database Setup</h2></li>
+The instructions below assume the BBS and UserPages databases are on the same computer. If they are not, each server will need a copy of the INI file, have the appropriate DSN set up, and have MSADC enabled (see “Setting up the Web service”).
+<ol type=A>
+<li>Move "msdfmap_DesktopWorld.ini" from the website directory (see step <b>2.C</b>) to the Windows directory (<i>C:\WINNT</i>).</li>
+<li>Go to Start | Settings | Control Panel | Administrative Tools | Data Sources.</li>
+Select the "System DSN" tab. Click &lt;Add...&gt; to create a DSN.<br>
+<b>&nbsp;&nbsp;&nbsp;Driver</b>: Microsoft Access Driver (*.mdb)<br>
+<b>&nbsp;&nbsp;&nbsp;Data Source Name</b>: DesktopWorldBBS<br>
+<b>&nbsp;&nbsp;&nbsp;Database</b>: BBS.mdb (in the BBS directory)<br>
+Click &lt;Add...&gt; to create a second DSN.<br>
+<b>&nbsp;&nbsp;&nbsp;Driver</b>: Microsoft Access Driver (*.mdb)<br>
+<b>&nbsp;&nbsp;&nbsp;Data Source Name</b>: DesktopWorldPages<br>
+<b>&nbsp;&nbsp;&nbsp;Database</b>: UserPages.mdb (in the user pages directory)
+</ol>
+<p>
+<li>
+<h2>Web Service Setup</h2>
+</li>
+Go to Start | Settings | Control Panel | Administrative Tools | Internet Services Manager.<br>
+Expand the tree and select "Default Web Site".
+<ol type=A>
+<li>Right-click on "MSADC" and click "Properties".</li>
+Go to the "Directory Security" tab and click &lt;Edit...> for IP restrictions.<br>
+Change the default from "Denied" to "Granted" and click &lt;OK&gt;.<br>
+Click &lt;OK&gt; to close the properties dialog.
+<li>Right-click on a blank line and click "New" then "Virtual Directory".</li>
+Click &lt;Next>.<br>
+Provide an alias. We use &quot;<b>Website</b>&quot; as our virtual directory name.<br>
+Click &lt;Next&gt;, then click &lt;Browse...&gt; to find the directory containing the external content.<br>
+Click &lt;Next&gt;, &lt;Next&gt;, and &lt;Finish&gt; to complete the setup.
+<li>Right-click on a blank line and click "New" then "Virtual Directory".</li>
+Click &lt;Next>.<br>
+Provide an alias. We use &quot;<b>Database</b>&quot; as our virtual directory name.<br>
+Click &lt;Next&gt;, then click &lt;Browse...&gt; to find the directory containing the database file(s).<br>
+Click &lt;Next&gt;, &lt;Next&gt;, and &lt;Finish&gt; to complete the setup.
+</ol>
+Close the IIS manager applet.
+<p>
+<li>
+<h2>World Setup</h2>
+</li>
+Go to Start | Programs | Microsoft Virtual Worlds | Virtual Worlds Server.
+<ol type=A>
+<li>Go to Tools | User Authentication...</li>
+Unselect "Require NTLM Authentication for Logins" then click &lt;OK>.
+<li>Go to File | New World...</li>
+Enter the name of the world (see step <b>3.A</b>), followed by the world number
+(&quot;1&quot;, &quot;2&quot;, etc.), then click &lt;Next>.<br>
+Provide a user name (do not set a password).<br>
+Unselect “Automatically logon after wizard has finished.”, then click &lt;Next&gt;.<br>
+Click &lt;Next&gt; (do not set a Content server).<br>
+Select “DesktopWorld” as the type of world.<br>
+Click &lt;Finish> to build the world.
+<li>Repeat step <B>B</B> to create multiple worlds.</li>
+Remember to increment the world number (&quot;2&quot;, &quot;3&quot;,
+&quot;4&quot;...).
+</ol>
+<p>
+<li>
+<h2>Uploading Files</h2>
+</li>
+WARNING: Enabling this DLL will allow users to upload files to your server. Currently, the script only permits .GIF and .JPG extensions, but does no other checking.
+<ol type=A>
+<li>Move FileUpload.dll from the website directory to <i>C:\WinNT\system</i>.</li>
+<li>Go to Start | Run and execute the following command: regsvr32 fileupload.dll.</li>
+</ol>
+<p>
+<li>
+<h2>Starting the Client</h2>
+</li>
+<ol type=A>
+<li>Go to the program directory (<i>C:\Program Files\Microsoft Virtual Worlds\Local Content\Worlds\DesktopWorld\Client</i>)</li>
+Edit “html\launcher.htm” in the editor of your choice.<br>
+View the HTML source, and find 'loginPath = "http://DesktopWorld/website/Login/"'.<br>
+Change "DesktopWorld/website/" to the name of the server and directory created in steps
+<b>5.B</b>.<br>
+Save the file and close the editor.
+<li>Open "launcher.htm" by double-clicking on it or right-clicking on it and selecting "Open".</li>
+You can also create an Active Desktop item from “launcher.htm” with the following steps:<br>
+<ol type=1>
+<li>Drag “launcher.htm” from Explorer onto the desktop using the Right mouse button. When you release the right mouse button, select “Create Active Desktop item(s) Here”.</li>
+<li>Click &lt;Yes&gt; to add the item to the desktop.</li>
+<li>Right-click on the desktop and select Active Desktop | Show Web Content if it is not selected.</li>
+<li>Click on the Active Desktop item to start the DesktopWorld client.</li>
+</ol>
+<li>Select the world to enter (1, 2, etc.), select or create a new nickname,
+  then select a gender. Click &lt;Go&gt; or press &lt;ENTER&gt; to log into your
+  world.</li>
+</ol>
+</ol>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<public:attach event=onclick onevent=DoClick() />
+
+<script language=vbs>
+Option Explicit
+
+'======================================
+' Name: DoClick
+' Desc:
+'--------------------------------------
+Sub DoClick
+	Dim intObjID, objTarget
+
+	intObjID = CInt(element.linkedItemID)
+	If intObjID <> 0 Then
+		Set objTarget = sobjWorld.ObjectByID(intObjID)
+		If objTarget Is Nothing Then
+			MsgBox "This avatar or object has left the room.", vbInformation, top.sstrAppName
+		ElseIf objTarget Is sobjUser then
+			objTarget.EditProfile
+		Else
+			objTarget.LookAt
+		End If
+	End If
+End Sub
+'======================================
+
+</script>

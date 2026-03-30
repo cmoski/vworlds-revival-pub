@@ -1,0 +1,235 @@
+<html>
+
+<head>
+<link rel=stylesheet href=..\shared\global.css>
+<script language=vbs>
+option explicit
+
+' World variables
+dim goWorld
+dim goUser
+dim target
+dim gsContentPath
+
+' Variables for generating room names
+dim Rooms, RoomNames, RoomIDs
+
+
+sub Window_OnLoad
+	top.AddToEventList window
+	set goWorld = Top.theClient.VWClient.World
+	set goUser = goWorld.User
+	if strcomp(left(goWorld.ContentPath, 7), "file://", vbtextcompare) = 0  then
+		gsContentPath = right(goWorld.ContentPath, len(goWorld.ContentPath) - 7)
+	else
+		gsContentPath = goWorld.ContentPath
+	end if
+	GetRooms
+	RefreshRooms
+end sub
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+sub Window_OnUnload
+	top.RemoveFromEventList window
+end sub
+
+sub launchRoomWiz
+	set goWorld = Top.theClient.VWClient.World
+	set goUser = goWorld.User
+	window.showModalDialog gsContentPath & "sdk\wizards\room\main.htm", top, "dialogHeight:337px;dialogWidth:546px;help:no;status:no;"
+end sub
+
+sub launchObjWiz
+	set goWorld = Top.theClient.VWClient.World
+	set goUser = goWorld.User
+	window.showModalDialog gsContentPath & "sdk\wizards\object\main.htm", top, "dialogHeight:337px;dialogWidth:468px;help:no;status:no;"
+end sub
+
+sub launchScript
+	set goWorld = Top.theClient.VWClient.World
+	set goUser = goWorld.User
+	goWorld.FireUIEvent goUser, "vwScript", ""
+end sub
+
+sub HandleUIEvent(byval who, what, byval args)
+	On Error Resume Next
+
+	set goWorld = Top.theClient.VWClient.World
+	set goUser = goWorld.User
+
+	If what = "OnCreateRoom" Then
+		GetRooms
+		RefreshRooms
+	Elseif what = "OnEnterRoom" Then
+		If args.id = goUser.id Then
+			RefreshRooms
+		End If
+	' Check for OnEnterWorld if user is teleporting
+	Elseif what = "OnEnterWorld" Then
+		If (who is goUser) Then
+			GetRooms
+			RefreshRooms
+		End If
+	End If
+	Err.Clear
+End Sub
+
+sub launchOE2
+	goWorld.fireUIEvent goUser, "vwLaunchOE", goUser
+end sub
+
+'-------------------------------
+' Teleport
+sub teleport
+	dim newRoom
+	dim selIndex
+
+	If (IsObject(goUser.Container) and Not (goUser.Container Is Nothing) ) then
+		selIndex = RoomList.selectedIndex
+		If selIndex > -1 and RoomList.Value <> "" then
+			set newRoom = goWorld.objectbyid(RoomList.options(selIndex).value)
+			' Server-side method to transport user through first portal in destination room's list
+			goUser.Teleport newRoom
+		End if
+	End if
+End sub
+
+'----------------------------
+' GetRooms
+' Generates list of rooms names from id's
+
+sub GetRooms
+	dim r
+
+	set goWorld = Top.theClient.VWClient.World
+	set goUser = goWorld.User
+	set Rooms = goWorld.Global.Rooms
+
+	if typename(goWorld) <> "IWorld" then
+		exit sub
+	end if
+
+	' Clear list
+	top.ClearSelectList(RoomList)
+
+	' Generate id list
+	set RoomIDs = goWorld.Global.CreatePropertyList
+	for each r in Rooms
+		roomids.add r.id
+	next
+	set roomnames = goWorld.Global.GetNamesFromIDs(roomids)
+end sub
+
+'------------------------------
+' RefreshRooms
+' Updates list of rooms in teleport list when transporting between rooms
+
+sub RefreshRooms
+	dim el,i, curID
+	i = 0
+
+	set goWorld = Top.theClient.VWClient.World
+	set goUser = goWorld.User
+
+	'Clear out old list
+	top.ClearSelectList(RoomList)
+
+	'Enumerate rooms
+	for each curID in RoomIDs
+		'Check that goUser.container exists and is not a stub before going through room list
+		If (Not (goWorld.user.container Is Nothing)) Then
+			if (not goWorld.user.container.isstub) then
+				' If user has a container, don't include in room list
+				if curID <> goWorld.user.container.id then
+					set el = document.CreateElement("OPTION")
+					el.value = curID
+					el.text = RoomNames.property(i)
+					RoomList.add el
+					RoomList.value = curID
+				end if
+			end if
+		else
+			'User doesn't have a container, list all rooms
+			set el = document.CreateElement("OPTION")
+			el.value = curID
+			el.text = roomnames.property(i)
+			RoomList.add el
+			RoomList.value = curID
+		end if
+		i = i + 1
+	next
+	RoomList.selectedIndex = 0
+	if RoomList.length = 0 then
+		RoomList.disabled = True
+	else
+		RoomList.disabled = False
+	end if
+end sub
+
+sub document_onmouseover
+	select case window.event.srcElement.className
+	case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	case "vGo"
+		if not window.event.srcElement.disabled then
+			imgGo.src = "..\shared\go1.gif"
+		else
+			imgGo.style.cursor = "default"
+		end if
+	case else
+	end select
+end sub
+
+sub document_onmouseout
+	select case window.event.srcElement.className
+	case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	case "vGo"
+		if not window.event.srcElement.disabled then
+			imgGo.src = "..\shared\go2.gif"
+		else
+			imgGo.style.cursor = ""
+		end if
+	case else
+	end select
+end sub
+
+</script>
+</head>
+<body>
+	<div style=top:0;left:10; class=vH2>
+		Standard<hr color=#A7A795 style=position:absolute;top:7;left:61; size=1 width=92>
+	</div>
+	<div class=vLabel style=left:10;top:20>Teleport to room:</div>
+	<select class=vInput style=width:125;top:35;left:10; id=RoomList>
+	</select>
+	<input type=image onclick=teleport id=imgGo class=vGo src=../shared/go2.gif style=left:140;top:32;>
+	<button class=bEnabled id=btnObjWiz onclick=launchObjWiz style=left:27;top:70;width:120;>
+		Add an Object
+	</button>
+	<button class=bEnabled id=btnRoomWiz onclick=launchRoomWiz style=left:27;top:100;width:120;>
+		Add a Room
+	</button>
+	<div style=top:150;left:10; class=vH2>
+		Advanced<hr color=#A7A795 style=position:absolute;top:7;left:66; size=1 width=87>
+	</div>
+	<button class=bEnabled id=btnCmdWnd onclick=launchscript style=left:27;top:170;width:120;>
+		Command Window
+	</button>
+	<button class=bEnabled id=btnOE2 onclick=launchOE2 style=left:27;top:200;width:120;>
+		Object Explorer
+	</button>
+</body>
+</html>

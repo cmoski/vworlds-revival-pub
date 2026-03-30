@@ -1,0 +1,79 @@
+<html>
+<head>
+<link rel=stylesheet href=../shared/global.css>
+<script language=vbs src=NoSelection.vbs></script>
+<script language=vbs src=EditProfile.vbs></script>
+</head>
+<body scroll=no>
+	<img src=../shared/menuclouds.gif style=position:absolute;left:0px;top:0px;width:95px;height:100%;z-index:-3;>
+	<img src=../shared/ncircle.gif style=position:absolute;left:18px;top:20px;width:44px;height:42px;z-index:-2;>
+	<img id=imgThumbNail src=../shared/tdefault.gif style=position:absolute;left:26px;top:29px;width:24px;height:24px;z-index:-2;>
+	<table cellpadding=0 cellspacing=0 width=100% height=100% style="padding: 7px 18px 7px 0px;">
+		<tr>
+			<td>
+				<table cellpadding=0 cellspacing=0 width=100% height=100%>
+					<tr>
+						<td style=width:95px;padding-top:73px;vertical-align:top;padding-right:18;>
+							<input type=radio name=menu id=optAppear style=position:absolute;left:-20px;top:-20px; onclick=MenuClick checked>
+							<div style=width:95px;padding-bottom:2px;margin-bottom:12px;padding-left:9px;>
+								<label id=lblAppear class=vvProfMenu for=optAppear>
+									Appearance
+								</label>
+							</div>
+							<input type=radio name=menu id=optDesc style=position:absolute;left:-20px;top:-20px; onclick=MenuClick checked>
+							<div style=width:95px;padding-bottom:2px;margin-bottom:12px;padding-left:9px;>
+								<label id=lblDesc class=vvProfMenu for=optDesc>
+									Description
+								</label>
+							</div>
+							<input type=radio name=menu id=optDetails style=position:absolute;left:-20px;top:-20px; onclick=MenuClick>
+							<div style=width:95px;padding-bottom:2px;margin-bottom:12px;padding-left:9px;>
+								<label id=lblDetails class=vvProfMenu for=optDetails>
+									Details
+								</label>
+							</div>
+							<input type=radio name=menu id=optFriends style=position:absolute;left:-20px;top:-20px; onclick=MenuClick>
+							<div style=width:95px;padding-bottom:2px;margin-bottom:12px;padding-left:9px;>
+								<label id=lblFriends class=vvProfMenu for=optFriends>
+									Friends
+								</label>
+							</div>
+							<input type=radio name=menu id=optIgnored style=position:absolute;left:-20px;top:-20px; onclick=MenuClick>
+							<div style=width:95px;padding-bottom:2px;margin-bottom:12px;padding-left:9px;>
+								<label id=lblFriends class=vvProfMenu for=optIgnored>
+									Ignored
+								</label>
+							</div>
+						</td>
+						<td>
+							<iframe frameborder=no scrolling=no src="ProfAppear.htm" id=fraAppear style=width:100%;height:100%;></iframe>
+							<iframe frameborder=no scrolling=no src="ProfDesc.htm" id=fraDesc style=width:100%;height:100%;display:none;></iframe>
+							<iframe frameborder=no scrolling=no src="ProfDetails.htm" id=fraDetails style=width:100%;height:100%;display:none;></iframe>
+							<iframe frameborder=no scrolling=no src="ProfFriends.htm" id=fraFriends style=width:100%;height:100%;display:none;></iframe>
+							<iframe frameborder=no scrolling=no src="ProfIgnored.htm" id=fraIgnored style=width:100%;height:100%;display:none;></iframe>&nbsp;
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+		<tr height=10px>
+			<td colspan=2 align=right valign=bottom style="border-top:1 solid gray;padding-top:7px;">
+				<table cellspacing=0 cellpadding=0 style=height:100%;width:100%;>
+					<tr>
+						<td align=left style=padding-left:18px;>
+							<a id=lnkHelp onclick=OnHelp href="">
+								<img src=../shared/help.gif id=imgHelp class=vwHelp style=position:relative;top:2;>
+							</a>
+						</td>
+						<td align=right>
+							<button id=btnOK class=vwButton>OK</button>&nbsp;&nbsp;
+							<button id=btnCancel onclick=window.close class=vwButton>Cancel</button>&nbsp;&nbsp;
+							<button id=btnApply class=vwButton disabled>Apply</button>
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+	</table>
+</body>
+</html>

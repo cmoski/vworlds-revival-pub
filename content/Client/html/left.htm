@@ -1,0 +1,43 @@
+<HTML>
+<head>
+<meta http-equiv="Expires" content="0">
+<title>V-Worlds Main Frameset</title></head>
+
+<SCRIPT LANGUAGE="VBScript">
+
+dim bInited
+bInited = false
+
+
+sub Initialize()
+	frames(0).Initialize()
+	frames(1).Initialize()
+	bInited = true
+end sub
+
+dim iReadyCount
+iReadyCount = 0
+
+sub ChildReady(theWin)
+	if bInited = true then
+		theWin.Initialize()
+	else
+		iReadyCount = iReadyCount + 1
+		if iReadyCount >= 3 then
+			iReadyCount = 3
+			parent.ChildReady(window)
+		end if
+	end if
+end sub
+
+sub window_onload
+	ChildReady(window)
+end sub
+
+</SCRIPT>
+
+<FRAMESET FRAMESPACING=2 ROWS="*,110">
+	<FRAME name="TopPaneFrame" SRC="top.htm" marginwidth=0 marginheight=0 frameborder=0 scrolling=no>
+	<FRAME name="BottomPaneFrame" SRC="controls.htm" marginwidth=0 marginheight=0  frameborder=0 scrolling=no>
+</FRAMESET>
+</HTML>

@@ -1,0 +1,55 @@
+<HTML>
+<BODY BGCOLOR="ACTIVEBORDER" LEFTMARGIN=7 TOPMARGIN=7>
+<FORM NAME="AudioForm">
+<TABLE><TR>
+<TD>Open Sound:</TD><TD><INPUT TYPE="TEXT" NAME="OpenSound"></TD>
+</TR><TR>
+<TD>Close Sound:</TD><TD><INPUT TYPE="TEXT" NAME="CloseSound"></TD>
+</TR></TABLE>
+</FORM>
+<SCRIPT LANGUAGE="VBSCRIPT">
+Dim oldOpenSound, oldCloseSound
+
+sub Window_OnLoad
+	On Error Resume Next
+	oldOpenSound = parent.Helper.Arg.OpenSound
+	AudioForm.OpenSound.value = oldOpenSound
+
+	oldCloseSound = parent.Helper.Arg.CloseSound
+	AudioForm.CloseSound.value = oldCloseSound
+end sub
+
+sub Window_OnUnload
+	On Error Resume Next
+
+	if AudioForm.OpenSound.value <> oldOpenSound then
+		if Len(AudioForm.OpenSound.value) > 255 then
+			msgbox "The open sound URL can not be longer than 255 letters, re-using the old open sound URL.", vbInformation, "Microsoft Virtual Worlds"
+			parent.Helper.Arg.OpenSound = oldOpenSound
+			AudioForm.OpenSound.value = oldOpenSound
+		else
+			parent.Helper.Arg.OpenSound = AudioForm.OpenSound.value
+		end if
+	end if
+
+	if AudioForm.CloseSound.value <> oldCloseSound then
+		if Len(AudioForm.CloseSound.value) > 255 then
+			msgbox "The close sound URL can not be longer than 255 letters, re-using the old close sound URL.", vbInformation, "Microsoft Virtual Worlds"
+			parent.Helper.Arg.CloseSound = oldCloseSound
+			AudioForm.CloseSound.value = oldCloseSound
+		else
+			parent.Helper.Arg.CloseSound = AudioForm.CloseSound.value
+		end if
+	end if
+end sub
+
+function GetHelpURL
+	GetHelpURL = "audhelp.htm"
+end function
+
+function verify
+	verify = true
+end function
+</SCRIPT>
+</BODY>
+</HTML>

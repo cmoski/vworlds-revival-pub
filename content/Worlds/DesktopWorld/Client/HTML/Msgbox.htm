@@ -1,0 +1,71 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//
+'//  File:			MsgBox.htm
+'//  Description:	Custom message box used in place of the standard VBScript msgbox.
+'////////////////////////////////////////////////////////////////////////-->
+<HTML>
+<HEAD>
+<TITLE>Notice
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</TITLE>
+
+<link rel=stylesheet href="../shared/global.css">
+<!--include scripts-->
+<script language="vbscript" src="../vbs/document_OnSelectStart.vbs">
+</script>
+<!--end include scripts-->
+
+<script language="vbscript">
+option explicit
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		window_Onload
+'//  Purpose:	Passes the arguments into the inner text of the div.
+'////////////////////////////////////////////////////////////////////////
+sub window_OnLoad
+	msg.innerText = DialogArguments 
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		document_onKeyPress
+'//  Purpose:	Accepts a key press as a button click.
+'////////////////////////////////////////////////////////////////////////
+sub document_onKeyPress
+	if window.event.keycode = 13 then
+		window.close
+	end if
+end sub
+</script>
+
+</HEAD>
+
+<body bgcolor="#FFFFFF" style="background:url(../images/bkgMenu.gif);margin-top:0;margin-left:0;width:250;height:97;">
+<div id=msg
+	class=ParaText
+	style="position:absolute;
+		top:5;
+		left:10;
+		width:210;
+		margin-top:5;
+		margin-left:5;">
+</div>
+<button id=SendButton
+	class=btnTeal
+	style="position:absolute;
+		top:45;
+		left:180;"
+	onclick="window.close">OK
+</button>
+		
+</BODY>
+
+</HTML>

@@ -1,0 +1,643 @@
+<!--'////////////////////////////////////////////////////////////////////
+'//  File:			Game_ConnectFour.htm
+'//  Description:	This file allows a single user to play connect four against the PC.
+'//  System:		Desktop World 
+'////////////////////////////////////////////////////////////////////////-->
+<HTML>
+<HEAD>
+<TITLE>Game: Connect Four</TITLE> 
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link rel=stylesheet href=../shared/global.css>
+
+<!--include scripts-->
+<script language="vbscript" src="../vbs/document_OnSelectStart.vbs">
+</script>
+<!--end include scripts-->
+
+<SCRIPT LANGUAGE="VBScript">
+<!--
+Option Explicit
+
+' Params
+Dim pValue
+
+Dim mBusy
+Dim mTimeForLastComputerMove
+Dim mLastComputerMoveX
+Dim mLastComputerMoveY
+
+Dim GAMESTATUS_STILL_PLAYING
+Dim GAMESTATUS_REDWINS
+Dim GAMESTATUS_BLACKWINS
+Dim GAMESTATUS_CATSGAME
+
+Dim INFINITY
+Dim BOARD_IS_WINNER
+
+' Options
+Dim mLookaheadMoveLimit
+Dim mComputerPlaysRed
+Dim mComputerPlaysBlack
+
+Dim mGameStatus
+Dim mcMovesDone
+Dim mMovesDone(42)
+Dim mWhoseTurn
+
+Dim mBoard(7, 6)
+Dim mBoardcWinLines(7, 6)
+Dim mBoardWinLines(7, 6, 13)
+
+Dim cWinLines
+Dim mWinLines(69, 2)
+    ' 1 gives cRed
+    ' 2 gives cBlack
+    ' 0 gives MaxY
+
+Dim mRowFromDropColumn(7)
+Dim ValueTable(4, 6)
+
+
+Sub Initialize()
+    mBusy = True
+    INFINITY = 2 ^ 28
+    BOARD_IS_WINNER = 2 ^ 20
+    
+    GAMESTATUS_STILL_PLAYING = 1
+    GAMESTATUS_REDWINS = 2
+    GAMESTATUS_BLACKWINS = 3
+    GAMESTATUS_CATSGAME = 4
+    
+    mComputerPlaysRed = False
+    mComputerPlaysBlack = True
+    mLookaheadMoveLimit = 3
+    
+    BtnNewGame.Value = "New game"
+    BtnUndo.Value = "Undo"
+    
+    Call InitValueTable
+    Call GenerateWinLines
+    Call PlayNewGame
+    mBusy = False
+End Sub
+
+Sub PlayNewGame()
+    Call InitBoard
+    mcMovesDone = 0
+    mGameStatus = GAMESTATUS_STILL_PLAYING
+    mWhoseTurn = 1
+    Call UpdateStatusMessage
+    Call ClearWinLinesCounts
+End Sub
+
+Sub InitBoard()
+    Dim x, y
+    
+    For x = 1 To 7
+        mRowFromDropColumn(x) = 1
+        For y = 1 To 6
+            mBoard(x, y) = 0
+            Call ColorSquare(x, y, 0)
+        Next
+    Next
+End Sub
+
+Sub AddUndoMove(ByVal x, ByVal y)
+    mcMovesDone = mcMovesDone + 1
+    mMovesDone(mcMovesDone) = x
+End Sub
+
+Sub Undo()
+    Dim x, y
+    If mcMovesDone <> 0 Then
+        x = mMovesDone(mcMovesDone)
+        y = mRowFromDropColumn(x) - 1
+        
+        mGameStatus = GAMESTATUS_STILL_PLAYING
+        mRowFromDropColumn(x) = mRowFromDropColumn(x) - 1
+        mcMovesDone = mcMovesDone - 1
+        mBoard(x, y) = 0
+        Call ColorSquare(x, y, 0)
+		toggleWhoseTurn
+        Call UpdateWinLines(x, y, mWhoseTurn, False)
+    End If
+End Sub
+
+
+Sub DoComputerMove()
+    Dim x, y
+    Dim IsWinner
+    Dim IsLoser
+    Dim MovesAhead
+    
+	if (not mBusy) and (mGameStatus = GAMESTATUS_STILL_PLAYING) Then
+		mBusy = true
+        If IsComputersTurn() Then
+                x = FindNextMove()
+                y = mRowFromDropColumn(x)
+                mLastComputerMoveX = x
+                mLastComputerMoveY = y
+                Call DoMoveWithUI(x, y)
+        End If
+		mBusy = false
+    End If
+End Sub
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Strategy
+'
+Function FindNormalMoveNDeep(ByVal OrigWT, ByVal OrigLeash, ByVal Leash)
+    Dim BestValueFound
+    Dim x, y
+    Dim RNextMove
+    Dim RValue
+    Dim WhoMoved
+    Dim i
+    
+    If Leash = 1 Then
+        ''''''''''''
+        ' Base case
+            BestValueFound = -INFINITY
+            For x = 1 To 7
+                y = mRowFromDropColumn(x)
+                If y <= 6 Then
+                    ' Move
+                        WhoMoved = mWhoseTurn
+                        Call DoMove(x, y)
+                        
+                    '   If this is the best move so far then remember it.
+                        RValue = BoardValue(WhoMoved)
+                        If RValue > BestValueFound Then
+                            FindNormalMoveNDeep = x
+                            BestValueFound = RValue
+                            If RValue = BOARD_IS_WINNER Then
+                                Undo
+                                pValue = BestValueFound
+                                Exit Function
+                            End If
+                        End If
+                    ' Unmove
+                        Call Undo
+                End If
+            Next
+            pValue = BestValueFound
+    Else
+        ''''''''''''''''
+        ' Recursive case
+            BestValueFound = -INFINITY
+            For x = 1 To 7
+                y = mRowFromDropColumn(x)
+                If y <= 6 Then
+                    ' Move
+                        WhoMoved = mWhoseTurn
+                        Call DoMove(x, y)
+                    ' If you won, that's good so stop right away.
+                        If SomeoneWon(x, y, WhoMoved) Then
+                            FindNormalMoveNDeep = x
+                            pValue = BOARD_IS_WINNER
+                            Undo
+                            Exit Function
+                        Else
+                            ' Recurse
+                                RNextMove = FindNormalMoveNDeep(OrigWT, OrigLeash, Leash - 1)
+                                RValue = -pValue
+                                
+                            ' If this is the best move so far then remember it.
+                                If RValue > BestValueFound Then
+                                    FindNormalMoveNDeep = x
+                                    BestValueFound = RValue
+                                    ' If you won, that's good so stop right away.
+                                    If BestValueFound = BOARD_IS_WINNER Then
+                                        pValue = BestValueFound
+                                        Undo
+                                        Exit Function
+                                    End If
+                                End If
+                        End If
+                                                
+                    ' Unmove
+                        Undo
+                End If
+            Next
+        pValue = BestValueFound
+    End If ' End recursive case
+End Function
+
+Function FindNextMove()
+    Dim MoveLeash
+'    Dim t1
+    
+'    t1 = Timer
+        MoveLeash = Max(1, Min(mLookaheadMoveLimit, MovesLeftInGame()))
+        FindNextMove = FindNormalMoveNDeep(mWhoseTurn, MoveLeash, MoveLeash)
+'    mTimeForLastComputerMove = Timer - t1
+End Function
+
+Function SomeoneWon(ByVal x, ByVal y, ByVal wt)
+    Dim wli
+    
+    For wli = 1 To mBoardcWinLines(x, y)
+        If mWinLines(mBoardWinLines(x, y, wli), wt) = 4 Then
+            SomeoneWon = True
+            Exit Function
+        End If
+    Next
+End Function
+
+
+Function BoardValue(ByVal WhosePerspective)
+    Dim wli
+    Dim cRed, cBlack, MaxY
+    Dim RedMult, BlackMult
+    
+    If WhosePerspective = 1 Then
+        RedMult = 1
+        BlackMult = -1
+    Else
+        RedMult = -1
+        BlackMult = 1
+    End If
+    
+    For wli = 1 To cWinLines
+        MaxY = mWinLines(wli, 0)
+        cRed = mWinLines(wli, 1)
+        cBlack = mWinLines(wli, 2)
+        
+        If cBlack = 0 Then
+            BoardValue = BoardValue + RedMult * ValueTable(cRed, MaxY)
+        Else
+            If cRed = 0 Then BoardValue = BoardValue + BlackMult * ValueTable(cBlack, MaxY)
+        End If
+    Next
+    If BoardValue > BOARD_IS_WINNER Then BoardValue = BOARD_IS_WINNER
+End Function
+
+
+Sub InitValueTable()
+    Dim NumInFourLine
+    Dim j
+    
+    For j = 1 To 6
+        ValueTable(4, j) = INFINITY
+    Next
+    
+    For NumInFourLine = 0 To 3
+        For j = 1 To 6
+            ' Most significant:  Value lines with more squares
+            ' Less significant:  Value items lower in the board more highly
+            ValueTable(NumInFourLine, j) = 2 ^ (6 - j) + 4 ^ NumInFourLine
+        Next
+    Next
+End Sub
+
+Sub ClearWinLinesCounts()
+    Dim li
+    
+    For li = 1 To cWinLines
+        mWinLines(li, 1) = 0
+        mWinLines(li, 2) = 0
+    Next
+End Sub
+
+' (x,y) indicates the last square that changed (add or remove).
+Sub UpdateWinLines(ByVal x, ByVal y, ByVal wt, ByVal PlaceIt)
+    Dim i
+    Dim wli
+    Dim Delta
+    
+    If PlaceIt Then Delta = 1 Else Delta = -1
+  
+    For i = 1 To mBoardcWinLines(x, y)
+        wli = mBoardWinLines(x, y, i)
+        mWinLines(wli, wt) = mWinLines(wli, wt) + Delta
+    Next
+End Sub
+
+Sub GenerateWinLines()
+    Dim i, j
+    
+    ' Verticals
+    For i = 1 To 7
+        Call AddWinLine(i, 1, 0, 1)
+    Next
+    
+    ' Horizontals
+    For j = 1 To 6
+        Call AddWinLine(1, j, 1, 0)
+    Next
+    
+    ' Up right diag (left col)
+    For j = 1 To 6
+        Call AddWinLine(1, j, 1, 1)
+    Next
+    
+    ' Up right diag (bottom)
+    For i = 2 To 7
+        Call AddWinLine(i, 1, 1, 1)
+    Next
+    
+    ' Down right diag (left col)
+    For j = 1 To 6
+        Call AddWinLine(1, j, 1, -1)
+    Next
+    
+    ' Down right diag (top)
+    For i = 2 To 7
+        Call AddWinLine(i, 6, 1, -1)
+    Next
+End Sub
+
+
+' AddWinLine walks along a line, may it be horizontal, vertical,
+' or diagonal, and adds all possible WinLine's to the WinLines
+' data structure.
+Sub AddWinLine(x, y, dx, dy)
+    Dim BaseX, BaseY
+    Dim ci
+    Dim theX, theY
+    
+    BaseX = x
+    BaseY = y
+    
+    While Not (BaseX < 1 Or BaseX > 7 Or _
+                BaseX + dx * 3 < 1 Or BaseX + dx * 3 > 7 Or _
+                BaseY < 1 Or BaseY > 6 Or _
+                BaseY + dy * 3 < 1 Or BaseY + dy * 3 > 6)
+        
+        cWinLines = cWinLines + 1
+        For ci = 1 To 4
+            theX = BaseX + (ci - 1) * dx
+            theY = BaseY + (ci - 1) * dy
+            
+            mWinLines(cWinLines, 0) = Max(theY, mWinLines(cWinLines, 0))
+            mBoardcWinLines(theX, theY) = mBoardcWinLines(theX, theY) + 1
+            mBoardWinLines(theX, theY, mBoardcWinLines(theX, theY)) = cWinLines
+        Next
+        
+        BaseX = BaseX + dx
+        BaseY = BaseY + dy
+    Wend
+End Sub
+
+Sub CheckGameOver()
+    Dim bv
+    
+    If mGameStatus = GAMESTATUS_STILL_PLAYING Then
+        bv = BoardValue(mWhoseTurn)
+        
+        If Abs(bv) = BOARD_IS_WINNER Then
+            If mWhoseTurn = 1 Then 
+				mGameStatus = GAMESTATUS_REDWINS 
+			Else 
+				mGameStatus = GAMESTATUS_BLACKWINS
+			end if
+        End If
+        
+        If mGameStatus = GAMESTATUS_STILL_PLAYING Then
+            If mcMovesDone = 42 Then mGameStatus = GAMESTATUS_CATSGAME
+        End If
+    End If
+End Sub
+
+
+''''''''''''''''
+' The board
+'
+Sub DoMove(ByVal x, ByVal y)
+    mRowFromDropColumn(x) = mRowFromDropColumn(x) + 1
+    
+    mBoard(x, y) = mWhoseTurn
+    Call AddUndoMove(x, y)
+    Call UpdateWinLines(x, y, mWhoseTurn, True)
+	toggleWhoseTurn
+End Sub
+
+sub toggleWhoseTurn
+    If mWhoseTurn = 1 Then
+		mWhoseTurn = 2
+	Else
+		mWhoseTurn = 1
+	End If
+end sub
+
+Sub DoMoveWithUI(ByVal x, ByVal y)
+    mRowFromDropColumn(x) = y + 1
+    
+    mBoard(x, y) = mWhoseTurn
+    Call ColorSquare(x, y, mWhoseTurn)
+    Call AddUndoMove(x, y)
+    Call UpdateWinLines(x, y, mWhoseTurn, True)
+    Call CheckGameOver
+	toggleWhoseTurn
+    If mGameStatus = GAMESTATUS_STILL_PLAYING Then
+        Call UpdateStatusMessage
+    Else
+        Call ReportGameOver
+    End If
+End Sub
+
+''''''''''''''''
+' UI
+'
+Sub Page_Initialize()
+    Call Initialize
+End Sub
+
+Sub BtnNewGame_OnClick()
+    Call PlayNewGame
+End Sub
+
+Sub Square_Click(ByVal x)
+    Dim y
+    
+'msgbox "square_click x:" & x
+    If mGameStatus = GAMESTATUS_STILL_PLAYING Then
+        y = mRowFromDropColumn(x)
+		If (Not mBusy) and (y <= 6) Then 
+			Call DoMoveWithUI(x, y)
+			window.setTimeout "DoComputerMove", 100, "VBScript"
+		end if
+    End If
+End Sub
+
+Sub ColorSquare(ByVal x, ByVal y, ByVal aColor)
+    Dim TheColor
+    Select Case aColor
+        Case 0:        TheColor = "#FFFFFF"
+        Case 1:        TheColor = "#FF0000"
+        Case 2:        TheColor = "#000000"
+	End Select
+    document.all.item("Square" & x & y).style.background = TheColor
+End Sub
+
+' Human vs Computer
+'   1. No one has won ==> the computer just moved, so undo twice
+'   2. The computer won ==> undo twice
+'   3. The human won ==> undo once
+' Human vs Human
+'   4. Always undo once.
+' There's probably another case for cat's games but I doubt it matters.
+' This could be reduced to one big boolean expression but doing so
+' would make it even less readable!
+Sub BtnUndo_OnClick()
+    Dim bUndoTwice
+    
+    If (mComputerPlaysRed Xor mComputerPlaysBlack) Then
+        ' Human vs Computer
+        If mGameStatus = GAMESTATUS_STILL_PLAYING Then
+            ' No one has won. (Case 1)
+            bUndoTwice = True
+        Else
+            ' Someone won.
+            If (mGameStatus = GAMESTATUS_REDWINS And mComputerPlaysRed) Or (mGameStatus = GAMESTATUS_BLACKWINS And mComputerPlaysBlack) Then
+                ' The computer won (Case 2)
+                bUndoTwice = True
+            Else
+                ' The human won (Case 3)
+                bUndoTwice = False
+            End If
+        End If
+    Else
+        ' Human vs Human (Case 4)
+        bUndoTwice = False
+    End If
+    
+    Call Undo
+    If bUndoTwice Then Undo
+    TxtStatusMessage.innerHTML = ""
+End Sub
+
+Sub ReportGameOver()
+    If mGameStatus = GAMESTATUS_STILL_PLAYING Then MsgBox "Error:  no winner"
+    If mGameStatus = GAMESTATUS_CATSGAME Then MsgBox "Cat's game."
+    If mGameStatus = GAMESTATUS_REDWINS Then MsgBox "Red wins.", , "Connect Four"
+    If mGameStatus = GAMESTATUS_BLACKWINS Then MsgBox "Black wins.", , "Connect Four"
+    TxtStatusMessage.innerHTML = "This game is over.  Press ""New Game"" to play again."
+End Sub
+
+Sub UpdateStatusMessage()
+    If mcMovesDone = 0 Then
+        If IsComputersTurn() Then
+            TxtStatusMessage.innerHTML = "I'm thinking...."
+        Else
+            TxtStatusMessage.innerHTML = "Your move! Place a piece by clicking any column."
+        End If
+    Else
+        If IsComputersTurn() Then
+            TxtStatusMessage.innerHTML = "I'm thinking . . ."
+        Else
+'            TxtStatusMessage.Value = "After thinking for " & Round(mTimeForLastComputerMove, 1) & " seconds, I placed my piece in column " & mLastComputerMoveX & ".  Your move!"
+            TxtStatusMessage.innerHTML = "I placed my piece in column " & mLastComputerMoveX & ".  Your move!"
+        End If
+    End If
+End Sub
+
+
+''''''''''''''''
+' Utilities
+'
+
+' Rounds the number (n) to a specified number of digits (d).
+Function Round(n, d)
+    Dim Mult
+    
+    Mult = 10 ^ d
+    Round = CLng((n * Mult)) / Mult
+End Function
+
+Function OppositeTurn(wt)
+    If OppositeTurn = 1 Then OppositeTurn = 2 Else OppositeTurn = 1
+End Function
+
+Function StringFromXY(ByVal x, ByVal y)
+    StringFromXY = "(" & x & ", " & y & ")"
+End Function
+
+Function MovesLeftInGame()
+    Dim i
+    
+    For i = 1 To 7
+        MovesLeftInGame = MovesLeftInGame + (6 - mRowFromDropColumn(i) + 1)
+    Next
+End Function
+
+Function Max(ByVal x, ByVal y)
+    If x > y Then Max = x Else Max = y
+End Function
+
+Function Min(ByVal x, ByVal y)
+    If x > y Then Min = y Else Min = x
+End Function
+
+Function StringFromCoord(ByVal x, ByVal y)
+    StringFromCoord = "(" & x & ", " & y & ")"
+End Function
+
+Function StringFromTurn(ByVal wt)
+    If wt = 1 Then StringFromTurn = "Red"
+    If wt = 2 Then StringFromTurn = "Black"
+End Function
+
+Function IsComputersTurn()
+    IsComputersTurn = mWhoseTurn = 1 And mComputerPlaysRed _
+                      Or _
+                      mWhoseTurn = 2 And mComputerPlaysBlack
+End Function
+
+
+''''''''''''''''
+' Ugly stuff
+'
+Sub Form_Initialize()
+    Call Page_Initialize
+End Sub
+
+Sub document_onClick
+	if mid(window.event.srcElement.id,1,6) = "Square" then
+	    Square_Click mid(window.event.srcElement.id,7,1)
+	end if
+End Sub
+
+Sub Window_OnLoad()
+    Call Initialize
+End Sub
+-->
+</SCRIPT>
+</HEAD>
+
+
+<body bgcolor=#FFFFFF>
+<div id=bkgPageHeadingPatch
+	class=bkgPageHeadingPatch>
+</div>
+<div id=bkgPageHeading
+	class=bkgPageHeading
+	style="background-image:url(../images/bkgGameRoom.gif);">
+</div>
+
+<span id=groupName class=PageHeading>Connect Four</span>
+<hr class=PageHeadingHR>
+<div style="position:absolute;top:65;">
+
+<CENTER>
+	<TABLE BORDER=1 BORDERCOLOR=darkblue cellpadding=1 cellspacing=1>
+		<TR><TD ID=Square16 style="width:30;height:30;">&nbsp;</TD><TD ID=Square26 style="width:30;height:30;">&nbsp;</TD><TD ID=Square36 style="width:30;height:30;">&nbsp;</TD><TD ID=Square46 style="width:30;height:30;">&nbsp;</TD><TD ID=Square56 style="width:30;height:30;">&nbsp;</TD><TD ID=Square66 style="width:30;height:30;">&nbsp;</TD><TD ID=Square76 style="width:30;height:30;">&nbsp;</TD></TR>
+		<TR><TD ID=Square15 style="width:30;height:30;">&nbsp;</TD><TD ID=Square25 style="width:30;height:30;">&nbsp;</TD><TD ID=Square35 style="width:30;height:30;">&nbsp;</TD><TD ID=Square45 style="width:30;height:30;">&nbsp;</TD><TD ID=Square55 style="width:30;height:30;">&nbsp;</TD><TD ID=Square65 style="width:30;height:30;">&nbsp;</TD><TD ID=Square75 style="width:30;height:30;">&nbsp;</TD></TR>
+		<TR><TD ID=Square14 style="width:30;height:30;">&nbsp;</TD><TD ID=Square24 style="width:30;height:30;">&nbsp;</TD><TD ID=Square34 style="width:30;height:30;">&nbsp;</TD><TD ID=Square44 style="width:30;height:30;">&nbsp;</TD><TD ID=Square54 style="width:30;height:30;">&nbsp;</TD><TD ID=Square64 style="width:30;height:30;">&nbsp;</TD><TD ID=Square74 style="width:30;height:30;">&nbsp;</TD></TR>
+		<TR><TD ID=Square13 style="width:30;height:30;">&nbsp;</TD><TD ID=Square23 style="width:30;height:30;">&nbsp;</TD><TD ID=Square33 style="width:30;height:30;">&nbsp;</TD><TD ID=Square43 style="width:30;height:30;">&nbsp;</TD><TD ID=Square53 style="width:30;height:30;">&nbsp;</TD><TD ID=Square63 style="width:30;height:30;">&nbsp;</TD><TD ID=Square73 style="width:30;height:30;">&nbsp;</TD></TR>
+		<TR><TD ID=Square12 style="width:30;height:30;">&nbsp;</TD><TD ID=Square22 style="width:30;height:30;">&nbsp;</TD><TD ID=Square32 style="width:30;height:30;">&nbsp;</TD><TD ID=Square42 style="width:30;height:30;">&nbsp;</TD><TD ID=Square52 style="width:30;height:30;">&nbsp;</TD><TD ID=Square62 style="width:30;height:30;">&nbsp;</TD><TD ID=Square72 style="width:30;height:30;">&nbsp;</TD></TR>
+		<TR><TD ID=Square11 style="width:30;height:30;">&nbsp;</TD><TD ID=Square21 style="width:30;height:30;">&nbsp;</TD><TD ID=Square31 style="width:30;height:30;">&nbsp;</TD><TD ID=Square41 style="width:30;height:30;">&nbsp;</TD><TD ID=Square51 style="width:30;height:30;">&nbsp;</TD><TD ID=Square61 style="width:30;height:30;">&nbsp;</TD><TD ID=Square71 style="width:30;height:30;">&nbsp;</TD></TR>
+	</TABLE><BR>
+	<P ID=TxtStatusMessage STYLE="font-family:arial;font-size:12;color:darkblue;"></P>
+	<INPUT NAME=BtnNewGame TYPE=BUTTON VALUE="New game">&nbsp;&nbsp;<INPUT NAME=BtnUndo TYPE=BUTTON VALUE="Undo"><br>
+</CENTER>
+
+
+<P>&nbsp;
+<P align = center>
+<!-- MSFT COPYRIGHT-->
+<!-- <FONT FACE="verdana, arial, helvetica" SIZE=1><A href="http://www.microsoft.com/info/cpyright.htm">&#169; 1999 Microsoft Corporation. All rights reserved. Terms of Use.</A></FONT> -->
+<!--MSFT COPYRIGHT-->
+</div>
+</BODY>
+</HTML>

@@ -1,0 +1,119 @@
+<html>
+<head>
+<link rel=stylesheet href=../../shared/global.css>
+<meta http-equiv="Expires" content="0">
+<script language=vbs>
+
+Option Explicit
+
+sub document_onmouseover
+	select case window.event.srcElement.tagName
+	case "DIV", "LABEL"
+		window.event.srcElement.style.color = "mediumvioletred"
+		window.status = window.event.srcElement.statusText
+	case else
+	end select
+end sub
+
+sub document_onmouseout
+	select case window.event.srcElement.tagName
+	case "DIV", "LABEL"
+		window.event.srcElement.style.color = ""
+		window.status = ""
+	case else
+	end select
+end sub
+
+sub HandleUIEvent(byval who, what, byval args)
+end sub
+
+Sub Initialize
+	UpdateButtonStates
+End Sub
+
+Sub Window_OnLoad
+	If Not parent.renderer Is Nothing Then
+		UpdateButtonStates
+	End If
+End Sub
+
+Sub UpdateButtonStates
+	if parent.renderer.EditMode = 0  then
+		normalButton.Src = "TabDown.bmp"
+		geometryButton.Src = "TabUp.bmp"
+		boundaryButton.Src = "TabUp.bmp"
+	elseif parent.renderer.EditMode = 1  then
+		normalButton.Src = "TabUp.bmp"
+		geometryButton.Src = "TabDown.bmp"
+		boundaryButton.Src = "TabUp.bmp"
+	elseif parent.renderer.EditMode = 2  then
+		normalButton.Src = "TabUp.bmp"
+		geometryButton.Src = "TabUp.bmp"
+		boundaryButton.Src = "TabDown.bmp"
+	end if
+End Sub
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+sub DoEditNormal
+	parent.SetAuthoringStatus 0
+	UpdateButtonStates
+End Sub
+
+sub DoEditGeometry
+	parent.SetAuthoringStatus 1
+	UpdateButtonStates
+End Sub
+
+sub DoEditBoundary
+	parent.SetAuthoringStatus 2
+	UpdateButtonStates
+End Sub
+
+sub ClickEditNormal
+	window.event.returnValue = false
+	DoEditNormal
+end sub
+
+sub ClickEditGeometry
+	window.event.returnValue = false
+	DoEditGeometry
+end sub
+
+sub ClickEditBoundary
+	window.event.returnValue = false
+	DoEditBoundary
+end sub
+
+
+</script>
+</head>
+<body>
+	<input OnClick=ClickEditNormal type=radio id=optNormal name=3DTabs style=position:absolute:left:-25>
+	<img src=TabDown.bmp name=normalButton style=position:absolute;left:2;top:0;border-style:none;>
+	<div class=vLabel style=left:2;top:0;width:110;height:19;text-align:center;padding-top:3; statusText="Switch to Normal View">
+		<label for=optNormal style=cursor:hand; statusText="Switch to Normal View">&nbsp;Normal View&nbsp;</label>
+	</div>
+	<input OnClick=ClickEditGeometry type=radio id=optGeometry name=3DTabs style=position:absolute:left:-25>
+	<img src=TabUp.bmp name=geometryButton style=position:absolute;left:114;top:0;border-style:none;>
+	<div class=vLabel style=left:114;top:0;width:110;height:19;text-align:center;padding-top:3; statusText="Switch to Geometry Editor">
+		<label for=optGeometry style=cursor:hand; statusText="Switch to Geometry Editor">&nbsp;Geometry Editor&nbsp;</label>
+	</div>
+	<input OnClick=ClickEditBoundary type=radio id=optBoundary name=3DTabs style=position:absolute:left:-25>
+	<img src=TabUp.bmp name=boundaryButton style=position:absolute;left:226;top:0;border-style:none;>
+	<div class=vLabel style=left:226;top:0;width:110;height:19;text-align:center;padding-top:3; statusText="Switch to Boundary Editor">
+		<label for=optBoundary style=cursor:hand; statusText="Switch to Boundary Editor">&nbsp;Boundary Editor&nbsp;</label>
+	</div>
+</body>
+</html>

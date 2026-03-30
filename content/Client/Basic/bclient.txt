@@ -1,0 +1,20 @@
+Microsoft Virtual Worlds
+The Basic Client
+Design Notes
+
+The Basic client is designed as an example of a full-featured client similar to the Authoring client. It was written with the following design goals in mind: 
+
+- Simplify and standardize the HTML code base to make it more easily understandable for developers. As the Authoring client was developed code written for one version of IE was modified to run on later versions of IE. Both JScript and VB Script were used as well as different coding styles. This led to a code base that was very difficult to read, understand, and modify.
+
+In the Basic client the code base is rewritten using a standard coding convention and most of the code borrowed from the Authoring client is entirely rewritten using more efficient use of IE features and VB Scripting features.
+
+- Create a design that allows easy removal of different sections with little or no impact on the basic operation. The Authoring client is very difficult to modify without running the risk of breaking code in many different files. This is especially true if a part of the client is to be removed.
+
+The Basic client is written to remove all direct references a parent window has to a child window. Communication between windows is accomplished by using the UI event mechanism. Thus, if message is sent for a portion of the client that is no longer there no error is generated.
+
+- Use built in features of IE and DHTML where possible to help reduce the needed code. The Authoring client uses a custom popup modeless dialog and used absolute positioning extensively.
+
+The Basic client uses the IE modeless dialog, tables as much as possible for positioning, and behaviors extensively. This reduces the amount of code and makes modification much easier.
+
+Note:	Watch for timing problems, where a message is received by code that isn’t ready to receive it. This typically happens as the server load increases and message traffic increases. Code should have adequate checks to handle such situations.
+

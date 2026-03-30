@@ -1,0 +1,631 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//
+'//  File:			People.htm
+'//  Description:	Legend and iframe for the people section.
+'//					The menu code was cloned from MyThings.htm and contains some unused code.
+'////////////////////////////////////////////////////////////////////////-->
+<html>
+<head>
+<link rel=stylesheet href=../shared/global.css>
+<meta http-equiv="Expires" content="0">
+<title>People</title>
+<!--Include scripts-->
+<script language="vbscript" src="../vbs/WriteSideLink.vbs">
+</script>
+<script language="vbscript" src="../vbs/document_OnSelectStart.vbs">
+</script>
+<script language="vbscript" src="../vbs/MenuOnMouseDown.vbs">
+</script>
+<!--End include scripts-->
+
+<script language="VBScript">
+option explicit
+
+dim lngSelectedItemId
+const SEL_COLOR = "#78fe8b"
+
+'////////////////////////////////////////////////////////////////////////
+'// Sub:  		document_OnMouseOver
+'// Purpose:	highlights menu items
+'////////////////////////////////////////////////////////////////////////
+sub document_OnMouseOver
+	dim objTempElm
+	
+	set objTempElm = window.event.srcElement
+	
+	'msgbox objTempElm.id
+	if instr(objTempElm.id, "vwInfo") <> 1 then
+		exit sub
+	end if
+	objTempElm.style.color = SEL_COLOR			'color from help menu
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'// Sub:  		document_OnMouseOut
+'// Purpose:	un-highlights menu items
+'////////////////////////////////////////////////////////////////////////
+sub document_OnMouseOut
+	dim objTempElm
+	
+	set objTempElm = window.event.srcElement
+	if instr(objTempElm.id, "vwInfo") <> 1 then
+		exit sub
+	end if
+
+	if lngSelectedItemId <> objTempElm.id then
+		objTempElm.style.color = "white"
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'// Sub:  		document_OnMouseDown
+'// Purpose:	make the clicked on item highlighted until something else is selected
+'////////////////////////////////////////////////////////////////////////
+sub document_OnMouseDown
+	dim objTempElm, objLoopElem
+
+	set objTempElm = window.event.srcElement
+	if instr(objTempElm.id, "vwInfo") <> 1 then
+		exit sub
+	end if
+
+	lngSelectedItemId = objTempElm.id
+
+	for each objLoopElem in document.all
+		if left(objLoopElem.id, len("vwInfo")) = "vwInfo" and objLoopElem.id <> lngSelectedItemId then  
+			objLoopElem.style.color = "white"
+		end if
+	next
+	objTempElm.style.color = SEL_COLOR
+end sub
+
+
+dim leftPanePct
+leftPanePct = 0.25
+
+dim colorHilite
+dim colorNormal
+colorHilite = "#4977F9"
+colorNormal = "#587f7e"
+
+dim PeopleBlock		' group of avatar elements; only one group (connected or non-connected) is shown at a time
+dim user, currentAvatarId, currentVWObjectId
+dim groupName		' for ShowPage
+
+set user = top.ClientUserPtr
+
+'////////////////////////////////////////////////////////////////////////
+'// Sub:  		GetCurrentAvatarId
+'// Purpose:	return the value of CurrentAvatarId variable to another window
+'// Called by:	ShowPerson.htm (to determine whom to display)
+'////////////////////////////////////////////////////////////////////////
+function GetCurrentAvatarId
+	GetCurrentAvatarId = currentAvatarId
+end function
+
+'////////////////////////////////////////////////////////////////////////
+'// Sub:  		ClearCurrentAvatarId
+'// Purpose:	set's the current avatar id to zero, so this page can be reopened without
+'//				displaying the current person. CurrentAvatarId is set by client.htm when
+'//				we want this page to open and display a specific person. After we have done
+'//				so in ShowPerson.htm, we want to forget about that person.
+'// Called by:	ShowPerson.htm
+'////////////////////////////////////////////////////////////////////////
+sub ClearCurrentAvatarId
+	currentAvatarId = 0
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'// Sub:  		GetCurrentVWObjectId
+'// Purpose:	return the current value of the CurrentVWObjectId variable
+'//	Called by:	NoteSend.htm, to determine if it is being opened to reply to a note or gift.
+'////////////////////////////////////////////////////////////////////////
+function GetCurrentVWObjectId
+	GetCurrentVWObjectId = currentVWObjectId
+end function
+
+
+'////////////////////////////////////////////////////////////////////////
+'// Sub:  		getGroupName
+'// Purpose:	return the current group name (gifts/notes) of objects;
+'//				the current group is the one whose menu list is open, if any.
+'// Called by:	ShowPage.htm, to determine what group name to display in the page heading
+'////////////////////////////////////////////////////////////////////////
+function getGroupName
+	getGroupName = groupName
+end function
+
+
+'////////////////////////////////////////////////////////////////////////
+'// Sub:  		window_onload
+'// Purpose:	Top.CurrentAvatarId determines who we display initially. 
+'//				If top.CurrentAvatarId > 0 then this page was invoked to display a specific person,
+'//				so we expand Who's Here or Who's Been Here depending on whether that person is connected.
+'//				Otherwise we expand Who's Here and display the current user.
+'////////////////////////////////////////////////////////////////////////
+sub window_onload
+	dim avatars, avatar, connectedness
+
+	WriteSideLink "lnkWhosHere", "MenuI", "Who is Here", "expandPeopleBlock true", 2
+	WriteSideLink "lnkWasHere", "MenuI", "Who was Here", "expandPeopleBlock false", 2
+	MenuOnMouseDown (document.all.item("lnkWhosHere"))
+	
+	top.AddToEventList window
+	' expand a person if specified
+
+	currentAvatarId = top.currentAvatarId
+	top.CurrentAvatarId = 0
+	if CurrentAvatarId > 0 then		' determine if the specified person is connected
+		connectedness = false
+		for each avatar in user.container.Avatars
+			if avatar.id = CurrentAvatarId then
+				connectedness = (avatar.IsValidProperty("IsConnected"))
+				exit for
+			end if
+		next
+	else				' we will display the current user, who we know is connected
+		connectedness = true
+	end if
+	makePeopleBlock connectedness	' Display either the Who's Here or Who's Been Here block
+
+	currentVWObjectId = top.currentVWObjectId
+	top.currentVWObjectId = 0
+
+
+	' open a web page if specified
+	if top.currentPeoplePage > "" then 
+		document.all.infoIFrame.src = top.currentPeoplePage
+		top.currentPeoplePage = ""
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'// Sub:  		window_onUnload
+'// Purpose:	removes use from the event list
+'////////////////////////////////////////////////////////////////////////
+sub window_onUnload
+	top.RemoveFromEventList window
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'// Sub:  		document_onClick
+'// Purpose:	Walk up the HTML tree until we get to an element of classname avatarBlock or menuItem.
+'//				A avatarBlock is a clickable element that pertains to one avatar.
+'//				It contains a vwThumbnail element, a vwInfo element with the avatar's name, 
+'//				and a vwMenu element with vwMenuItems generated from the avatar's right-click menu.
+'////////////////////////////////////////////////////////////////////////
+sub document_onClick
+	dim elem, avatarId, avatar, menu, menuItem, menuItemId
+	dim menuBlock, avatarBlock
+	dim underscore
+	dim n,m
+	dim theFunc
+	set elem = window.event.srcElement
+
+	do while (elem.className <> "avatarBlock") _
+		and (elem.className <> "vwMenuItem") _
+		and (elem.className <> "MenuII") _		
+		and (elem.className <> "MenuIII") _		
+		and (elem.tagname <> "BODY")
+		set elem = elem.parentElement
+	loop
+	if elem.className = "MenuII" then
+		hideMenus
+		avatarId = elem.getAttribute("avatarId")
+		top.getObjectById avatarId, avatar
+		if avatar is Nothing then exit sub
+		' generate the avatar's menu
+		makeAvatarMenuBlock avatar.Id
+		currentAvatarId = avatar.Id
+		' display the object's web page in the iframe
+		groupName = peopleBlock.getAttribute("groupName")
+		document.all.infoIFrame.src = "showPerson.htm"
+
+	elseif elem.className = "MenuIII" then
+		top.wakeUp		' wake up the avatar, as a right-click in the 3d view would do.
+			' Right-clicking in the 3d pane while asleep automatically perform an Idle gesture (i.e. you wake up). 
+			' Waking up the avatar with a UI menu click is not absolutely necessary, but is a good idea
+			' because it averts errors that might occur while trying to do certain things while asleep,
+			' such as Whispering. Other gestures in VWorlds such as Wave end when the gesture mechanics
+			' are finished, but a Sleep gesture continues until you perform a different gesture.
+			' So to ensure that we are still not doing a sleep Gesture we wake up the avatar here.
+		set menuBlock = elem.parentElement
+		set avatarBlock = menuBlock.parentElement
+		
+		' Execute a menu item from the object's in-world menu
+		avatarId = avatarBlock.getAttribute("avatarId")
+		top.getObjectById avatarId, avatar
+		if not (avatar is Nothing) then
+			currentAvatarId = avatar.Id
+			menuItemId = mid(elem.id,instrRev(elem.id, "_")+1,255)
+			' GetMenuList is an undocumented method that returns an object's menu;
+			' a menu is a propertyList filled with menuItem objects
+			set menu = avatar.GetMenuList
+			set menuItem = menu.property(menuItemId)
+			if elem.innerText = "-Send a Note" then
+				document.frames(0).location = "NoteSend.htm"
+			else
+				menuItem.Execute
+			end if
+		end if
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'// Sub:  		hideMenus
+'// Purpose:	undisplay menu items; shotgun approach for when we switch to a different object
+'// Called by:	document_onClick
+'////////////////////////////////////////////////////////////////////////
+sub hideMenus
+	dim elem
+	for each elem in document.all
+		if elem.className = "vwMenu" then elem.style.display = "none"
+	next
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'// Sub:  		expandPeopleBlock
+'// Purpose:	event handler for expanding a people block
+'// Params:
+'//		connectedness	- <str> 1 or 0, if the ser wants the connect block or disconnected block
+'// Called by:	window_onLoad
+'////////////////////////////////////////////////////////////////////////
+sub expandPeopleBlock (connectedness)
+	if connectedness = "1" then connectedness = 1
+	if connectedness = "0" then connectedness = 0
+	currentAvatarId = 0
+	makePeopleBlock (connectedness)
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'// Sub:  		removePeopleBlock
+'// Purpose:	delete existing peopleBlock, if any
+'// Called by:	makePeopleBlock
+'////////////////////////////////////////////////////////////////////////
+sub removePeopleBlock
+	if not IsEmpty(PeopleBlock) then
+		if not (PeopleBlock is Nothing) then
+			set PeopleBlock = PeopleBlock.removeNode (true)
+			set PeopleBlock = Nothing
+		end if
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'// Sub:  		updateAvatarList
+'// Purpose:	Show connections/disconnections of other users, depending on which group we are showing;
+'//				for Who Is Here, add a connected avatar or remove a disconnected;
+'//				for Who Was Here, add a disconnected user or remove a connected one.
+'// Params:
+'//		avatar		- <object> ref to an avatar object
+'//		connectedness	- <str> 1 or 0, connected or not
+'// Called by:	HandleUIEvent, for events OnEnterWorld and OnLeaveWorld
+'////////////////////////////////////////////////////////////////////////
+sub updateAvatarList (avatar, connectedness)
+	dim element, blockName
+	if avatar is top.ClientUserPtr then exit sub
+	if not IsEmpty(PeopleBlock) then
+		' see whether we are displaying who is here or who is not here
+		blockName = lcase(mid(PeopleBlock.getAttribute("groupName"),2,255))
+		if (blockName = "who is here" and connectedness) or _
+		   (blockName = "who was here" and not connectedness) then
+			makeAvatarblock avatar
+		elseif (blockName = "who is here" and not connectedness) or _
+			   (blockName = "who was here" and connectedness) then
+			for each element in PeopleBlock.children
+				if element.id = "avatar" & avatar.Id then 
+					PeopleBlock.removeChild(element)
+					exit sub
+				end if
+			next
+		end if
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'// Sub:  		makePeopleBlock
+'// Purpose:	Generate a sorted group of HTML elements for connected or non-connected avatars.
+'//				If the current user is in the group, put that element first.
+'//				If CurrentAvatarId > 0 then expand that person, else expand the first one in the group.
+'//				It is possible that the non-connected group could be empty; in that case show a list-empty page.
+'// Params:
+'//		connectedness	- <str> 1 or 0, connected or not
+'// Called by:	window_onLoad
+'//				expandPeopleBlock
+'////////////////////////////////////////////////////////////////////////
+sub makePeopleBlock (connectedness)
+	dim avatar, elem, targetAvatarId, blnIsAvatar
+	blnIsAvatar = False
+	removePeopleBlock()
+	if connectedness then
+		set PeopleBlock = SideLinks.insertBefore (document.createElement("DIV"), lnkWasHere)
+		PeopleBlock.setAttribute "groupName", lnkWhosHere.innerText
+	else
+		set PeopleBlock = SideLinks.insertAdjacentElement ("BeforeEnd", document.createElement("DIV"))
+		PeopleBlock.setAttribute "groupName", lnkWasHere.innerText
+	end if
+
+	' Insert the PeopleBlock itself into the document now, before inserting avatar elements.
+	' This is necessary so we can apply color filters to the avatar thumbnails as they are generated.
+	' Filters can be applied only to elements that are part of the document.
+	PeopleBlock.id = "PeopleBlock"
+	PeopleBlock.className = "MenuBlock"
+	lngSelectedItemId = ""
+	for each avatar in user.container.Avatars
+		if avatar.IsValidProperty("IsConnected") = connectedness then
+			
+			blnIsAvatar = True
+			makeAvatarBlock avatar
+		end if
+	next
+	
+	'if user.container.Avatars.count = 0 then
+	if not blnIsAvatar then
+		PeopleBlock.style.display = "none"
+		document.frames(0).location = "NoPerson.htm"
+	end if
+
+	' If we have no current avatar, select the first one in the group
+	if currentAvatarId = 0 then
+		set elem = PeopleBlock.firstChild			
+		if not (elem is nothing) then currentAvatarId = elem.avatarId
+	end if
+
+	on error resume next
+	document.all.item("avatar" & currentAvatarId).click
+	MenuOnMouseDown(document.all.item("avatar" & currentAvatarId))
+	lngSelectedItemId = "vwInfo" & currentAvatarId
+	
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'// Sub:  		makeAvatarBlock
+'// Purpose:	Generate a clickable Avatar Block containing a Thumbnail Block with the image and
+'//				an Info Block with the name.
+'//				Clicking generates a Menu Block from the avatar's menu (see document_onclick).
+'// Params:
+'//		avatar	- <object> avatar to make the menu block for
+'// Called by:	updateAvatarList
+'//				makePeopleBlock
+'////////////////////////////////////////////////////////////////////////
+sub makeAvatarBlock (avatar)
+	dim gif
+	dim category
+	dim sortKey, insertBeforeId
+	dim avatarBlock, thumbnailBlock, infoBlock, menuBlock
+	dim avatarDate
+	dim n, elem, img, newHTML, newElem
+	
+	' don't do anything if the People block is not visible
+	if IsEmpty(PeopleBlock) then exit sub
+	if PeopleBlock is Nothing then  exit sub
+
+	' generate a sortkey value for the object
+	if avatar.id = top.clientUserPtr.id then
+		sortKey = " "
+	else
+		sortKey = ucase(avatar.Name)
+	end if
+				
+	' generate a block of HTML code for the object, id="avatarN" where N = object ID
+	set avatarBlock = document.createElement ("SPAN")
+	avatarBlock.id = "avatar" & avatar.Id
+	avatarBlock.className = "MenuII"
+	avatarBlock.setAttribute "sortKey", sortKey
+	avatarBlock.setAttribute "avatarId", avatar.id
+
+	' Insert avatarBlock into the page.
+	' We have to do this now, rather than making sure avatarBlock is non-empty first,
+	' because insertThumbnailElement only works if avatarBlock is part of the document.
+	insertBeforeId = ""
+	for each elem in PeopleBlock.children
+		if elem.className = "MenuII" then
+			if elem.getAttribute("sortKey") >= sortKey then
+				insertBeforeId = elem.Id
+				exit for
+			end	if
+		end if
+	next
+
+	if insertBeforeId > "" then
+		PeopleBlock.insertBefore avatarBlock, document.all.item(insertBeforeId)
+	else
+		PeopleBlock.insertAdjacentElement "BeforeEnd", avatarBlock
+	end if
+	
+	' insert thumbnail block
+	dim tnailBlock
+	set tnailBlock = document.createElement ("SPAN")
+	tnailBlock.id = "tnail" & avatar.Id
+	tnailBlock.className = "MenuII_tnail"
+
+	avatarBlock.InsertAdjacentElement "BeforeEnd", tnailBlock
+	
+	' insert the thumbnail image into the block
+	top.insertThumbnailElement avatar, document, tnailBlock
+
+	' insert an item info block next to the image
+	set infoBlock = document.createElement ("SPAN")
+	infoBlock.id = "vwInfo" & avatar.Id
+	dim strAvName 
+	if Len(avatar.Name) > 8 then
+		strAvName = Left(avatar.Name,9) & "..."
+	else
+		strAvName = avatar.Name	
+	end if
+	infoBlock.innerHTML = strAvName
+	if currentAvatarID = avatar.id then
+		infoBlock.className = "MenuII_Title_CLK"
+	else
+		infoBlock.className = "MenuII_Title"
+	end if
+	infoBlock.setAttribute "origClass", "MenuII_Title"
+	infoBlock.setAttribute "clickClass", "MenuII_Title_CLK"
+	infoBlock.setAttribute "hoverClass", "MenuII_Title_MO"
+	avatarBlock.InsertAdjacentElement "BeforeEnd", infoBlock
+	set infoBlock = document.all.item(infoBlock.id)
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'// Sub:  		makeAvatarMenuBlock
+'// Purpose:	Generate a menu based on the object's menu and insert it in the avatarBlock
+'// Params:
+'//		avatarid	- <int> the object id of an avatar object in the world
+'// Called by:	refreshAvatar
+'//				document_onClick
+'////////////////////////////////////////////////////////////////////////
+sub makeAvatarMenuBlock (avatarId)
+	dim avatar, avatarBlock, menu, menuItem, menuItemCount, menuBlock, elem, n
+	dim avatarExists
+	top.getObjectById avatarId, avatar
+	' verify that the avatar exists
+	for each avatar in user.container.avatars
+		if avatar.Id = avatarId then 
+			avatarExists = true
+			exit for
+		end if
+	next
+	if not avatarExists then exit sub
+
+	' insert menu block
+	set avatarBlock = document.all.item("avatar" & avatar.Id)
+	if avatarBlock is Nothing then exit sub
+	set menuBlock = document.createElement ("SPAN")
+	menuBlock.id = "vwMenu" & avatar.Id
+	menuBlock.classname = "vwMenu"
+	avatarBlock.InsertAdjacentElement "BeforeEnd", menuBlock
+
+	' GetMenuList is an undocumented method that returns an object's menu;
+	' a menu is a propertyList filled with menuItem objects
+	set menu = avatar.GetMenuList
+	menuItemCount = 0
+	for n = 0 to menu.count - 1
+		set menuItem = menu.property(n)
+		if menuItem.menuText <> "" and instr(1,menuItem.menuText,"Profile") = 0 and menuItem.Flags <> top.ClientWorldPtr.MI_INVISIBLE then
+			menuItemCount = menuItemCount + 1
+			set elem = document.createElement("SPAN")
+			elem.className = "MenuIII"
+			' set the id so we can get the object id and the menu item id
+			elem.id = "vwMenuItem" & avatar.id & "_" & n
+			elem.setAttribute "menuItemId",n
+			dim menuText
+			menuText = ""
+			menuText = menuItem.menuText
+			if LCase(menuText) = "send a note" then menuText = "Send a Note"
+			if LCase(menuText) = "make a friend" then menuText = "Make Friend"
+			elem.innerHTML = "-" & menuText
+			menuBlock.InsertAdjacentElement "BeforeEnd", elem
+		end if
+		set menuItem = Nothing
+	next
+	set menu = Nothing
+	
+	' add some bottom padding into the menu
+	set elem = document.createElement("SPAN")
+	elem.className = "MenuIII_BtmPad"
+	elem.innerHTML = "&nbsp;"
+	menuBlock.InsertAdjacentElement "BeforeEnd", elem
+	
+	if menuItemCount <> 0 then menuBlock.style.display = "block"
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'// Sub:  		refreshAvatar
+'// Purpose:	Refresh the avatar menu block and/or thumbnail block,
+'//				to provide indicate a change in friendship or ignored status
+'// Params:
+'//		bRefreshMenu		- <bool> do we refresh the menu?
+'//		bRefreshThumbnail	- <bool> refresh the thumbnail ? 
+'// Called by:	HandleUIEvent, for the events related to friends and ignoring people
+'////////////////////////////////////////////////////////////////////////
+sub refreshAvatar (bRefreshMenu,bRefreshThumbnail)
+	dim element, thumbnailBlock
+	' find the thumbnail block the thumbnail is part of and remove the thumbnail element
+	set thumbnailBlock = nothing
+	for each element in document.all
+		if bRefreshMenu and (element.id = "vwMenu" & currentAvatarId) then
+			element.removeNode true
+		elseif bRefreshThumbnail then
+			if element.id = "tnail" & currentAvatarId then 
+				set thumbnailBlock = element
+			elseif element.id = "thumb" & currentAvatarId then
+				element.removeNode true
+			end if
+		end if
+	next
+	set element = Nothing
+	' make new thumbnail
+	if bRefreshThumbnail and not (thumbnailBlock is Nothing) then
+		top.insertThumbnailElement top.ClientWorldPtr.objectById(currentAvatarId), document, thumbnailBlock
+	end if
+	' make new menu if we are supposed to
+	if bRefreshMenu then makeAvatarMenuBlock currentAvatarId
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'// Sub:  		HandleUIEvent
+'// Purpose:	handle a few world events
+'// Args:		who - the avatar that caused the event to happen
+'//				what - the name of the event
+'//				args - extra info passed as an array
+'//  Called by:	client.htm:theclient_OnUIEvent
+'////////////////////////////////////////////////////////////////////////
+sub HandleUIEvent(byVal who, what, byVal args)	
+	dim bRefreshThumbnail, bRefreshMenu, whatToDo
+ 	select case what
+		case "OnEnterWorld"
+			' Update the Who Is Here / Was Here lists
+			updateAvatarList who, true
+		case "OnLeaveWorld"
+			' Update the Who Is Here / Was Here lists
+			updateAvatarList who, false
+		case "MakeFriendRequest", "YouRemovedFriend", "FriendRequestReturned", "FriendRequestCancelled", _
+				"IgnoredUser", "UnignoredUser", "IgnoredByUser", "UnignoredByUser"
+			bRefreshMenu = (who.id = currentAvatarId)
+			bRefreshThumbnail = (instr(1,lcase(what),"ignore") > 0)
+			whatToDo = "refreshAvatar " & bRefreshMenu & "," & bRefreshThumbnail
+			' refresh the avatar's menu and/or thumbnail image after allowing time for the world to change
+			window.setTimeout whatToDo, 500, "VBScript"
+		case else
+	end select
+end sub
+
+</script>
+</head>
+
+<body bgcolor=#ffffff>
+
+<span id=bkgMain
+	style="BACKGROUND-IMAGE: url(../Images/grntile2.gif);
+		width:115;
+		height:100%;">
+</span>
+<div id=bkgPatch
+	style="position:absolute;
+		top:0;
+		left:115;
+		background:#F7F7F7;
+		width:16;
+		height:41;">
+</div>
+<span id=SideLinks
+	class=SideLinks>
+</span>
+
+<iframe id=infoIFrame
+	name=infoIFrame
+	class=infoIFrame 
+	marginwidth=0
+	marginheight=0
+	frameborder=no></iframe>
+	
+</body>
+</HTML>

@@ -1,0 +1,136 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//
+'//  File:			FriendRequest.htm
+'//  Description:	Asks you if you would like to be added to someones friend list.
+'//					This file is opened as a modeless dialog by chatBox.htm.
+'////////////////////////////////////////////////////////////////////////-->
+<HTML>
+<HEAD>
+<TITLE>Friend Request
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</TITLE>
+
+<link rel=stylesheet href="../shared/global.css">
+
+<!--include scripts-->
+<script language="vbscript" src="../vbs/document_OnSelectStart.vbs">
+</script>
+<!--end include scripts-->
+
+<script language="vbscript">
+option explicit
+
+dim topWin, avRequester, avUser, bAccept
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		getArgs
+'//  Purpose:	set normal args array to three separate ones
+'//	 Params:
+'//		args	- <array> 
+'//		arg0	- <object pointer>
+'//		arg1	- <object pointer>
+'//		arg2	- <object pointer>
+'//  Called by:	window_onLoad
+'////////////////////////////////////////////////////////////////////////
+sub getArgs (byval args, arg0, arg1, arg2)
+	set arg0 = args(0)
+	set arg1 = args(1)
+	set arg2 = args(2)
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		window_OnLoad
+'//  Purpose:	get the arguments passed to use, add use to the event list
+'////////////////////////////////////////////////////////////////////////
+sub window_OnLoad
+	getArgs window.DialogArguments, topWin, avRequester, avUser
+	bAccept = false
+	requester.innerText = avRequester.name
+	topWin.AddToEventList window
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		window_OnLoad
+'//  Purpose:	get the arguments passed to use, add use to the event list
+'////////////////////////////////////////////////////////////////////////
+sub window_onUnload
+	' timing may cause this to execute after the top window is closed, but then we don't care
+	on error resume next
+	topWin.RemoveFromEventList window
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		HandleUIEvent
+'//  Purpose:	handles OnLeaveWorld event
+'//	 Params:
+'//  Args:		who - the avatar that caused the event to happen
+'//				what - the name of the event
+'//				args - extra info passed as an array
+'//  Called by:	client.htm:theclient_OnUIEvent
+'////////////////////////////////////////////////////////////////////////
+sub HandleUIEvent(byval who, what, byval args)
+	select case what
+		case "OnLeaveWorld"
+			if who is avRequester then window.setTimeout "window.close",500,"VBScript"
+	end select
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		ReplyToFriendRequest (bAccepted)
+'//  Purpose:	tell the world the user accepted the friend request
+'//	 Param:
+'//			bAccepted	- <boolean> 
+'////////////////////////////////////////////////////////////////////////
+sub ReplyToFriendRequest (bAccepted)
+	bAccept = bAccepted
+	' tell the world to accept or reject
+	avRequester.FinalizeFriend avUser, bAccept
+	' notify the requester
+	avRequester.NotifyFriend avUser, bAccept
+	window.close
+end sub
+
+</script>
+
+</HEAD>
+
+<body bgcolor="#FFFFFF" style="background:url(../images/bkgMakeFriendMsg.gif);margin-top:0;margin-left:0;width:250;height:97;">
+<div id=msg
+	class=ParaText
+	style="position:absolute;
+		top:5;
+		left:10;
+		width:210;
+		margin-top:5;
+		margin-left:5;">You have been invited to join 
+	<span id=requester></span>'s friend list. Do you accept?
+</div>
+<button id=btnYes
+	class=btnYellow
+	style="position:absolute;
+		top:45;
+		left:120;"
+	onclick="ReplyToFriendRequest(true)">
+	Yes
+</button>
+<button id=btnNo
+	class=btnYellow
+	style="position:absolute;
+		top:45;
+		left:180;"
+	onclick="ReplyToFriendRequest(false)">
+	No
+</button>		
+</BODY>
+</HTML>

@@ -1,0 +1,113 @@
+<HTML>
+<HEAD>
+<style>
+.head {font-family: Arial;font-size:12pt;color:"#67675D";font-weight:bold}</style>
+</HEAD>
+<BODY BGCOLOR="#F4F4E8" LEFTMARGIN=19 TOPMARGIN=12>
+<div class="head" align="center">Advanced Properties</div><br>
+<div style="border-color:#77786F; border-width:2px;border-style:solid">
+<OBJECT ID="listprop" CLASSID="clsid:EF7D655D-0161-11D2-88BE-00C04FC32EF3" border="1" height="82%" width="100%"></div>
+</OBJECT>
+<OBJECT id="Popup"
+		CLASSID="clsid:7E3832CD-4F4E-11D0-89AB-00A0C9054129"
+		BORDER=0 WIDTH=0 HEIGHT=0>
+</OBJECT>
+<SCRIPT LANGUAGE="VBScript">
+On error resume next
+
+public editThing
+public editPropName
+
+sub Window_OnLoad
+     set listprop.vwclient=parent.helper.client
+     set listprop.targetobjectproperty=parent.helper.arg
+	 'turn off the apply button
+	 parent.Btns.ApplyBtn.style.visibility = "hidden"
+	 parent.Btns.ResetBtn.style.visibility = "hidden"
+end sub
+sub Window_OnUnload
+	parent.Btns.ApplyBtn.style.visibility = "visible"
+	parent.Btns.ResetBtn.style.visibility = "visible"
+end sub
+
+sub Reset
+	Window_OnLoad
+end sub
+
+sub Apply
+	Window_OnUnLoad
+end sub
+
+sub Cancel
+end sub
+
+SUB listprop_EditName(thing, name)
+	msgbox "Edit name of " & name & ".", vbInformation, "Microsoft Virtual Worlds"
+END SUB
+
+SUB listprop_EditValue(thing, name)
+	msgbox "Edit value of " & name &" in " & thing.name & ".", vbInformation, "Microsoft Virtual Worlds"
+	dim prop
+	dim world
+	dim editorMap
+	dim editorHTML
+
+	on error resume next
+	prop = thing.Property(name)
+	set prop = thing.Property(name)
+
+	set editorMap = parent.helper.client.world.global.property("PropertyEditors")
+
+	editorHTML=""
+
+	if IsObject(prop) then
+		if not prop is Nothing then
+			if IsObject(editorMap) then
+				if editorMap.IsValid(prop.type) then
+					editorHTML = editorMap.property(prop.type)
+				else
+					editorHTML = editorMap.property("thing")
+				end if
+			end if
+		else
+			editorHTML = editorMap.property("thing")
+		end if
+	else
+		'must be a string
+		'well, I can assume that for now
+		editorHTML = editorMap.property("string")
+	end if
+
+	if Len(EditorHTML) > 0 then
+		set editThing = thing
+		editPropName = name
+		Popup.ShowUrlEx "Edit Value", 0, editorHTML, _
+						"Edit Value", false, window, 30, 30, 400, 240
+	end if
+END SUB
+
+SUB listprop_NewProperty(thing)
+	set editThing = thing
+	Popup.ShowUrlEx "Create New Property", 0, "SDK/Editors/Core/newprop.htm", _
+							"Enter Property information", false, window, 30, 30, 400, 240
+END SUB
+
+SUB listprop_Help(helpId)
+	top.DoHelp helpId
+END SUB
+
+function GetHelpURL
+	GetHelpURL = ""
+end function
+
+function GetHelpTopic
+	GetHelpTopic = "advanced"
+end function
+
+function verify
+	verify = true
+end function
+
+</SCRIPT>
+</BODY>
+</HTML>

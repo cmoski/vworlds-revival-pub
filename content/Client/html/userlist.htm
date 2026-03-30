@@ -1,0 +1,90 @@
+<HTML>
+<HEAD>
+<link rel=stylesheet href=..\shared\global.css>
+<script language=vbs>
+
+Option Explicit
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+Sub window_onresize
+	DoPosition
+End Sub
+
+Sub DoPosition
+	If document.body.offsetHeight - 45 > 0 Then
+		document.all("UserList").style.height = document.body.offsetHeight - 45
+		document.all("RoomList").style.height = document.body.offsetHeight - 45
+		document.all("InvList").style.height = document.body.offsetHeight - 45
+		document.all("StudTab").style.height = document.body.offsetHeight - 45
+	End If
+End Sub
+
+Sub Initialize
+	DoPosition
+	' check for multiple refresh...
+	If parent.bInited = true Then
+		' refresh the tab list
+		parent.frames(0).Initialize()
+	End If
+End Sub
+
+Sub window_onload
+	DoPosition
+	parent.ChildReady(window)
+End Sub
+
+</script>
+</head>
+<body>
+	<div id=lblTitle class=vH1 style=left:54;top:5;width:65;>Avatars</div>
+	<nobr><div id=lblTitleHelp class=vLabelSmall style=left:24;top:25;width:125;>Left-click to show menus</div></nobr>
+	<iframe border=0
+					frameborder=no
+					id=UserList
+					name=UserList
+					noresize
+					src=avlist.htm
+					style=position:absolute;left:0;top:45;
+					width=100%>
+	</iframe>
+	<iframe border=0
+					frameborder=no
+					id=RoomList
+					name=RoomList
+					noresize
+					src=peerlist.htm
+					style=position:absolute;left:0;top:45;display:none;
+					width=100%>
+	</iframe>
+	<iframe border=0
+					frameborder=no
+					id=InvList
+					name=InvList
+					noresize
+					src=contlist.htm
+					style=position:absolute;left:0;top:45;display:none;
+					width=100%>
+	</iframe>
+	<iframe border=0
+					frameborder=no
+					id=StudTab
+					name=StudTab
+					noresize
+					src=studtab.htm
+					style=position:absolute;left:0;top:45;display:none;
+					width=100%>
+	</iframe>
+</body>
+</html>

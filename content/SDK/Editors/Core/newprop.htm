@@ -1,0 +1,337 @@
+<html>
+<head>
+<title>New Property</title>
+<link Rel=Stylesheet href=../../../client/shared/global.css>
+<script language=vbs>
+
+dim Thing
+dim world
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+sub Window_OnLoad
+	set Thing = window.dialogArguments.editThing
+	divObject.innerText = Thing.name
+	copy.checked = true
+	set world = window.dialogArguments.goWorld
+end sub
+
+sub Window_OnUnload
+end sub
+
+sub OnOk
+	if propName.value = "" then
+		msgbox "Enter a name for the new property.", vbExclamation, "Microsoft Virtual Worlds"
+		propName.focus
+		exit sub
+	else
+		if not World.ValidatePropertyName(propName.value) then
+			msgbox "The property name entered is not valid. A valid name must begin with a letter and can contain numbers, letters, and the underscore character.", vbExclamation, "Microsoft Virtual Worlds"
+			propName.focus
+			propName.select
+			exit sub
+		end if
+	end if
+	overwrite = false
+	forgetit = false
+	addit = true
+	iVarType = 12
+	bselect = false
+	dim prompt
+
+	if Thing.IsValidProperty(propName.value) then
+		set security = Thing.PropertySecurity(propName.value)
+		if security.Bits and world.PSBIT_HIDDEN then
+			msgbox "This property name is reserved by the system. Enter a different one.", vbExclamation, "Microsoft Virtual Worlds"
+			propName.focus
+			propName.select
+			exit sub
+		end if
+		prompt = msgbox("A property of this name already exists." & vbcrlf & "Overwrite?", vbYesNo + vbQuestion, "Microsoft Virtual Worlds")
+		if prompt = 6 then
+			if not Thing.CheckPropertiesSecurity(world.PS_WRITE) then
+				msgbox "Insufficient permission to overwrite properties on this object.", vbExclamation, "Microsoft Virtual Worlds"
+				forgetit = true
+			else
+				if Thing.CheckPropertySecurity(propName.value, world.PS_WRITE) then
+					overwrite = true
+				else
+					msgbox "Insufficient permission to overwrite this property.", vbExclamation, "Microsoft Virtual Worlds"
+					forgetit = true
+				end if
+			end if
+		else
+			forgetit = true
+		end if
+	else
+		if not Thing.CheckPropertiesSecurity(world.PS_ADD) then
+			msgbox "Insufficient permission to add a property to this object.", vbExclamation, "Microsoft Virtual Worlds"
+			forgetit = true
+		end if
+	end if
+
+	if forgetit then
+		exit sub
+	end if
+
+	flags = 0
+
+	' set flags
+	if copy.checked then
+		flags = world.PSBIT_COPYONGET
+	end if
+
+	if logged.checked then
+		flags = flags or world.PSBIT_NOTLOGGED
+	end if
+
+	if remoted.checked then
+		flags = flags or world.PSBIT_NOTREMOTED
+	end if
+
+	if Len(propValue.value) = 0 then
+		if typeList.SelectedIndex < 6 and typeList.SelectedIndex > 1 then
+			propValue.value = "0"
+		end if
+	end if
+
+	select case typelist.SelectedIndex
+		case 0	'String
+			tempValue = propValue.value
+			iVarType = 8
+		case 1	'Boolean
+			if boolList.SelectedIndex = 0 then
+				tempValue = true
+			else
+				tempValue = false
+			end if
+			iVarType = 11
+		case 2	'Double
+			tempValue = CDbl(propValue.value)
+			iVarType = 5
+		case 3	'Float
+			tempValue = Csng(propValue.value)
+			iVarType = 4
+		case 4	'Long
+			tempValue = CLng(propValue.value)
+			iVarType = 3
+		case 5	'integer
+			tempValue = CInt(propValue.value)
+			iVarType = 2
+		case 6	'Vector
+			set tempValue = world.CreateVector(0.0, 0.0, 0.0)
+			iVarType = 9
+		case 7	'Menu
+			set tempValue = world.CreateMenu()
+			iVarType = 9
+		case 8	'Property List
+			set tempValue = world.CreatePropertyList()
+			iVarType = 9
+		case 9	'Property Map
+			set tempValue = world.CreatePropertyMap()
+			iVarType = 9
+		case 10	'Thing
+			' add as NULL Thing ptr
+			if overwrite then
+				Thing.property(propName.value) = Nothing
+				if (Err.number = &H80040206) or (Err.number = &H80040230) Then
+					Msgbox "You can not change the type of this property.", vbExclamation, "Microsoft Virtual Worlds"
+					Err.Clear
+					exit sub
+				end if
+			else
+				' REVIEW: Need to use AddProperty with the IID so that we can set the security correctly
+				' for editing
+				dim bstrIID
+				bstrIID = world.global.GetIIDFromType("Thing")
+				Thing.AddProperty propName.value, Nothing, flags, world.PS_SCRIPTDEFAULTPROPERTY, 9, bstrIID
+			end if
+			bselect = true
+			addit = false
+		case else	'nothing
+			addit = false
+	end select
+
+	if addit then
+		bselect = true
+		if overwrite then
+			Err.Clear
+			Thing.Property(propName.value) = tempValue
+			if (Err.number = &H80040206) or (Err.number = &H80040230) Then
+				Msgbox "You can not change the type of this property.", vbExclamation, "Microsoft Virtual Worlds"
+				Err.Clear
+				exit sub
+			end if
+		else
+			Thing.AddProperty propName.value, tempValue, flags, world.PS_SCRIPTDEFAULTPROPERTY, iVarType
+		end if
+	end if
+
+	if bselect then
+		dim selectionList
+		set selectionList = world.CreatePropertyList
+		selectionList.Add propName.value
+		window.dialogArguments.listprop.selectionList = selectionList
+		window.dialogArguments.listprop.DoFocus
+	end if
+
+	' Thing.AddProperty([in] BSTR bstrName, [in, optional] VARIANT var, [in, optional, defaultvalue(PSBIT_COPYONGET)] VARIANT flags,
+	'		[in, optional, defaultvalue(PS_DEFAULT)] VARIANT permission, [in, optional, defaultvalue(12)] VARIANT type,
+	'		[in, optional, defaultvalue("")] BSTR bstrIID, [in, optional, defaultvalue("")] BSTR bstrType);
+	window.close
+end sub
+
+sub OnHelp
+	Dim helpstringsList
+	window.event.returnValue = false
+	on error resume next
+	set helpstringsList = world.CreatePropertyList()
+	helpstringsList.add "Authoring"
+	helpstringsList.add "Object Explorer"
+	helpstringsList.add "New Property"
+	world.FireUIEvent world.user, "Help", helpstringsList
+end sub
+
+sub OnTypeSelect
+	if typelist.SelectedIndex = 1 then
+		propValue.disabled = false
+		propValue.style.backgroundcolor = ""
+		lblInitVal.style.color = ""
+		boolList.style.display= ""
+		propValue.style.display = "none"
+		propValue.value = ""
+	else
+		if typelist.SelectedIndex < 6 then
+			if typelist.SelectedIndex > 1 then
+				if not isnumeric(propValue.value) then
+					propValue.value = 0
+				end if
+				if propValue.value = 0 then
+					select case typelist.SelectedIndex
+					case 2
+						'Double
+						propValue.value = "0.0"
+					case 3
+						'Float
+						propValue.value = "0.0"
+					case 4
+						'Long
+						propValue.value = "0"
+					case 5
+						'integer
+						propValue.value = "0"
+					case else
+					'nothing
+						propValue.value = ""
+					end select
+				end if
+			else
+				propValue.value = ""
+			end if
+			propValue.disabled = false
+			propValue.style.backgroundcolor = ""
+			lblInitVal.style.color = ""
+			boolList.style.display = "none"
+			propValue.style.display = ""
+		else
+			propValue.disabled = true
+			lblInitVal.style.color = "gray"
+			boolList.style.display = "none"
+			propValue.style.display = ""
+			propValue.style.backgroundcolor = "#D3D3D3"
+			propValue.value = ""
+		end if
+	end if
+end sub
+
+sub document_onkeypress
+	select case window.event.keyCode
+	case 27
+		window.close
+	case 13
+		if window.event.srcElement.tagName <> "BUTTON" and window.event.srcElement.tagName <> "A" then OnOK
+	case else
+	end select
+end sub
+
+sub document_OnMouseOver
+	select case window.event.srcElement.className
+	case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	case "vHelp"
+		imgHelp.src="../../../client/shared/helpH.gif"
+	case else
+	end select
+end sub
+
+sub document_OnMouseOut
+	select case window.event.srcElement.className
+	case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	case "vHelp"
+		imgHelp.src="../../../client/shared/help.gif"
+	case else
+	end select
+end sub
+
+</script>
+</head>
+<body class=vBody>
+	<div class=vLabel style=left:18;top:7;>Object:</div>
+	<div id=divObject class=vLabel style=left:120;top:7;></div>
+	<div class=vLabel style=left:18;top:28;>Property Name:</div>
+	<input id=propName class=vInput style=left:120;top:25;width:110; maxlength=50>
+	<div class=vLabel style=left:18;top:49;>Property Type:</div>
+	<select id=TypeList style=left:120;top:46;width:110; class=vInput onchange=OnTypeSelect>
+		<option>String</option>
+		<option>Boolean</option>
+		<option>Double</option>
+		<option>Float</option>
+		<option>Long</option>
+		<option>Integer</option>
+		<option>Vector</option>
+		<option>Menu</option>
+		<option>Property List</option>
+		<option>Property Map</option>
+		<option>Thing</option>
+	</select>
+	<div id=lblInitVal class=vLabel style=left:18;top:70;>Initial Value:</div>
+	<input id=propValue class=vInput maxlength=50 style=left:120;top:67;width:110;>
+	<select id=BoolList class=vInput style=left:120;top:67;width:110;display:none;>
+		<option>True</option>
+		<option>False</option>
+	</select>
+	<fieldset style=position:absolute;left:18;top:94;height:60;width:212;>
+		<legend class=vLabel style=position:relative; align=top>Property Flags:</legend>
+		<div style=position:absolute;left:4;top:15;>
+			<input type=checkbox id=Copy><label class=vInputLbl for=Copy>&nbsp;Copy On Get&nbsp;</label>
+		</div>
+		<div style=position:absolute;left:110;top:15;>
+			<input type=checkbox id=Logged><label class=vInputLbl for=Logged>&nbsp;Not Logged&nbsp;</label>
+		</div>
+		<div style=position:absolute;left:4;top:30;>
+			<input type=checkbox id=Remoted><label class=vInputLbl for=Remoted>&nbsp;Not Remoted&nbsp;</label>
+		</div>
+	</fieldset>
+	<button class=bEnabled id=btnOK style=left:100;top:164; onclick=OnOk>
+		<span style=position:relative;top:-1;>OK</span>
+	</button>
+	<button class=bEnabled id=btnCancel style=left:170;top:164; onclick=window.close>
+		<span style=position:relative;top:-1;>Cancel</span>
+	</button>
+	<a id=lnkHelp onclick=OnHelp href="">
+		<img src=../../../client/shared/help.gif id=imgHelp class=vHelp style=top:164;>
+	</a>
+</body>
+</html>

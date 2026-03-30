@@ -1,0 +1,190 @@
+<html>
+<head>
+<link rel=stylesheet href=global.css>
+<script language=vbs src=scripts/NoSelection.vbs></script>
+<script language=vbs src=scripts/ContextMenu.vbs></script>
+<script language=vbs src=scripts/Controls.vbs></script>
+</head>
+<body scroll=no>
+	<table cellspacing=0 cellpadding=0 width=100% height=100%>
+		<tr height=25px>
+			<td>
+				<table cellspacing=0 cellpadding=0 width=100% height=100%>
+					<tr height=25px valign=top>
+						<td width=39px>
+							<img alt="Show Avatars"
+									 src=images/usersl.gif
+									 name=imgTabs
+									 class=vwControlTab
+									 Active=images/usersl.gif
+									 inActive=images/usersd.gif
+									 iFrame=fraAvatars
+									 enabled=false
+									 tabTitle=Avatars>
+						</td>
+						<td width=39px>
+							<img alt="Show Things in Room"
+									 src=images/roomd.gif
+									 name=imgTabs
+									 class=vwControlTab
+									 Active=images/rooml.gif
+									 inActive=images/roomd.gif
+									 iFrame=fraRoomThings
+									 enabled=false
+									 tabTitle="Things In Room">
+						</td>
+						<td width=39px>
+							<img alt="Show My Things"
+									 src=images/thingsd.gif
+									 name=imgTabs
+									 class=vwControlTab
+									 Active=images/thingsl.gif
+									 inActive=images/thingsd.gif
+									 iFrame=fraMyThings
+									 enabled=false
+									 tabTitle="My Things">
+						</td>
+						<td>
+							<div class=vwMenuBarBack style=height:25px;>
+								&nbsp;
+							</div>
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+		<tr height=10px>
+			<td>
+				<div id=divTitle class=vwHead2>Avatars</div>
+				<div class=vwSubHead2>Right-click for menus.</div>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<iframe id=fraAvatars src=Avatars.htm style=width:100%;height:100%; frameborder=no></iframe>
+				<iframe id=fraRoomThings src=RoomThings.htm style=width:100%;height:100%;display:none; frameborder=no></iframe>
+				<iframe id=fraMyThings src=MyThings.htm style=width:100%;height:100%;display:none; frameborder=no></iframe>
+			</td>
+		</tr>
+		<tr height=128px>
+			<td align=center>
+				<object id=objSelfView
+								style=width:128px;height:128px;
+								classid=clsid:63FB7203-909E-11D0-89AA-00A0C9054129>
+				</object>
+			</td>
+		</tr>
+		<tr height=62px>
+			<td align=center style=padding-top:5px;>
+				<table cellspacing=0 cellpadding=0>
+					<tr>
+						<td width=25px>
+							<img alt=Wave
+									 src=images/wave.gif
+									 class=vwGestureButton
+									 mOver=images/waveh.gif
+									 mOut=images/wave.gif
+									 gesture=WAVE
+									 enabled=false>
+						</td>
+						<td width=25px>
+							<img alt=Turn
+									 src=images/turn.gif
+									 class=vwGestureButton
+									 mOver=images/turnh.gif
+									 mOut=images/turn.gif
+									 gesture=TURN
+									 enabled=false>
+						</td>
+						<td width=25px>
+							<img alt=Smile
+									 src=images/smile.gif
+									 class=vwGestureButton
+									 mOver=images/smileh.gif
+									 mOut=images/smile.gif
+									 gesture=SMILE
+									 enabled=false>
+						</td>
+						<td width=25px>
+							<img alt=Laugh
+									 src=images/laugh.gif
+									 class=vwGestureButton
+									 mOver=images/laughh.gif
+									 mOut=images/laugh.gif
+									 gesture=LAUGH
+									 enabled=false>
+						</td>
+						<td width=25px>
+							<img alt=Flirt
+									 src=images/flirt.gif
+									 class=vwGestureButton
+									 mOver=images/flirth.gif
+									 mOut=images/flirt.gif
+									 gesture=FLIRT
+									 enabled=false>
+						</td>
+						<td width=25px>
+							<img alt=Shrug
+									 src=images/shrug.gif
+									 class=vwGestureButton
+									 mOver=images/shrugh.gif
+									 mOut=images/shrug.gif
+									 gesture=SHRUG
+									 enabled=false>
+						</td>
+					</tr>
+				</table>
+				<table cellspacing=0 cellpadding=0>
+					<tr>
+						<td width=25px>
+							<img alt=Blush
+									 src=images/blush.gif
+									 class=vwGestureButton
+									 mOver=images/blushh.gif
+									 mOut=images/blush.gif
+									 gesture=BLUSH
+									 enabled=false>
+						</td>
+						<td width=25px>
+							<img alt=Frown
+									 src=images/frown.gif
+									 class=vwGestureButton
+									 mOver=images/frownh.gif
+									 mOut=images/frown.gif
+									 gesture=ANGRY
+									 enabled=false>
+						</td>
+						<td width=25px>
+							<img alt=Sleep
+									 src=images/sleep.gif
+									 class=vwGestureButton
+									 mOver=images/sleeph.gif
+									 mOut=images/sleep.gif
+									 gesture=SLEEP
+									 enabled=false>
+						</td>
+						<td width=25px>
+							<img alt=Pose
+									 src=images/pose.gif
+									 class=vwGestureButton
+									 mOver=images/poseh.gif
+									 mOut=images/pose.gif
+									 gesture="TRICK 3"
+									 enabled=false>
+						</td>
+						<td width=25px>
+							<img alt=Act
+									 src=images/act.gif
+									 class=vwGestureButton
+									 mOver=images/acth.gif
+									 mOut=images/act.gif
+									 gesture="TRICK 1"
+									 enabled=false>
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+	</table>
+</body>
+</html>

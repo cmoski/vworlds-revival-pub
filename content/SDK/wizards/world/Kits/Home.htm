@@ -1,0 +1,1318 @@
+<html>
+<head>
+<LINK Rel=Stylesheet href="..\..\..\..\client\shared\global.css">
+<object id="elements" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
+  <param name="DataURL" value="home.csv">
+  <param name="UseHeader" value="True">
+  <param name="TextQualifier" value="'">
+</object>
+<script language="VBSCRIPT">
+
+option explicit
+dim rs
+dim ready
+Dim world
+Dim Outside
+Dim LivingRoom
+Dim StyleName
+Dim selected
+Dim p_Entry
+Dim p_Outside_Interior
+Dim p_Interior_Outside
+ready = False
+
+sub window_onload
+	if top.SelectedStyleIndex <> -1 then
+		lstStyle.selectedIndex = top.SelectedStyleIndex
+	else
+		lstStyle.selectedIndex = 0
+	end if
+	choseName 'since we are selcting first element it will have same effect
+end sub
+
+sub elements_ondatasetcomplete
+	set rs = elements.recordset
+	fillin_select
+	if top.SelectedStyleIndex <> -1 then
+		lstStyle.selectedIndex = top.SelectedStyleIndex
+	end if
+end sub
+
+function verify()
+	verify = ready
+end function
+
+sub fillin_select()
+	dim el
+
+	rs.MoveFirst
+	' interate on world templates
+	Do Until rs.EOF
+			set el = document.CreateElement("OPTION")
+			el.value = rs.Fields(0).value
+			el.text = rs.Fields(0).value
+			lstStyle.add el
+			rs.MoveNext
+	Loop
+end sub
+
+sub choseName()
+	selected = lstStyle.selectedIndex
+	rs.MoveFirst
+	rs.Move selected
+	StyleName = rs.fields(0)
+	top.SelectedStyleIndex = selected
+	ready = true
+end sub
+
+sub finish
+	buildworld
+end sub
+
+sub buildworld
+	if top.buildworld then
+
+		set world = top.client.world
+
+		parent.StatusMsg "creating Outside"
+		CreateOutside
+
+
+		parent.StatusMsg "creating Living Room"
+		CreateInteriorRoom
+
+
+		parent.StatusMsg "creating portals"
+		CreatePortals
+
+		' set default room to Outside
+		world.Global.DefaultRoom = Outside
+
+		' set default Portal to Outside
+		world.Global.DefaultPortal = p_Entry
+
+		world.user.MoveInto Outside
+
+		world.SaveDatabase
+		world.Trace "All done with SaveDatabase"
+		world.disconnect
+	end if
+end sub
+
+sub CreateOutside
+	Dim eye
+
+	set Outside = world.CreateInstance("Outside", "Room")
+
+	Select Case StyleName
+		case "Classical"
+			Outside.InitializeGraphics "", 0.0, 0.0, 0.0, 0.0, 0.0, 1.0
+			Outside.BackgroundColor = &HBDD5E8
+
+		case "Modern"
+			Outside.InitializeGraphics "", 0.0, 0.0, 0.0, 0.0, 0.0, 1.0
+			Outside.BackgroundColor = &HBDD5E8
+
+	End Select
+
+	world.Trace "done creating Outside"
+
+	'Now add objects to the Outside
+	Select Case StyleName
+		case "Classical"
+
+			Dim planta
+			set planta = World.CreateInstance("plants","artifact" , Outside)
+			planta.InitializeSpriteGraphics "SDK\Library\Models\_HomeCl\plants1.gif",-8.34,1.45,19.8,0.0,0.0,-1.0
+			planta.scale.set 0.5,0.9,0.5
+			planta.IsUIVisible = False
+			planta.IsMoveable = False
+
+			Dim sound5
+			set sound5= World.CreateInstance("soundout", "Artifact", Outside)
+			sound5.Description = ""
+			sound5.IsUIVisible = False
+			sound5.InitializeGraphics "", 0.0, 2.0, 0.0, 1.0, 0.0, 0.0
+			sound5.SetSound "SDK\library\sounds\forest2.wav", True, -900,0,0
+
+			Dim lighta
+			set lighta= World.CreateInstance("ambient light", "Artifact", Outside)
+			lighta.Description = ""
+			Lighta.IsUIVisible = False
+			lighta.InitializeGraphics "SDK\Library\Models\lights\lightdown-transparent.3ds", 16.0, 16.0, 16.0, 1.0, 0.0, 0.0
+
+
+			Dim birds
+			set birds= World.CreateInstance("birds", "Artifact",Outside)
+			birds.Description = ""
+			birds.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\birds.x", 0.0, 20.0, 0.0, 0.0, 0.0, 0.0
+			birds.RotationAxis.set 0,1,0
+			birds.IsUIVisible = False
+			birds.RotationRate = 0.005
+			birds.scale.set 0.3, 0.3, 0.3
+
+			Dim overview
+			set overview= World.CreateInstance("overview","artifact", Outside)
+			overview.InitializeSpriteGraphics "",-31.31,1.8,33.71,0.92,0.0,-0.4
+			overview.IsUIVisible = False
+			overview.IsCameraAnchor = True
+
+
+			Dim Entry1
+			set Entry1 = World.CreateInstance("entry point", "artifact", Outside)
+			Entry1.Description = "Moves you to the spot where you entered this world."
+			Entry1.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\entrypoint.x", -3.39, 1.8, 35.55, -0.54,0.0,0.85
+			Entry1.IsMoveable = False
+
+
+
+			Dim Grounda
+			set Grounda = World.CreateInstance("ground", "artifact", Outside)
+			Grounda.Description = ""
+			Grounda.InitializeGraphics "SDK\Library\Models\_HomeCl\groundh.x", 22, -1.0, 35, -1.0, 0.0, 0.0
+			Grounda.IsUIVisible = False
+			CreateGroundaBoundaries(grounda)
+			Grounda.IsMoveable = False
+
+			Dim hedgea1
+			set hedgea1 = World.CreateInstance("hedge1", "artifact", Outside)
+			hedgea1.Description = ""
+			hedgea1.IsUIVisible = False
+			hedgea1.InitializeGraphics "SDK\Library\Models\_HomeCl\hedge.x", -6.4, 1.5, -0.56, -0.5, 0.0, 0.87
+			hedgea1.IsMoveable = False
+
+			Dim skya
+			set skya = World.CreateInstance("sky", "artifact", Outside)
+			skya.Description = ""
+			skya.IsUIVisible = False
+			skya.InitializeGraphics "SDK\Library\Models\_HomeCl\sky1.x", 27.5, 65.0, -22.4, 0.0, 0.0, 0.0
+			skya.IsMoveable = False
+
+			Dim hedgea2
+			set hedgea2 = World.CreateInstance("hedge2", "artifact", Outside)
+			hedgea2.Description = ""
+			hedgea2.IsUIVisible = False
+			hedgea2.InitializeGraphics "SDK\Library\Models\_HomeCl\hedge.x", 23.0, 1.5, 17.0,  -0.5, 0.0, 0.87
+			hedgea2.IsMoveable = False
+
+			Dim housea
+			set housea = World.CreateInstance("house", "artifact", Outside)
+			housea.Description = ""
+			housea.IsUIVisible = False
+			housea.InitializeGraphics "SDK\Library\Models\_HomeCl\house.x", 17.56, 8.69, -6.84,  -0.5, 0.0, 0.87
+			housea.ApproachDistance = 11
+			CreateHouseaBoundaries(housea)
+			housea.IsMoveable = False
+
+			Dim porcha
+			set porcha = World.CreateInstance("porch", "artifact" , Outside)
+			porcha.Description = ""
+			porcha.IsUIVisible = False
+			porcha.InitializeGraphics "SDK\Library\Models\_HomeCl\porch.x", 16.13, 1.27, -4.49,  -0.5, 0.0, 0.87
+			porcha.ApproachDistance = 12
+			CreatePorchaBoundaries(porcha)
+			porcha.IsMoveable = False
+
+			Dim dorma1
+			set dorma1 = World.CreateInstance("dormer1", "artifact", Outside)
+			dorma1.Description = ""
+			dorma1.IsUIVisible = False
+			dorma1.InitializeGraphics "SDK\Library\Models\_HomeCl\dormer.x", 14.19, 14.0, -1.11,  -0.5, 0.0, 0.87
+			dorma1.ApproachDistance = 12
+			dorma1.IsMoveable = False
+
+			Dim dorma2
+			set dorma2 = World.CreateInstance("dormer2", "artifact", Outside)
+			dorma2.Description = ""
+			dorma2.IsUIVisible = False
+			dorma2.InitializeGraphics "SDK\Library\Models\_HomeCl\dormer.x", 19.77, 14.0, 1.97,  -0.5, 0.0, 0.87
+			dorma2.ApproachDistance = 12
+			dorma2.IsMoveable = False
+
+			Dim dorma3
+			set dorma3 = World.CreateInstance("dormer3", "artifact", Outside)
+			dorma3.Description = ""
+			dorma3.IsUIVisible = False
+			dorma3.InitializeGraphics "SDK\Library\Models\_HomeCl\dormer.x", 9.05, 14.0, -4.05, -0.5, 0.0, 0.87
+			dorma3.ApproachDistance = 12
+			dorma3.IsMoveable = False
+
+			Dim columna1
+			set columna1 = World.CreateInstance("column1", "artifact", Outside)
+			columna1.Description = ""
+			columna1.IsUIVisible = False
+			columna1.InitializeGraphics "SDK\Library\Models\_HomeCl\column.x", 25.38, 6.0, 9.27, -0.5, 0.0, 0.87
+			columna1.IsMoveable = False
+
+			Dim columna2
+			set columna2 = World.CreateInstance("column2", "artifact", Outside)
+			columna2.Description = ""
+			columna2.InitializeGraphics "SDK\Library\Models\_HomeCl\column.x", 15.1, 6.0, 3.3, -0.5, 0.0, 0.87
+			columna2.IsUIVisible = False
+			columna2.IsMoveable = False
+
+			Dim columna3
+			set columna3 = World.CreateInstance("column3", "artifact", Outside)
+			columna3.Description = ""
+			columna3.InitializeGraphics "SDK\Library\Models\_HomeCl\column.x", 9.77, 6.0, 0.58, -0.5, 0.0, 0.87
+			columna3.IsUIVisible = False
+			columna3.IsMoveable = False
+
+			Dim columna4
+			set columna4 = World.CreateInstance("column4", "artifact", Outside)
+			columna4.Description = ""
+			columna4.InitializeGraphics "SDK\Library\Models\_HomeCl\column.x", 4.45, 6.0, -2.36, -0.5, 0.0, 0.87
+			columna4.IsUIVisible = False
+			columna4.IsMoveable = False
+
+
+			Dim columna5
+			set columna5 = World.CreateInstance("column5", "artifact", Outside)
+			columna5.Description = ""
+			columna5.InitializeGraphics "SDK\Library\Models\_HomeCl\column.x", 20.28, 6.0, 6.45, -0.5, 0.0, 0.87
+			columna5.IsUIVisible = False
+			columna5.IsMoveable = False
+
+			Dim columna6
+			set columna6 = World.CreateInstance("column6", "artifact", Outside)
+			columna6.Description = ""
+			columna6.InitializeGraphics "SDK\Library\Models\_HomeCl\column.x", -0.1, 6.0, -5.06, -0.5, 0.0, 0.87
+			columna6.IsUIVisible = False
+			columna6.IsMoveable = False
+
+			Dim Treea1
+			set Treea1 = World.CreateInstance("tree1", "Artifact", Outside)
+			Treea1.Description = ""
+			Treea1.InitializeGraphics "SDK\Library\Models\_HomeCl\Tree1.x", 105, 13, -35, -1.0, 0.0, 0.0
+			Treea1.ApproachDistance = 84
+			Treea1.IsUIVisible = False
+			Treea1.IsMoveable = False
+
+
+			Dim Foresta
+			set Foresta = World.CreateInstance("forest", "Artifact", Outside)
+			Foresta.Description = ""
+			Foresta.InitializeGraphics "SDK\Library\Models\_HomeCl\Foresth.x", -3.89, 10.0, 28.72, 0.933, 0.0, 0.358
+			Foresta.ApproachDistance = 8
+			Foresta.IsUIVisible = False
+			Foresta.IsMoveable = False
+
+			Dim Treea2
+			set Treea2 = World.CreateInstance("tree2", "Artifact", Outside)
+			Treea2.Description = ""
+			Treea2.InitializeGraphics "SDK\Library\Models\_HomeCl\Tree2.x", 53.53, 10.07, 3.16, -0.5, 0.0, 0.866
+			Treea2.ApproachDistance = 32
+			Treea2.IsUIVisible = False
+			Treea2.IsMoveable = False
+
+			Dim Treea3
+			set Treea3 = World.CreateInstance("tree3", "Artifact", Outside)
+			Treea3.Description = ""
+			Treea3.InitializeGraphics "SDK\Library\Models\_HomeCl\Tree3.x", 19.6, 10.0, 75.82, 0.0, 0.0, -1
+			Treea3.ApproachDistance = 32
+			Treea3.IsMoveable = False
+			Treea3.IsUIVisible = False
+
+			Dim Treea4
+			set Treea4 = World.CreateInstance("tree4", "Artifact", Outside)
+			Treea4.Description = ""
+			Treea4.InitializeGraphics "SDK\Library\Models\_HomeCl\Tree4.x", -25.82, 10.07, 5.56, 1.0, 0.0, 0.0
+			Treea4.ApproachDistance = 20
+			Treea4.IsMoveable = False
+			Treea4.IsUIVisible = False
+
+			Dim Treea5
+			set Treea5 = World.CreateInstance("tree5", "Artifact", Outside)
+			Treea5.Description = ""
+			Treea5.InitializeGraphics "SDK\Library\Models\_HomeCl\Tree5.x", -12.02, 10.07, -10.0, -0.398, 0.0, 0.917
+			Treea5.ApproachDistance = 12
+			Treea5.IsMoveable = False
+			Treea5.IsUIVisible = False
+
+			Dim Treea6
+			set Treea6 = World.CreateInstance("tree6", "Artifact", Outside)
+			Treea6.Description = ""
+			Treea6.InitializeGraphics "SDK\Library\Models\_HomeCl\Tree6.x", -18.5, 10.07, 37.0, 0.422, 0.0, -0.91
+			Treea6.ApproachDistance = 12
+			Treea6.IsUIVisible = False
+			Treea6.IsMoveable = False
+
+			Dim Viewa
+			set Viewa = World.CreateInstance("view", "Artifact", Outside)
+			Viewa.Description = ""
+			Viewa.InitializeGraphics "SDK\Library\Models\_HomeCl\Viewh.x", 76, 13, 125, -1, 0.0, -1
+			Viewa.ApproachDistance = 40
+			Viewa.IsUIVisible = False
+			Viewa.IsMoveable = False
+
+	case "Modern"
+
+		Dim plants1
+		set plants1 = World.CreateInstance("plants","artifact",Outside)
+		plants1.InitializeSpriteGraphics "SDK\Library\Models\_HomeMod\plants1.gif",-8.34,1.45,17.8,0.0,0.0,-1.0
+		plants1.scale.set 0.5,0.9,0.5
+		plants1.IsUIVisible = False
+		plants1.IsMoveable = False
+
+
+		Dim sound1
+		set sound1= World.CreateInstance("sound", "Artifact", Outside)
+		sound1.Description = ""
+		sound1.InitializeGraphics "", 0.0, 0.0, 0.0, 1.0, 0.0, 0.0
+		sound1.IsUIVisible = False
+		sound1.SetSound "sdk\library\sounds\forest2.wav", True, -900,0,0
+
+		Dim lightb
+		set lightb= World.CreateInstance("ambient light", "Artifact", Outside)
+		lightb.Description = ""
+		lightb.InitializeGraphics "SDK\Library\Models\lights\lightdown-transparent.3ds", 16.0, 16.0, 16.0, 1.0, 0.0, 0.0
+		lightb.IsUIVisible = False
+
+		Dim overview1
+		set overview1= World.CreateInstance("overview","artifact", Outside)
+		overview1.InitializeSpriteGraphics "",59.31,0.8,48.29,-0.86,0.0,-0.5
+		overview1.IsUIVisible = False
+		overview1.IsCameraAnchor = True
+
+
+		Dim Entry2
+		set Entry2= World.CreateInstance("entry point", "artifact", Outside)
+		Entry2.Description = "Moves you to the spot where you entered this world."
+		Entry2.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\entrypoint.x", 18.41, 0.89, 32.25, 0.715, 0.0, 0.7
+		Entry2.IsMoveable = False
+
+
+		Dim Beam1
+		set Beam1 = World.CreateInstance("trellis beam1", "artifact", Outside)
+		Beam1.Description = ""
+		Beam1.InitializeGraphics "SDK\Library\Models\_HomeMod\beam1hmx.x", -5.78, 4.77, 9.42, 0.0, 0.0, 1.0
+		Beam1.IsMoveable = False
+		Beam1.IsUIVisible = False
+
+		Dim Beam2
+		set Beam2 = World.CreateInstance("trellis beam2", "artifact", Outside)
+		Beam2.Description = ""
+		Beam2.InitializeGraphics "SDK\Library\Models\_homeMod\beam1hmx.x", -5.85, 4.77, 8.42, 0.0, 0.0, 1.0
+		Beam2.IsUIVisible = False
+		Beam2.IsMoveable = False
+
+		Dim Beam3
+		set Beam3 = World.CreateInstance("trellis beam3", "artifact", Outside)
+		Beam3.Description = ""
+		Beam3.InitializeGraphics "SDK\Library\Models\_homeMod\beam1hmx.x", -5.78, 4.77, 7.42, 0.0, 0.0, 1.0
+		Beam3.IsUIVisible = False
+		Beam3.IsMoveable = False
+
+		Dim Bedroom
+		set Bedroom = World.CreateInstance("bedroom", "artifact", Outside)
+		Bedroom.Description = ""
+		Bedroom.InitializeGraphics "SDK\Library\Models\_homeMod\bedrmhmx.x", 8.5, 6.36, 7, -0.99, 0.0, -0.16
+		Bedroom.ApproachDistance = 12
+		Bedroom.IsUIVisible = False
+		Bedroom.IsMoveable = False
+
+		Dim Cube
+		set Cube = World.CreateInstance("cube", "artifact", Outside)
+		Cube.Description = "This is a cube-shaped piece of kinetic art."
+		Cube.InitializeGraphics "SDK\Library\Models\_homeMod\Cubehmx.x", 4.1, 1.34, 31.48, 1.0, 0.0, 0.0
+		Cube.RenderQuality= 4
+		Cube.RotationAxis.set 0,1,0
+		Cube.RotationRate = 0.05
+		Cube.IsMoveable = False
+
+		Dim Fountain
+		set Fountain = World.CreateInstance("fountain", "artifact", Outside)
+		Fountain.Description = "This fountain pours into a basin that contains koi and plants."
+		Fountain.InitializeGraphics "SDK\Library\Models\_homeMod\founthmx.x", -8.6, 3.1, 24.5, -1.0, 0.0, 0.0
+		Fountain.IsMoveable = False
+
+		Dim Ground
+		set Ground = World.CreateInstance("ground", "artifact", Outside)
+		Ground.Description = ""
+		Ground.InitializeGraphics "SDK\Library\Models\_homeMod\groundhm.x", 22, -1.0, 35, -1.0, 0.0, 0.0
+		Ground.IsUIVisible = False
+		Ground.IsMoveable = False
+		CreateGroundhmxBoundaries(Ground)
+
+
+		Dim House
+		set House = World.CreateInstance("house", "artifact", Outside)
+		House.Description = ""
+		House.InitializeGraphics "SDK\Library\Models\_homeMod\househmx.x", 3.8, 4.5, 5.0, 0.0, 0.0, 1.0
+		House.ApproachDistance = 12
+		House.IsUIVisible = False
+		House.IsMoveable = False
+		CreateHouseBoundaries(House)
+
+
+		Dim Patio1
+		set Patio1 = World.CreateInstance("patio1", "artifact", Outside)
+		Patio1.Description = ""
+		Patio1.InitializeGraphics "SDK\Library\Models\_homeMod\Ptio1hmx.x", -7.45, 0.53, 16.02, 1.0, 0.0, 0.0
+		Patio1.IsUIVisible = False
+		Patio1.IsMoveable = False
+		CreatePatio1Boundaries(Patio1)
+
+		Dim Pool
+		set Pool = World.CreateInstance("pool", "Artifact", Outside)
+		Pool.Description = ""
+		Pool.InitializeGraphics "SDK\Library\Models\_homeMod\poolhmx.x", -8.35, 1.25, 20.5, -1.0, 0.0, 0.0
+		Pool.IsUIVisible = False
+		pool.IsMoveable = False
+
+		Dim Tree1
+		set Tree1 = World.CreateInstance("tree1", "Artifact", Outside)
+		Tree1.Description = ""
+		Tree1.InitializeGraphics "SDK\Library\Models\_homeMod\Tree1hm.x", 105, 13, -35, -1.0, 0.0, 0.0
+		Tree1.ApproachDistance = 85
+		Tree1.IsUIVisible = False
+		Tree1.IsMoveable = False
+
+		Dim Forest
+		set Forest = World.CreateInstance("forest", "Artifact", Outside)
+		Forest.Description = ""
+		Forest.InitializeGraphics "SDK\Library\Models\_homeMod\Foresthm.x", 8, 9, 28, 1, 0.0, 0
+		Forest.ApproachDistance = 8
+		Forest.IsUIVisible = False
+		Forest.IsMoveable = False
+
+		Dim Sky
+		set Sky = World.CreateInstance("sky", "Artifact", Outside)
+		Sky.Description = ""
+		Sky.InitializeGraphics "SDK\Library\Models\_homeMod\skyhm.x", 0.0, 0, 0, 1, 0, 0
+		Sky.ApproachDistance = 20
+		Sky.IsUIVisible = False
+		Sky.IsMoveable = False
+
+		Dim Patio2
+		set Patio2 = World.CreateInstance("patio2", "Artifact", Outside)
+		Patio2.Description = ""
+		Patio2.InitializeGraphics "SDK\Library\Models\_homeMod\Ptio2hmx.x", 5.32, 0.51, 6.2, 0.0, 0.0, 1.0
+		Patio2.IsUIVisible = False
+		Patio2.IsMoveable = False
+		CreatePatio2XBoundaries(Patio2)
+
+		Dim PatioWall1
+		set PatioWall1 = World.CreateInstance("patio wall1", "Artifact", Outside)
+		PatioWall1.Description = ""
+		PatioWall1.InitializeGraphics "SDK\Library\Models\_homeMod\wallp1hm.x", -5.5, 2.46, 31.5, 0.0, 0.0, -0.99
+		PatioWall1.IsUIVisible = False
+		PatioWall1.IsMoveable = False
+		CreatePatiowall1Boundaries(PatioWall1)
+
+		Dim PatioWall2
+		set PatioWall2 = World.CreateInstance("patio wall2", "Artifact", Outside)
+		PatioWall2.Description = ""
+		PatioWall2.InitializeGraphics "SDK\Library\Models\_homeMod\wallp2hm.x", -14.58, 2.9, 19.7, 1.0, 0.0, 0.0
+		PatioWall2.IsUIVisible = False
+		PatioWall2.IsMoveable = False
+		CreatePatiowall2Boundaries(PatioWall2)
+
+		Dim PlaneV
+		set PlaneV = World.CreateInstance("patio wall3", "Artifact", Outside)
+		PlaneV.Description = ""
+		PlaneV.InitializeGraphics "SDK\Library\Models\_homeMod\Wall1hm.x", -4.96, 2.98, 3.3, 0.0, 0.0, 1.0
+		PlaneV.IsUIVisible = False
+		PlaneV.IsMoveable = False
+		CreatePatiowall3Boundaries(PlaneV)
+
+		Dim Stone
+		set Stone = World.CreateInstance("stone wall", "Artifact", Outside)
+		Stone.Description = ""
+		Stone.InitializeGraphics "SDK\Library\Models\_homeMod\wallp3hm.x", -1.8, 2.7, 22, -1.0, 0.0, 0.0
+		Stone.IsUIVisible = False
+		Stone.IsMoveable = False
+
+		Dim STower
+		set STower = World.CreateInstance("stone tower", "Artifact", Outside)
+		STower.Description = ""
+		STower.InitializeGraphics "SDK\Library\Models\_homeMod\towrshmx.x", -15.73, 3.6, 10.5, -0.2, 0.0, 0.99
+		STower.IsUIVisible = False
+		STower.IsMoveable = False
+		CreateStoneTowerBoundaries(STower)
+
+		Dim Tower
+		set Tower = World.CreateInstance("tower", "Artifact", Outside)
+		Tower.Description = ""
+		Tower.InitializeGraphics "SDK\Library\Models\_homeMod\towrhmx.x", -11.3, 5.98, 4.95, -0.2, 0.0, 1
+		Tower.ApproachDistance = 12
+		Tower.IsUIVisible = False
+		Tower.IsMoveable = False
+		CreateTowerHXBoundaries(Tower)
+
+		Dim Tree2
+		set Tree2= World.CreateInstance("Tree2", "Artifact", Outside)
+		Tree2.Description = ""
+		Tree2.InitializeGraphics "SDK\Library\Models\_homeMod\Tree2hm.x", 53.53, 10.07, 3.16, -0.5, 0.0, 0.866
+		Tree2.ApproachDistance = 32
+		Tree2.IsUIVisible = False
+		Tree2.IsMoveable = False
+
+		Dim Tree3
+		set Tree3= World.CreateInstance("Tree3", "Artifact", Outside)
+		Tree3.Description = ""
+		Tree3.InitializeGraphics "SDK\Library\Models\_homeMod\Tree3hm.x", 19.6, 10.0, 75.82, 0.0, 0.0, -1
+		Tree3.ApproachDistance = 32
+		Tree3.IsUIVisible = False
+		Tree3.IsMoveable = False
+
+		Dim Tree4
+		set Tree4= World.CreateInstance("Tree4", "Artifact", Outside)
+		Tree4.Description = ""
+		Tree4.InitializeGraphics "SDK\Library\Models\_homeMod\Tree4hm.x", -25.82, 10.07, 5.56, 1.0, 0.0, 0.0
+		Tree4.ApproachDistance = 20
+		Tree4.IsUIVisible = False
+		Tree4.IsMoveable = False
+
+		Dim Tree5
+		set Tree5= World.CreateInstance("Tree5", "Artifact", Outside)
+		Tree5.Description = ""
+		Tree5.InitializeGraphics "SDK\Library\Models\_homeMod\Tree5hm.x", -12.02, 10.07, -10.0, -0.398, 0.0, 0.917
+		Tree5.ApproachDistance = 12
+		Tree5.IsUIVisible = False
+		Tree5.IsMoveable = False
+
+		Dim Tree6
+		set Tree6= World.CreateInstance("Tree6", "Artifact", Outside)
+		Tree6.Description = ""
+		Tree6.InitializeGraphics "SDK\Library\Models\_homeMod\Tree6hm.x", -18.5, 10.07, 37.0, 0.422, 0.0, -0.91
+		Tree6.ApproachDistance = 12
+		Tree6.IsUIVisible = False
+		Tree6.IsMoveable = False
+
+		Dim Trellis1
+		set Trellis1 = World.CreateInstance("trellis1", "Artifact", Outside)
+		Trellis1.Description = ""
+		Trellis1.InitializeGraphics "SDK\Library\Models\_homeMod\trel1hm.x", 0.6, 4.55, 12.5, 0.0, 0.0, 1.0
+		Trellis1.IsUIVisible = False
+		Trellis1.IsMoveable = False
+
+		Dim Trellis2
+		set Trellis2 = World.CreateInstance("trellis2", "Artifact", Outside)
+		Trellis2.Description = ""
+		Trellis2.InitializeGraphics "SDK\Library\Models\_homeMod\trel1hm.x", 0.6, 4.55, 10.85, 0.0, 0.0, 1.0
+		Trellis2.IsUIVisible = False
+		Trellis2.IsMoveable = False
+
+		Dim View
+		set View = World.CreateInstance("view", "Artifact", Outside)
+		View.Description = ""
+		View.InitializeGraphics "SDK\Library\Models\_homeMod\Viewhm.x", 76, 13, 125, -1, 0.0, -1
+		View.ApproachDistance = 40
+		View.IsUIVisible = False
+		View.IsMoveable = False
+
+	End Select
+end sub
+
+sub CreateInteriorRoom
+	Dim eye
+	set LivingRoom = world.CreateInstance("LivingRoom", "Room")
+
+	Select Case StyleName
+		case "Classical"
+			LivingRoom.InitializeGraphics "", 0.0, 0.0, 0.0, 0.0, 0.0, 1.0
+			LivingRoom.BackgroundColor = 0
+
+		case "Modern"
+			LivingRoom.InitializeGraphics "", 0.0, 0.0, 0.0, 0.0, 0.0, 1.0
+			LivingRoom.BackgroundColor = 0
+
+
+	End Select
+
+	World.Trace "done creating LivingRoom"
+
+	'Now add objects to the LivingRoom
+	Select Case StyleName
+		case "Classical"
+
+			Dim plantb
+			set plantb = World.CreateInstance("plants","artifact" ,LivingRoom)
+			plantb.InitializeSpriteGraphics "SDK\Library\Models\_HomeCl\plants1.gif",-8.34,1.45,17.8,0.0,0.0,-1.0
+			plantb.scale.set 0.5,0.9,0.5
+			plantb.IsUIVisible = False
+			plantb.IsMoveable = False
+
+			Dim painting
+			set painting= World.CreateInstance("painting", "artifact", LivingRoom)
+			painting.Description = ""
+			painting.InitializeGraphics "SDK\Library\Models\_HomeCl\painting.x", -10.35, 4.44, 1.34, 0.796, 0.0, 0.606
+			painting.scale.set 1.5,1.5,1.5
+			painting.IsUIVisible = False
+			painting.IsMoveable = False
+
+			Dim Entry3
+			set Entry3= World.CreateInstance("entry point", "artifact", LivingRoom)
+			Entry3.Description = "Moves you to the spot where you entered this world."
+			Entry3.InitializeGraphics "SDK\Library\Models\_HomeCl\entrypoint.x", -8.64, 3.06, 2.14, -0.57,0.0,0.82
+			Entry3.ApproachDistance = 0.5
+			Entry3.IsMoveable = False
+
+			Dim overview4
+			set overview4= World.CreateInstance("overview","artifact", LivingRoom)
+			overview4.InitializeSpriteGraphics "",-5.14,4.4,-3.0,0.97,0.0,-0.23
+			overview4.IsUIVisible = False
+			overview4.IsCameraAnchor = True
+
+
+			Dim birds2
+			set birds2= World.CreateInstance("birds", "Artifact",LivingRoom)
+			birds2.Description = ""
+			birds2.InitializeGraphics "SDK\Library\Models\_EmptyLandscape\birds.x", 0.0, 20.0, 0.0, 0.0, 0.0, 0.0
+			birds2.IsUIVisible = False
+			birds2.RotationAxis.set 0,1,0
+			birds2.RotationRate = 0.005
+			birds2.scale.set 0.3, 0.3, 0.3
+
+			Dim lightc
+			set lightc= World.CreateInstance("ambient light", "Artifact",LivingRoom)
+			lightc.Description = ""
+			lightc.InitializeGraphics "SDK\Library\Models\lights\lightdown-transparent.3ds", 16.0, 16.0, 16.0, 1.0, 0.0, 0.0
+			Lightc.IsUIVisible = False
+
+			Dim Groundb
+			set Groundb = World.CreateInstance("ground", "artifact",LivingRoom)
+			Groundb.Description = ""
+			Groundb.InitializeGraphics "SDK\Library\Models\_HomeCl\groundh.x", 22, -1.0, 35, -1.0, 0.0, 0.0
+			Groundb.IsUIVisible = False
+			Groundb.IsMoveable = False
+
+			Dim houseb
+			set houseb = World.CreateInstance("house", "artifact",LivingRoom)
+			houseb.Description = ""
+			houseb.InitializeGraphics "SDK\Library\Models\_HomeCl\inter.x", 0, 2.0, 0, -1.0, 0.0, 0.0
+			houseb.IsUIVisible = False
+			houseb.IsMoveable = False
+			CreateHousebBoundaries(houseb)
+
+
+			Dim skyb
+			set skyb = World.CreateInstance("sky", "artifact",LivingRoom)
+			skyb.Description = ""
+			skyb.InitializeGraphics "SDK\Library\Models\_HomeCl\sky1.x", 27.5, 65.0, -22.4, 0.0, 0.0, 0.0
+			skyb.IsUIVisible = False
+			skyb.IsMoveable = False
+
+
+			Dim Treeb1
+			set Treeb1 = World.CreateInstance("tree1", "Artifact",LivingRoom)
+			Treeb1.Description = ""
+			Treeb1.InitializeGraphics "SDK\Library\Models\_HomeCl\Tree1.x", 105, 13, -35, -1.0, 0.0, 0.0
+			Treeb1.IsUIVisible = False
+			Treeb1.IsMoveable = False
+
+			Dim Forestb
+			set Forestb = World.CreateInstance("forest", "Artifact",LivingRoom)
+			Forestb.Description = ""
+			Forestb.InitializeGraphics "SDK\Library\Models\_HomeCl\Foresth.x", -3.89, 10.0, 28.72, 0.933, 0.0, 0.358
+			Forestb.IsUIVisible = False
+			Forestb.IsMoveable = False
+
+
+			Dim Treeb2
+			set Treeb2 = World.CreateInstance("tree2", "Artifact",LivingRoom)
+			Treeb2.Description = ""
+			Treeb2.InitializeGraphics "SDK\Library\Models\_HomeCl\Tree2.x", 53.53, 10.07, 3.16, -0.5, 0.0, 0.866
+			Treeb2.IsUIVisible = False
+			Treeb2.IsMoveable = False
+
+
+			Dim Treeb3
+			set Treeb3 = World.CreateInstance("tree3", "Artifact",LivingRoom)
+			Treeb3.Description = ""
+			Treeb3.InitializeGraphics "SDK\Library\Models\_HomeCl\Tree3.x", 19.6, 10.0, 75.82, 0.0, 0.0, -1
+			Treeb3.IsUIVisible = False
+			Treeb3.IsMoveable = False
+
+			Dim Treeb4
+			set Treeb4 = World.CreateInstance("tree4", "Artifact",LivingRoom)
+			Treeb4.Description = ""
+			Treeb4.InitializeGraphics "SDK\Library\Models\_HomeCl\Tree4.x", -25.82, 10.07, 5.56, 1.0, 0.0, 0.0
+			Treeb4.IsUIVisible = False
+			Treeb4.IsMoveable = False
+
+			Dim Treeb5
+			set Treeb5 = World.CreateInstance("tree5", "Artifact",LivingRoom)
+			Treeb5.Description = ""
+			Treeb5.InitializeGraphics "SDK\Library\Models\_HomeCl\Tree5.x", -12.02, 10.07, -10.0, -0.398, 0.0, 0.917
+			Treeb5.IsUIVisible = False
+			Treeb5.IsMoveable = False
+
+			Dim Treeb6
+			set Treeb6 = World.CreateInstance("tree6", "Artifact",LivingRoom)
+			Treeb6.Description = ""
+			Treeb6.InitializeGraphics "SDK\Library\Models\_HomeCl\Tree6.x", -18.5, 10.07, 37.0, 0.422, 0.0, -0.91
+			Treeb6.IsUIVisible = False
+			Treeb6.IsMoveable = False
+
+			Dim Viewb
+			set Viewb = World.CreateInstance("view", "Artifact",LivingRoom)
+			Viewb.Description = ""
+			Viewb.InitializeGraphics "SDK\Library\Models\_HomeCl\Viewh.x", 76, 13, 125, -1, 0.0, -1
+			Viewb.IsUIVisible = False
+			Viewb.IsMoveable = False
+
+		case "Modern"
+
+			Dim sculpture
+			set sculpture= World.CreateInstance("sculpture", "artifact", LivingRoom)
+			sculpture.Description = "This is a piece of kinetic art shaped like an airplane propeller."
+			sculpture.InitializeGraphics "SDK\Library\Models\_homeMod\sculpture.x", 4.7, 1.5, 6.5, -1.0, 0.0, 0.0
+			sculpture.scale.set 2.0,2.0,2.0
+
+			Dim Rotate1
+			set Rotate1 = world.CreateInstance("Rotate1", "artifact", Sculpture)
+			Rotate1.IsNoticeable = true
+			Rotate1.Description = ""
+			Rotate1.InitializeGraphics "SDK\Library\Models\_HomeMod\Rotate1.x", 0, .068, .002, 0, 0.0, 1.0
+			Rotate1.RotationAxis.Set  0,0,1
+			Rotate1.RotationRate = .2
+
+			Dim Ground
+			set Ground = World.CreateInstance("ground", "artifact", LivingRoom)
+			Ground.Description = ""
+			Ground.InitializeGraphics "SDK\Library\Models\_homeMod\groundhm.x", 22, -1.0, 35, -1.0, 0.0, 0.0
+			Ground.IsUIVisible = False
+			Ground.IsMoveable = False
+
+			Dim sound3
+			set sound3= World.CreateInstance("sound", "Artifact", Outside)
+			sound3.Description = ""
+			sound3.InitializeGraphics "", 0.0, 0.0, 0.0, 1.0, 0.0, 0.0
+			sound3.IsUIVisible = False
+			sound3.SetSound "sdk\library\sounds\forest2.wav", True, -900,0,0
+
+
+			Dim lightd
+			set lightd= World.CreateInstance("ambient light", "artifact", LivingRoom)
+			lightd.Description = ""
+			lightd.InitializeGraphics "SDK\Library\Models\lights\lightdown-transparent.3ds", 16.0, 16.0, 16.0, 1.0, 0.0, 0.0
+			Lightd.IsUIVisible = False
+
+			Dim Entry4
+			set Entry4= World.CreateInstance("entry point", "artifact", LivingRoom)
+			Entry4.Description = "Moves you to the spot where you entered this world."
+			Entry4.InitializeGraphics "SDK\Library\Models\_homeMod\entrypoint.x", -6.73, 2, -0.159, -0.982, 0.0, -0.19
+			Entry4.IsMoveable = False
+
+			Dim overview3
+			set overview3= World.CreateInstance("overview","artifact", LivingRoom)
+			overview3.InitializeSpriteGraphics "",9.06,2.0,-0.61,-0.05,0.0,0.99
+			overview3.IsUIVisible = False
+			overview3.IsCameraAnchor = True
+
+
+			Dim Patio1
+			set Patio1 = World.CreateInstance("patio1", "artifact", LivingRoom)
+			Patio1.Description = ""
+			Patio1.InitializeGraphics "SDK\Library\Models\_homeMod\Ptio1hmx.x", -9.5, 0.5, 16.02, 1.0, 0.0, 0.0
+			Patio1.IsUIVisible = False
+			Patio1.IsMoveable = False
+
+
+			Dim Paint
+			set Paint= World.CreateInstance("painting", "artifact", LivingRoom)
+			Paint.Description = ""
+			Paint.InitializeGraphics "SDK\Library\Models\_homeMod\paint.x", 12.078, 3.14, 6.877, 1.0, 0.0, 0.0
+			Paint.scale.set 1,1,1
+			Paint.IsUIVisible = False
+			Paint.IsMoveable= false
+
+			Dim Tree1
+			set Tree1 = World.CreateInstance("tree1", "artifact", LivingRoom)
+			Tree1.Description = ""
+			Tree1.InitializeGraphics "SDK\Library\Models\_homeMod\Tree1hm.x", 105, 13, -35, -1.0, 0.0, 0.0
+			Tree1.IsUIVisible = False
+			Tree1.IsMoveable = False
+
+			Dim Tree2
+			set Tree2= World.CreateInstance("Tree2", "artifact", LivingRoom)
+			Tree2.Description = ""
+			Tree2.InitializeGraphics "SDK\Library\Models\_homeMod\Tree2hm.x", 53.53, 10.07, 3.16, -0.5, 0.0, 0.866
+			Tree2.IsUIVisible = False
+			Tree2.IsMoveable = False
+
+			Dim Tree3
+			set Tree3= World.CreateInstance("Tree3", "artifact", LivingRoom)
+			Tree3.Description = ""
+			Tree3.InitializeGraphics "SDK\Library\Models\_homeMod\Tree3hm.x", 19.6, 10.0, 70.82, 0.0, 0.0, -1
+			Tree3.IsUIVisible = False
+			Tree3.IsMoveable = False
+
+			Dim Tree4
+			set Tree4= World.CreateInstance("Tree4", "artifact", LivingRoom)
+			Tree4.Description = ""
+			Tree4.InitializeGraphics "SDK\Library\Models\_homeMod\Tree4hm.x", -18.5, 10.07, 37.0, 0.422, 0.0, -0.91
+			Tree4.IsUIVisible = False
+			Tree4.IsMoveable = False
+
+			Dim Forest
+			set Forest = World.CreateInstance("forest", "artifact", LivingRoom)
+			Forest.Description = ""
+			Forest.InitializeGraphics "SDK\Library\Models\_homeMod\Foresthm.x", 8,9, 28, 1, 0.0, 0.0
+			Forest.IsUIVisible = False
+			Forest.IsMoveable = False
+
+			Dim Sky
+			set Sky = World.CreateInstance("sky", "artifact", LivingRoom)
+			Sky.Description = ""
+			Sky.InitializeGraphics "SDK\Library\Models\_homeMod\skyhm.x", 0.0, 0, 0, 1, 0, 0
+			Sky.IsUIVisible = False
+			Sky.IsMoveable = False
+
+			Dim PatioWall1
+			set PatioWall1 = World.CreateInstance("patio wall1", "artifact", LivingRoom)
+			PatioWall1.Description = ""
+			PatioWall1.InitializeGraphics "SDK\Library\Models\_homeMod\wallp1hm.x", -7.55, 2.46, 31, 0.0, 0.0, -0.99
+			PatioWall1.IsUIVisible = False
+			PatioWall1.IsMoveable = False
+
+			Dim Cube
+			set Cube = World.CreateInstance("cube", "artifact", LivingRoom)
+			Cube.Description = ""
+			Cube.InitializeGraphics "SDK\Library\Models\_homeMod\Cubehmx.x", 1.905, 1.34, 31.141, 1.0, 0.0, 0.0
+			Cube.RenderQuality= 4
+			Cube.RotationAxis.set 0,1,0
+			Cube.RotationRate = 0.05
+			Cube.IsUIVisible = False
+			Cube.IsMoveable = false
+
+			Dim PatioWall2
+			set PatioWall2 = World.CreateInstance("patio wall2", "artifact", LivingRoom)
+			PatioWall2.Description = ""
+			PatioWall2.InitializeGraphics "SDK\Library\Models\_homeMod\wallp2hm.x", -16.63, 2.95, 19.5, 1.0, 0.0, 0.0
+			PatioWall2.IsUIVisible = False
+			PatioWall2.IsMoveable = False
+
+			Dim PlaneV
+			set PlaneV = World.CreateInstance("patio wall3", "artifact", LivingRoom)
+			PlaneV.Description = ""
+			PlaneV.InitializeGraphics "SDK\Library\Models\_homeMod\wall1hmi.x", -7.6, 2.8, 4, 0.0, 0.0, -1.0
+			PlaneV.IsUIVisible = False
+			PlaneV.IsMoveable = False
+
+			Dim Stone
+			set Stone = World.CreateInstance("stone wall", "artifact", LivingRoom)
+			Stone.Description = ""
+			Stone.InitializeGraphics "SDK\Library\Models\_homeMod\walp3hmi.x", -4.5, 2.7, 17.2, -1.0, 0.0, 0.0
+			Stone.IsUIVisible = False
+			Stone.IsMoveable = False
+
+			Dim Trellis1
+			set Trellis1 = World.CreateInstance("trellis1", "artifact", LivingRoom)
+			Trellis1.Description = ""
+			Trellis1.InitializeGraphics "SDK\Library\Models\_homeMod\trel2hm.x", 0.6, 4.55, 12.5, 0.0, 0.0, -1.0
+			Trellis1.IsUIVisible = False
+			Trellis1.IsMoveable = False
+
+			Dim Trellis2
+			set Trellis2 = World.CreateInstance("trellis2", "artifact", LivingRoom)
+			Trellis2.InitializeGraphics "SDK\Library\Models\_homeMod\trel2hm.x", 0.6, 4.55, 10.85, 0.0, 0.0, -1.0
+			Trellis2.Description = ""
+			Trellis2.IsUIVisible = False
+			Trellis2.IsMoveable = False
+
+			Dim View
+			set View = World.CreateInstance("view", "artifact", LivingRoom)
+			View.Description = ""
+			View.InitializeGraphics "SDK\Library\Models\_homeMod\Viewhm.x", 76, 13, 125, -1, 0.0, -1
+			View.IsUIVisible = False
+			View.IsMoveable = False
+
+			Dim Trel3
+			set Trel3 = World.CreateInstance("trellis3", "artifact", LivingRoom)
+			Trel3.Description = ""
+			Trel3.InitializeGraphics "SDK\Library\Models\_homeMod\Trel3hm.x", 3.75, 4.5, 2.67, 0, 0.0, -1
+			Trel3.IsUIVisible = False
+			Trel3.IsMoveable = False
+
+			Dim Trel4
+			set Trel4 = World.CreateInstance("trellis4", "artifact", LivingRoom)
+			Trel4.Description = ""
+			Trel4.InitializeGraphics "SDK\Library\Models\_homeMod\Trel4hm.x", 6.4, 4.72, -0.63, -1, 0.0, 0
+			Trel4.IsUIVisible = False
+			Trel4.IsMoveable = False
+
+			Dim Entry
+			set Entry = World.CreateInstance("entry", "artifact", LivingRoom)
+			Entry.Description = ""
+			Entry.InitializeGraphics "SDK\Library\Models\_homeMod\entryhmi.x", 0.0, 6.88, -0.6, 0, 0.0, 1
+			Entry.IsUIVisible = False
+			Entry.IsMoveable = False
+
+			Dim bwallhmi
+			set bwallhmi = World.CreateInstance("wall3", "artifact", LivingRoom)
+			bwallhmi.Description = ""
+			bwallhmi.InitializeGraphics "SDK\Library\Models\_homeMod\wall3hmi.x", 0.7, 4.46, -2.5, 0, 0.0, 1
+			bwallhmi.IsUIVisible = False
+			bwallhmi.IsMoveable = False
+
+			Dim floorhmi
+			set floorhmi = World.CreateInstance("floor", "artifact", LivingRoom)
+			floorhmi.Description = ""
+			floorhmi.InitializeGraphics "SDK\Library\Models\_homeMod\floorhmi.x", 1.0, 1.02, 2.20, -1, 0.0, 0
+			floorhmi.IsUIVisible = False
+			floorhmi.IsMoveable = False
+			CreateFloorHMIBoundaries(floorhmi)
+
+			Dim baseboard
+			set baseboard = World.CreateInstance("baseboard", "artifact", LivingRoom)
+			baseboard.Description = ""
+			baseboard.InitializeGraphics "SDK\Library\Models\_homeMod\basehmi.x", 4.0, 1.25, 10.75, 0, 0.0, -1
+			baseboard.IsUIVisible = False
+			baseboard.IsMoveable = False
+
+			Dim tower
+			set tower = World.CreateInstance("tower", "artifact", LivingRoom)
+			tower.Description = ""
+			tower.InitializeGraphics "SDK\Library\Models\_homeMod\towerhmi.x", -10, 6, 4.5, 0.989, 0.0, 0.147
+			tower.IsUIVisible = False
+			tower.IsMoveable = False
+
+			Dim chair1
+			set chair1 = World.CreateInstance("chair1", "artifact", LivingRoom)
+			chair1.Description = ""
+			chair1.InitializeGraphics "SDK\Library\Models\_homeMod\chairhm.x", 7.7, 1.47, 6.3, -1, 0.0, 0
+			chair1.IsUIVisible = False
+
+			Dim chair2
+			set chair2 = World.CreateInstance("chair2", "artifact", LivingRoom)
+			chair2.Description = ""
+			chair2.InitializeGraphics "SDK\Library\Models\_homeMod\chairhm.x", 5.9, 1.47, 8.9, 0, 0.0, -1
+			chair2.IsUIVisible = False
+
+			Dim chair3
+			set chair3 = World.CreateInstance("chair3", "artifact", LivingRoom)
+			chair3.Description = ""
+			chair3.InitializeGraphics "SDK\Library\Models\_homeMod\chairhm.x", 4, 1.47, 8.9, 0, 0.0, -1
+			chair3.IsUIVisible = False
+
+			Dim rug
+			set rug = World.CreateInstance("rug", "artifact", LivingRoom)
+			rug.Description = ""
+			rug.InitializeGraphics "SDK\Library\Models\_homeMod\rughmi.x", 4.68, 1.05, 6.5, -1, 0.0, 0
+			rug.IsUIVisible = False
+			Dim table
+			set table = World.CreateInstance("table", "artifact", LivingRoom)
+			table.Description = ""
+			table.InitializeGraphics "SDK\Library\Models\_homeMod\tablehmi.x", 4.9, 1.2, 6.55, 0, 0.0, -1
+			table.IsUIVisible = False
+
+			Dim bedroom
+			set bedroom = World.CreateInstance("bedroom", "artifact", LivingRoom)
+			bedroom.Description = ""
+			bedroom.InitializeGraphics "SDK\Library\Models\_homeMod\bdrmhmi.x", 10.5, 6.5, 3, -1, 0.0, 0
+			bedroom.IsUIVisible = False
+			bedroom.IsMoveable = False
+
+			Dim wall2
+			set wall2 = World.CreateInstance("wall2", "artifact", LivingRoom)
+			wall2.Description = ""
+			wall2.InitializeGraphics "SDK\Library\Models\_homeMod\wall2hmi.x", 12.1, 4.55, 4.3, -1, 0.0, 0
+			wall2.IsUIVisible = False
+			wall2.IsMoveable = False
+
+			Dim ceiling
+			set ceiling = World.CreateInstance("ceiling", "artifact", LivingRoom)
+			ceiling.Description = ""
+			ceiling.InitializeGraphics "SDK\Library\Models\_homeMod\clinghmi.x", 3.7, 8.4, 4, 0, 0.0, 1
+			ceiling.IsUIVisible = False
+			ceiling.IsMoveable = False
+
+	End Select
+end sub
+
+'Modern Collision Detection
+
+Sub CreateFloorHMIBoundaries(thething)
+	Dim Ecb
+	Dim theBoundaryList
+	Dim theBoundaryList_t
+
+	Set theBoundaryList = World.Global.CreateBoundaryList
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+		1.38919, 10.5339, -3.91347, 9.63314, -3.89894, -10.4298, 8.02841, -10.4153, _
+		8.04294, 4.73726, -1.22582, 4.76631, -1.24035, 6.29174, 1.43277, 6.30627_
+		))
+	theBoundaryList_t.HeightUpper = 16
+	theBoundaryList_t.HeightLower = 0
+	theBoundaryList.Add theBoundaryList_t
+	set thething.BoundaryList = theBoundaryList
+End Sub
+
+
+Sub CreateTowerHXBoundaries(thething)
+	Dim theBoundaryList_t
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+		-4.14875, -5.71247, -4.10752, 6.12258, 4.67599, 6.20506, 4.71722, -5.7537_
+		))
+	theBoundaryList_t.HeightUpper = 9.05414
+	theBoundaryList_t.HeightLower = -5.05414
+	thething.BoundaryList.Add theBoundaryList_t
+End Sub
+
+Sub CreatePatio2XBoundaries(thething)
+	Dim theBoundaryList_t
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+		6.09855, 7.62206, -5.79588, 7.5937, -5.80875, 7.2483, 6.0573, 7.19419_
+		))
+	theBoundaryList_t.HeightUpper = 0.15
+	theBoundaryList_t.HeightLower = -0.545504
+	thething.BoundaryList.Add theBoundaryList_t
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+		6.07758, 8.02167, -5.63873, 8.02167, -5.61037, 7.5394, 6.02084, 7.56777_
+		))
+	theBoundaryList_t.HeightUpper = -0.20
+	theBoundaryList_t.HeightLower = -0.545504
+	thething.BoundaryList.Add theBoundaryList_t
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+		6.06888, 7.21264, -5.93113, 7.241, -5.87439, -7.99304, 6.09724, -8.02141_
+		))
+	theBoundaryList_t.HeightUpper = 0.470205
+	theBoundaryList_t.HeightLower = -0.545504
+	thething.BoundaryList.Add theBoundaryList_t
+End Sub
+
+
+Sub CreatePatiowall3Boundaries(thething)
+	Dim theBoundaryList_t
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+		-2.28336, 0.395677, 2.18358, 0.422332, 2.1363, -0.247027, -2.29669, -0.205791_
+		))
+	theBoundaryList_t.HeightUpper = 2.02781
+	theBoundaryList_t.HeightLower = -2.02581
+	thething.BoundaryList.Add theBoundaryList_t
+End Sub
+
+Sub CreateGroundhmxBoundaries(thething)
+	Dim theBoundaryList_t
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+		-5.06172, 70.0222, -69.7215, 22.5171, -69.0617, -49.4005, -12.3194, -94.2665, _
+		43.763, -97.5654, 97.2063, -35.5448, 68.8352, -14.4314, 64.2166, 35.0531_
+		))
+	theBoundaryList_t.HeightUpper = 16
+	theBoundaryList_t.HeightLower = 0.83
+	thething.BoundaryList.Add theBoundaryList_t
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+		-3.57719, 17.816, -3.41225, 37.1975, -24.5256, 38.1872, -36.5669, 37.0325, _
+		-36.7318, 2.8882, 0.546517, 2.55829, 10.1135, 16.414))
+	theBoundaryList_t.HeightUpper = 16
+	theBoundaryList_t.HeightLower = 0
+	thething.BoundaryList.Add theBoundaryList_t
+End Sub
+
+Sub CreatePatio1Boundaries(thething)
+
+	Dim theBoundaryList_t
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+		2.32212, 7.73678, 2.32212, 7.31125, -15.607, 7.31125, -15.6353, 7.73678_
+		))
+	theBoundaryList_t.HeightUpper = -0.20
+	theBoundaryList_t.HeightLower = -0.545563
+	thething.BoundaryList.Add theBoundaryList_t
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+		2.71927, 7.36799, 2.69091, 6.91409, -15.5786, 6.91409, -15.607, 7.39636_
+		))
+	theBoundaryList_t.HeightUpper = 0.13
+	theBoundaryList_t.HeightLower = -0.525563
+	thething.BoundaryList.Add theBoundaryList_t
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+		15.1732, 6.91409, -15.3516, 6.97083, -15.4651, -7.44052, 15.003, -7.55399, _
+		15.0597, 2.5453))
+	theBoundaryList_t.HeightUpper = 0.43
+	theBoundaryList_t.HeightLower = -0.525564
+	thething.BoundaryList.Add theBoundaryList_t
+End Sub
+
+
+
+Sub CreateStoneTowerBoundaries(thething)
+	Dim theBoundaryList_t
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+		CDbl(3.31931), CDbl(1.63943), CDbl(2.87554), CDbl(-2.2616), CDbl(-3.401), CDbl(-1.81208), CDbl(-2.93701), CDbl(2.33214)_
+		))
+	theBoundaryList_t.HeightUpper = CDbl(5.68261)
+	theBoundaryList_t.HeightLower = CDbl(-2.68261)
+	thething.BoundaryList.Add theBoundaryList_t
+End Sub
+
+Sub CreatePatiowall2Boundaries(thething)
+	Dim theBoundaryList_t
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+		-11.8677, -0.19293, -11.8453, 0.523516, 8.75738, 0.543984, 8.53457, -0.232592_
+		))
+	theBoundaryList_t.HeightUpper = 2.0135
+	theBoundaryList_t.HeightLower = -2.0135
+	thething.BoundaryList.Add theBoundaryList_t
+End Sub
+
+
+Sub CreatePatiowall1Boundaries(thething)
+
+	Dim theBoundaryList_t
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+		-9.58286, 0.621021, -9.58286, -0.116568, 9.42424, -0.00309181, 9.42424, 0.621021_
+		))
+	theBoundaryList_t.HeightUpper = 2.4743
+	theBoundaryList_t.HeightLower = -2.4743
+	thething.BoundaryList.Add theBoundaryList_t
+End Sub
+
+Sub CreateHouseBoundaries(thething)
+	Dim theBoundaryList_t
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+		-7.21065, 5.69627, 7.04706, 5.58562, 7.08981, -5.60699, -7.27229, -5.65366_
+		))
+	theBoundaryList_t.HeightUpper = 7.46967
+	theBoundaryList_t.HeightLower = -5
+	thething.BoundaryList.Add theBoundaryList_t
+End Sub
+
+Sub CreateGroundaBoundaries(thething)
+	Dim theBoundaryList_t
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+		-37.837, 52.7031, -36.9292, -2.21893, 14.3615, -3.12673, 35.6949, -0.857229, _
+		34.7871, 31.8236, 13.9076, 53.6109))
+	theBoundaryList_t.HeightUpper = 20.88011
+	theBoundaryList_t.HeightLower = 1.88011
+	thething.BoundaryList.Add theBoundaryList_t
+End Sub
+
+Sub CreateHouseaBoundaries(thething)
+	Dim theBoundaryList_t
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+		-1.033816, 8.014211, -1.312378, 7.801188, -15.838234, 7.793278, -15.889689, 0.960074, _
+		15.245064, 1.389802, 15.514209, 7.779143, 1.129708, 7.800632, 0.727427, 7.994073_
+		))
+
+	theBoundaryList_t.HeightUpper = 20.04494
+	theBoundaryList_t.HeightLower = -7.04495
+	thething.BoundaryList.Add theBoundaryList_t
+End Sub
+
+Sub CreatePorchaBoundaries(thething)
+	Dim theBoundaryList_t
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+				-16.310486, 10.794222, 16.004883, 10.545435, 15.930247, -8.258455, -15.844575, -5.702719_
+		))
+	theBoundaryList_t.HeightUpper = 1.
+	theBoundaryList_t.HeightLower = -3.560078
+	thething.BoundaryList.Add theBoundaryList_t
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+		-1.557327, 11.869669, 16.007143, 11.460299, 16.199389, 9.517486, -16.061699, 8.949795, _
+		-15.801602, 11.679685))
+	theBoundaryList_t.HeightUpper = 0.5
+	theBoundaryList_t.HeightLower = -4.560078
+	thething.BoundaryList.Add theBoundaryList_t
+End Sub
+
+Sub CreateHousebBoundaries(thething)
+	Dim theBoundaryList_t
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+		5.823540, -0.767160, 0.603684, 5.473970, 3.071770, 3.700930, 7.298716, 7.176104, _
+		3.554040, 11.828600, -14.148100, -1.561490, -7.339580, -11.093400, -4.988508, -8.731755, _
+		4.284581, -1.380661))
+	theBoundaryList_t.HeightUpper = 8.92289
+	theBoundaryList_t.HeightLower = 0
+	thething.BoundaryList.Add theBoundaryList_t
+End Sub
+
+
+
+sub CreatePortals
+	'Default world entry
+	set p_Entry = World.CreateInstance("world entry", "Portal", Outside)
+	p_Entry.Description = ""
+	p_Entry.IsUIVisible = False
+
+	Dim p_Outside_Interior
+	set p_Outside_Interior = world.CreateInstance("portal to living room", "Portal", Outside)
+
+	Dim p_Interior_Outside
+	set p_Interior_Outside = world.CreateInstance("portal to outside", "Portal", LivingRoom)
+
+	' Set portal properties and destinations (has to be done after both portals are created)
+	p_Outside_Interior.Description = "Takes you to the living room."
+	p_Outside_Interior.Destinations.Add p_Interior_Outside
+
+	p_Interior_Outside.Description = "Takes you outside. 'outside' is considered to be another room."
+	p_Interior_Outside.Destinations.Add p_Outside_Interior
+
+
+	Select Case StyleName
+		case "Classical"
+
+			p_Entry.InitializeGraphics "", -3.39, 0.0, 35.55, -0.5, 0.0, 0.87
+			p_Entry.EntryPoint.set -3.39, 1.8, 35.55
+			p_Entry.EntryOrientation.set 0.38, 0.0, -0.92
+			p_Entry.EntryRadius = 0.5
+
+			p_Outside_Interior.InitializeGraphics "SDK\Library\Models\_HomeCl\door2.x", 13.675,3.25, -0.145, -0.5, 0.0, 0.87
+			p_Outside_Interior.EntryPoint.set 10.36, 2.77, 5.27
+			p_Outside_Interior.EntryOrientation.set -0.54,0.0,0.85
+			p_Outside_Interior.scale.set 1.5,1.5,1.5
+			p_Outside_Interior.EntryRadius = 0.5
+
+			p_Interior_Outside.InitializeGraphics "SDK\Library\Models\_HomeCl\cleardr.x", -10.25, 3.56, 4.55, 0.626, 0.0, -0.78
+			p_Interior_Outside.EntryPoint.set -9.15, 3.06, 2.7
+			p_Interior_Outside.EntryOrientation.set  0.57,0.0,-0.82
+			p_Interior_Outside.EntryRadius = 0.25
+			p_Interior_Outside.Scale.set 1.91, 1.54, 1.91
+
+		case "Modern"
+			p_Entry.InitializeGraphics "", 19.41, .89, 37.25, -0.715, 0.0, -0.7
+			p_Entry.EntryPoint.set 18.41, .89, 32.25
+			p_Entry.EntryOrientation.set  -0.715, 0.0, -0.7
+			p_Entry.EntryRadius = 0.5
+
+			p_Outside_Interior.InitializeGraphics "SDK\Library\Models\_HomeMod\portalhm.x", -4.9, 2.6, 3.33, 0, 0, 1
+			p_Outside_Interior.EntryPoint.set -4.94, 1.974, 6.582
+			p_Outside_Interior.EntryOrientation.set 0.0, 0.0, 1.0
+			p_Outside_Interior.EntryRadius = 0.5
+
+			p_Interior_Outside.InitializeGraphics "SDK\Library\Models\_HomeMod\portalhm.x", -7.4, 2.6, 4, 0, 0.0, -1.0
+			p_Interior_Outside.EntryPoint.set -6.73, 2, -0.159
+			p_Interior_Outside.EntryOrientation.set 0.982, 0.0, 0.19
+			p_Interior_Outside.EntryRadius = 0.5
+	End Select
+	
+	'Create boundaries around each portal except for entry, which has no destinations
+	p_Outside_Interior.IsSolid = True
+	p_Interior_Outside.IsSolid = True
+
+end sub
+
+sub document_onKeyPress
+	select case window.event.keycode
+	case 27
+		top.frames(1).OnCancel
+	case 13
+		top.frames(1).OnFinish
+	case Else
+	end select
+end sub
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+</script>
+</head>
+<body>
+	<div class=vLabel style=top:0;left:10;>Styles:</div>
+	<select id=lstStyle class=vInput style=left:10;top:15;width:120; size=7 onchange=choseName></select>
+	<div class=vLabel style=top:0;left:150;>Preview:</div>
+	<img datafld=previewGIF datasrc="#elements" id=imgPreview style=position:absolute;left:150;top:15;></img>
+	<div id=lblDesc class=vInput datafld="description" datasrc="#elements" style=left:10;top:130;width:400;>
+</body>
+</html>

@@ -1,0 +1,459 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//  File:			ClientMainToolsIFrame.htm
+'//  Description:	This file contains the client's toolbar and does contain
+'//					most of the code for toolbar button functionality.  Other
+'//					files include Client.htm and ToolbarRollover.htc 
+'////////////////////////////////////////////////////////////////////////-->
+<html>
+<head>
+<title>Browser ToolBar</title>
+<link rel=stylesheet href=../shared/global.css>
+
+<script language="vbscript" src="../vbs/document_OnSelectStart.vbs">
+</script>
+<script language="vbscript" src="../vbs/ShowDialog.vbs">
+</script>
+<script language="vbscript">
+option explicit
+
+dim btnBehavior
+dim TallOrShort	
+dim buttonWideWidth
+dim buttonNarrowWidth
+dim webdingUp
+dim webdingDown
+dim webdingMaxWin
+dim webdingNormalWin
+dim DisableGray
+dim intMaxFlashes
+dim blnNewThing
+
+buttonWideWidth = 89
+buttonNarrowWidth = 27
+TallOrShort = "tall"	' for toggling the behavior of the resizing buttons
+DisableGray = "#a0a0a0"
+btnBehavior = "url(../htc/ToolbarRollover.htc)"
+intMaxFlashes = 10
+blnNewThing = false
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		window_onLoad
+'//  Purpose:	checks for gifts, highlights tabs and set's a few properties
+'////////////////////////////////////////////////////////////////////////
+sub window_onLoad
+	if not top.isWorldLoaded then
+		window.setTimeout "window_onload", 500, "vbs"
+		exit sub
+	end if
+	
+	top.AddToEventList window
+	' Check for unopened gifts/notes
+	dim vwObject
+	for each vwObject in top.clientUserptr.contents
+		if vwObject.IsValidProperty("DisplayName") then
+			if LCase(vwObject.DisplayName) = "note" _
+			or LCase(vwObject.DisplayName) = "gift" then
+				blnNewThing = true
+				FlashIcnNewThing(0)
+				exit for
+			end if
+		end if
+	next
+	
+	'highlight the dest tab
+	DestImg.parentElement.className = DestImg.parentElement.className & "_CLK"
+	DestImg.src = DestImg.pressedSrc			
+		
+	'click on the dest tab
+	top.LinkTo "sampleLinks.htm" 
+	
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		window_onUnload
+'//  Purpose:	removes this page from the event list
+'////////////////////////////////////////////////////////////////////////
+sub window_onUnload
+	top.RemoveFromEventList window
+end sub
+
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		HandleUIEvent
+'//  Purpose:	handles general UI events from the world
+'//	 Params:
+'//		who		- <vw avatar> who the event is from
+'//		what	- <string> id of the event
+'//		args	- <array> of arg values
+'////////////////////////////////////////////////////////////////////////
+sub HandleUIEvent(byVal who, what, byVal args)
+	dim vwObject
+	select case what
+		case "OnEnterInventory"
+			if who is top.clientUserptr then
+				set vwObject = Args
+				if vwObject.IsValidProperty("DisplayName") then
+					if LCase(vwObject.DisplayName) = "note" _
+					or LCase(vwObject.DisplayName) = "gift" then
+						blnNewThing = true
+						FlashIcnNewThing(0)
+					end if
+				end if
+			end if
+		case "OnLeaveInventory"
+			handleLeaveInventory args
+		case "SurfToURL"
+			select case args(0)
+				case "People.htm"
+					document.all("btnPeople").click
+				case "MyProfile.htm"
+					document.all("btnMyProfile").click
+				case "MyThings.htm"
+					document.all("btnMyThings").click
+				case "Help.htm"
+					document.all("btnHelp").click
+			end select
+		case "SurfToSampleURL"
+			document.all("btnDestinations").click
+	end select
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		handleLeaveInventory
+'//  Purpose:	show's a dialog that the user threw away something
+'//	 Params:
+'//		vwObject	- user object
+'//	 Called by:	handleUIEvent, for an OnLeaveInventory event
+'////////////////////////////////////////////////////////////////////////
+sub handleLeaveInventory (byval vwObject)
+	if vwObject.from > "" then showDialog "You threw away a " & vwObject.name & " from " & vwObject.from, ""
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		FlashIcnNewThing(intFlashes)
+'//  Purpose:	flashs the ! icon 
+'//	 Params:
+'//		intFlashes - number of flashs
+'//	 Called by:	window_onLoad
+'//				handleUIEvent
+'////////////////////////////////////////////////////////////////////////
+sub FlashIcnNewThing(intFlashes)
+	if blnNewThing = false then exit sub
+	if document.all.item("icnNewThing").style.display = "inline" then
+		document.all.item("icnNewThing").style.display = "none"		
+	else
+		document.all.item("icnNewThing").style.display = "inline"
+	end if
+	if intFlashes =< intMaxFlashes*2 then
+		window.setTimeout "FlashIcnNewThing(" & intFlashes + 1 & ")", 500
+	else
+		document.all.item("icnNewThing").style.display = "inline"
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		ResizeMax
+'//  Purpose:	toggle the right pane of the client to full page or normal size
+'//  Called by:	document_onClick
+'////////////////////////////////////////////////////////////////////////
+sub ResizeMax
+	dim resizingOp	' tells the resize function which edges	to move where
+	select case document.all.btnResizeMax.style.action
+		case "none" 
+			exit sub
+		case "max"
+			' Current spec says only allow maximizing if the right pane is tall
+			if TallOrShort <> "tall" then exit sub
+			resizingOp = 5	' RightMax
+			document.all.icnResizeMax.src = "../images/icnResizeMin.gif"
+			document.all.btnResizeMax.style.action = "normal"
+			
+			document.all.btnResizeUp.style.action = "none"
+			document.all.icnResizeUp.src = "../images/icnResizeUp2.gif"
+			document.all.btnResizeUp.parentElement.style.behavior = "x"
+			document.all.btnResizeUp.parentElement.style.cursor = "default"	
+		case "normal"
+			resizingOp = 3	' RightTall
+			document.all.icnResizeMax.src = "../images/icnResizeMax.gif"
+			document.all.btnResizeMax.style.color = "#ffffff"
+			document.all.btnResizeMax.style.action = "max"
+			
+			document.all.btnResizeUp.style.action = "down"
+			document.all.btnResizeUp.style.color = "#ffffff"
+			document.all.icnResizeUp.src = "../images/icnResizeUp.gif"
+			document.all.btnResizeUp.parentElement.style.behavior = btnBehavior
+			document.all.btnResizeUp.parentElement.style.cursor = "hand"	
+	end select
+	top.ResizePane resizingOp
+	top.ClientRendererIFrame.document.all.renderer.focus
+	' needed to make the change happen; don't know why
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		ResizeUp
+'//  Purpose:	toggle the right pane to its tallest or normal height
+'//  Called by:	document_onClick
+'////////////////////////////////////////////////////////////////////////
+sub ResizeUp
+	dim resizingOp	' tells the resize function which edges	to move where
+	select case document.all.btnResizeUp.style.action
+		case "none" 
+			exit sub
+		case "up"
+			resizingOp = 3	' rightTall
+			document.all.btnResizeUp.style.action = "down"
+			
+			document.all.btnResizeMax.style.action = "max"
+			document.all.icnResizeMax.src = "../images/icnResizeMax.gif"
+			document.all.btnResizeMax.parentElement.style.behavior = btnBehavior
+			document.all.btnResizeMax.parentElement.style.cursor = "hand"			
+			TallOrShort = "tall"
+		case "down"
+			resizingOp = 4	' rightShort
+			document.all.btnResizeUp.style.action = "up"
+			
+			document.all.btnResizeMax.style.action = "none"
+			document.all.icnResizeMax.src = "../images/icnResizeMax2.gif"
+			document.all.btnResizeMax.parentElement.style.behavior = "none"
+			document.all.btnResizeMax.parentElement.style.cursor = "default"	
+			TallOrShort = "short"
+	end select
+	top.ResizePane resizingOp
+	top.ClientRendererIFrame.document.all.renderer.focus	
+	' needed to make the change happen; don't know why
+	
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		document_onClick
+'//  Purpose:	main switch for links on the toolbar
+'////////////////////////////////////////////////////////////////////////
+sub document_onClick
+	dim elem
+	set elem = window.event.srcElement
+	if InStr(elem.className,"CLK")  then
+		exit sub
+	end if 	
+
+	select case elem.id 
+		case "btnDestinations"
+			if top.navigationEnabled then
+				top.LinkTo "sampleLinks.htm" 
+				ImgNewThingOff
+			end if
+		case "btnPeople"
+			if top.navigationEnabled then
+				top.LinkTo "People.htm"
+				ImgNewThingOff
+			end if
+		case "btnMyProfile"
+			if top.navigationEnabled then
+				top.LinkTo "MyProfile.htm"
+				ImgNewThingOff
+			end if
+		case "btnMyThings"					
+			if top.navigationEnabled then top.LinkTo "MyThings.htm"
+		case "btnHelp", "icnHelp"
+			top.LinkTo "Help.htm"
+			ImgNewThingOff
+		case "btnResizeUp", "icnResizeUp"  
+			ResizeUp			
+		case "btnResizeMax", "icnResizeMax"
+			ResizeMax			
+		case "btnCloseWin","icnCloseWin"
+			top.window.close			
+	end select
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		imgNewThingOff()
+'//  Purpose:	turn the new thing off
+'//  Called by:	document_onClick
+'//  Notes:
+'//  Turn off the "you have a new thing" indicator
+'//  On error resume next averts a security error if a URL from another root is in the frame
+'////////////////////////////////////////////////////////////////////////
+sub imgNewThingOff()
+	on error resume next
+	if InStr(top.ClientBrowserIFrame.location,"MyThings.htm") then
+		document.all.item("icnNewThing").style.display = "none"
+		blnNewThing = false
+	end if
+	err.Clear
+end sub	
+</script>
+</head>
+
+<body bgcolor="#FFFFFF" class=ClientBackgroundMainTools background="../images/clrgradient.gif">
+
+<span id=DestinationsSec
+	class=btnContainer
+	style="left:0;">
+	<img id=DestImg src="../images/btnLarge.gif"
+		class=btnImage 
+		valign=center 
+		origSrc="../images/btnLarge.gif"
+		hoverSrc="../images/btnLarge2.gif"
+		pressedSrc="../images/btnLarge2.gif">	
+	<span class=btnText
+		style="left:1;top:1;color:#3B5D5C;letter-Spacing:-.5pt;">
+		Destinations
+	</span>
+	<span id=btnDestinations 
+		class=btnText
+		style="letter-Spacing:-.5pt;">
+		Destinations
+	</span>		
+</span>
+
+<span id=MyProfileSec 	
+	class=btnContainer
+	style="left:82;">
+	<img src="../images/btnLarge.gif"
+		class=btnImage 
+		valign=center 
+		origSrc="../images/btnLarge.gif"
+		hoverSrc="../images/btnLarge2.gif"
+		pressedSrc="../images/btnLarge2.gif">
+	<span class=btnText
+		style="left:1;top:1;color:#3B5D5C">
+		My Profile
+	</span>
+	<span id=btnMyProfile
+		class=btnText>
+		My Profile
+	</span>			
+</span>
+
+<span id=MyThingsSec
+	class=btnContainer
+	style="left:164;">
+	<img src="../images/btnLarge.gif"
+		class=btnImage 
+		valign=center 
+		origSrc="../images/btnLarge.gif"
+		hoverSrc="../images/btnLarge2.gif"
+		pressedSrc="../images/btnLarge2.gif">
+	<span class=btnText
+		style="left:1;top:1;color:#3B5D5C">
+		My Things
+	</span>
+	<span id=btnMyThings
+		class=btnText>
+		My Things
+	</span>
+	<img src="../images/icnNewThing.gif"
+			id=icnNewThing
+			class=icnNewThing
+			style="display:none;">
+</span>
+
+<span id=PeopleSec
+	class=btnContainer
+	style="left:246px;">
+	<img src="../images/btnLarge.gif"
+		class=btnImage 
+		valign=center 
+		origSrc="../images/btnLarge.gif"
+		hoverSrc="../images/btnLarge2.gif"
+		pressedSrc="../images/btnLarge2.gif">
+	<span class=btnText
+		style="left:1;top:1;color:#3B5D5C">
+		People
+	</span>
+	<span id=btnPeople
+		class=btnText>
+		People
+	</span>			
+</span>
+
+<span id=HelpSec
+	class=btnContainer
+	style="left:expression(document.body.clientWidth-(4*27));width:27px;">
+	<img src="../images/btnSmall.gif"
+		class=btnImage 
+		valign=center 
+		origSrc="../images/btnSmall.gif"
+		hoverSrc="../images/btnSmall2.gif"
+		pressedSrc="../images/btnSmall2.gif"
+		style="width:27px;"
+		alt="Help">			
+	<span id=btnHelp
+		class=btnTextSm
+		style="font-family:verdana;">
+		<img id=icnHelp
+			src="../images/icnHelp.gif"
+			class=btnIcon
+			alt="Help">
+	</span>
+</span>	
+
+<span id=ResizeUpSec
+	class=btnContainer
+	style="left:expression(document.body.clientWidth-(3*27));width:27px;">
+	<img src="../images/btnSmall.gif"
+		class=btnSmImage 
+		valign=center 
+		origSrc="../images/btnSmall.gif"
+		hoverSrc="../images/btnSmall2.gif"
+		pressedSrc=""
+		alt="Minimize this pane">	
+	<span id=btnResizeUp
+		class=btnTextSm
+		style="font-family:webdings;font-size:10pt;action:down;">		
+		<img id=icnResizeUp
+			src="../Images/icnResizeUp.gif"
+			class=btnIcon
+			alt="Minimize this pane">
+	</span>
+</span>
+
+<span id=ResizeMaxSec
+	class=btnContainer
+	style="left:expression(document.body.clientWidth-(2*27));width:27px;">
+	<img src="../images/btnSmall.gif"
+		class=btnSmImage 
+		valign=center 
+		origSrc="../images/btnSmall.gif"
+		hoverSrc="../images/btnSmall2.gif"
+		pressedSrc=""
+		alt="Maximize this pane">
+	<span id=btnResizeMax
+		class=btnTextSm
+		style="font-family:webdings;font-size:10pt;action:max;">		
+		<img id=icnResizeMax
+			src="../images/icnResizeMax.gif"
+			class=btnIcon
+			alt="Maximize this pane">
+	</span>			
+</span>
+
+<span id=CloseWinSec
+	class=btnContainer
+	colPosition=3
+	style="left:expression(document.body.clientWidth-(1*27));width:27px;">
+	<img src="../images/btnSmall.gif"
+		class=btnSmImage 
+		valign=center 
+		origSrc="../images/btnSmall.gif"
+		hoverSrc="../images/btnSmall2.gif"
+		pressedSrc=""
+		alt = "Log Off">
+	<span id=btnCloseWin
+		class=btnTextSm
+		style="font-family:webdings;font-size:10pt;">		
+		<img id=icnCloseWin
+			src="../images/icnCloseWin.gif"
+			class=btnIcon
+			alt="Log Off">			
+	</span>				
+</span>
+
+</body>
+</html>

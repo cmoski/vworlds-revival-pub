@@ -1,0 +1,50 @@
+.Square1
+{
+	background:#85643A;
+	width:40;
+	height:40;
+	z-Index:-1000;
+}
+
+.Square2
+{
+	background:#533111;
+	width:40;
+	height:40;
+	z-Index:-1000;
+}
+
+.Square3
+{
+	width:40;
+	height:0;
+	z-Index:-1001;
+}
+
+.Square4
+{
+	height:80;
+	z-Index:-1002;
+}
+
+.PieceWht
+{
+	behavior:url(Movable.htc);
+	mv--boundary:0 320 480 0;
+	width:40;
+	height:40;
+	cursor: move;
+	position:relative;
+	z-Index:1;
+}
+
+.PieceBlk
+{
+	behavior:url(Movable.htc);
+	mv--boundary:0 320 480 0;
+	width:40;
+	height:40;
+	cursor: move;
+	position:relative;
+	z-Index:2;
+}

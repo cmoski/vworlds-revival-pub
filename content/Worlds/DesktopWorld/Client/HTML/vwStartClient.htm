@@ -1,0 +1,29 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//
+'//  File:			vwStartClient.htm
+'//  Description:	Open the sample client start page in a specific size window.  
+'//
+'//		This is the page the user should open to start the sample client locally.
+'//
+'////////////////////////////////////////////////////////////////////////-->
+<html>
+<head>
+<title>Virtual Worlds Starting...</title>
+<!-- Windows that are opened by other windows can be closed with a window.close statement.
+	However, since this page is opened by the user rather than by another window, closing
+	it with a window.close statement would cause IE to display a user prompt.
+	The helper object's CloseWindow method closes the window without prompting. -->
+<object id=helper classid=clsid:7E3832CF-4F4E-11D0-89AB-00A0C9054129></object>
+<script language=vbs>
+
+window.open "vwStart.htm", "VirtualWorldsStart", _
+	"toolbar=no,location=no,status=no,menubar=no,resizable=no,width=520,height=405,top=" & _
+	(screen.availHeight - 405) / 2 & ",left=" & (screen.availWidth - 520) / 2
+Helper.CloseWindow
+
+</script>
+</head>
+<body>
+</body>
+</html>

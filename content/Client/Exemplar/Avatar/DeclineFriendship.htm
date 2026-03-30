@@ -1,0 +1,25 @@
+<html>
+<head>
+<title>Friendship Request</title>
+<link rel=stylesheet href=..\shared\global.css>
+<script language=vbs>
+option explicit
+
+sub window_onload
+
+	dim oWhat
+	set oWhat = window.dialogArguments
+
+	divAvatarNAme.innerText = oWhat.Name
+
+end sub
+
+
+</script>
+</head>
+<body style=padding:5;>
+	<div class=vH2 id=divTitle style=position:relative;margin-bottom:10;></div>
+	<div class=vInput id=divAvatarName style=position:relative;></div>
+	<div class=vInput> doesn't want to be your friend!</div>
+</body>
+</html>

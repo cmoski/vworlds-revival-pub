@@ -1,0 +1,427 @@
+<!--'////////////////////////////////////////////////////////////////////
+'//  File:			Game_Hangman.htm
+'//  Description:	Allows a single player to play Seattle Hangman.
+'//  System:		Desktop World 
+'////////////////////////////////////////////////////////////////////////-->
+<HTML>
+<HEAD>
+<TITLE>Game: Hangman</TITLE> 
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link rel=stylesheet href=../shared/global.css>
+
+<!--include scripts-->
+<script language="vbscript" src="../vbs/document_OnSelectStart.vbs">
+</script>
+<!--end include scripts-->
+
+<SCRIPT LANGUAGE="VBScript">
+
+option explicit
+
+const NUM_WORDS = 31
+Dim next_cell, num_filled
+Dim guessed, answer, prevwords, iCountPrevWords
+Dim blank_page, empty_page, page_header, page_footer
+Dim current_string
+Dim num_won, num_lost
+
+num_won = 0
+num_lost = 0
+next_cell = 1
+
+sub Window_OnLoad
+	iCountPrevWords = 0
+	prevwords = ""
+	
+ 	Startup
+end sub
+
+sub startup
+
+	iCountPrevWords = iCountPrevWords + 1
+	if iCountPrevWords = (NUM_WORDS-1) then	'fix/hack for end of words condition 'a-jclegg, the -1 is for safefy. i don't have time to test it
+		prevwords = ""
+		iCountPrevWords = 0
+	end if
+
+	do  
+	    answer = GetWord()
+	loop until InStr(prevwords,answer) = 0 
+	prevwords = prevwords & "," & answer
+	
+    fill_frames Len(answer)
+end sub
+
+sub restart
+    restore_captions
+    guessed = ""
+    next_cell = 1
+    num_filled = 0
+    startup
+    'divNumFilled.innerHTML = num_filled															'''******DEBUG*******
+end sub
+
+sub fill_frames(ByVal num_to_fill)
+	Pic.src = "../images/s1.gif"
+    current_string = ""
+    Dim i
+    For i = 1 to Len(answer)
+		if Mid(answer, i, 1) = "-" then
+			current_string = current_string & "- "
+			num_filled = num_filled + 1
+		else
+			current_string = current_string & "_ "
+		end if
+    Next
+
+' writes the underscore characters
+
+	ReplaceMe.innerHTML = current_string
+	ReplaceMe2.innerHTML = "won:&nbsp " & num_won & "&nbsp &nbsp lost:&nbsp " & num_lost
+end sub
+
+sub restore_captions
+' use Elements array when its implemented
+    	A.style.visibility = "visible"
+    	B.style.visibility = "visible"
+    	C.style.visibility = "visible"
+    	D.style.visibility = "visible"
+    	E.style.visibility = "visible"
+    	F.style.visibility = "visible"
+    	G.style.visibility = "visible"
+    	H.style.visibility = "visible"
+    	I.style.visibility = "visible"
+    	J.style.visibility = "visible"
+    	K.style.visibility = "visible"
+    	L.style.visibility = "visible"
+    	M.style.visibility = "visible"
+    	N.style.visibility = "visible"
+    	O.style.visibility = "visible"
+    	P.style.visibility = "visible"
+    	Q.style.visibility = "visible"
+    	R.style.visibility = "visible"
+    	S.style.visibility = "visible"
+    	T.style.visibility = "visible"
+    	U.style.visibility = "visible"
+    	V.style.visibility = "visible"
+    	W.style.visibility = "visible"
+    	X.style.visibility = "visible"
+    	Y.style.visibility = "visible"
+		Z.style.visibility = "visible"
+end sub
+
+sub erase_caption (ByVal letter)
+' use Elements array when its implemented
+
+    Select Case letter
+case "a" : A.style.visibility = "hidden"
+case "b" : B.style.visibility = "hidden"
+case "c" : C.style.visibility = "hidden"
+case "d" : D.style.visibility = "hidden"
+case "e" : E.style.visibility = "hidden"
+case "f" : F.style.visibility = "hidden"
+case "g" : G.style.visibility = "hidden"
+case "h" : H.style.visibility = "hidden"
+case "i" : I.style.visibility = "hidden"
+case "j" : J.style.visibility = "hidden"
+case "k" : K.style.visibility = "hidden"
+case "l" : L.style.visibility = "hidden"
+case "m" : M.style.visibility = "hidden"
+case "n" : N.style.visibility = "hidden"
+case "o" : O.style.visibility = "hidden"
+case "p" : P.style.visibility = "hidden"
+case "q" : Q.style.visibility = "hidden"
+case "r" : R.style.visibility = "hidden"
+case "s" : S.style.visibility = "hidden"
+case "t" : T.style.visibility = "hidden"
+case "u" : U.style.visibility = "hidden"
+case "v" : V.style.visibility = "hidden"
+case "w" : W.style.visibility = "hidden"
+case "x" : X.style.visibility = "hidden"
+case "y" : Y.style.visibility = "hidden"
+case "z" : Z.style.visibility = "hidden"
+
+    End Select
+end sub
+
+function return_next_cell()
+    next_cell = next_cell + 1
+    return_next_cell =  CStr(next_cell) & ".gif"
+end function
+
+sub fill_letters(ByVal pos, ByVal letter)
+	'fillletters.innerHTML =  current_string
+    do
+        if pos = 1 then
+            current_string = letter & mid(current_string,2)
+        else
+            current_string = Left(current_string,(2*pos-2)) & letter & mid(current_string,(2*pos))
+        end if
+
+        num_filled = num_filled + 1
+        pos = Instr(pos + 1, LCase(answer), letter)
+    Loop Until pos = 0
+    'divCurrentString.innerHTML = current_string
+    'divNumFilled.innerHTML = num_filled
+    
+end sub
+
+sub guess(ByVal letter)
+    dim pos
+
+	'this is an end game condition.
+	if guessed = "abcdefghijklmnopqrstuvwxyz" then
+		exit sub
+	end if 
+    If Instr(guessed,letter) Then 
+		msgbox "Error: Letter was already picked, this should never happen"
+        Exit Sub
+    end if
+        
+    guessed = guessed & letter
+    erase_caption letter
+
+    pos = Instr(LCase(answer), letter)
+    If pos Then
+        fill_letters pos, letter
+		If num_filled = Len(answer) Then 
+            end_game 1
+        Else
+			ReplaceMe.innerHTML = current_string
+        end if
+    Else
+		Pic.src = "../images/S" & return_next_cell
+        If next_cell = 7 Then 
+            end_game 0
+        End If
+    End If
+end sub
+
+sub end_game (ByVal winner)
+    If winner Then
+   		num_won = num_won + 1
+		ReplaceMe.innerHTML = answer & "<BR>you win!"
+    else    
+        num_lost = num_lost + 1
+	 	ReplaceMe.innerHTML = "you lost!<BR>(" & answer & ")"
+    End If
+
+	ReplaceMe2.innerHTML = "won:&nbsp " & num_won & "&nbsp &nbsp lost:&nbsp " & num_lost
+    guessed = "abcdefghijklmnopqrstuvwxyz"
+end sub
+
+function GetWord()
+    Dim WordList(30), temp_str, coded_word, i
+    
+	WordList(0)="Tfbuumf"
+	WordList(1)="Xbtijohupo-Tubuf"
+	WordList(2)="Gfssjft"
+	WordList(3)="Tqbdf-Offemf"
+	WordList(4)="Bqqmft"
+	WordList(5)="Tfbibxlt"
+	WordList(6)="Tvqfstpojdt"
+	WordList(7)="Nbsjofst"
+	WordList(8)="Tbmnpo"
+	WordList(9)="Qjlf-Qmbdf-Nbslfu"
+	WordList(10)="Qjpoffs-Trvbsf"
+	WordList(11)="Njdsptpgu"
+	WordList(12)="Gmpbujoh-Csjehf"
+	WordList(13)="Gsfe-Ivudijotpo"
+	WordList(14)="Vojwfstjuz-pg-Xbtijohupo"
+	WordList(15)="Xbtijohupo-Ivtljft"
+	WordList(16)="Ivtlz-Tubejvn"
+	WordList(17)="Tbgfdp-Gjfme"
+	WordList(18)="Ljohepnf"
+	WordList(19)="Tmffqmftt-jo-Tfbuumf"
+	WordList(20)="Npvou-Sbjojfs"
+	WordList(21)="Tmvht"
+	WordList(22)="Sbjo-sbjo-hp-bxbz"
+	WordList(23)="Mblf-Vojpo"
+	WordList(24)="Mblf-Xbtijohupo"
+	WordList(25)="Toprvbmnjf-Gbmmt"
+	WordList(26)="Xppemboe-Qbsl-[pp"
+	WordList(27)="Tfbuumf-Dfoufs"
+	WordList(28)="Hfpevdl"
+	WordList(29)="Cpfjoh"
+	WordList(30)="Dpggff"
+	
+	if ubound(WordList)+1 <> NUM_WORDS then
+		msgbox "Error: Number of words is inconsistent"
+	end if	
+
+    Randomize
+    coded_word = WordList(Int(Rnd*UBound(WordList)+1))
+    For i = 1 To Len(coded_word)
+		if Mid(coded_word, i, 1) = "-" then
+			temp_str = temp_str & "-"
+		else
+	        temp_str = temp_str & Chr(Asc(Mid(coded_word, i, 1)) - 1)
+		end if
+    Next
+    GetWord = temp_str
+	'debugdiv.innerHTML  = getword
+end function
+
+'EncodeWord 'On
+sub EncodeWord
+	' to run through a complete array of words
+	'dim arrClearWrds(29)
+	'arrClearWrds(0) = "Put-a-word here"
+	'...
+	'arrClearWrds(29) = "Put-a-word here"
+	dim strWord
+	dim strTemp
+	dim z, q
+	'for q = 0 to 29 'UBound(arrClearWrds)-1	
+	'	for z = 1 To Len(arrClearWrds(q))		
+			'strWord = arrClearWrds(q)
+		strWord = InputBox("")
+		for z = 1 To Len(strWord)		
+			if Mid(strWord, z, 1) = "-" _
+			or Mid(strWord, z, 1) = " " then
+				strTemp = strTemp & "-"
+			else
+		    	strTemp = strTemp & Chr(Asc(Mid(strWord, z, 1)) + 1)
+			end if
+	    next
+		'strTemp = strTemp & "<br>"
+	'next
+	'document.body.innerHTML = strTemp
+end sub
+
+</SCRIPT>
+
+
+</HEAD>
+
+<STYLE type="text/css">
+<!-- 
+	BODY { margin-right:0; }
+	DIV { font-family:Verdana, Arial, Helvetica; color:black; background:white; }
+	.ResetButton { cursor:hand; font-weight:bold; }
+	.A { cursor:hand; font-weight:bold; }
+	.B { cursor:hand; font-weight:bold; }
+	.C { cursor:hand; font-weight:bold; }
+	.D { cursor:hand; font-weight:bold; }
+	.E { cursor:hand; font-weight:bold; }
+	.F { cursor:hand; font-weight:bold; }
+	.G { cursor:hand; font-weight:bold; }
+	.H { cursor:hand; font-weight:bold; }
+	.I { cursor:hand; font-weight:bold; }
+	.J { cursor:hand; font-weight:bold; }
+	.K { cursor:hand; font-weight:bold; }
+	.L { cursor:hand; font-weight:bold; }
+	.M { cursor:hand; font-weight:bold; }
+	.N { cursor:hand; font-weight:bold; }
+	.O { cursor:hand; font-weight:bold; }
+	.P { cursor:hand; font-weight:bold; }
+	.Q { cursor:hand; font-weight:bold; }
+	.R { cursor:hand; font-weight:bold; }
+	.S { cursor:hand; font-weight:bold; }
+	.T { cursor:hand; font-weight:bold; }
+	.U { cursor:hand; font-weight:bold; }
+	.V { cursor:hand; font-weight:bold; }
+	.W { cursor:hand; font-weight:bold; }
+	.X { cursor:hand; font-weight:bold; }
+	.Y { cursor:hand; font-weight:bold; }
+	.Z { cursor:hand; font-weight:bold; }
+ //-->
+</STYLE>
+
+<body bgcolor=#FFFFFF>
+<div id=bkgPageHeadingPatch
+	class=bkgPageHeadingPatch>
+</div>
+<div id=bkgPageHeading
+	class=bkgPageHeading
+	style="background-image:url(../images/bkgGameRoom.gif);">
+</div>
+
+<span id=groupName class=PageHeading>Hangman</span>
+<hr class=PageHeadingHR>
+<div style="position:absolute;top:55;">
+<table CELLSPACING=0>
+<TR>
+	<TD WIDTH=175>
+		<img border=0 name="Pic" src="../Images/s1.gif" hspace="0">
+	</TD>
+	<TD VALIGN=TOP>
+         <span onmouseout id=A OnClick="guess('a')" class="A">A</span>
+         <span onmouseout id=B OnClick="guess('b')" class="B">B</span>
+         <span onmouseout id=C OnClick="guess('c')" class="C">C</span>
+         <span onmouseout id=D OnClick="guess('d')" class="D">D</span><br>
+		 
+         <span onmouseout id=E OnClick="guess('e')" class="E">E</span>
+         <span onmouseout id=F OnClick="guess('f')" class="F">F</span>
+         <span onmouseout id=G OnClick="guess('g')" class="G">G</span>
+         <span onmouseout id=H OnClick="guess('h')" class="H">H</span><br>
+		 
+         <span onmouseout id=I OnClick="guess('i')" class="I">I</span>
+         <span onmouseout id=J OnClick="guess('j')" class="J">J</span>
+         <span onmouseout id=K OnClick="guess('k')" class="K">K</span>
+         <span onmouseout id=L OnClick="guess('l')" class="L">L</span><br>
+		 
+         <span onmouseout id=M OnClick="guess('m')" class="M">M</span>
+         <span onmouseout id=N OnClick="guess('n')" class="N">N</span>
+         <span onmouseout id=O OnClick="guess('o')" class="O">O</span>
+         <span onmouseout id=P OnClick="guess('p')" class="P">P</span><br>
+		 
+         <span onmouseout id=Q OnClick="guess('q')" class="Q">Q</span>
+         <span onmouseout id=R OnClick="guess('r')" class="R">R</span>
+         <span onmouseout id=S OnClick="guess('s')" class="S">S</span>
+         <span onmouseout id=T OnClick="guess('t')" class="T">T</span><br>
+		 
+         <span onmouseout id=U OnClick="guess('u')" class="U">U</span>
+         <span onmouseout id=V OnClick="guess('v')" class="V">V</span>
+         <span onmouseout id=W OnClick="guess('w')" class="W">W</span>
+         <span onmouseout id=X OnClick="guess('x')" class="X">X</span><br>
+		 
+         <span onmouseout id=Y OnClick="guess('y')" class="Y">Y</span>
+         <span onmouseout id=Z OnClick="guess('z')" class="Z">Z</span>
+	</TD>
+</TR>
+<TR>
+	<TD COLSPAN=2>
+		<br>
+		<div id=ReplaceMe ></div>
+		<br>
+	</TD>
+</TR>
+<TR>
+	<TD COLSPAN=2>
+		<span id=ReplaceMe2></span>&nbsp;&nbsp;
+		<input type=button id=ResetButton OnClick="restart()" value="New Game">
+	</TD>
+</TR>
+</TABLE>
+
+<!-- Preload graphics -->
+<IMG SRC="../Images/s1.gif" HEIGHT=1 WIDTH=1>
+<IMG SRC="../Images/s2.gif" HEIGHT=1 WIDTH=1>
+<IMG SRC="../Images/s3.gif" HEIGHT=1 WIDTH=1>
+<IMG SRC="../Images/s4.gif" HEIGHT=1 WIDTH=1>
+<IMG SRC="../Images/s5.gif" HEIGHT=1 WIDTH=1>
+<IMG SRC="../Images/s6.gif" HEIGHT=1 WIDTH=1>
+<!--<IMG SRC="../Images/s7.gif" HEIGHT=1 WIDTH=1> causes a lone .dot. for somereason -->
+
+
+<br>
+<!-- for debuging 
+<span id="debugdiv" style="visibility:hidden;"></span><br>
+<span id="fillletters" style="visibility:hidden;"></span><br>
+<span id="divNumFilled" style="visibility:hidden;"></span><br>
+<span id="divCurrentString" style="visibility:hidden;"></span>
+end for debuging -->
+
+
+<P>&nbsp;
+
+<P align = center>
+
+<br>
+<!-- MSFT COPYRIGHT-->
+<!-- <FONT FACE="verdana, arial, helvetica" SIZE=1><A href="http://www.microsoft.com/info/cpyright.htm">&#169; 1999 Microsoft Corporation. All rights reserved. Terms of Use.</A></FONT> -->
+<!--MSFT COPYRIGHT-->
+</div>
+</BODY>
+</HTML>

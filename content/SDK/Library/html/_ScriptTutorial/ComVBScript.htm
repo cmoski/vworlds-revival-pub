@@ -1,0 +1,55 @@
+sub ShowStep(el)
+	dim sTemp
+	document.all("Step" & theBody.CurrentStep).style.display = "none"
+	select case lcase(left(el.id, 1))
+	case "n"	'next button
+		theBody.CurrentStep = theBody.CurrentStep + 1
+		top.frames("Btns").EnableButton(top.frames("Btns").backbtn)
+		if cint(theBody.CurrentStep) = cint(theBody.MaxSteps) then
+			top.frames("Btns").backbtn.focus
+			top.frames("Btns").DisableButton(el)
+		end if
+	case "b"	'back button
+		theBody.CurrentStep = theBody.CurrentStep - 1
+		top.frames("Btns").EnableButton(top.frames("Btns").nextbtn)
+		if theBody.CurrentStep = 1 then
+			top.frames("Btns").nextbtn.focus
+			top.frames("Btns").DisableButton(el)
+		end if
+	case else	'a lesson button
+		theBody.CurrentStep = cint(left(el.id, 1))
+		if theBody.CurrentStep = 1 then
+			top.frames("Btns").DisableButton(top.frames("Btns").backbtn)
+			top.frames("Btns").EnableButton(top.frames("Btns").nextbtn)
+		elseif cint(theBody.CurrentStep) = cint(theBody.MaxSteps) then
+			top.frames("Btns").EnableButton(top.frames("Btns").backbtn)
+			top.frames("Btns").DisableButton(top.frames("Btns").nextbtn)
+		else
+			top.frames("Btns").EnableButton(top.frames("Btns").backbtn)
+			top.frames("Btns").EnableButton(top.frames("Btns").nextbtn)
+		end if
+	end select
+	top.frames("Btns").btnHighLight theBody.CurrentStep
+	sTemp = document.all("Step" & theBody.CurrentStep).innerHTML
+	document.all("Step" & theBody.CurrentStep).innerHTML = ""
+	document.all("Step" & theBody.CurrentStep).style.display = ""
+	document.all("Step" & theBody.CurrentStep).innerHTML = sTemp
+	window.scroll 0, 0
+end sub
+
+sub document_onclick
+'added this line for html bug
+	select case window.event.srcElement.className
+	case "Outline"
+		if left(window.event.srcElement.id, 3) = "Out" and right(window.event.srcElement.id, 1) <> "d" then
+			if document.all(window.event.srcElement.id & "d").style.display = "none" then
+				document.all(window.event.srcElement.id & "d").style.display = ""
+			else
+				document.all(window.event.srcElement.id & "d").style.display = "none"
+			end if
+		end if
+	case "helplink", "scriptlink"
+		window.ShowHelp("mk:@MSITStore:" & world.global.helppath & window.event.srcElement.HelpString & ">sdkall")
+	case else
+	end select
+end sub

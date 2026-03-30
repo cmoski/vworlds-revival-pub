@@ -1,0 +1,4 @@
+style_name:STRING,description:STRING,previewGIF:STRING,gifInfo:STRING
+'Classical','The classic home world represents a large country estate. There are two rooms, an outdoor space and an indoor room with windows.  The classic home is designed as a ready-to-use environment and has entry-point objects (these move avatars to their original spots on entering the rooms).
+','allClass.gif','View of Classic country estate:'
+'Modern','The modern home world represents a contemporary house with views of the countryside. There are two rooms, an outdoor space and an interior space with windows.  The modern home is designed as a ready-to-use environment and has entry-point objects (these move avatars to their original spots upon entering the rooms).  Interesting objects include an outside water fountain, rotating cube sculpture, and a perpetual motion sculpture on the coffee table inside.','allMod.gif','View of Contemporary country estate:'

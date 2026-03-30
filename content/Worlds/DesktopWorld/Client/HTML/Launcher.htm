@@ -1,0 +1,43 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//
+'//  File:			Launcher.htm
+'//  Description:	Active desktop shortcut for launching the sample world login.
+'//		This file invokes the login page, passing it the path to the client-side files.
+'////////////////////////////////////////////////////////////////////////-->
+<html>
+<head>
+<!--
+  The client-side pathnames.vbs file contains the URL of the login webserver.
+  All other external URLs are stored on that server and passed to the client
+  by the login page. The idea is to have an unchanging login server and be able
+  to relocate server-side content or the world itself without affecting the user.
+-->
+<script language="vbscript" src="../vbs/pathnames.vbs"></script>
+<script language=vbs>
+option explicit
+
+dim loginPath, clientPath
+
+' The login path must be set to wherever your login.asp is located.
+' This is the only server information the client needs to know; the login page
+' will pass other server paths to the client
+loginPath = "http://samples.vworlds.org/website/Login/"
+
+' The path to the client pages is passed to login.asp so it can invoke client.htm
+clientPath = left(document.location.pathname, instrRev(document.location.pathname,"\"))
+
+'////////////////////////////////////////////////////////////////////
+'//  Sub:			document_onClick
+'//  Description:	Open the login window in a new window.
+'////////////////////////////////////////////////////////////////////////
+sub document_onClick
+	window.open loginPath & "login.asp?clientPath=" & clientPath, "DesktopWorldStart", _
+		"toolbar=no,location=no,status=no,menubar=no,resizable=no,width=495,height=370,top=" & _
+		(screen.availHeight - 370) / 2 & ",left=" & (screen.availWidth - 495) / 2
+end sub
+
+</script>
+</head>
+<body scroll=no style="background-color: #000099; background-image:url(../images/dsktpimg.gif); margin: 0; font: 8pt Verdana; cursor:hand;">
+</body></html>

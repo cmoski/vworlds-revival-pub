@@ -1,0 +1,1417 @@
+<html>
+<style>
+.vauthor{Font-Size: 11pt;Font-Weight:bold;Font-Family: Verdana;Color:#002F5F}
+.vsmall{Font-Size: 8pt;Font-Family: Verdana;Color: #000000}
+.vsmall2{Font-Size: 7pt;Font-Family: Verdana;Color: #000000}
+.vlabel{Font-Size: 10pt;Font-Weight: bold;Font-Family: Verdana;Color: #000000 vertical-align:middle }
+</style>
+
+<head>
+<meta http-equiv="Page-Enter" CONTENT="BlendTrans(Duration=2)">
+<meta http-equiv="Page-Exit" CONTENT="BlendTrans(Duration=2)">
+<meta http-equiv="Expires" content="0">
+<title>Geometry Editor</title>
+</head>
+
+<script language="VBScript">
+Option Explicit
+
+Dim ZoomDropDownChanging
+Dim szPrevPosX, szPrevPosY, szPrevPosZ
+Dim oldPosX, oldPosY, oldPosZ
+Dim szMsgboxTitle
+Dim bDeleteIsDisabled
+Dim world, user, bIsInitialized
+
+bIsInitialized = false
+
+szMsgboxTitle = "Microsoft Virtual Worlds"
+
+sub ToolEvent(eventNum, what, args1, args2, args3)
+	If (bIsInitialized) Then
+		if (IsObject(what) AND Not (what Is Nothing) AND ObjectsDropDown.selectedIndex >= 0) Then
+			If StrComp(CStr(what.id), ObjectsDropDown.Item(ObjectsDropDown.selectedIndex).value, 1) = 0 Then
+				PosX.value = args1
+				PosY.value = args2
+				PosZ.value = args3
+
+				oldPosX = CStr(PosX.value)
+				oldPosY = CStr(PosY.value)
+				oldPosZ = CStr(PosZ.value)
+			End If
+		End If
+	End If
+end sub
+
+
+sub HandleUIEvent(byval who, what, byval args)
+
+	dim tmpel, fx, fy, fz, obj, bSelected
+
+	If (bIsInitialized = false) Then
+		'msgbox "bIsInitialized is false"
+		Exit Sub
+	End If
+
+	If what = "OnNameChanged" Then
+
+		bSelected = false
+
+		set obj = GetSelectedObject()
+		If (Not (Obj Is Nothing) ) Then
+			if (obj.id = who.id) Then
+				bSelected = true
+			End If
+		End If
+
+		RemoveFromRoomContentDropDown who
+		AddToRoomContentDropDown who
+
+		if (bSelected) Then
+			SelectInRoomContentDropDown who
+		End If
+	ElseIf what = "OnAddSelection" Then
+		SelectInRoomContentDropDown args
+	Elseif what = "OnRemoveSelection" Then
+		UnselectInRoomContentDropDown args
+	Elseif what = "OnClearSelection" Then
+		UnselectInRoomContentDropDown Nothing
+	Elseif what = "OnContentEnter" Then
+		If (Not (args Is Nothing) ) Then
+			If (args.id = top.theclient.vwclient.world.user.id) Then
+				Initialize
+			Elseif (who.id = user.container.id) Then
+				AddToRoomContentDropDown args
+			End If
+		End If
+	Elseif what = "OnEnterWorld" Then
+		If (Not (who Is Nothing) ) Then
+			If (who.id = top.theclient.vwclient.world.user.id) Then
+				if StrComp("Navigate",args,1) = 0 Then
+					world.tool("Navigate").Gravity = world.global.Gravity
+				End if
+				Initialize
+			End If
+		End If
+	Elseif what = "OnLeaveRoom" Or what = "OnContentLeave" Then
+		If (Not (args Is Nothing) ) Then
+			If (args.id = top.theclient.vwclient.world.user.id) Then
+				Initialize
+			Elseif (who.id = user.container.id) Then
+				RemoveFromRoomContentDropDown args
+			End If
+		End If
+	Elseif StrComp("OnAddCurrentTool",what,1) = 0 Then
+		UpdateButtonStates
+	Elseif StrComp("OnViewModeChanged",what,1) = 0 OR _
+			StrComp("OnGravityChanged",what,1) = 0 OR StrComp("OnCollisionDetectionChanged",what,1) = 0 OR _
+			StrComp("OnSelectionLockChanged",what,1) = 0 Then
+		UpdateButtonStates
+	Elseif what = "OnZoomLevelChanged" AND ZoomDropDownChanging = 0 Then
+		Select Case args
+		Case 0.0625
+			ZoomDropDown.selectedIndex = 0
+		Case 0.125
+			ZoomDropDown.selectedIndex = 1
+		Case 0.25
+			ZoomDropDown.selectedIndex = 2
+		Case 0.33
+			ZoomDropDown.selectedIndex = 3
+		Case 0.5
+			ZoomDropDown.selectedIndex = 4
+		Case 1.0
+			ZoomDropDown.selectedIndex = 5
+		Case 2.0
+			ZoomDropDown.selectedIndex = 6
+		Case 3.0
+			ZoomDropDown.selectedIndex = 7
+		Case 4.0
+			ZoomDropDown.selectedIndex = 8
+		Case 8.0
+			ZoomDropDown.selectedIndex = 9
+		Case 16.0
+			ZoomDropDown.selectedIndex = 10
+		End Select
+	Elseif IsObject(who) AND Not (who Is Nothing) AND ObjectsDropDown.selectedIndex >= 0 Then
+		If (who.isStub = False) AND StrComp(who.name, ObjectsDropDown.Item(ObjectsDropDown.selectedIndex).text, 1) = 0 Then
+			If what = "OnPositionChanged" Then
+				PosX.value = Round(args.x, 3)
+				PosY.value = Round(args.y, 3)
+				PosZ.value = Round(args.z, 3)
+			Elseif what = "OnDirectionChanged" Then
+				GetRotationAngles obj, fX, fY, fZ
+
+				PosX.value = fx
+				PosY.value = fy
+				PosZ.value = fz
+			Elseif what = "OnScaleChanged" Then
+				PosX.value = Round(args.x, 3)
+				PosY.value = Round(args.y, 3)
+				PosZ.value = Round(args.z, 3)
+			End If
+			oldPosX = CStr(PosX.value)
+			oldPosY = CStr(PosY.value)
+			oldPosZ = CStr(PosZ.value)
+		End If
+	End If
+End Sub
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'Object Drop Down related functions
+
+function PosInList(tagName, sItem)
+
+	Dim i
+
+	PosInList = tagName.tags("OPTION").length
+	for i = 0 to tagName.tags("OPTION").length - 1
+		if StrComp(sItem, tagName.tags("OPTION").item(i).text, 1) <= 0 then
+			PosInList = i
+			exit for
+		end if
+	next
+end function
+
+
+sub AddToRoomContentDropDown(obj)
+	Dim tmpel
+
+	set tmpel = document.createElement("OPTION")
+	tmpel.text = obj.name
+	tmpel.value = CLng(obj.id)
+
+	ObjectsDropDown.Add tmpel, PosInList(ObjectsDropDown, tmpel.text )
+
+End Sub
+
+sub RemoveFromRoomContentDropDown(obj)
+	Dim nCount, objID, i
+
+	nCount = ObjectsDropDown.length
+	objID = obj.id
+
+	for i = 0 to nCount - 1
+		if CStr(objID) = CStr(ObjectsDropDown.item(i).value) then
+			ObjectsDropDown.Remove i
+			exit Sub
+		end if
+	next
+
+End Sub
+
+sub SelectInRoomContentDropDown(obj)
+
+	Dim tmpel, nCount, objID, i
+
+	ObjectsDropDown.SelectedIndex = -1
+
+	nCount = ObjectsDropDown.length
+	objID = obj.id
+	for i = 0 to nCount - 1
+		if CLng(objID) = CLng(ObjectsDropDown.item(i).value) then
+			ObjectsDropDown.SelectedIndex = i
+			exit For
+		end if
+	next
+
+	ObjectsDropDownOnChange
+End Sub
+
+
+sub UnselectInRoomContentDropDown(obj)
+
+	Dim sellist
+
+	set world =  top.theclient.vwclient.world
+
+	ObjectsDropDown.SelectedIndex = -1
+
+	set sellist = parent.renderer.ControlManager.SelectionList
+
+	if (Not Sellist Is Nothing) Then
+		If (sellist.count > 0) Then
+			set obj = sellist.property(0)
+			SelectInRoomContentDropDown obj
+		End If
+	End If
+
+	if (world.Global.SelectionLock) Then
+		DoSelectionLock
+	End If
+
+	ObjectsDropDownOnChange
+End Sub
+
+
+
+Sub RefillRoomContentsDropDown
+
+	Dim i, len, roomcontents, obj, tmpel, sellist
+
+	ObjectsDropDown.selectedIndex = -1
+
+	len = ObjectsDropDown.Length
+	For i = 0 to len - 1
+		ObjectsDropDown.Remove 0
+	Next
+
+	ObjectsDropDown.Length = 0
+
+	if (User.container Is Nothing) Then
+		Exit Sub
+	End If
+
+	set tmpel = document.createElement("OPTION")
+	tmpel.text = user.container.name
+	tmpel.value = CLng(user.container.id)
+	ObjectsDropDown.Add tmpel
+
+	set roomcontents = user.container.contents
+
+	For Each obj in roomcontents
+		set tmpel = document.createElement("OPTION")
+		tmpel.text = obj.name
+		tmpel.value = CLng(obj.id)
+		ObjectsDropDown.Add tmpel, PosInList(ObjectsDropDown, tmpel.text )
+	Next
+
+'	On Error Resume Next
+
+	set sellist = parent.renderer.ControlManager.SelectionList
+
+	Err.Clear
+
+	if (Not Sellist Is Nothing) Then
+
+		If (sellist.count >= 0) Then
+			For Each obj In sellist
+				If obj.IsStub = False Then
+					If obj.isoftype("thing") Then
+						SelectInRoomContentDropDown(obj)
+						Exit For
+					End If
+				End If
+			Next
+		Else
+			ObjectsDropDown.selectedIndex = -1
+		End If
+	End If
+
+	ObjectsDropDownOnChange
+
+End Sub
+
+Function GetSelectedObject()
+
+	Dim obj
+	set world =  top.theclient.vwclient.world
+
+	If (ObjectsDropDown.selectedIndex >= 0) Then
+		set GetSelectedObject = World.ObjectByID(CLng(ObjectsDropDown.Item(ObjectsDropDown.selectedIndex).value))
+	Else
+		set GetSelectedObject = Nothing
+	End If
+
+End Function
+
+Function GetSelectedByID(value)
+
+	Dim selList, user
+
+	'On Error Resume Next
+
+	If (Not IsNull(user.container ) AND Not (user.container is Nothing) ) Then
+		If (CStr(user.container.id) = value) Then
+			set GetSelectedByID = user.container
+			Exit Function
+		End If
+
+		set selList = user.container.contents
+
+		for each obj in selList
+			if  CStr(obj.id) = value then
+				set GetSelectedByID = obj
+				Exit Function
+			end if
+		next
+	End If
+
+	set GetSelectedByID = Nothing
+
+End Function
+
+
+Sub ObjectsDropDownUserPick
+
+	Dim cm, obj
+
+	set obj = GetSelectedObject()
+	if (Not (obj Is Nothing) ) Then
+		set cm = parent.renderer.ControlManager
+		if (Not cm.IsSelected(obj)) Then
+			cm.Select obj
+		End If
+	End If
+
+end sub
+
+'Enables/disables buttons based on last selected object
+Sub ObjectsDropDownOnChange
+	set world =  top.theclient.vwclient.world
+
+	Dim obj, prop, fx, fy, fz
+
+	PosX.value = ""
+	PosY.value = ""
+	PosZ.value = ""
+
+	'If nothing is selected then we're done.
+	set obj = GetSelectedObject()
+	if (Not (obj Is Nothing) ) Then
+		if (obj.id = user.id) or (obj.owner is Nothing) then
+			DeleteButton.filters(0).enabled = true
+			DeleteButton.filters(1).enabled = true
+			bDeleteIsDisabled = true
+		elseIf (obj.owner.id = user.id OR world.global.owner.id = user.id) Then
+			DeleteButton.filters(0).enabled = false
+			DeleteButton.filters(1).enabled = false
+			bDeleteIsDisabled = false
+		Else
+			DeleteButton.filters(0).enabled = true
+			DeleteButton.filters(1).enabled = true
+			bDeleteIsDisabled = true
+		End if
+
+		If parent.renderer.IsUIToolCurrent("Rotate")  Then
+			GetRotationAngles obj, fX, fY, fZ
+
+			PosX.value = fx
+			PosY.value = fy
+			PosZ.value = fz
+			If (obj.CheckPropertySecurity("Direction", 2)) Then
+				EnableTransformBoxes
+			Else
+				DisableTransformBoxes
+			End If
+		Elseif parent.renderer.IsUIToolCurrent("Scale")  Then
+			set prop = obj.scale
+			PosX.value = Round(prop.x, 3)
+			PosY.value = Round(prop.y, 3)
+			PosZ.value = Round(prop.z, 3)
+			If (obj.CheckPropertySecurity("Scale", 2)) Then
+				EnableTransformBoxes
+			Else
+				DisableTransformBoxes
+			End If
+		ElseIf parent.renderer.IsUIToolCurrent("Translate") Then
+			set prop = obj.position
+			PosX.value = Round(prop.x, 3)
+			PosY.value = Round(prop.y, 3)
+			PosZ.value = Round(prop.z, 3)
+			If (obj.CheckPropertySecurity("Position", 2)) Then
+				EnableTransformBoxes
+			Else
+				DisableTransformBoxes
+			End If
+		Else
+			DisableTransformBoxes
+		End If
+	Else
+		DeleteButton.filters(0).enabled = true
+		DeleteButton.filters(1).enabled = true
+		bDeleteIsDisabled = true
+		DisableTransformBoxes
+	End If
+
+	oldPosX = CStr(PosX.value)
+	oldPosY = CStr(PosY.value)
+	oldPosZ = CStr(PosZ.value)
+
+End Sub
+
+function Arccos(X)
+	Arccos = Atn(-X / Sqr(-X * X + 1)) + 2 * Atn(1)
+end function
+
+function DotProduct(fX, fY, fZ, f2X, f2Y, f2Z)
+
+	DotProduct = fX * f2X + fY * f2Y + fZ * f2Z
+
+end function
+
+
+sub GetRotationAngles(obj, fX, fY, fZ)
+
+	set world =  top.theclient.vwclient.world
+	Dim vec1
+
+	set vec1 = world.CreateVector(0.0, 0.0, 0.0)
+
+	parent.renderer.GetUITool("Rotate").ComputeEulerAngles obj.GetFrame(), vec1
+
+	fX = Round(vec1.x * 57.2957795130823, 3)
+	fY = Round(vec1.y * 57.2957795130823, 3)
+	fZ = Round(vec1.z * 57.2957795130823, 3)
+
+End Sub
+
+
+
+Sub ResetToolButtons
+
+	translateButton.Src = "moveup.bmp"
+	rotateButton.Src = "rotup.bmp"
+	scaleButton.Src = "scaleup.bmp"
+	navigateButton.Src = "navup.bmp"
+	ZoomInButton.Src = "ZoomUp.bmp"
+	ZoomOutButton.Src = "ZoomOUp.bmp"
+
+
+End Sub
+
+
+sub EnableTransformBoxes
+	PosX.disabled = false
+	PosY.disabled = false
+	PosZ.disabled = false
+	SpanX.style.color = "black"
+	SpanY.style.color = "black"
+	SpanZ.style.color = "black"
+End Sub
+
+sub DisableTransformBoxes
+	PosX.disabled = true
+	PosY.disabled = true
+	PosZ.disabled = true
+	SpanX.style.color = "gray"
+	SpanY.style.color = "gray"
+	SpanZ.style.color = "gray"
+
+End Sub
+
+
+sub DoNavigate()
+
+	if parent.renderer.IsUIToolCurrent("Navigate") Then
+		Exit Sub
+	End If
+
+	set world =  top.theclient.vwclient.world
+	parent.renderer.AddCurrentUITool ""
+	parent.renderer.AddCurrentUITool "Navigate"
+	parent.renderer.AddCurrentUITool "VWPickTool"
+
+	'parent.renderer.GetUITool("Navigate").NavigationTarget = world.user
+
+	ResetToolButtons
+	DisableTransformBoxes
+	navigateButton.Src = "navdwn.bmp"
+	window.status = "Click and drag or use arrow keys to navigate.  Hold CTRL to pan camera."
+end sub
+
+sub DoTranslate()
+
+	Dim obj, prop
+
+	if parent.renderer.IsUIToolCurrent("Translate") Then
+		Exit Sub
+	End If
+
+	parent.renderer.AddCurrentUITool ""
+	parent.renderer.AddCurrentUITool "Select"
+	parent.renderer.AddCurrentUITool "Translate"
+
+	ResetToolButtons
+
+	translateButton.Src = "movedwn.bmp"
+
+	parent.renderer.GetUITool("Select").VertexSelection = False
+
+	set obj = GetSelectedObject()
+	if (Not (obj Is Nothing) ) Then
+		set prop = obj.position
+		PosX.value = Round(prop.x, 3)
+		PosY.value = Round(prop.y, 3)
+		PosZ.value = Round(prop.z, 3)
+		oldPosX = CStr(PosX.value)
+		oldPosY = CStr(PosY.value)
+		oldPosZ = CStr(PosZ.value)
+
+		If (obj.CheckPropertySecurity("Position", 2)) Then
+			EnableTransformBoxes
+		Else
+			DisableTransformBoxes
+		End If
+	End If
+
+	window.status = "Click and drag to move on XZ plane. RButton: Y axis. 'O': orbit selection. 'X' 'Y' 'Z': single axis."
+
+end sub
+
+sub DoRotate()
+
+	Dim obj, fx, fy, fz
+
+	if parent.renderer.IsUIToolCurrent("Rotate") Then
+		Exit Sub
+	End If
+
+	parent.renderer.AddCurrentUITool ""
+	parent.renderer.AddCurrentUITool "Select"
+	parent.renderer.AddCurrentUITool "Rotate"
+	ResetToolButtons
+	rotateButton.Src = "rotdwn.bmp"
+	parent.renderer.GetUITool("Select").VertexSelection = False
+
+	set obj = GetSelectedObject()
+	if (Not (obj Is Nothing) ) Then
+
+		GetRotationAngles obj, fX, fY, fZ
+
+		PosX.value = fx
+		PosY.value = fy
+		PosZ.value = fz
+		oldPosX = CStr(PosX.value)
+		oldPosY = CStr(PosY.value)
+		oldPosZ = CStr(PosZ.value)
+		If (obj.CheckPropertySecurity("Direction", 2)) Then
+			EnableTransformBoxes
+		Else
+			DisableTransformBoxes
+		End If
+	End If
+
+	window.status = "Click and drag to rotate.  'X' 'Y' 'Z': rotate on single axis."
+end sub
+
+sub DoScale()
+
+	Dim obj, prop
+
+	if parent.renderer.IsUIToolCurrent("Scale") Then
+		Exit Sub
+	End If
+
+	parent.renderer.AddCurrentUITool ""
+	parent.renderer.AddCurrentUITool "Select"
+	parent.renderer.AddCurrentUITool "Scale"
+	ResetToolButtons
+	scaleButton.Src = "scaledwn.bmp"
+	parent.renderer.GetUITool("Select").VertexSelection = False
+
+	set obj = GetSelectedObject()
+	if (IsObject(obj) and Not (obj Is Nothing) ) Then
+		set prop = obj.Scale
+		PosX.value = Round(prop.x, 3)
+		PosY.value = Round(prop.y, 3)
+		PosZ.value = Round(prop.z, 3)
+		oldPosX = CStr(PosX.value)
+		oldPosY = CStr(PosY.value)
+		oldPosZ = CStr(PosZ.value)
+		If (obj.CheckPropertySecurity("Scale", 2)) Then
+			EnableTransformBoxes
+		Else
+			DisableTransformBoxes
+		End If
+	End If
+
+	window.status = "Click and drag to scale on XZ plane. SHIFT: uniform scale. 'X','Y','Z': scale on single axis."
+
+end sub
+
+sub DoZoomIn()
+
+	if parent.renderer.IsUIToolCurrent("ZoomIn3D") Then
+		if (parent.renderer.GetUITool("ZoomIn3D").Mode = 0) Then
+			Exit Sub
+		End If
+	End If
+
+	parent.renderer.AddCurrentUITool ""
+	parent.renderer.AddCurrentUITool "ZoomIn3D"
+	parent.renderer.GetUITool("ZoomIn3D").Mode = 0
+	ResetToolButtons
+	DisableTransformBoxes
+	ZoomInButton.Src = "ZoomDwn.bmp"
+
+	window.status = "Click in view to zoom in."
+end sub
+
+sub DoZoomOut()
+
+	if parent.renderer.IsUIToolCurrent("ZoomIn3D") Then
+		if (parent.renderer.GetUITool("ZoomIn3D").Mode = 1) Then
+			Exit Sub
+		End If
+	End If
+
+	parent.renderer.AddCurrentUITool ""
+	parent.renderer.AddCurrentUITool "ZoomIn3D"
+	parent.renderer.GetUITool("ZoomIn3D").Mode = 1
+	DisableTransformBoxes
+	ResetToolButtons
+	ZoomOutButton.Src = "ZoomODwn.bmp"
+	window.status = "Click in view to zoom out."
+end sub
+
+sub DoLockX()
+	set world =  top.theclient.vwclient.world
+
+	if (world.global.CheckPropertySecurity("XAxisLocked", 2)) Then
+		world.global.XAxisLocked = Not world.global.XAxisLocked
+
+		if world.global.XAxisLocked then
+			lockXButton.Src = "ButtDwn.bmp"
+		else
+			lockXButton.Src = "ButtUp.bmp"
+		end if
+	else
+		msgbox "Insufficient permission to change axis locks.", vbExclamation, szMsgboxTitle
+	end if
+
+end sub
+
+sub DoLockY()
+	set world =  top.theclient.vwclient.world
+
+	if (world.global.CheckPropertySecurity("YAxisLocked", 2)) Then
+		world.global.YAxisLocked = Not world.global.YAxisLocked
+
+		if world.global.YAxisLocked then
+			lockYButton.Src = "ButtDwn.bmp"
+		else
+			lockYButton.Src = "ButtUp.bmp"
+		end if
+	else
+		msgbox "Insufficient permission to change axis locks.", vbExclamation, szMsgboxTitle
+	end if
+end sub
+
+sub DoLockZ()
+	set world =  top.theclient.vwclient.world
+
+	if (world.global.CheckPropertySecurity("ZAxisLocked", 2)) Then
+
+		world.global.ZAxisLocked = Not world.global.ZAxisLocked
+
+		if world.global.ZAxisLocked then
+			lockZButton.Src = "ButtDwn.bmp"
+		else
+			lockZButton.Src = "ButtUp.bmp"
+		end if
+	else
+		msgbox "Insufficient permission to change axis locks.", vbExclamation, szMsgboxTitle
+	end if
+
+end sub
+
+sub DoSelectionLock
+
+	On Error Resume Next
+	set world =  top.theclient.vwclient.world
+
+	world.Global.SelectionLock = Not world.Global.SelectionLock
+
+	if Not world.global.SelectionLock then
+		SelectionLockButton.Src = "xlockup.bmp"
+		ObjectsDropDown.disabled = false
+	else
+		SelectionLockButton.Src = "xlockdwn.bmp"
+		ObjectsDropDown.disabled = true
+	end if
+
+	Err.Clear
+
+end sub
+
+sub DoCameraFollowsObject
+
+	set world =  top.theclient.vwclient.world
+	On Error Resume Next
+
+	world.Global.CameraFollowsObject = Not world.Global.CameraFollowsObject
+
+	if Not world.global.CameraFollowsObject then
+		CameraFollowsObjectButton.Src = "CLockUp.bmp"
+	else
+		CameraFollowsObjectButton.Src = "CLockDwn.bmp"
+	end if
+
+	Err.Clear
+
+end sub
+
+sub DoPassable ()
+
+	set world =  top.theclient.vwclient.world
+	if (world.global.CheckPropertySecurity("CollisionDetection", 2)) Then
+		world.global.CollisionDetection = Not world.global.CollisionDetection
+
+		world.tool("Navigate").CollisionDetection = world.global.CollisionDetection
+
+		if world.global.CollisionDetection then
+			PassableButton.Src = "BoundOn.bmp"
+		else
+			PassableButton.Src = "BoundOff.bmp"
+		end if
+	else
+		msgbox "Insufficient permission to change the world's passability.", vbExclamation, szMsgboxTitle
+	end if
+
+end sub
+
+sub DoGravity ()
+	set world =  top.theclient.vwclient.world
+	if (world.global.CheckPropertySecurity("XAxisLocked", 2)) Then
+		world.global.Gravity = Not world.global.Gravity
+
+		world.tool("Navigate").Gravity = world.global.Gravity
+
+		if world.global.Gravity then
+			GravityButton.Src = "GravOn.bmp"
+		else
+			GravityButton.Src = "GravOff.bmp"
+		end if
+	else
+		msgbox "Insufficient permission to change gravity.", vbExclamation, szMsgboxTitle
+	end if
+
+end sub
+
+
+sub DoAvatarView ()
+
+	if (parent.renderer.EditMode = 1) Then
+		TopViewButton.Src = "topUp.bmp"
+		'SideViewButton.Src = "Sideup.bmp"
+		AvatarViewButton.Src = "CamDwn.bmp"
+
+		parent.renderer.ViewMode = 0
+	End If
+end sub
+
+sub DoTopView ()
+
+	if (parent.renderer.EditMode = 1) Then
+		'SideViewButton.Src = "Sideup.bmp"
+		AvatarViewButton.Src = "CamUp.bmp"
+		TopViewButton.Src = "topDwn.bmp"
+
+		parent.renderer.ViewMode = 1
+	End If
+
+end sub
+
+sub DoSideView ()
+
+	if (parent.renderer.EditMode = 1) Then
+		TopViewButton.Src = "topUp.bmp"
+		AvatarViewButton.Src = "CamUp.bmp"
+		'SideViewButton.Src = "SideDwn.bmp"
+
+		parent.renderer.ViewMode = 2
+	End If
+end sub
+
+
+sub UpdateButtonStates
+
+	'On Error Resume Next
+
+	'Hack to make sure we always have good world ptr.
+	set world = top.theclient.vwclient.world
+
+	ResetToolButtons
+
+	If parent.renderer.IsUIToolCurrent("Navigate") Then
+		navigateButton.Src = "navdwn.bmp"
+	Elseif parent.renderer.IsUIToolCurrent("Translate") OR parent.renderer.IsUIToolCurrent("Translate2D") Then
+		translateButton.Src = "movedwn.bmp"
+	Elseif parent.renderer.IsUIToolCurrent("Rotate") OR parent.renderer.IsUIToolCurrent("Rotate2D") Then
+		rotateButton.Src = "rotdwn.bmp"
+	Elseif parent.renderer.IsUIToolCurrent("Scale") OR parent.renderer.IsUIToolCurrent("Scale2D") Then
+		scaleButton.Src = "scaledwn.bmp"
+	Elseif parent.renderer.IsUIToolCurrent("ZoomIn3D") Then
+		ZoomInButton.Src = "ZoomDwn.bmp"
+	Elseif parent.renderer.IsUIToolCurrent("ZoomOut3D") Then
+		ZoomOutButton.Src = "ZoomODwn.bmp"
+	End If
+
+	if world.global.Gravity then
+		GravityButton.Src = "GravOn.bmp"
+	else
+		GravityButton.Src = "GravOff.bmp"
+	end if
+
+	'if Not world.global.CollisionDetection then
+	'	PassableButton.Src = "BoundOff.bmp"
+	'else
+	'	PassableButton.Src = "BoundOn.bmp"
+	'end if
+
+	if Not world.global.SelectionLock then
+		SelectionLockButton.Src = "xlockup.bmp"
+		ObjectsDropDown.disabled = false
+	else
+		SelectionLockButton.Src = "xlockdwn.bmp"
+		ObjectsDropDown.disabled = true
+	end if
+
+	if Not world.global.CameraFollowsObject then
+		CameraFollowsObjectButton.Src = "CLockUp.bmp"
+	else
+		CameraFollowsObjectButton.Src = "CLockDwn.bmp"
+	end if
+
+	if world.global.XAxisLocked then
+		lockXButton.Src = "ButtDwn.bmp"
+	else
+		lockXButton.Src = "ButtUp.bmp"
+	end if
+
+	if world.global.YAxisLocked then
+		lockYButton.Src = "ButtDwn.bmp"
+	else
+		lockYButton.Src = "ButtUp.bmp"
+	end if
+
+	if world.global.ZAxisLocked then
+		lockZButton.Src = "ButtDwn.bmp"
+	else
+		lockZButton.Src = "ButtUp.bmp"
+	end if
+
+	'Reset the view buttons
+	TopViewButton.Src = "topUp.bmp"
+	AvatarViewButton.Src = "CamUp.bmp"
+
+	if parent.renderer.ViewMode = 1 Then
+		TopViewButton.Src = "topDwn.bmp"
+	Else
+		AvatarViewButton.Src = "CamDwn.bmp"
+	End If
+
+	ObjectsDropDownOnChange
+
+	'Err.Clear
+
+End Sub
+
+sub window_OnLoad
+	top.addToEventList window
+	bIsInitialized = False
+	parent.ChildReady(window)
+end sub
+
+
+
+Sub Window_OnUnload
+
+	top.removeFromEventList window
+
+End Sub
+
+
+Sub Initialize()
+
+	Dim whichMode, obj, prop, sellist, tmpel
+
+	bIsInitialized = true
+
+	ZoomDropDownChanging = 0
+
+	set world =  top.theclient.vwclient.world
+	set user = world.user
+
+	world.global.selectionlock = false
+
+	RefillRoomContentsDropDown
+
+	UpdateButtonStates
+	HandleUIEvent Nothing, "OnZoomLevelChanged", parent.renderer.ZoomLevel
+
+End Sub
+
+
+Function GetCurrentToolName
+
+	If parent.renderer.IsUIToolCurrent("Rotate") OR parent.renderer.IsUIToolCurrent("Rotate2D") Then
+		GetCurrentToolName = "r"
+	Elseif parent.renderer.IsUIToolCurrent("Scale") OR parent.renderer.IsUIToolCurrent("Scale2D") Then
+		GetCurrentToolName = "s"
+	ElseIf parent.renderer.IsUIToolCurrent("Translate") OR parent.renderer.IsUIToolCurrent("Translate2D") Then
+		GetCurrentToolName = "t"
+	Else
+		GetCurrentToolName = "?"
+	End If
+
+End Function
+
+function clamp(fVal, fLow, fHigh)
+
+	if (fVal < fLow) then
+		clamp = fLow
+	elseif (fVal > fHigh) then
+		clamp = fHigh
+	else
+		clamp = fVal
+	End if
+
+end function
+
+function MaximumMagnitude(f1, f2)
+
+	if ( abs(f1) > abs(f2) ) Then
+		MaximumMagnitude = f1
+	else
+		MaximumMagnitude = f2
+	End If
+
+end function
+
+sub SetObjectDirection( obj, fX, fY, fZ)
+
+	set world =  top.theclient.vwclient.world
+	dim vec1, vec2, rlvDirX, rlvDirY, rlvDirZ
+
+	rlvDirX = -fX / 57.295779513082
+	rlvDirY = fY / 57.295779513082
+	rlvDirZ = fZ / 57.295779513082
+
+	set vec1 = top.theclient.vwclient.world.CreateVector(1.0, 0.0, 0.0)
+	set vec2 = top.theclient.vwclient.world.CreateVector(0.0, 1.0, 0.0)
+
+	vec1.RotateAboutAxis rlvDirY, 0.0, 1.0, 0.0
+	vec1.RotateAboutAxis rlvDirZ, 1.0, 0.0, 0.0
+	vec1.RotateAboutAxis rlvDirX, 0.0, 0.0, 1.0
+	obj.direction.set vec1.x, vec1.y, vec1.z
+
+	vec2.RotateAboutAxis rlvDirZ, 1.0, 0.0, 0.0
+	vec2.RotateAboutAxis rlvDirX, 0.0, 0.0, 1.0
+	obj.up.set vec2.x, vec2.y, vec2.z
+
+end sub
+
+Sub HandleKeypressForNumeric(whichBox)
+
+	Dim trange
+
+	If ( window.event.keyCode = 45) Then
+		set trange = document.selection.createRange
+		If (InStr(window.event.srcElement.value, "-") AND Not InStr(trange.text, "-") ) Then
+			window.event.returnValue = false
+		End If
+	ElseIf ( window.event.keyCode = 46) Then
+		set trange = document.selection.createRange
+		If (InStr(window.event.srcElement.value, ".") AND Not InStr(trange.text, ".")) Then
+			window.event.returnValue = false
+		End If
+	ElseIf ( (window.event.keyCode < 48 OR window.event.keyCode > 57) AND (window.event.keyCode <> 13) ) Then
+		window.event.returnValue = false
+	End If
+
+End Sub
+
+Sub DoSetTransform(whichMode)
+
+	Dim obj
+
+	'Force the toolbar to be in the right place, not scrolled away
+	'document.body.scrollLeft = 0
+	'document.body.scrollTop = 0
+
+	set obj = GetSelectedObject()
+	If (Not (obj Is Nothing) ) Then
+		If (oldPosX = CStr(PosX.value) And oldPosY = CStr(PosY.value) And oldPosZ = CStr(PosZ.value)) Then
+			Exit Sub
+		End If
+
+		If (Not IsNumeric(PosX.value) Or Not IsNumeric(PosY.value) Or Not IsNumeric(PosZ.value)) Then
+			DoResetTransform whichMode
+			window.event.returnValue = false
+			Msgbox "Values must be numeric.", vbExclamation, szMsgboxTitle
+		End If
+
+		if (PosX.value = "" Or PosZ.value = "") Then
+			DoResetTransform whichMode
+		End If
+
+		If (whichMode = "t") Then
+			If (Not obj.CheckPropertySecurity("Position", 2)) Then
+				DoResetTransform whichMode
+				msgbox "Insufficient permission to modify " & obj.name & "'s position.", vbExclamation, szMsgboxTitle
+				Exit Sub
+			End If
+			obj.Position.Set CSng(PosX.value), CSng(PosY.value), CSng(PosZ.value)
+		ElseIf (whichMode = "r") Then
+			If (Not obj.CheckPropertySecurity("Direction", 2)) Then
+				DoResetTransform whichMode
+				msgbox "Insufficient permission to modify " & obj.name & "'s direction.", vbExclamation, szMsgboxTitle
+				Exit Sub
+			End If
+			SetObjectDirection obj, CSng(PosX.value), CSng(PosY.value), CSng(PosZ.value)
+		ElseIf (whichMode = "s") Then
+			If (Not obj.CheckPropertySecurity("Scale", 2)) Then
+				DoResetTransform whichMode
+				msgbox "Insufficient permission to modify " & obj.name & "'s scale.", vbExclamation, szMsgboxTitle
+				Exit Sub
+			End If
+
+			If (CSng(PosX.value) = 0 Or CSng(PosY.value) = 0 Or CSng(PosZ.value) = 0) Then
+				DoResetTransform whichMode
+				msgbox "Absolute zero scaling values are not allowed.", vbExclamation, szMsgboxTitle
+				Exit Sub
+			End If
+			ValidateScaleTransform
+			obj.Scale.Set CSng(PosX.value), CSng(PosY.value), CSng(PosZ.value)
+		End If
+
+		oldPosX = CStr(PosX.value)
+		oldPosY = CStr(PosY.value)
+		oldPosZ = CStr(PosZ.value)
+
+	End If
+End Sub
+
+sub ValidateScaleTransform
+	Dim bShowMessage
+	bShowMessage = false
+
+	If (CSng(PosX.value) >= 0) Then
+		If ( CSng(PosX.value) < 0.001) Then
+			bShowMessage = true
+			PosX.value = 0.001
+		End If
+		If ( CSng(PosX.value) > 99999.0) Then
+			bShowMessage = true
+			PosX.value = 99999.0
+		End If
+	Else
+		If ( CSng(PosX.value) > -0.001) Then
+			bShowMessage = true
+			PosX.value = -0.001
+		End If
+		If ( CSng(PosX.value) < -99999.0) Then
+			bShowMessage = true
+			PosX.value = -99999.0
+		End If
+	End If
+
+	If (CSng(PosY.value) > 0) Then
+		If ( CSng(PosY.value) < 0.001) Then
+			bShowMessage = true
+			PosY.value = 0.001
+		End If
+		If ( CSng(PosY.value) > 99999.0) Then
+			bShowMessage = true
+			PosY.value = 99999.0
+		End If
+	Else
+		If ( CSng(PosY.value) > -0.001) Then
+			bShowMessage = true
+			PosY.value = -0.001
+		End If
+		If ( CSng(PosY.value) < -99999.0) Then
+			bShowMessage = true
+			PosY.value = -99999.0
+		End If
+	End If
+
+	If (CSng(PosZ.value) > 0) Then
+		If ( CSng(PosZ.value) < 0.001) Then
+			bShowMessage = true
+			PosZ.value = 0.001
+		End If
+		If ( CSng(PosZ.value) > 99999.0) Then
+			bShowMessage = true
+			PosZ.value = 99999.0
+		End If
+	Else
+		If ( CSng(PosZ.value) > -0.001) Then
+			bShowMessage = true
+			PosZ.value = -0.001
+		End If
+		If ( CSng(PosZ.value) < -99999.0) Then
+			bShowMessage = true
+			PosZ.value = -99999.0
+		End If
+	End If
+
+	if (bShowMessage) Then
+		msgbox "Scale values must be between 0.001 and 99,999.00 or -0.001 and -99,999.00.", vbExclamation, szMsgboxTitle
+	End If
+End Sub
+
+
+Sub DoResetTransform(whichMode)
+
+	Dim prop, obj, fx, fy, fz
+
+	set obj = GetSelectedObject()
+	If (Not (obj Is Nothing) ) Then
+
+		If (whichMode = "t") Then
+			set prop = obj.Position
+			PosX.value = Round(prop.x, 3)
+			PosY.value = Round(prop.y, 3)
+			PosZ.value = Round(prop.z, 3)
+		ElseIf (whichMode = "r") Then
+			GetRotationAngles obj, fX, fY, fZ
+			PosX.value = fx
+			PosY.value = fy
+			PosZ.value = fz
+		ElseIf (whichMode = "s") Then
+			set prop = obj.Scale
+			PosX.value = Round(prop.x, 3)
+			PosY.value = Round(prop.y, 3)
+			PosZ.value = Round(prop.z, 3)
+		End If
+
+		oldPosX = CStr(PosX.value)
+		oldPosY = CStr(PosY.value)
+		oldPosZ = CStr(PosZ.value)
+
+	End If
+
+End Sub
+
+
+
+Sub HandleTabAndEnter(whichBox)
+
+	Dim whichMode
+
+	whichMode = GetCurrentToolName()
+
+	If (window.event.keyCode = 9) OR (window.event.keyCode = 13) Then    'Tab key
+		window.event.returnValue = false
+		DoSetTransform whichMode
+	Elseif (window.event.keyCode = 27) Then    'Escape key
+		window.event.returnValue = false
+		DoResetTransform whichMode
+	End If
+
+End Sub
+
+
+sub DoGetFocus
+
+	Dim tr
+
+	set tr = window.event.srcElement.CreateTextRange
+	tr.Expand "textedit"
+	tr.select
+
+End Sub
+
+
+sub DoClickCenterOnSelected
+	Dim obj
+	CenterOnSelectedButton.SRC = "ctrup.bmp"
+	If (ObjectsDropDown.selectedIndex >= 0) Then
+		set obj = GetSelectedObject()
+		If (Not (obj Is Nothing) ) Then
+			parent.renderer.CenterViewOnObject obj, false
+		End If
+	End If
+End Sub
+
+sub DoMouseDownCenterOnSelected
+	Dim obj
+	if ( window.event.button = 1) Then
+		CenterOnSelectedButton.SRC = "ctrdwn.bmp"
+	end if
+end sub
+
+sub DoMouseUpCenterOnSelected
+	Dim obj
+	if ( window.event.button = 1) Then
+		CenterOnSelectedButton.SRC = "ctrup.bmp"
+	end if
+end sub
+
+sub DoClickDelete
+	Dim obj, sellist, bCanDelete
+
+	set world =  top.theclient.vwclient.world
+	if (Not bDeleteIsDisabled) Then
+		DeleteButton.SRC = "delup.bmp"
+
+		bCanDelete = true
+
+		set sellist = parent.renderer.ControlManager.SelectionList
+
+		If (sellist.count >= 0) Then
+
+			For each obj in sellist
+
+				If (IsObject(obj) AND Not obj Is Nothing) Then
+					If (MsgBox ("Deleting " & obj.name & ".  Are you sure?", vbYesNo + vbQuestion, szMsgboxTitle) = vbYes) Then
+						On Error Resume Next
+						top.theclient.vwclient.world.DestroyObject obj
+
+						if (Err.number = &H8004024e) Then
+							Msgbox "You may not delete a room.", vbExclamation, szMsgboxTitle
+						Elseif (Err.number =  &H80040255) Then
+							Msgbox "You may not delete an avatar.", vbExclamation, szMsgboxTitle
+						Elseif (Err.number =  &H8004024c) Then
+							Msgbox "You may not delete a user.", vbExclamation, szMsgboxTitle
+						Elseif (Err.number =  &H8004024d) Then
+							Msgbox "You may not delete an avatar's container.", vbExclamation, szMsgboxTitle
+						Elseif (Err.Number < 0) Then
+							Msgbox "Error deleting this object.", vbExclamation, szMsgboxTitle
+						Else
+							RemoveFromRoomContentDropDown(obj)
+						End If
+
+						Err.Clear
+					End If
+				End If
+			Next
+
+			parent.renderer.ControlManager.ClearSelections
+
+		End If
+	End if
+End Sub
+
+sub DoMouseDownDelete
+	Dim obj, bCanDelete
+	if ( (Not bDeleteIsDisabled) AND window.event.button = 1) Then
+		DeleteButton.SRC = "deldwn.bmp"
+	end if
+End sub
+
+sub DoMouseUpDelete
+	Dim obj, bCanDelete
+	if ( (Not bDeleteIsDisabled) AND window.event.button = 1) Then
+		DeleteButton.SRC = "delup.bmp"
+	end if
+End sub
+
+sub ZoomDropDownOnChange
+
+	'mutex
+	ZoomDropDownChanging = 1
+
+	Select Case ZoomDropDown.selectedIndex
+	Case 0
+		parent.renderer.ZoomLevel = 0.0625
+	Case 1
+		parent.renderer.ZoomLevel = 0.125
+	Case 2
+		parent.renderer.ZoomLevel = 0.25
+	Case 3
+		parent.renderer.ZoomLevel = 0.33
+	Case 4
+		parent.renderer.ZoomLevel = 0.5
+	Case 5
+		parent.renderer.ZoomLevel = 1.0
+	Case 6
+		parent.renderer.ZoomLevel = 2.0
+	Case 7
+		parent.renderer.ZoomLevel = 3.0
+	Case 8
+		parent.renderer.ZoomLevel = 4.0
+	Case 9
+		parent.renderer.ZoomLevel = 8.0
+	Case 10
+		parent.renderer.ZoomLevel = 16.0
+	End Select
+
+	'unmutex
+	ZoomDropDownChanging = 0
+
+End Sub
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+'----------------------------------------------
+</script>
+
+<body bgcolor="#dcdacd" topmargin="0" leftmargin="0" style="FILTER: blend(duration=3)">
+
+
+<!-- The Upper span <span class=vsmall style="HEIGHT: 24px; LEFT: 2px; POSITION: absolute; TOP: 3px; VERTICAL-ALIGN: middle; WIDTH: 640px"> -->
+
+<span style="HEIGHT: 26px; LEFT: 7px; POSITION: absolute; TOP: 8px; WIDTH: 99px" class=vsmall>Selected Object:</span>
+<SELECT class=vsmall NAME="ObjectsDropDown" ID="ObjectsDropDown" OnChange=ObjectsDropDownUserPick SIZE="1" STYLE="HEIGHT: 22px; LEFT: 108px; POSITION: absolute; TOP: 5px; WIDTH: 200px">
+</SELECT>
+<IMG	 BORDER=0 SRC="ctrup.bmp" NAME="CenterOnSelectedButton" onclick=DoClickCenterOnSelected onmousedown=DoMouseDownCenterOnSelected onmouseout='CenterOnSelectedButton.SRC="ctrup.bmp"' Title      ="Center View on Selection" OnMouseUp     =DoMouseUpCenterOnSelected STYLE="HEIGHT: 21px; LEFT: 341px; POSITION: absolute; TOP: 4px; WIDTH: 21px" height=21 width=21>
+<IMG	 BORDER=0 SRC="delup.bmp" NAME="DeleteButton" onclick=DoClickDelete onmousedown=DoMouseDownDelete onmouseout='DeleteButton.SRC="delup.bmp"' Title      ="Delete Selection" OnMouseUp     =DoMouseUpDelete STYLE="FILTER: gray alpha(opacity=50); HEIGHT: 21px; LEFT: 363px; POSITION: absolute; TOP: 4px; WIDTH: 21px">
+<IMG	 BORDER=0 SRC="xlockup.bmp" NAME ="SelectionLockButton" OnClick=DoSelectionLock Title="Lock Selection" style="HEIGHT: 21px; LEFT: 310px; POSITION: absolute; TOP: 4px; WIDTH: 21px">
+
+<span ID="SpanX" class=vsmall style="HEIGHT: 16px; LEFT: 395px; POSITION: absolute; TOP: 8px; WIDTH: 66px">
+X:
+<INPUT  class=vsmall2 title = "X Value (World Coordinates)" MAXLENGTH=20 NAME="PosX" ID="PosX" style="HEIGHT: 20px; LEFT: 14px; POSITION: absolute; TOP: -3px; WIDTH: 53px" OnKeyDown="HandleTabAndEnter(0)" OnBlur="DoSetTransform GetCurrentToolName()" OnKeyPress="HandleKeypressForNumeric(0)" OnFocus="DoGetFocus">&nbsp;
+</span>
+
+<span ID="SpanY" class=vsmall style="HEIGHT: 22px; LEFT: 466px; POSITION: absolute; TOP: 8px; WIDTH: 68px">
+Y:
+<INPUT  class=vsmall2 title = "Y Value (World Coordinates)" MAXLENGTH=20 NAME="PosY" ID="PosY" style="HEIGHT: 20px; LEFT: 14px; POSITION: absolute; TOP: -3px; WIDTH: 53px" OnKeyDown="HandleTabAndEnter(1)" OnBlur="DoSetTransform GetCurrentToolName()" OnKeyPress="HandleKeypressForNumeric(1)" OnFocus="DoGetFocus">
+</span>
+
+<span ID="SpanZ" class=vsmall style="HEIGHT: 24px; LEFT: 537px; POSITION: absolute; TOP: 8px; WIDTH: 66px">
+Z:
+<INPUT  class=vsmall2 title = "Z Value (World Coordinates)" MAXLENGTH=20 NAME="PosZ" ID="PosZ" style="HEIGHT: 20px; LEFT: 14px; POSITION: absolute; TOP: -3px; WIDTH: 53px" OnKeyDown="HandleTabAndEnter(2)" OnBlur="DoSetTransform GetCurrentToolName()" OnKeyPress="HandleKeypressForNumeric(2)" OnFocus="DoGetFocus">&nbsp;
+</span>
+
+<hr style="HEIGHT: 1px; LEFT: 2px; POSITION: absolute; TOP: 30px">
+
+<!-- The Lower span <span class=vsmall style="LEFT: 0px; POSITION: absolute; TOP: 35px">!-->
+
+<IMG	 BORDER=0 SRC="Navup.bmp" NAME  ="navigateButton" OnClick        =DoNavigate title="Move Camera" style="HEIGHT: 25px; LEFT: 4px; POSITION: absolute; TOP: 34px; WIDTH: 23px">
+<IMG	 BORDER=0 SRC="moveup.bmp" NAME ="translateButton" OnClick        =DoTranslate title="Move Object" style="HEIGHT: 25px; LEFT: 27px; POSITION: absolute; TOP: 34px; WIDTH: 23px">
+<IMG	 BORDER=0 SRC="rotup.bmp" NAME ="rotateButton" OnClick        =DoRotate title="Rotate Object" style="HEIGHT: 25px; LEFT: 50px; POSITION: absolute; TOP: 34px; WIDTH: 23px">
+<IMG	 BORDER=0 SRC="scaleup.bmp" NAME="scaleButton" OnClick=DoScale title ="Scale Object" style="HEIGHT: 25px; LEFT: 73px; POSITION: absolute; TOP: 34px; WIDTH: 23px">
+
+<IMG	 BORDER=0 SRC="Zoomup.bmp" NAME ="zoomInButton" title="Zoom In" OnClick      =DoZoomIn style="HEIGHT: 25px; LEFT: 108px; POSITION: absolute; TOP: 34px; WIDTH: 23px">
+<IMG	 BORDER=0 SRC="ZoomOUp.bmp" NAME ="zoomOutButton" title="Zoom Out" OnClick      =DoZoomOut style="HEIGHT: 25px; LEFT: 132px; POSITION: absolute; TOP: 34px; WIDTH: 23px">
+<SELECT NAME="ZoomDropDown" title  = "Zoom Selector" class="" OnChange=ZoomDropDownOnChange SIZE="1" STYLE="HEIGHT: 25px; LEFT: 157px; POSITION: absolute; TOP: 34px; WIDTH: 53px">
+<OPTION VALUE="0" selected>1:16
+<OPTION VALUE="1">1:8
+<OPTION VALUE="2">1:4
+<OPTION VALUE="3">1:3
+<OPTION VALUE="4">1:2
+<OPTION VALUE ="5">1:1
+<OPTION VALUE="6">2:1
+<OPTION VALUE="7">3:1
+<OPTION VALUE="8">4:1
+<OPTION VALUE="9">8:1
+<OPTION VALUE="10">16:1
+</SELECT>
+
+<IMG	 BORDER=0 SRC="GravOn.bmp"
+		NAME="GravityButton" OnClick=DoGravity title="Toggle Gravity" style="HEIGHT: 25px; LEFT: 220px; POSITION: absolute; TOP: 34px; WIDTH: 23px">
+<IMG	 BORDER=0 SRC="CLockUp.bmp"
+		NAME="CameraFollowsObjectButton" OnClick=DoCameraFollowsObject title="Toggle Camera Follows Object" style="HEIGHT: 25px; LEFT: 252px; POSITION: absolute; TOP: 34px; WIDTH: 23px"> &nbsp;
+
+
+<IMG SRC="buttup.bmp" title="X Axis Lock (View Coordinates)" NAME="lockXButton" style="HEIGHT: 25px; LEFT: 309px; POSITION: absolute; TOP: 34px; WIDTH: 23px" OnClick="DoLockX">
+<span class=vlabel OnClick="DoLockX" style="CURSOR: default; HEIGHT: 16px; LEFT: 315px; POSITION: absolute; TOP: 38px; WIDTH: 16px">X</span>&nbsp;
+
+<IMG SRC="buttup.bmp" title="Y Axis Lock (View Coordinates)" NAME="lockYButton" style="HEIGHT: 25px; LEFT: 332px; POSITION: absolute; TOP: 34px; WIDTH: 23px" OnClick=DoLockY height = 25 width = 23 >
+<span class=vlabel OnClick="DoLockY" style="CURSOR: default; HEIGHT: 16px; LEFT: 338px; POSITION: absolute; TOP: 38px; WIDTH: 16px">Y</span>
+
+<IMG SRC="buttup.bmp" title="Z Axis Lock (View Coordinates)" name="lockZButton" onclick=DoLockZ style="HEIGHT: 25px; LEFT: 355px; POSITION: absolute; TOP: 34px; WIDTH: 23px" >
+<span class=vlabel OnClick="DoLockZ" style="CURSOR: default; HEIGHT: 16px; LEFT: 361px; POSITION: absolute; TOP: 38px; WIDTH: 16px">Z</span>&nbsp;
+
+<IMG	 BORDER=0 SRC="Camup.bmp"
+		NAME="AvatarViewButton" OnClick=DoAvatarView title="Perspective View" style="HEIGHT: 25px; LEFT: 395px; POSITION: absolute; TOP: 34px; WIDTH: 23px">
+<IMG	 BORDER=0 SRC="topUp.bmp"
+		NAME="TopViewButton" OnClick=DoTopView title="Top View" style="HEIGHT: 25px; LEFT: 419px; POSITION: absolute; TOP: 34px; WIDTH: 23px">
+
+</body>
+</HTML>

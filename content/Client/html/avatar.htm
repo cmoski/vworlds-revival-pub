@@ -1,0 +1,80 @@
+<html>
+<head>
+<title>New Avatar</title>
+<link rel=stylesheet href=../shared/global.css>
+<script language="VBscript">
+
+Option Explicit
+
+'Initialize textbox to last name a user entered in case of invalid name
+Sub window_onload
+	txtName.value = window.dialogArguments.avatarName
+	txtName.focus
+End Sub
+
+Sub document_onmouseover
+	If window.event.srcElement.className = "bEnabled" Then
+		window.event.srcElement.className = "bHighlight"
+	End If
+End Sub
+
+Sub document_onmouseout
+	If window.event.srcElement.className = "bHighlight" Then
+		window.event.srcElement.className = "bEnabled"
+	End If
+End Sub
+
+Sub OnCancel
+	window.close
+End Sub
+
+Sub document_onkeypress
+	Select Case window.event.keycode
+	Case 27
+		OnCancel
+	Case 13
+		If window.event.srcElement.tagname <> "BUTTON" Then OnOK
+	Case Else
+	End Select
+End Sub
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+Sub OnOK
+	window.dialogArguments.avatarName = txtName.value
+	If window.dialogArguments.OnDoneCreatingAvatar Then
+		window.close
+	Else
+		txtName.focus
+		txtName.select
+	End If
+End Sub
+
+</script>
+</head>
+<body style=background-color:white;>
+	<div class=vH2 style=left:18;top:7;>
+		Enter a name for your new avatar.
+	</div>
+	<div class=vLabel style=left:18;top:25;color:gray;>
+		(Must be 2 to 12 characters.)
+	</div>
+	<div class=vLabel style=top:54;left:24;>
+		Nickname:
+	</div>
+	<input class=vInput style=top:51;left:97;width:145; id=txtName maxlength=12>
+	<button class=bEnabled id=btnOK onclick=OnOK style=left:112;top:80;>OK</button>
+	<button class=bEnabled id=btnCancel onclick=OnCancel style=left:182;top:80;>Cancel</button>
+</BODY>
+</HTML>

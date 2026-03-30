@@ -1,0 +1,408 @@
+<html>
+<head>
+<LINK Rel=Stylesheet href=../../../../client/shared/global.css>
+<style>
+	.note {font-family:Webdings;color:#cc6600;font-size:14pt;}
+	.task {font-family:Webdings;color:#009900;font-size:14pt;}
+	.alert {font-family:Webdings;color:#cc0000;font-size:14pt;}
+	.helplink {font-family:Verdana;color:#3300cc;cursor:hand;font-size:8pt;font-weight:bold;}
+	.scriptlink {font-family:Verdana;color:#3300cc;cursor:hand;font-size:9pt;font-weight:bold;}
+</style>
+<title>Welcome to Objects with Timers Script Tutorial!</title>
+<script language=vbs src=ComVBScript.htm></script>
+<script language=vbs>
+
+dim world
+
+sub Window_OnLoad
+	window.settimeout "top.frames(""Btns"").BuildButtons(theBody.MaxSteps)", 0, "vbs"
+	window.settimeout "top.frames(""Tabs"").HighlightItem mid(window.location, instrRev(window.location, ""/"") + 1, len(window.location) - instrRev(window.location, ""/"") - 4)", 0, "vbs"
+	set world = top.goWorld
+	world.tutorial.start_lesson 3
+	world.fireUIEvent world.user, "EventRequest", window
+end sub
+
+Sub window_onunload
+	world.fireUIEvent world.user, "EventRequestCancel", window
+End sub
+
+</script>
+</head>
+<body id=theBody class=vBody CurrentStep=1 MaxSteps=4>
+	<div class=vh1 Style=position:absolute;left:0;top:10; id=heading>
+		Objects with Timers
+	</div>
+	<div class=vweb style=position:absolute;left:340;top:1; id=circle>=</div>
+
+	<!-- Step 1 -->
+	<div id=Step1 style=position:absolute;width:99%;left:0;top:44;>
+		<nobr>
+			<div class=vstep Style=position:absolute;left:351;top:-35; id=divNumSteps>
+				Step 1 of 4
+			</div>
+		</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step One: Compound Objects
+		</div>
+		<div class=vtext style=position:absolute;left:0;top:30;width:99%;>
+			<p>This set of objects introduces the Virtual Worlds <span class=helplink HelpString="vworlds.chm::/API Reference/World/CreateTimer.htm" TITLE="Help">timer</span> capability. We use clickable object behavior in conjunction with a timer to make a self-timing set of objects that a user can start and stop with mouse clicks.
+		<table class=vtext cellspacing=3>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>In the Virtual Worlds window you should see a large 3-D timer object with panels that read <b>Start</b> and <b>Stop</b>. These panels are clickable and their scripts activate the center arrow object. Click the left-hand panel to activate the timer.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>When it has finished rotating and changing color, click it again.</td></tr>
+			<tr><td valign=top><span class=note>$</span></td>
+			<td>Notice that this object knew how to turn itself off when it completed its task! This time, when you click <b>Start</b>, try to click the <b>Stop</b> panel before the timer goes around and notice that it has a different behavior. Try different combinations of start and stop, and watch the messages in the Command window as the scripts run.</td></tr>
+			<tr><td valign=top><span class=note>$</span></td>
+			<td>If you expand the object marked <b>Lesson_3</b> in the <span class=helplink HelpString="vworlds.chm::/UIREF/objexpl/intrface.htm" TITLE="Help">Object Explorer</span>, you can see that it contains three objects-- the <b>Start</b> and <b>Stop</b> panels, and the arrow. The <b>Lesson_3</b> object itself is the ring shape that combines and connects all of these parts. These are all Virtual Worlds objects in their own right, but they work together in scripts to make a virtual machine that has moving and animating parts.</td></tr>
+		</table>
+<P>Although the timer appears as one graphical form, it is an illusion of the design. You can move the pieces away from each other with the <span class=helplink HelpString="vworlds.chm::/UIREF/geomed/intrface.htm" TITLE="Help">Geometry Editor</span>, and they should function precisely as they did before. (If you attempt this, please try to move them back together for the next reader!) Different component objects within the whole composition have different custom methods attached to them that create the corresponding part of the composition's functionality. Some are clickable and manipulable, in the same way links on a web page have separate tags even though they appear as part of one unified document.
+		<table class=vtext cellspacing=3>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>You can go on to <b>Step 2</b> to examine the relationship of the component objects and scripts to the whole sequence.</td></tr>
+		</table>
+			<p>The <span class=helplink HelpString="vworlds.chm::/Programmer's Guide/Objects/Object_Model_Overview.html" TITLE="Help">Virtual Worlds object hierarchy</span> allows objects to be contained within other objects even when their graphics look distinct. In this case, the center ring object owns the arrow, start and stop objects, but the methods run on the 3 components, not the owner.
+		<table class=vtext cellspacing=3>
+			<tr><td valign=top><span class=note>$</span></td>
+			<td>Take another look at this object's ownership tree, using the <b>Object Explorer</b>. In the next step, we will look at the subroutines for the start and stop panel objects you can see below the <b>Lesson_3</b> object in the tree.</td></tr>
+		</table>
+		</div>
+	</div>
+
+	<!-- Step 2 -->
+	<div id=Step2 style=position:absolute;left:0;top:44;width:99%;display:none;>
+		<nobr>
+			<div class=vstep Style=position:absolute;left:351;top:-35; id=divNumSteps>
+				Step 2 of 4
+			</div>
+		</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step Two: Objects as properties of Other Objects
+		</div>
+			<br>
+			<table class=vtext cellspacing=3>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Take a look at the script code below from the module <b>Lesson_3</b>. This module points at the file <b>lesson_3_timer_objects.vbs</b>. The <b>start_timer</b> routine below is used by a "child" object (<b>start_button</b>) of the <b>Lesson_3</b> object to make a timer. A timer is simply an object that executes a method on another object repeatedly at a set interval of time. In this case, the location of the method the timer calls is on the <b>timer_arrow</b> object. The <b>stop_button</b> object's <span class=helplink HelpString="vworlds.chm::/API Reference/Events/OnLButtonUp.htm" TITLE="Help">OnLButtonUp</span> method has the script <b>stop_timer</b>, also below. It is important to see that scripts for different objects can be contained in the same file. The sub <b>stop_timer</b> removes the timer if it is in progress, effectively stopping it from calling the method "timer_method" on the <b>timer_arrow</b> object.</td></tr>
+			<tr><td valign=top><span class=note>$</span></td>
+			<td>How does the object <b>start_button</b> know about the <b>timer_arrow</b> object to put a timer on it? It has been made a <span class=helplink HelpString="vworlds.chm::/Programmer's Guide/property/Adding a Property.htm" TITLE="Help">property</span> of <b>start_button</b>, so that it is easy for start_button's methods to use it. </td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Using the Object Explorer, take a look at the properties of the object <b>start_button</b>, inside the <b>lesson_3</b> object.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Check for the property <b>timer_arrow</b> and verify that it points to another Virtual Worlds object.</td></tr>
+		</table>
+		<table style=background-color:white;vertical-align:top;padding-left:7;padding-right:5;padding-top:5;width:610;>
+		<tr>
+   		 <td valign=top><font face=verdana size=2>option explicit</font></td>
+   		 <td>&nbsp;</td>
+  		</tr>
+  		<tr>
+   		 <td valign=top><font face=verdana size=2>dim my_timer</font></td>
+   		 <td valign=top>
+			<span CLASS="Outline" ID="Out1" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out1d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+					'we need a global variable for the timer,<br>
+					'see below<br>
+				</div></td>
+  		</tr>
+  		<tr>
+  		  <td valign=top><font face=verdana size=2>dim counter</font></td>
+			<td width=50% valign=top><span CLASS="Outline" ID="Out2" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out2d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+					'we need a global counter so the timer<br>
+					'can keep track of how many times it<br>
+					'is being called<br>
+				</div></td>
+		</tr>
+		<tr>
+ 		   <td>&nbsp;</td>
+ 		   <td>&nbsp;</td>
+		</tr>
+		<tr>
+  			<td valign=top>
+  			  <font face=verdana size=2>sub start_timer (hwnd, x, y)</font></td>
+    		<td valign=top>&nbsp;</td>
+		</tr>
+		<tr>
+    		<td width="100%" colspan="2"><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>world.trace "start_timer VBScript called on object "&this.name</font>
+ 		</tr>
+  		<tr>
+   			<td valign=top><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>if isObject (my_timer) &nbsp;then</font>
+ 		</tr>
+			</td>
+    		<td width=50%><span CLASS="Outline" ID="Out3" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out3d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+					'this line makes sure there isn't already<br>
+					'a timer created- that's why we need<br>
+					'the global<br>
+				</div></td>
+  		</tr>
+  		<tr>
+    		<td><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>do nothing</font></td>
+    		<td width=50%><span CLASS="Outline" ID="Out4" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out4d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+					'if my_timer is an object, we know we have<br>
+					'already started the timer, so just ignore it<br>
+				</div>
+			</td>
+  		</tr>
+  		<tr>
+    		<td><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>else</font></td>
+    		<td>&nbsp;</td>
+  		</tr>
+  		<tr>
+  		<tr>
+   		 	<td>&nbsp;</td>
+   		 	<td width=50%><span CLASS="Outline" ID="Out5" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out5d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+					'there is no timer made yet,<br>
+					'so we should make one<br>
+					'we should also reset the counter&#151; <br>
+					'otherwise if a previous timer already <br>
+					'incremented it past its maximum<br>
+					'it will only call once<br>
+				</div>
+			</td>
+ 		</tr>
+		<tr>
+   		 	<td>&nbsp;</td>
+   		 	<td width=50%><span CLASS="Outline" ID="Out6" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out6d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+					'The underscore '_' followed           _<br>
+					'IMMEDIATELY by a return character     _<br>
+					'allows you to put one long line of    _<br>
+					'code across multiple lines, for more  _<br>
+					'legible code. All of these comments   _<br>
+					'Are really in one line of code!<br>
+				</div>
+			</td>
+ 		</tr>
+  		<tr>
+    		<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>
+set my_timer = world.<span class=scriptlink HelpString="vworlds.chm::/API Reference/World/CreateTimer.htm" TITLE="Help">CreateTimer</span> (_<br>
+			<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=48 height=4>this.timer_arrow.timer_interval,_<br>
+			<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=48 height=4>this.timer_arrow, "timer_method")</font></td>
+  		</tr>
+		<tr>
+   		 	<td>&nbsp;</td>
+   		 	<td width=50%><span CLASS="Outline" ID="Out7" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out7d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+					'notice that timer_arrow is<br>
+					'a property of the start_timer<br>
+					'object (this) but it holds the actual<br>
+					'timer_arrow object inside it! So we<br>
+					'can get to the arrow object's properties as<br>
+					'well by going down another level with '.'<br>
+					'timer_interval is a numeric property<br>
+					'of the timer_arrow object.
+				</div>
+			</td>
+ 		</tr>
+  		<tr>
+    		<td><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>counter = 1</font></td>
+    		<td>&nbsp;</td>
+  		</tr>
+  		<tr>
+    		<td><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>end if</font></td>
+    		<td>&nbsp;</td>
+  		</tr>
+  		<tr>
+    		<td colspan=2><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>dim result<br>
+			<img src="Images/spacer.gif" width=32 height=4>result = this.invokesupermethod(Array(hwnd,x,y))</font></td>
+  		</tr>
+  		<tr>
+    		<td><font face=verdana size=2>end sub</font></td>
+    		<td>&nbsp;</td>
+  		</tr>
+  		<tr>
+    		<td>&nbsp;</td>
+    		<td>&nbsp;</td>
+  		</tr>
+  		<tr>
+    		<td valign=top><font face=verdana size=2>sub stop_timer (hwnd, x, y)</font></td>
+    		<td>&nbsp;</td>
+  		</tr>
+  		<tr>
+    		<td width="100%" colspan="2"><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>world.trace "stop_timer VBScript called on object "&this.name</font></td>
+  		</tr>
+  		<tr>
+    		<td valign=top><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>if isObject(my_timer) then</font></td>
+			<td width=50% valign=top><span CLASS="Outline" ID="Out8" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out8d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+					'see comment above for isObject(my_timer)<br>
+				</div></td>
+  		</tr>
+  		<tr>
+    		<td width="50%" valign=top><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=48 height=4><font face=verdana size=2>this.timer_arrow.<span class=scriptlink HelpString="vworlds.chm::/API Reference/Exemplars/Thing/Up.htm" TITLE="Help">Up</span>.set 0,1,0</td>
+			<td width="50%" valign=top><span CLASS="Outline" ID="Out9" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out9d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+					'make this a reset call<br>
+				</div></td>
+  		</tr>
+    	<tr>
+    		<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=48 height=4><font face=verdana size=2>world.<span class=scriptlink HelpString="vworlds.chm::/API Reference/World/DestroyTimer.htm" TITLE="Help">DestroyTimer my_timer</span my_timer</font></td>
+  		</tr>
+  		</tr>
+    	<tr>
+    		<td valign=top><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=48 height=4><font face=verdana size=2>my_timer = NULL</font></td>
+    		<td>&nbsp;</td>
+  		</tr>
+    	<tr>
+    		<td valign=top><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>else</font></td>
+    		<td>&nbsp;</td>
+  		</tr>
+  		<tr>
+    		<td>&nbsp;</td>
+    		<td width=50%><span CLASS="Outline" ID="Out10" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out10d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+					'there is no timer object to destroy,<br>
+					'so we do nothing<br>
+				</div>
+			</td>
+  		</tr>
+    	<tr>
+    			<td valign=top><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>end if</font></td>
+    			<td>&nbsp;</td>
+  		</tr>
+  		<tr>
+	    		<td colspan=2><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>dim result<br>
+				<img src="Images/spacer.gif" width=32 height=4>result = this.invokesupermethod(Array(hwnd,x,y))</font></td>
+  		</tr>
+    	<tr>
+    			<td valign=top><font face=verdana size=2>end sub</font></td>
+    			<td>&nbsp;</td>
+  		</tr>
+ 	</table><br>
+	</div>
+
+	<!-- Step 3 -->
+	<div id=Step3 style=position:absolute;left:0;top:44;width:99%;display:none;>
+		<nobr>
+			<div class=vstep Style=position:absolute;left:351;top:-35; id=divNumSteps>
+				Step 3 of 4
+			</div>
+		</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step Three: Methods Invoked by a Timer
+		</div>
+		<div class=vtext id=body2 style=position:relative;left:0;top:30;width:99%;>
+			<p>This subroutine is the script for the custom method located on the <b>timer_arrow</b> object, from the same <b>Lesson_3</b> module and script file. This method is started by the <b>start_timer</b> object; the timer will call the method until it reaches a maximum number of iterations.
+		<table class=vtext cellspacing=3>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Try altering the <span class=helplink HelpString="vworlds.chm::/Programmer's Guide/property/Adding a Property.htm" TITLE="Help">property</span> "timer_maximum" of the <b>timer_arrow</b> object in the <b>Object Explorer</b> to make the timer run a longer or shorter time.</td></tr>
+		</table>
+		<p>&nbsp;</p>
+		</div><br>
+	<table style=background-color:white;vertical-align:top;padding-left:7;padding-right:5;padding-top:5;width:610;>
+		<tr>
+    		<td valign=top><font face=verdana size=2>sub timer_method (the_timer)</font></td>
+			<td width=50%" valign=top>
+			<span CLASS="Outline" ID="Out11" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out11d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+				'a timer call-back method is always passed<br>
+				'a local variable with the timer in it <br>
+				'(here we call it "the_timer")<br>
+			    'this is so we can destroy it from<br>
+				'this subroutine, even if we did not<br>
+			    'store it in a global (such as "my_timer")<br>
+ 				</DIV></td>
+ 		 </tr>
+			<tr>
+    		<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>world.trace "timer_method script called on object "_<br>
+			<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=16 height=4>&this.name&" "&cstr (counter)&" times..."</font></td>
+		</tr>
+		<tr>
+			<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>this.<span class=helplink HelpString="vworlds.chm::/API Reference/Exemplars/Thing/SetNamedMeshColor.htm" TITLE="Help">SetNamedMeshColor</span> "*", rgb( _<br>
+			<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=16 height=4>(counter mod 2)*255,_<br>
+			<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=16 height=4>0, _<br>
+			<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=16 height=4>255-((counter mod 2)*255))</font></td>
+		</tr>
+			<td valign=top>&nbsp;</td>
+			<td width=50% valign=top>
+			<span CLASS="Outline" ID="Out12" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out12d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+				'as global variable 'counter' increases by 1<br>
+				'it goes consecutively even and odd, so<br>
+				'we can use the counter variable to toggle<br>
+				'the colors of the mesh by using<br>
+				'the remainder of counter/2<br>
+ 				</DIV></td>
+ 		 </tr>
+		 <tr>
+			<td>&nbsp;</td>
+			<td width=50% valign=top>
+			<span CLASS="Outline" ID="Out13" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out13d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+				'the next line will make the timer rotate <br>
+				'around exactly once no matter how many<br>
+				'times the timer is called<br>
+ 				</DIV></td>
+		</tr>
+		<tr>
+			<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>this.<span class=scriptlink HelpString="vworlds.chm::/API Reference/Exemplars/Thing/Up.htm" TITLE="Help">Up</span>.set _</font><td>
+		</tr>
+		<tr>
+			<td width="100%" colspan=2><font face=verdana size=2>
+			<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=16 height=4>-1.0*sin(cdbl(counter)*(cdbl(6.282/(this.timer_maximum*1.0)))), _<br>
+			<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=16 height=4>cos(cdbl(counter)*(cdbl(6.282/(this.timer_maximum*1.0)))), _<br>
+			<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=16 height=4>0<br>
+	</font><td>
+		</tr>
+		<tr>
+			<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>counter = counter + 1</font><td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td width=50% valign=top>
+			<span CLASS="Outline" ID="Out14" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+				<DIV ID="Out14d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+				'here we have a condition that causes <br>
+				'the timer to be destroyed<br>
+				'this happens when the counter variable <br>
+				'(an integer) exceeds the number stored <br>
+				'in the property "timer_maximum" of <br>
+				'the object running the timer<br>
+				</DIV></td>
+		</tr>
+		<tr>
+			<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>if counter >this.timer_maximum then</font></td>
+		</tr>
+		<tr>
+			<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>world.<span class=scriptlink HelpString="vworlds.chm::/API Reference/World/DestroyTimer.htm" TITLE="Help">DestroyTimer</span> the_timer</font></td>
+		</tr>
+		<tr>
+			<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>my_timer = NULL</font></td>
+		</tr>
+		<tr>
+			<td width="100%" colspan=2><font face=verdana size=2><img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>world.trace "timer_method destroyed the timer at "& _<br>
+			<img src="Images/spacer.gif" width=32 height=4><img src="Images/spacer.gif" width=32 height=4>cstr(this.timer_maximum)&" calls..."</font></td>
+		</tr>
+		<tr>
+			<td width="100%" colspan=2><img src="Images/spacer.gif" width=32 height=4><font face=verdana size=2>end if</font></td>
+		</tr>
+		<tr>
+			<td width="100%" colspan=2><font face=verdana size=2>end sub</font></td>
+		</tr>
+		</table><br>
+	</div>
+
+	<!-- Step 4 -->
+	<div id=Step4 style=position:absolute;left:0;top:44;width:99%;display:none;>
+		<nobr>
+			<div class=vstep Style=position:absolute;left:351;top:-35; id=divNumSteps>
+				Step 4 of 4
+			</div>
+		</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step Four: Timers, Objects, and Persistence
+		</div>
+		<div class=vtext id=body2 style=position:absolute;left:0;top:30;width:99%;height:100%;>
+		<table class=vtext cellspacing=3>
+			<tr><td valign=top><span class=alert>~</span></td>
+			<td>Note that the <span class=helplink HelpString="vworlds.chm::/API Reference/World/CreateTimer.htm" TITLE="Help">timer</span> is not really a part of any object. It is a Virtual World's component that can be started anywhere, even, as we saw in this lesson, by a completely different object than the one that has the method the timer will be calling! You can run as many timers calling any methods on any objects as you need. A timer provides the primary means of doing a repeatable task on an object that occurs through time, and managing the stopping and starting of the timer in the method that it is calling is very important to prevent timers that can run on too long.</td></tr>
+			<tr><td valign=top>&nbsp;</td>
+			<td>A timer is -not- a persistent part of the world unless it is being run on the <span class=helplink HelpString="vworlds.chm::/Programmer's Guide/Client Server/client_server_overview.htm" TITLE="Help">server</span>, and the server has active <span class=helplink HelpString="vworlds.chm::/Programmer's Guide/Client Server/client_server_overview.htm" TITLE="Help">clients</span> connected to it (we will discuss <span class=helplink HelpString="vworlds.chm::/Programmer's Guide/Client Server/client_server_overview.htm" TITLE="Help">server side methods</span> that use timers in future lessons). These timers run only on the client, that is, they run on a user's local machine to provide behaviors for the objects. If an object has a timer running on it and a user logs off the world, that timer is destroyed automatically. When they log back on, the object will not still have a timer running on it. However, it is possible to create special methods that can detect a user logon and reactivate timers to give the illusion of persistence, using different Virtual Worlds <span class=helplink HelpString="vworlds.chm::/API Reference/Events/Event Handlers.htm" TITLE="Help">event-handling methods</span>.</td></tr>
+	</table>
+		</div>
+	</div>
+</body>
+</html>

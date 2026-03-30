@@ -1,0 +1,230 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//
+'//  File:			ShowGift.htm
+'//  Description:	Displays graphics and text for a gift object from the world.
+'//					The Reply button opens NoteSend.htm and passes it the message that accompanied the gift.
+'////////////////////////////////////////////////////////////////////////-->
+<html>
+<head>
+<title>Gift Display</title>
+<link rel=stylesheet href=../shared/global.css>
+
+<!--include scripts-->
+<script language="vbscript" src="../vbs/document_OnSelectStart.vbs">
+</script>
+<script language="vbscript" src="../vbs/HTMLFilter.vbs">
+</script>
+<!--end include scripts-->
+
+<script language=vbs>
+option explicit
+
+'////////////////////////////////////////////////////////////////////////
+'//  Global Constants and Variables: To this file
+'////////////////////////////////////////////////////////////////////////
+dim world
+'dim gift
+dim user
+set world = top.ClientWorldPtr
+set user = top.ClientUserPtr
+
+' This page is designed to work as an IFrame within MyProfile.htm.
+' We get the current VWorlds object id from the parent window,
+' and if that object is in the user's contents we display it.
+
+dim vwObject
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		window_onLoad
+'//  Purpose:  	To startup the page after all objects are instantiated
+'////////////////////////////////////////////////////////////////////////
+sub window_onLoad
+	dim obj
+	dim vwObjectId
+	vwObjectId = parent.getCurrentObjectId
+	if vwObjectId = 0 then exit sub
+	set vwObject = Nothing
+	' find the object in the user's contents
+	for each obj in user.contents
+		if obj.Id = vwObjectId then 
+			set vwObject = obj
+			exit for
+		end if
+	next
+	if not (vwObject is Nothing) then ShowGift vwObject
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		ShowGift (gift)
+'//  Purpose:  	Show the gift based off of the vwObject passed in
+'//  Args:		gift - the vwobject that is the gift
+'//  Called by:	window_onLoad
+'////////////////////////////////////////////////////////////////////////
+sub ShowGift (gift)
+	dim sender
+	dim msg
+	dim n
+	dim elem
+	dim intTempLeft
+	
+	if InStr(LCase(gift.Name),"balloon") then
+		msgCard.style.background = "url(../images/bkgBalloonNote.gif)"
+	end if
+	
+	SenderName.innerText = "From: " & gift.from
+	ReceiverName.innerText = "To: " & User.Name	
+	msgText.innerHTML = Replace(gift.message, vbCrLf, "<br>")
+	msgText.innerHTML = ParseURLs(msgText.innerHTML)
+	if msgText.scrollHeight > msgText.offsetHeight then
+		msgText.style.borderWidth = "2px"
+		msgText.style.borderStyle = "inset"
+	end if
+	for n = 0 to gift.HTMLgraphics.count - 1
+		set elem = document.createElement("img")
+		elem.src = "../Images/" & gift.HTMLgraphics.property(n)
+		elem.style.position = "absolute"
+		elem.style.left = gift.HTMLposX.property(n)
+		
+		'hack due to IE bug with img height/width properies
+		select case gift.HTMLgraphics.property(n)
+			case "imgBlnStar.gif"
+				elem.height = 140
+				elem.width = 64
+			case "imgBlnSausage.gif"
+				elem.height = 199
+				elem.width = 70
+		end select
+
+		
+		intTempLeft = int(left(elem.style.left, len(elem.style.left)-2)) + elem.width
+		if intTempLeft > 160 then
+			intTempLeft = 160
+			elem.style.left = intTempLeft & "px"
+		end if
+		
+
+		elem.style.top = gift.HTMLposY.property(n)
+		giftView.insertAdjacentElement "BeforeEnd",elem
+	next
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		ReplyToGift
+'//  Purpose:  	Set up the note send page to reply
+'//  Called by:	onClick handler for the Reply button
+'////////////////////////////////////////////////////////////////////////
+sub ReplyToGift
+	if not isEmpty(vwObject) then
+		top.CurrentAvatarId = top.ClientUserPtr.container.findwithin(vwObject.from).id
+		top.CurrentVWObjectId = vwObject.id
+		location = "NoteSend.htm?" & vwObject.id & "&" & top.CurrentAvatarId
+	end if
+end sub
+
+sub CloseGift
+	top.LinkToObject 0
+end sub
+
+'global vars for positioning
+const lngGiftWidth = 258
+</script>
+</head>
+
+<body bgcolor=#FFFFFF>
+
+<div style="position:absolute; left:10;">
+	<!--Start Heading Section-->
+<!--
+	<div id=bkgPageHeadingPatch
+		class=bkgPageHeadingPatch>
+	</div>
+-->
+	<div id=bkgPageHeading
+		class=bkgPageHeading
+		style="background-image:url(../images/bkgMyThings.gif);
+			   width:expression(document.body.clientWidth-30);">
+	</div>
+
+	<span id=groupName class=PageHeading style="width:expression(document.body.clientWidth-35);">My Gifts</span>
+	<span class=PageHeadingRt style="width:expression(document.body.clientWidth-35);">View Gift</span>
+	<hr class=PageHeadingHR style="width:expression(document.body.clientWidth-35);">
+	<!--End Heading Section-->
+	
+	
+	<span class=ParaText style="top:40">
+	Here is your gift
+	</span>
+	<div id=giftView
+		style="position:absolute;
+			left:15;
+			top:100;
+			width:expression(lngGiftWidth);
+			height:300;
+			vertical-align:bottom;
+			align:center;">
+	</div>		
+
+
+	<div id=msgCard
+		style="position:absolute;
+			top:285;
+			left:15;
+			width:expression(lngGiftWidth);
+			height:131;
+			background:url(../images/bkgFlowerNote.gif);
+			border:1px solid black;"
+		Copyable=true>
+		<img src="../images/imgDialogTitleBar.gif"
+			style="position:absolute;
+				left:0;
+				top:0;
+				width:expression(lngGiftWidth-2);
+				height:13;">
+		<div id=ReceiverName
+			class=ParaText
+			style="position:absolute;
+				top:15;
+				left:17;">			
+		</div>	
+		<div id=SenderName
+			class=ParaText 
+			style="position:absolute;
+				top:30;
+				left:17;">		
+		</div>
+		<div id=msgText class=ParaText
+			style="position:absolute;
+				top:45;
+				left:17;
+				width:expression(lngGiftWidth-50);
+				height:63;
+				overflow-y:auto;">
+		</div>
+		<button id=CloseButton
+			class=btnTeal
+			style="position:absolute;
+					top:140;
+					left:expression(lngGiftWidth-120);"
+			onclick=CloseGift()>
+			Close
+		</button>
+		<button id=ReplyButton
+			class=btnTeal
+				style="position:absolute;
+					top:140;
+					left:expression(lngGiftWidth-60);"
+			onclick=ReplyToGift()>
+			Reply
+		</button>
+	</div>
+</div>
+
+<div id=htmlFilter style="POSITION:absolute;LEFT:0px;TOP:0px;VISIBILITY:hidden">
+
+</body>
+</html>
+
+
+

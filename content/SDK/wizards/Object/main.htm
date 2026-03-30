@@ -1,0 +1,123 @@
+<html>
+<head>
+<title>Add an object</title>
+<link rel=stylesheet href=..\..\..\client\shared\global.css>
+<script language=vbs>
+
+'globals for creating the object
+Dim newFile
+Dim newDesc
+Dim newType
+
+public goClient, goWorld, goUser
+set goClient = window.dialogArguments.theclient.VWClient
+set goWorld = goClient.world
+set goUser = goWorld.user
+
+sub DoCreate
+	ShowWaitCursor true, document
+	DoCreate1
+end sub
+
+sub ShowWaitCursor(bShow, oDocument)
+	'the error trapping is implemented to stop any extraneous errors from popping up in the users face if
+	'the style change fails.
+	on error resume next
+	dim curEl, i, sVal
+	sVal = ""
+	if bShow then sVal = "wait"
+	if IsObject(oDocument) Then
+		oDocument.body.style.cursor = sVal
+		for each curEl in oDocument.body.children
+				curEl.style.cursor = sVal
+		next
+		for i = 0 to oDocument.frames.length - 1
+			ShowWaitCursor bShow, oDocument.frames(i).document
+		next
+	end if
+end sub
+
+sub DoCreate1
+	On Error Resume Next
+	Err.Clear
+	set Object = goWorld.CreateInstance(newDesc, newType, goUser)
+	if (Err.number = &H80040260) Then
+		Msgbox "The object quota was exceeded. Try deleting other objects you have created.", vbInformation, "Microsoft Virtual Worlds"
+	elseif (Err.number < 0) Then
+		Msgbox "Error creating object. (" & cstr(err.number) & " - " & cstr(err.description) & ")", vbExclamation, "Microsoft Virtual Worlds"
+	else
+		Err.Clear
+		Object.GeometryName = newFile
+		goUser.Drop Object
+		Object.IsSolid = true
+		goWorld.Synchronize
+		Object.editobject
+		goWorld.Synchronize
+		if goWorld.IsValidTool("ControlManager") then
+			goWorld.tool("ControlManager").select(Object)
+		end if
+	end if
+	ShowWaitCursor false, document
+	window.close
+end sub
+
+sub OnHelp
+	window.event.returnValue = false
+	set helpstringsList = goWorld.global.CreatePropertyList
+	helpstringsList.add "Authoring"
+	helpstringsList.add "wizards"
+	helpstringsList.add "new object"
+	goWorld.FireUIEvent goUser, "Help", helpstringsList
+end sub
+
+sub DoCancel
+	window.close
+end sub
+
+sub document_OnMouseOver
+	select case window.event.srcElement.className
+	case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	case "vHelp"
+		imgHelp.src="..\..\..\client\shared\helpH.gif"
+	case else
+	end select
+end sub
+
+sub document_OnMouseOut
+	select case window.event.srcElement.className
+	case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	case "vHelp"
+		imgHelp.src="..\..\..\client\shared\help.gif"
+	case else
+	end select
+end sub
+
+sub window_onload
+end sub
+
+sub document_onKeyPress
+	select case window.event.keycode
+	case 27
+		DoCancel
+	case 13
+		if window.event.srcElement.tagName <> "BUTTON" and _
+			window.event.srcElement.tagName <> "A" then DoCreate
+	case else
+	end select
+end sub
+
+</script>
+</head>
+<body scroll=no>
+	<iframe name=wizPage src=page1.htm frameborder=no scrolling=no style=width:100%;height:275;></iframe>
+	<hr id=lnTop color=gray style=position:absolute;left:0;top:276;height:1;>
+	<hr id=lnBottom color=black style=position:absolute;left:0;top:277;height:1;>
+	<button class=bEnabled id=btnCreate onclick=DoCreate style=left:315;top:286;>Create</button>
+	<button class=bEnabled id=btnCancel onclick=DoCancel style=left:385;top:286;>Cancel</button>
+	<a id=lnkHelp onclick=OnHelp href="" class=vHelp style=top:286;>
+		<img src=../../../client/shared/help.gif id=imgHelp>
+	</a>
+</body>
+</html>

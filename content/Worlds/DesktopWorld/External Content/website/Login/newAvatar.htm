@@ -1,0 +1,113 @@
+<HTML>
+<HEAD>
+<META NAME="GENERATOR" Content="Microsoft Visual Studio 6.0">
+<TITLE>Create new nickname
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TITLE>
+<link rel="stylesheet" href="../shared/global.css">
+<script language=VBScript>
+
+' This page is designed to be a modal dialog for Login.asp.
+' It gets a leically valid username and password from the user and returns them to the caller.
+
+sub window_onLoad
+	divError.innerText = mid(document.location.search,2,255)
+	if divError.innerText > "" then
+		head1.style.display = "none"
+		head2.style.display = "none"
+		divError.style.display = ""
+	end if
+end sub
+
+function validName (strName)
+	dim n, ch
+	validName = true
+	for n = 1 to len(strName)
+		ch = lcase(mid(strName,n,1))
+		if not (((ch >= "a") and (ch <= "z")) or ((ch >= "0") and (ch <= "9"))) then
+			validName = false
+			exit function
+		end if
+	next
+end function
+
+sub document_onKeyPress
+	select case window.event.keycode
+	case 27
+		OnCancel
+	case 13
+		if window.event.srcElement.tagname <> "BUTTON" then OnOK
+	case else
+	end select
+end sub
+
+sub OnOK
+	dim msg
+	msg = ""
+	if (len(txtUsername.value) < 3) or (len(txtUsername.value) > 12) then
+		' Bad length
+		msg = "Your nickname must be 3-12 characters in length"
+		txtUsername.value = ""
+		txtUsername.focus
+	elseif not validName(txtUsername.value) then
+		' Invalid chars in name
+		msg = "Nicknames must contain only letters (A-Z, a-z) and digits (0-9). Please enter a different name."
+		txtUsername.value = ""
+		txtUsername.focus
+	elseif (len(txtPassword1.value) = 0) or (len(txtPassword2.value) = 0) then
+		' Empty password
+		msg = "You must make up a password and enter it twice"
+		txtPassword1.focus
+	elseif txtPassword1.value <> txtPassword2.value then
+		' Passwords don't match
+		msg = "The two passwords you entered did not match. Please enter them again."
+		txtPassword1.focus
+	end if
+
+	if msg = "" then
+		' pass the user-entered info back to the calling page
+		window.returnValue = txtUsername.value & "," & txtPassword1.value
+		window.close
+	end if
+
+	' if we are still here then something went wrong
+	txtPassword1.value = ""
+	txtPassword2.value = ""
+	msgbox msg
+end sub
+
+sub OnCancel
+	window.returnValue = ""
+	window.close
+end sub
+
+</script>
+</HEAD>
+<body style=background-color:white;>
+	<div id="head1" class=vH2 style=left:18;top:7;>Enter a new nickname for yourself.</div>
+	<div id="head2" class=vLabel style=left:18;top:22;color:gray;>(Must be 3 to 12 characters.)</div>
+	<div class=vLabel style=top:42;left:20;>Nickname:</div>
+	<input type=text id=txtUsername name=txtUsername class=vInput style=top:40;left:97;width:145; maxlength=12><br>
+
+	<div id=divError class=vH2 style=left:18;top:7;height:25;color:red;display:none;>This nickname has already been used. Please choose another.</div>
+	
+	<div class=vH2 style=left:18;top:72;>Enter a password for your nickname.</div>
+	<div class=vLabel style=left:18;top:87;color:gray;>(use a word you will remember)</div>
+	<div class=vLabel style=top:107;left:24;>Password:</div>
+	<input type=password id=txtPassword1 name=txtPassword1 class=vInput style=top:104;left:97;width:145; maxlength=12><br>
+
+	<div class=vH2 style=left:18;top:137;>To guard against typing mistakes, please re-enter the same password.</div>
+	<div class=vLabel style=top:169;left:24;>Password:</div>
+	<input type=password id=txtPassword2 name=txtPassword2 class=vInput style=top:166;left:97;width:145; maxlength=12><br>
+
+	<button class=bEnabled id=btnOK onclick=OnOK style=left:112;top:195;>OK</button>
+	<button class=bEnabled id=btnCancel onclick=OnCancel style=left:182;top:195;>Cancel</button>
+</BODY>
+</HTML>

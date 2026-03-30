@@ -1,0 +1,219 @@
+<html>
+<head>
+<link rel=stylesheet href=../../../client/shared/global.css>
+<script language=vbs>
+
+dim vector
+
+Public sarrArgs
+
+sarrArgs = Array()
+sarrArgs = window.dialogArguments
+document.title = sarrArgs(0)
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+sub Window_OnLoad
+	On error resume next
+	set vector = sarrArgs(1).editThing.property(sarrArgs(1).editPropName)
+	set vector = sarrArgs(1).editMap.property(sarrArgs(1).editPropName)
+	set vector = sarrArgs(1).editList.property(sarrArgs(1).editIndex)
+	x.value = Round(vector.x, 3)
+	y.value = Round(vector.y, 3)
+	z.value = Round(vector.z, 3)
+	divObject.innerText = sarrArgs(1).editThing.name
+	if len(divObject.innerText) = 0 then
+		divObject.innerText = sarrArgs(1).divObject.innerText
+	end if
+	divProperty.innerText = sarrArgs(1).editPropName
+	if len(sarrArgs(1).pNameExt) <> 0 then
+		divProperty.innerText = sarrArgs(1).divProperty.innerText & sarrArgs(1).pNameExt
+	end if
+	x.select
+end sub
+
+sub Window_OnUnload
+end sub
+
+sub DoHelp
+	dim world, helpstringsList
+	window.event.returnValue = false
+	on error resume next
+	set world = vector.world
+	set helpstringsList = world.global.CreatePropertyList
+	helpstringsList.add "Authoring"
+	helpstringsList.add "Object Explorer"
+	helpstringsList.add "Vector Editor"
+	world.FireUIEvent world.user, "Help", helpstringsList
+end sub
+
+sub OnOk
+	OnApply
+	window.close
+end sub
+
+function ValidateValue(el, bIsScale)
+
+	el.value = Round(el.value, 3)
+
+	'If it's any property BUT scale
+	If (Not bIsScale) Then
+		If ( CSng(el.value) > -99999.0 AND CSng(el.value) < 99999.0) Then
+			ValidateValue = true
+		else
+			ValidateValue = false
+		end if
+	Else
+		ValidateValue = true
+
+		If (CSng(el.value) >= 0) Then
+			If ( CSng(el.value) < 0.001) Then
+				ValidateValue = false
+				el.value = 0.001
+			End If
+			If ( CSng(el.value) > 99999.0) Then
+				ValidateValue = false
+				el.value = 99999.0
+			End If
+		Else
+			If ( CSng(el.value) > -0.001) Then
+				ValidateValue = false
+				el.value = -0.001
+			End If
+			If ( CSng(el.value) < -99999.0) Then
+				ValidateValue = false
+				el.value = -99999.0
+			End If
+		End If
+	End If
+
+End Function
+
+
+sub OnApply
+
+	dim fTmp, bShowMessage, bPropIsScale, bValidatedValue
+
+	On error resume next
+
+	If (StrComp(sarrArgs(1).editPropName, "Scale", 1) <> 0) Then
+		bPropIsScale = false
+	else
+		bPropIsScale = true
+	End If
+
+	bValidatedValue = true
+
+	If (Not ValidateValue(x, bPropIsScale)) Then
+		bValidatedValue = false
+	End If
+	If (Not ValidateValue(y, bPropIsScale)) Then
+		bValidatedValue = false
+	End If
+	If (Not ValidateValue(z, bPropIsScale)) Then
+		bValidatedValue = false
+	End If
+
+	if (Not bValidatedValue) Then
+		If (bPropIsScale) Then
+			msgbox "Scale values must be between 0.001 and 99,999.00 or -0.001 and -99,999.00.", vbExclamation, "Microsoft Virtual Worlds"
+		Else
+			msgbox "Values must be between -99,999 and 99,999.", vbExclamation, "Microsoft Virtual Worlds"
+		End If
+	End If
+
+	'vector.x = x.value
+	'vector.y = y.value
+	'vector.z = z.value
+
+	set vector = vector.world.CreateVector(x.value, y.value, z.value)
+
+	On error resume next
+	sarrArgs(1).editThing.property(sarrArgs(1).editPropName) = vector
+	sarrArgs(1).editMap.property(sarrArgs(1).editPropName) = vector
+	sarrArgs(1).editList.property(sarrArgs(1).editIndex) = vector
+
+	'HACK: Added (at Kirk's direction) to make boundary editor display correct coordinates.
+	'Will revisit for v1.5 and implement better solution. MM
+
+	Err.Clear
+
+	If (StrComp(sarrArgs(1).editPropName, "Position", 1) = 0 OR _
+		StrComp(sarrArgs(1).editPropName, "Direction", 1) = 0 OR _
+		StrComp(sarrArgs(1).editPropName, "Up", 1) = 0 OR _
+		StrComp(sarrArgs(1).editPropName, "Scale", 1) = 0) Then
+
+		sarrArgs(1).editThing.World.FireUIEvent sarrArgs(1).editThing, "BoundaryUpdate", CLng(6)
+	End If
+
+end sub
+
+sub document_OnMouseOver
+	select case window.event.srcElement.className
+	case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	case "vHelp"
+		imgHelp.src="../../../client/shared/helpH.gif"
+	case else
+	end select
+end sub
+
+sub document_OnMouseOut
+	select case window.event.srcElement.className
+	case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	case "vHelp"
+		imgHelp.src="../../../client/shared/help.gif"
+	case else
+	end select
+end sub
+
+sub document_onkeypress
+	select case window.event.keyCode
+	case 27
+		window.close
+	case 13
+		if window.event.srcElement.tagName <> "BUTTON" and window.event.srcElement.tagName <> "A" then OnOK
+	case else
+	end select
+end sub
+
+</script>
+</head>
+<body class=vBody>
+	<div class=vLabel style=left:18;top:7;>Object:</div>
+	<div id=divObject class=vLabel style=left:92;top:7;></div>
+	<div class=vLabel style=left:18;top:25;>Property:</div>
+	<div id=divProperty class=vLabel style=left:92;top:25;></div>
+	<div class=vLabel style=left:18;top:53;>Values:</div>
+	<div class=vLabel style=left:92;top:53;>X:</div>
+	<input id=x class=vInput maxlength=8 style=left:106;top:50;width:50;>
+	<div class=vLabel style=left:164;top:53;>Y:</div>
+	<input id=y class=vInput maxlength=8 style=left:178;top:50;width:50;>
+	<div class=vLabel style=left:236;top:53;>Z:</div>
+	<input id=z class=vInput maxlength=8 style=left:250;top:50;width:50;>
+	<button class=bEnabled id=btnOK style=left:100;top:101; onclick=OnOK>
+		<span style=position:relative;top:-1;>OK</span>
+	</button>
+	<button class=bEnabled id=btnCancel style=left:170;top:101; onclick=window.close>
+		<span style=position:relative;top:-1;>Cancel</span>
+	</button>
+	<button class=bEnabled id=btnApply style=left:240;top:101; onclick=OnApply>
+		<span style=position:relative;top:-1;>Apply</span>
+	</button>
+	<a id=lnkHelp onclick=DoHelp href="">
+		<img src=../../../client/shared/help.gif id=imgHelp class=vHelp style=top:101;>
+	</a>
+</body>
+</html>

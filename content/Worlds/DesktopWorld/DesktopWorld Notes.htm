@@ -1,0 +1,342 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Microsoft Word 9">
+<meta name=Originator content="Microsoft Word 9">
+<link rel=File-List href="./DesktopWorld%20Notes_files/filelist.xml">
+<title>DesktopWorld Notes</title>
+<!--[if gte mso 9]><xml>
+ <o:DocumentProperties>
+  <o:Author>PETEWONG</o:Author>
+  <o:LastAuthor>PETEWONG</o:LastAuthor>
+  <o:Revision>1</o:Revision>
+  <o:TotalTime>15</o:TotalTime>
+  <o:Created>2000-06-15T17:39:00Z</o:Created>
+  <o:LastSaved>2000-06-15T17:54:00Z</o:LastSaved>
+  <o:Pages>4</o:Pages>
+  <o:Words>1394</o:Words>
+  <o:Characters>7949</o:Characters>
+  <o:Company>Microsoft Corp.</o:Company>
+  <o:Lines>66</o:Lines>
+  <o:Paragraphs>15</o:Paragraphs>
+  <o:CharactersWithSpaces>9761</o:CharactersWithSpaces>
+  <o:Version>9.3821</o:Version>
+ </o:DocumentProperties>
+</xml><![endif]-->
+<style>
+<!--
+ /* Style Definitions */
+p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-parent:"";
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:12.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";}
+h1
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:1;
+	font-size:16.0pt;
+	font-family:Arial;
+	mso-font-kerning:16.0pt;}
+h2
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:2;
+	font-size:14.0pt;
+	font-family:Arial;
+	font-style:italic;}
+@page Section1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.25in 1.0in 1.25in;
+	mso-header-margin:.5in;
+	mso-footer-margin:.5in;
+	mso-paper-source:0;}
+div.Section1
+	{page:Section1;}
+-->
+</style>
+</head>
+
+<body lang=EN-US style='tab-interval:.5in'>
+
+<div class=Section1>
+
+<h1>DesktopWorld Notes</h1>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>The <i>DesktopWorld</i> sample application implements some
+interesting variations on standard Microsoft Virtual Worlds objects and some
+fairly complex interactions between the world and the DHTML client. </p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>This document describes some of these unique features and
+provides insight into their implementation.</p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<h2>Multipart Avatars</h2>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>Avatar objects themselves are not visible in <i>DesktopWorld</i>.
+Each avatar carries around a collection of five visible bodyPart objects:
+shoes, pants, shirt, skin and hair. Six body types are available, each a
+collection of these five parts. The individual parts can be independently
+colorized, but they are not interchangeable; for example, the pants of the Sean
+body cannot be attached to the shirt of the Russ body. This is only because
+these avatars were intended to look somewhat realistic. For a world with more
+fanciful avatars, the code could be modified to allow users to assemble their
+own avatars from interchangeable bodyParts.</p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>Since an avatar's bodyParts are in its contents, navigating
+them through the world is not an issue; the parts simply move with the avatar.
+But to get the avatar to perform a gesture the five parts must all perform the
+gesture in unison. Users do not actually click on avatars, they click on
+bodyparts and the bodypart click events are passed from the bodypart to the
+avatar. </p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<h2>Automated Navigation</h2>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>A system of paths and boundaries allows avatars to be moved
+automatically (guided) from one area of <i>DesktopWorld</i> to another. The
+bounded areas are the Resource Desk, Seattle Desk, Discussion Area, Game Room,
+Music Garden, Gift Carts area, individual Flower Cart and Balloon Cart, and the
+central area of the Lobby that is not within the other areas. </p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>Each area is surrounded by a passable boundary. Boundary
+collisions are detected when an avatar passes from one area to another. When
+the user selects auto-navigation in the UI to move to a specific area, the
+avatar is moved along a predetermined path between its current area and the new
+area. This is handled in <i>DesktopWorld</i> by statically storing all possible
+paths between all areas. </p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>The data structures describing each area used for navigation
+contain some information about each area, are used to update a status line in
+the UI and to display web pages pertaining to the different areas.</p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<h2>Animation</h2>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>The methods for navigating avatars on predetermined paths
+were originally written for an earlier version of Virtual Worlds. Although it
+still works, using the built-in animation methods of Virtual Worlds version 1.5
+would make it much simpler and more efficient. </p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>Other objects animated with pre-1.5 techniques include the
+user avatar's camera and the clickable objects in the Music Garden. The camera
+movement path is calculated in real-time based on ellipse formulas. The Music
+Garden objects iterate through lists of position and direction values. The
+Music Garden objects have small, repetitive animations that they perform while
+idle, and others that they do when clicked.</p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<h2>Client-to-Client Communication</h2>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>Communicating between two users via object methods, and
+giving feedback on both of their clients, can be somewhat confusing because it
+involves a sequence of client and server methods. User 1 runs a client-side
+method (so it can fire a UI event on client 1 for feedback), which runs a
+server-side method, whose only purpose is to run a second client-side method,
+which runs on all clients but only takes action if its user is user 2. This
+general technique is used to implement the Make Friends and Ignore features.</p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<h2>Interaction Between Client Pages</h2>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>The <i>DesktopWorld</i> client consists of an outer page (<i>client.htm</i>)
+with some iframes containing several other pages, many of which respond to
+events taking place in the world. Several mechanisms are in place for these
+pages to communicate with each other and the world.</p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>One handles UI events fired by in-world objects. Each page
+that needs to receive UI events must have a sub called <b>HandleUIEvent</b>,
+and must add its window to an array of window pointers defined in <i>Client.htm</i>.
+The Virtual Worlds client object, also defined in <i>client.htm</i>, has an <b>OnUIEvent</b>
+handler that runs when the client object receives UI events from the world.
+This method iterates through the list of window pointers and calls each
+window's <b>HandleUIEvent</b> sub.</p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>Another communications mechanism uses global variables in <i>Client.htm</i>
+and buttons in <i>ClientMainToolsIFrame.htm</i> to display information in the
+browser frame (the area below the toolbar buttons). For example, clicking the
+People button opens a page called <i>people.htm</i> that displays a list of
+avatars, then checks a global called <b>CurrentAvatarId</b> and displays that
+avatar's profile. Other pages in the client can trigger the page to display a
+specific avatar's profile by setting the global variable and calling the People
+button's <b>Click</b> method. <i>ChatHistory.htm</i> does this when you click
+on an avatar thumbnail image in the chat history. <i>Client.htm</i> does it to
+handle the &quot;<b>ShowProfile</b>&quot; UI event, which is fired when you
+pick &quot;Profile&quot; from an avatar's right-click menu in the 3d renderer.</p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<h2>Object Ownership -- Gifts and Notes</h2>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>Enabling avatars to exchange dynamically created objects
+presents the problem of eventually getting rid of these objects. Virtual Worlds
+security allows only the user that created the object to destroy it. To enable
+users to delete notes and gifts from others, these objects are created by the
+recipient. Instead of the sender avatar creating an object and sending it, the
+sender merely passes information to a method of the recipient avatar, which
+creates the actual gift or note. The recipient owns the object and is able to
+destroy it later.</p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<h2>Holding Gifts</h2>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>Avatars in <i>DesktopWorld</i> are can display one gift at a
+time from their list of gifts. This is referred to as &quot;holding&quot; the
+gift. In addition to the 2d graphics displayed in the <i>ShowGift.htm</i> page,
+each gift has a single representative graphic that simply shows the type of
+gift (flowers or balloons). Setting a gift's <b>IsVisible</b> property = true
+makes this graphic appear in front of the user. All gifts are basically in the
+same position within the avatar; they are only made visible one at a time.</p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<h2>Timing Issues</h2>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>As with all client/server apps, programming for Virtual
+Worlds requires an awareness of what is happening on the client and on the
+server, and when. Errors will occur if scripts in web pages try to interact
+with in-world objects that have not been marshaled over to the client yet. A
+number of procedures in client page scripts use the <b>window.setTimeout</b>
+method to re-execute themselves until the objects they need are available. For
+example, in various client pages the <b>window_onLoad</b> sub calls itself
+repeatedly until a global variable called <b>IsWorldLoaded</b> is set TRUE by <i>Client.htm</i>.
+This ensures that the pages get initialized properly by making them wait for
+the data to be available.</p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>Several helpful tools for making sure world objects are
+ready are to check value of the <b>IsObject</b> and <b>IsNull</b> functions,
+the <b>IsStub</b> method of the Virtual Worlds Thing type, and to compare an
+object variable to Nothing. If you get an error message like, &quot;Object does
+not support this property or method,&quot; a timing problem is a likely
+suspect. Think about using <b>window.SetTimeout</b> in web script code to
+reattempt a procedure until data is available, or firing a UI event within a
+client-side method of an in-world object to signal the UI when it is safe to
+run the code.</p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<h2>Client References to In-World Objects</h2>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>Much of the <i>DesktopWorld</i> client's functionality
+involves handling lists of in-world objects and associating them with pieces
+HTML code. This is generally done by using an object's id property, which is an
+integer value, to create an ID value for an HTML tag. Every object in Virtual
+Worlds, including avatars, has an id property. Using an object id to get an
+actual object from Virtual Worlds involves using an undocumented world method: <b>world.objectById</b>(id),
+which returns a pointer to an object. The problem with this method is that it
+generates an error if there is no such object id, which happens if the object
+has been deleted. <i>Client.htm</i> provides a function <b>GetObjectById</b>
+which uses &quot;on error resume next&quot; to safely call <b>world.ObjectById</b>,
+returning a value of Nothing if no object is found.</p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<h2>Clicking Through Avatars</h2>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>One problem with implementing avatar gestures is that the
+avatar graphics must be wide enough to display the largest gesture. Because of
+this there is a transparent area around the avatar which the renderer considers
+part of the avatar even when the avatar is not gesturing. When you try to click
+on an object that lies behind this clear area, you are actually still clicking
+on the avatar. <i>DesktopWorld</i> uses a special technique to enable the user
+to click on objects behind the avatar.</p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>When the user clicks on an avatar body part, the bodypart_<b>OnLButtonUp</b>
+method (in <i>avatar_module.vbs</i>) fires a UI event called &quot;<b>avatarLButtonUp</b>&quot;.
+The <b>HandleUIEvent</b> procedure in <b>ClientRendererIFrame</b> calls <b>renderroot.vwrender3d.hittest</b>,
+an undocumented method of the 3d renderer object. This method returns a
+property list of all graphics frames that lie behind the mouse pointer. The <b>HandleUIEvent</b>
+procedure iterates through this list until it finds an object that is neither
+an avatar nor contained in an avatar. If it finds such an object, it simply
+calls that object's <b>OnLButtonUp</b> method, simulating a click on that
+object. </p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>Note that this click-through behavior applies to clicks on
+the visible body parts of the avatar as well as the transparent areas. The
+renderer simply does not distinguish between the two.</p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<h2>Some HTML Editors May Induce "Unsafe Control" Warnings</h2>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>Some controls used in the <i>DesktopWorld</i> client are not marked
+safe for scripting -- for example, the 3D renderer control in <i>ClientRendererIFrame.htm</i>. 
+Since these controls are not scripted in the client they should generate no errors or warnings as used. 
+However, some HTML editors may helpfully add parameters to controls, in effect scripting the controls. 
+This will generate safety warnings when the client is started. If you edit the client HTML files,
+or even examine them by opening them with an editor, use an editor such as 
+Microsoft Visual Interdev or Notepad.</p>
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+</div>
+
+</body>
+
+</html>

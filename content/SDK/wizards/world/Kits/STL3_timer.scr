@@ -1,0 +1,46 @@
+option explicit
+
+
+sub make_lesson_3 (lesson_3_graphics)
+
+	set lesson_3_graphics = world.createInstance("lesson_3","artifact")
+	lesson_3_graphics.initializegraphics "SDK\library\models\_ScriptTutorial\timer_ring.3DS" , -10 , -300 , -10 , 0,0,1
+	dim vec
+	 set vec = world.createvector(.5,.5,.5)
+	world.global.addproperty "lesson_3" , lesson_3_graphics
+	 lesson_3_graphics.moveinto home
+	lesson_3_graphics.IsNoticeable = true
+	lesson_3_graphics.description = "a scripting tutorial object"
+	
+	dim lesson_3_box
+	set lesson_3_box = world.createInstance("timer_arrow","artifact")
+	lesson_3_box.initializegraphics "SDK\library\models\_ScriptTutorial\timer_arrow.3DS" , 0 , 0 , 0 , 0,0,1
+	 set vec = world.createvector(1,1,1)
+	 lesson_3_box.scale = vec
+	lesson_3_box.moveinto lesson_3_graphics
+	lesson_3_box.createandaddmethod World.METHOD_CLIENT, Lesson_3_Module,  "timer_method" 
+	lesson_3_box.addproperty "timer_interval" , 500
+	lesson_3_box.addproperty "timer_maximum" , 30
+	lesson_3_box.upduration = 600
+	lesson_3_box.IsNoticeable = true
+	
+	dim start_button
+	set start_button = world.createInstance("start_button","artifact")
+	start_button.initializegraphics "SDK\library\models\_ScriptTutorial\timer_start_panel.3DS" , 0 , 0 , 0 , 0,0,1
+	 set vec = world.createvector(1,1,1)
+	 start_button.scale = vec
+	start_button.moveinto lesson_3_graphics
+	start_button.createandaddmethod World.METHOD_CLIENT, Lesson_3_Module,  "start_timer" , "OnLButtonUp"
+	start_button.addproperty "timer_arrow" , lesson_3_box
+	start_button.IsNoticeable = true
+
+	dim stop_button
+	set stop_button = world.createInstance("stop_button","artifact")
+	stop_button.initializegraphics "SDK\library\models\_ScriptTutorial\timer_stop_panel.3DS" , 0 , 0 , 0 , 0,0,1
+	 set vec = world.createvector(1,1,1)
+	 stop_button.scale = vec
+	stop_button.moveinto lesson_3_graphics
+	stop_button.createandaddmethod World.METHOD_CLIENT, Lesson_3_Module,  "stop_timer" , "OnLButtonUp"
+	stop_button.addproperty "timer_arrow" , lesson_3_box
+	stop_button.IsNoticeable = true
+end sub

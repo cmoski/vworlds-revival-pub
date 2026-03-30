@@ -1,0 +1,27 @@
+<html>
+<head>
+<link rel=stylesheet href=../global.css>
+<script language=vbs>
+
+Sub document_onkeypress
+	Select Case window.event.keyCode
+	Case 27
+		parent.onCancel
+	Case 13
+		parent.onEnter
+	Case 9
+		window.event.returnValue = False
+		If window.event.shiftKey Then
+			parent.btnCancel.focus
+		Else
+			parent.btnEnter.focus
+		End If
+	Case Else
+	End Select
+End Sub
+
+</script>
+</head>
+<body class=vLabel style=padding-right:3;>
+</body>
+</html>

@@ -1,0 +1,80 @@
+// This file is for script functions that can be used by multiple pages
+
+// ===========================================
+// Sorting function and helper functions to sort a SELECT list
+// Review: is there another algorithm that is more efficient 
+// or should there be a function that inserts elements in order?
+// SortList(list)
+// Uses Insert sort algorithm to sort elements
+
+// (!(IsInAscendOrder(list.options[i-1].value, list.options[i].value))
+
+function SortList(list)
+	{
+	var curPosition, i;
+	var tempText;
+	var tempValue;
+	
+	for (curPosition =1; curPosition < list.length; curPosition++)
+		{
+		tempText = list.options[curPosition].text;
+		tempValue  = list.options[curPosition].value
+		
+		for (i=curPosition; ((i>0)&&(IsInAscendOrder(list.options[i-1].text, tempText)==false)); i--)
+			{		
+			list.options[i].text=list.options[i-1].text;
+			list.options[i].value=list.options[i-1].value;
+
+			}
+		list.options[i].text = tempText;
+		list.options[i].value = tempValue;
+		}
+	return(list);		
+	}
+
+// ===========================================
+// IsInAscendOrder(string1, string2)
+// Compares two strings and returns the one that comes first
+
+function IsInAscendOrder(string1, string2)
+	{
+	lower1 = new String( string1.toLowerCase() );
+	lower2 = new String( string2.toLowerCase() );
+	shortString = new String ( (GetShortest(string1, string2)) );
+	var shortLength = shortString.length;
+	var returnValue = true;
+			
+	for (var i=0; i<shortLength; i++)
+		{
+		// String pair is in order
+		if ((lower1.charAt(i))<(lower2.charAt(i)))
+			{
+			break;
+			}
+		// String pair is not in order 
+		else if ((lower2.charAt(i))<(lower1.charAt(i)))
+			{
+			returnValue=false;
+			break;
+			}
+		// Strings are the same comparing char's, but one is longer
+		else if (i==(shortLength-1))				
+			{
+			if (string1.length>string2.length)
+				returnValue=false;
+			}
+		}
+		return(returnValue);
+	}
+	
+// ===========================================
+// GetShortest(string1, string2)
+// Compares lengths of two strings and returns the shortest one	
+
+function GetShortest(string1, string2)
+	{
+	if ((string1.length)<(string2.length))
+		return string1;
+	else 
+		return string2;
+	}

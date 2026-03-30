@@ -1,0 +1,63 @@
+<html>
+<head>
+<title>Delete Nickname
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</title>
+<link rel=stylesheet href=../shared/global.css>
+<script language=vbs>
+
+sub window_onload
+	divQuestion.innerText = "Do you want to permanently delete the nickname '" & _
+		window.dialogArguments.theForm.AvatarList.value & "'?"
+	divQuestion.style.top = (document.body.clientHeight - divQuestion.offsetHeight) / 2
+	divQuestion.style.visibility = ""
+	OKbtn.focus
+end sub
+
+sub document_OnMouseOver
+	if window.event.srcElement.className = "bEnabled" then
+		window.event.srcElement.className = "bHighlight"
+	end if
+end sub
+
+sub document_OnMouseOut
+	if window.event.srcElement.className = "bHighlight" then
+		window.event.srcElement.className = "bEnabled"
+	end if
+end sub
+
+sub OnOK
+	window.dialogArguments.OnConfirmDelete
+	window.close
+end sub
+
+sub OnCancel
+	window.close
+end sub
+
+sub document_onkeypress
+	select case window.event.keycode
+	case 27
+		OnCancel
+	case 13
+		OnOK
+	case else
+	end select
+end sub
+
+</script>
+</head>
+<body style=background-color:white;>
+	<div id=divQuestion class=vH2 style=left:18;top:18;width:215;visibility:hidden;></div>
+	<button class=bEnabled id=OKbtn onclick=OnOK style=left:240;top:14;>OK</button>
+	<button class=bEnabled id=Cancel onclick=OnCancel style=left:240;top:40;>Cancel</button>
+</body>
+</html>

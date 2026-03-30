@@ -1,0 +1,167 @@
+<HTML>
+<HEAD><title>Worlds</title>
+<LINK REL=StyleSheet HREF=../shared/global.css>
+<SCRIPT LANGUAGE=VBScript>
+
+option explicit
+
+public oWnd
+
+set oWnd = window.dialogArguments
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+public curSort, fAscending, sSavedDate
+
+sub document_onmouseover
+	select case window.event.srcElement.className
+	case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	case "vHelp"
+		imgHelp.src = "..\shared\helpH.gif"
+	case else
+	end select
+end sub
+
+sub document_onmouseout
+	select case window.event.srcElement.className
+	case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	case "vHelp"
+		imgHelp.src = "..\shared\help.gif"
+	case else
+	end select
+end sub
+
+sub window_onLoad
+	if oWnd.name <> "VirtualWorldsStart" then
+		oWnd.AddToEventList window
+	end if
+	set curSort = Col1
+	curSort.innerHTML = curSort.ColName & "<font face=Webdings style=position:relative;top:-1;>5</font>"
+	fAscending = true
+	sSavedDate = ""
+	document.frames("ServerList").location = "dServiceContent.htm"
+	document.all("ServerList").focus
+end sub
+
+sub window_OnUnload
+	if oWnd.name <> "VirtualWorldsStart" then
+		If Not oWnd.blnAppClosing Then
+			oWnd.RemoveFromEventList window
+		end If
+	end if
+end sub
+
+'======================================
+' Name: HandleUIEvent
+' Desc: Fires when the client gets a Handle UI event
+'--------------------------------------
+Sub HandleUIEvent(objFrom, strEventName, vntArgs)
+	Select Case strEventName
+	Case "vwCloseAllDialogs"
+			window.close
+	Case Else
+	End Select
+End Sub
+'======================================
+
+sub Refreshbtn_OnClick
+	TimeStamp.innerHTML = "Querying Directory... Please Wait..."
+	ServerList.location.reload true
+end sub
+
+sub OnHelp
+	dim helpString
+	window.event.returnValue = false
+	helpString = "mk:@MSITStore:" & oWnd.theClient.vwclient.world.global.HelpPath
+	helpString = helpString & "vworlds.chm::/UIRef/cliels/dirserv.htm>sdkall"
+	window.showhelp helpString
+end sub
+
+sub document_onKeyPress()
+	select case window.event.keycode
+	case 27
+		window.close
+	case else
+	end select
+end sub
+
+sub DoSort
+	dim newSortEl
+	sSavedDate = TimeStamp.innerHTML
+	TimeStamp.innerHTML = "Sorting Directory... Please Wait..."
+	if window.event.srcElement.tagName = "FONT" then
+		set newSortEl = window.event.srcElement.document.activeelement.children(0)
+	else
+		set newSortEl = window.event.srcElement
+	end if
+	curSort.innerText = curSort.ColName
+	if curSort.SortID <> newSortEl.SortID then
+		set curSort = newSortEl
+		if curSort.SortID = "1" then
+			fAscending = true
+		else
+			fAscending = false
+		end if
+	else
+		fAscending = not fAscending
+	end if
+	If fAscending Then
+		curSort.innerHTML = curSort.ColName & "<font face=Webdings style=position:relative;top:-1;>5</font>"
+	Else
+		curSort.innerHTML = curSort.ColName & "<font face=Webdings style=position:relative;top:-1;>6</font>"
+	End If
+	window.frames(0).divWorldList.innerHTML = ""
+	window.setTimeout "window.frames(0).SortList", 50
+end sub
+
+</script>
+</HEAD>
+<BODY>
+<script language=vbs>
+	if oWnd.name = "VirtualWorldsStart" then
+		document.body.style.backgroundcolor = "white"
+	end if
+</script>
+	<div class=vLabel style=left:18;top:7;><nobr>Select a Virtual World or related Web page to visit.</nobr></div>
+	<div id=divHeading class=vInput style=left:18;top:27;width:463;>
+		<table id=TableHead width=100% height=20 cellspacing=0 cellpadding=0 bgcolor=#798E87>
+			<tr>
+				<td width=170 align=left>
+					<div class=vH2 id=Col1 style=position:relative;left:1;color:white;cursor:hand; onclick=DoSort title="Sort by Virtual World" SortID=1 ColName="Virtual World">Virtual World</div>
+				</td>
+				<td width=70 align=left>
+					<div class=vH2 id=Col2 style=position:relative;color:white;cursor:hand; onclick=DoSort title="Sort by number of connected Avatars" SortID=2 ColName="Avatars">Avatars</div>
+				</td>
+				<td align=left>
+					<div class=vH2 id=Col3 style=position:relative;color:white;cursor:hand; onclick=DoSort title="Sort by Web Page" SortID=3 ColName="Web Page">Web Page</div>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<iframe id=ServerList name=ServerLst src="" style=position:absolute;left:18;top:47;width:464;height:198;></iframe>
+	</div>
+	<nobr>
+		<div id=TimeStamp class=vInput style=left:18;top:250;>
+			Querying Directory... Please Wait...
+		</div>
+	</nobr>
+	<button class=bEnabled id=Refreshbtn style=top:273;left:352;>Refresh</button>
+	<button class=bEnabled id=Closebtn onclick=window.close style=top:273;left:422;>Close</button>
+	<a id=lnkHelp onclick=OnHelp href="">
+		<img src=../shared/help.gif id=imgHelp class=vHelp style=top:273;>
+	</a>
+</BODY>
+</HTML>

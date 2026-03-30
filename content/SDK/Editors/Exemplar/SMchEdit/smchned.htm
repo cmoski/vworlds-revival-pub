@@ -1,0 +1,32 @@
+<HTML>
+<HEAD>
+<SCRIPT LANGUAGE="VBSCRIPT">
+Dim reloadCount
+
+sub ShowIt
+	NameEditFrame.location.href = parent.GetNameEditor() & ".htm"
+	ActionFrame.location.href = "SMchAct.htm"
+	reloadCount = 2
+end sub
+
+sub ReloadDone
+	reloadCount = reloadCount-1
+	if reloadCount = 0 then
+		parent.ReloadDone()
+	end if
+end sub
+
+sub SaveIt
+	if NameEditFrame.SaveIt() or ActionFrame.SaveIt() then
+		parent.RedoNameSummary
+	end if
+end sub
+
+</SCRIPT></HEAD>
+
+<FRAMESET FRAMEBORDER="0" FRAMESPACING="0" ROWS="27,*" LEFTMARGIN=7
+		  ONLOAD="ShowIt" LANGUAGE="VBScript">
+	<FRAME SRC="SMchNada.htm" NAME="NameEditFrame" SCROLLING="no">
+	<FRAME SRC="SMchNada.htm" NAME="ActionFrame" SCROLLING="no">
+</FRAMESET>
+</HTML>

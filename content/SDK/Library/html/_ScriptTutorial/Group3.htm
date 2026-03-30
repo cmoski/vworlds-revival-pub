@@ -1,0 +1,56 @@
+<HTML>
+<HEAD>
+<LINK Rel=Stylesheet href=../../../../client/shared/global.css>
+<style>
+	.note {font-family:Webdings;color:#cc6600;font-size:14pt;}
+	.task {font-family:Webdings;color:#009900;font-size:14pt;}
+	.alert {font-family:Webdings;color:#cc0000;font-size:14pt;}
+	.helplink {font-family:Verdana;color:#3300cc;cursor:hand;font-size:8pt;font-weight:bold;}
+	.scriptlink {font-family:Verdana;color:#3300cc;cursor:hand;font-size:9pt;font-weight:bold;}
+</style>
+<TITLE>Group3</TITLE>
+<script language=vbs>
+
+dim world
+
+sub Window_OnLoad
+	set World = top.goWorld
+	if top.frames("Btns").document.readyState = "complete" then
+		top.frames("Btns").BuildButtons(0)
+	end if
+end sub
+
+sub document_onmouseover
+	if (window.event.srcElement.className = "vwMenu") then
+		window.event.srcElement.className = "vwMenuHighlight"
+	end if
+end sub
+
+sub document_onmouseout
+	if (window.event.srcElement.className = "vwMenuHighlight") then
+		window.event.srcElement.className = "vwMenu"
+	end if
+end sub
+
+</script>
+</HEAD>
+<BODY class=vBody>
+	<div class=vH1 style=position:absolute;width:98%;left:10;top:10>
+		Advanced Graphics
+	</div>
+	<div class=vtext style=position:absolute;width:98%;left:10;top:45;padding-left:10;padding-right:10;>
+		<p>The <b>Advanced Graphics</b> lessons demonstrate the uses of animations and lighting on 3-D worlds
+		 to enhance interactivity and user feedback. 
+		<table class=vtext cellspacing=3>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>In these lessons we will look at how to animate the graphical properies of Virtual
+			 Worlds objects, synchronize simultaneous animations, and create dynamic lights.
+			 By adding scripted behaviors to the objects that trigger animations, they can react to
+			 users with complex graphical behavior. </td></tr>
+
+			</table>
+		<p><nobr><a href="GraphicsAnim.htm" class=vwMenu style=font-size:10pt;>9. Animation and Lighting</a></nobr>
+			<br>This is an advanced tutorial.
+	</div>
+</BODY>
+</HTML>

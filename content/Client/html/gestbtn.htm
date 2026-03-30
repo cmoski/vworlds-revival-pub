@@ -1,0 +1,141 @@
+<HTML>
+<HEAD>
+<META NAME="GENERATOR" Content="Microsoft Developer Studio">
+<META HTTP-EQUIV="Content-Type" content="text/html; charset=iso-8859-1">
+<TITLE>Generic Button Layout Test</TITLE>
+</HEAD>
+
+<SCRIPT LANGUAGE="VBScript">
+
+dim currentBtnName
+dim currentBtn
+
+sub Initialize()
+	currentBtnName=""
+end sub
+
+sub window_onload
+	parent.ChildReady(window)
+end sub
+
+sub DoMouseEnter
+	window.event.srcElement.src = window.event.srcElement.HiliteImg
+	window.status = "Perform " + window.event.srcElement.alt + " gesture"
+end sub
+
+sub DoMouseOut
+	if currentBtnName = "" then
+		window.event.srcElement.src = window.event.srcElement.DefaultImg
+	elseif currentBtnName = window.event.srcElement.name then
+		currentBtn.src = currentBtn.StuckImg
+	else
+		window.event.srcElement.src = window.event.srcElement.DefaultImg
+	end if
+	window.status = ""
+end sub
+
+sub DoDblClk
+	SetDefaultBtn(window.event.srcElement)
+end sub
+
+sub SetDefaultBtn (whichBtn)
+	if currentBtnName <> "" then
+		currentBtn.src = currentBtn.DefaultImg
+	end if
+	set currentBtn = whichBtn
+	if whichBtn is nothing then
+		currentBtnName = ""
+	else
+		currentBtnName = currentBtn.name
+		currentBtn.src = currentBtn.StuckImg
+	end if
+end sub
+
+sub DoBtnClick
+	DoBtnAction (window.event.srcElement)
+	SetDefaultBtn (Nothing)
+end sub
+
+
+sub DoBtnAction (whichBtn)
+	gestureText = whichBtn.GestureText
+	theText = parent.parent.frames(0).frames(1).frames(1).frames(0).TextBox.value
+	if (theText = "")  or (theText =  "Type here and press Enter to speak") then
+		top.theclient.VWClient.World.User.Emote gestureText
+	else
+		top.theclient.VWClient.World.User.Emote gestureText, theText
+	end if
+	parent.parent.frames(0).frames(1).frames(1).frames(0).TextBox.value = ""
+end sub
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+</SCRIPT>
+
+<BODY TOPMARGIN=0 LEFTMARGIN=0 BGCOLOR=#F4F4EB>
+<IMG	BORDER=0 SRC="wave.gif" NAME="Wave" STYLE="position:absolute; left:10; top:0"
+			OnClick=DoBtnClick OnMouseOver="DoMouseEnter" OnMouseOut="DoMouseOut"
+			GestureText="WAVE" DefaultImg="wave.gif" HiliteImg="waveh.gif"  Alt="Wave">
+
+<IMG	BORDER=0 SRC="turn.gif" NAME="Turn" STYLE="position:absolute; left:35; top:0"
+			OnClick=DoBtnClick OnMouseOver="DoMouseEnter" OnMouseOut="DoMouseOut"
+			GestureText="TURN" DefaultImg="turn.gif" HiliteImg="turnh.gif" Alt="Turn">
+
+<IMG	BORDER=0 SRC="smile.gif" NAME="Smile" STYLE="position:absolute; left:60; top:0"
+			OnClick=DoBtnClick OnMouseOver="DoMouseEnter" OnMouseOut="DoMouseOut"
+			GestureText="SMILE" DefaultImg="smile.gif" HiliteImg="smileh.gif" Alt="Smile">
+
+<IMG	BORDER=0 SRC="talk.gif" NAME="Laugh" STYLE="position:absolute; left:85; top:0"
+			OnClick=DoBtnClick OnMouseOver="DoMouseEnter" OnMouseOut="DoMouseOut"
+			GestureText="LAUGH" DefaultImg="talk.gif" HiliteImg="talkh.gif" Alt="Laugh">
+
+<IMG	BORDER=0 SRC="flirt.gif" NAME="Flirt" STYLE="position:absolute; left:110; top:0"
+			OnClick=DoBtnClick OnMouseOver="DoMouseEnter" OnMouseOut="DoMouseOut"
+			GestureText="FLIRT" DefaultImg="flirt.gif" HiliteImg="flirth.gif" Alt="Flirt">
+
+<IMG	BORDER=0 SRC="shrug.gif" NAME="Shrug" STYLE="position:absolute; left:135; top:0"
+			OnClick=DoBtnClick OnMouseOver="DoMouseEnter" OnMouseOut="DoMouseOut"
+			GestureText="SHRUG" DefaultImg="shrug.gif" HiliteImg="shrugh.gif" Alt="Shrug">
+<BR>
+<IMG	BORDER=NO SRC="blush.gif" NAME="Blush"  STYLE="position:absolute; left:22; top:25"
+			OnClick=DoBtnClick OnMouseOver="DoMouseEnter" OnMouseOut="DoMouseOut"
+			GestureText="BLUSH" DefaultImg="blush.gif" HiliteImg="blushh.gif" Alt="Blush">
+<IMG	BORDER=NO SRC="frown.gif" NAME="Frown"  STYLE="position:absolute; left:47; top:25"
+			OnClick=DoBtnClick OnMouseOver="DoMouseEnter" OnMouseOut="DoMouseOut"
+			GestureText="ANGRY" DefaultImg="frown.gif" HiliteImg="frownh.gif" Alt="Frown">
+<IMG	BORDER=NO SRC="sleep.gif" NAME="Sleep" STYLE="position:absolute; left:72; top:25"
+			OnClick=DoBtnClick OnMouseOver="DoMouseEnter" OnMouseOut="DoMouseOut"
+			GestureText="SLEEP" DefaultImg="sleep.gif" HiliteImg="sleeph.gif"  Alt="Sleep">
+<IMG	BORDER=NO SRC="still.gif" NAME="Pose" STYLE="position:absolute; left:97; top:25"
+			OnClick=DoBtnClick OnMouseOver="DoMouseEnter" OnMouseOut="DoMouseOut"
+			GestureText="TRICK 3" DefaultImg="still.gif" HiliteImg="stillh.gif"  Alt="Pose">
+<IMG	BORDER=NO SRC="action.gif" NAME="Action" STYLE="position:absolute; left:122; top:25"
+			OnClick=DoBtnClick OnMouseOver="DoMouseEnter" OnMouseOut="DoMouseOut"
+			GestureText="TRICK 1" DefaultImg="action.gif" HiliteImg="actionh.gif" Alt="Act">
+
+
+</BODY>
+
+</HTML>
+
+
+
+
+
+
+
+
+
+
+

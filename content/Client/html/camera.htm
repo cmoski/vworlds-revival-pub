@@ -1,0 +1,289 @@
+<HTML>
+<HEAD>
+<TITLE>Camera</TITLE>
+<LINK REL=StyleSheet HREF=../shared/global.css>
+<SCRIPT language=VBScript>
+
+Option Explicit
+
+public goClient, goWorld, goUser, giLoadTimer
+set goClient = window.dialogArguments.theclient.VWClient
+set goWorld = goClient.world
+set goUser = goWorld.user
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+sub document_OnMouseOver
+	select case window.event.srcElement.className
+	case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	case "vHelp"
+		imgHelp.src="..\shared\helpH.gif"
+	case else
+	end select
+end sub
+
+sub document_OnMouseOut
+	select case window.event.srcElement.className
+	case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	case "vHelp"
+		imgHelp.src="..\shared\help.gif"
+	case else
+	end select
+end sub
+
+function PosInList(tagName, sItem)
+	dim i
+	PosInList = tagName.length
+	for i = 0 to tagName.length - 1
+		if lcase(sItem) < lcase(tagName.options.item(i).text) then
+			PosInList = i
+			exit for
+		end if
+	next
+end function
+
+sub window_OnLoad
+	dim el, curMode, art
+	on error resume next
+	goWorld.fireUIEvent goUser, "EventRequest", window
+	for each art in goUser.container.contents
+		if art.IsCameraAnchor then
+			set el = document.CreateElement("OPTION")
+			el.value = art.id
+			el.text = art.name
+			theCamList.add el, PosInList(theCamList, el.text)
+		end if
+	next
+	if theCamList.length > 0 then
+		theCamList.options(0).selected = true
+		lblAttached.style.color = ""
+	else
+		attached.disabled = true
+		lblAttached.style.color = "gray"
+		theCamList.disabled = true
+	end if
+	' restore camera preference
+	curMode = goUser.profile.keyvalue("CameraPreference")
+	if curMode = "*FIRSTPERSON*" then
+		theCamList.disabled = true
+		divFirstPerson.style.display = ""
+		eyes.checked = true
+		eyes.focus
+	elseif curMode = "*WINGMAN*" then
+		theCamList.disabled = true
+		divWingMan.style.display = ""
+		shoulder.checked = true
+		shoulder.focus
+	elseif curMode = "*FACING*" then
+		theCamList.disabled = true
+		divFacing.style.display = ""
+		facing.checked = true
+		facing.focus
+	else
+		divAttached.style.display = ""
+		attached.checked = true
+		theCamList.value = goUser.Container.FindWithin(curMode, True).ID
+		theCamList.focus
+	end if
+end sub
+
+sub window_onunload
+	If Not window.dialogArguments.blnAppClosing Then
+		goWorld.fireUIEvent goUser, "EventRequestCancel", window
+		goWorld.FireUIEvent goUser, "vwCameraClose", True
+	End If
+end sub
+
+sub HandleUIEvent(byVal who, what, byVal arg)
+	select case what
+	case "OnEnterRoom"
+		if goUser is arg then
+			window.location.reload
+		end if
+	case "OnEditingModeChanged"
+		if (goWorld.global.editingmode) Then
+			DoClose
+		End If
+	case else
+	end select
+end sub
+
+sub inputClick
+	if giLoadTimer <> 0 then
+		window.clearTimeout giLoadTimer
+	end if
+	select case window.event.srcElement.id
+	case "eyes"
+		giLoadTimer=window.setTimeout("ResetCamera:giLoadTimer=0", 150)
+	case "facing"
+		giLoadTimer=window.setTimeout("Front:giLoadTimer=0", 150)
+	case "shoulder"
+		giLoadTimer=window.setTimeout("Wingman:giLoadTimer=0", 150)
+	case "attached"
+		giLoadTimer=window.setTimeout("chooseCam:giLoadTimer=0", 150)
+	case else
+	end select
+end sub
+
+sub ResetCamera
+	theCamList.disabled = true
+	divFacing.style.display = "none"
+	divWingMan.style.display = "none"
+	divAttached.style.display = "none"
+	divFirstPerson.style.display = ""
+	goUser.profile.keyValue("CameraPreference") = "*FIRSTPERSON*"
+	goWorld.FireUIEvent goUser, "SetCamera", array(0.0, 0.7, 0.0)
+end sub
+
+sub Wingman
+	theCamList.disabled = true
+	divFacing.style.display = "none"
+	divAttached.style.display = "none"
+	divFirstPerson.style.display = "none"
+	divWingMan.style.display = ""
+	goUser.profile.keyValue("CameraPreference") = "*WINGMAN*"
+	goWorld.FireUIEvent goUser, "SetCamera", array(0.5, 1.0, -3.0)
+end sub
+
+sub Front
+	theCamList.disabled = true
+	divAttached.style.display = "none"
+	divFirstPerson.style.display = "none"
+	divWingMan.style.display = "none"
+	divFacing.style.display = ""
+	goUser.profile.keyValue("CameraPreference") = "*FACING*"
+	goWorld.FireUIEvent goUser, "SetCameraOr", array(0.0, 0.0, 3.0, 0.0, 0.0, -1.0)
+end sub
+
+sub chooseCam
+	dim art, theItem, ID, selItem
+	theCamList.disabled = false
+	divFirstPerson.style.display = "none"
+	divWingMan.style.display = "none"
+	divFacing.style.display = "none"
+	divAttached.style.display = ""
+	attached.checked = True
+	selItem = theCamList.selectedIndex
+	if selItem > -1 then
+		theItem = theCamList.item(selItem).text
+		ID = theCamList.item(selItem).value
+		goUser.profile.keyValue("CameraPreference") = theItem
+		set art = goWorld.ObjectByID(ID)
+		goWorld.FireUIEvent art, "SetCamera", array(0.0, 0.0, 0.0)
+	end if
+end sub
+
+sub DoClose
+	window.close
+end sub
+
+sub OnHelp
+	dim helpstringsList
+	window.event.returnValue = false
+	set helpstringsList = goWorld.global.CreatePropertyList
+	helpstringsList.add "client"
+	helpstringsList.add "camera"
+	goWorld.FireUIEvent goUser, "Help", helpstringsList
+end sub
+
+sub OptFocus()
+	if eyes.checked then
+		eyes.focus
+	elseif facing.checked then
+		facing.focus
+	elseif shoulder.checked then
+		shoulder.focus
+	else
+		attached.focus
+	end if
+end sub
+
+sub document_onKeyPress()
+	select case window.event.keycode
+	case 27
+		DoClose
+	case else
+	end select
+end sub
+
+</SCRIPT>
+</HEAD>
+<body bgcolor=#F4F4E8 style=margin:0;padding:0>
+	<nobr>
+		<div id=divTitle class=vLabel style=top:5;left:57;width:224;>
+				Choose a camera view relative to your<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;avatar or attach to another object.
+		</div>
+		<div style=position:absolute;top:45;height:200;left:7;>
+			<input type=radio id=eyes name=choice OnClick=inputClick style=position:relative;left:6;>
+			<label class=vInputLbl for=eyes>
+				&nbsp;Through my eyes&nbsp;
+			</label><br>
+			<input type=radio name=choice ID=facing OnClick=inputClick style=position:relative;left:6;>
+			<label class=vInputLbl for=facing>
+				&nbsp;Facing me&nbsp;
+			</label><br>
+			<input type=radio name=choice ID=shoulder OnClick=inputClick style=position:relative;left:6;>
+			<label class=vInputLbl for=shoulder>
+				&nbsp;Over my shoulder&nbsp;
+			</label><br>
+			<div id=test style=position:absolute;top:65;left:0;>
+				<input type=radio name=choice ID=attached OnClick=inputClick style=position:relative;left:6;>
+				<label id=lblAttached class=vInputLbl for=attached>
+					&nbsp;Attached to:&nbsp;
+				</label>
+				<br>
+				<select class=vInput id=theCamList onchange=chooseCam onclick=chooseCam size=6 style=left:28;position:relative;width:130>
+				</select>
+			</div>
+		</div>
+	</nobr>
+	<div class=vLabel
+			 id=divDesc
+			 style="border-color: #555a47;
+							border-style: solid;
+							border-width: 1;
+							height: 164;
+							left: 174;
+							padding-right: 10;
+							top: 50;
+							width: 146;
+							background-color: #cbccba;">
+		<div id=divFirstPerson style=position:relative;top:6;left:6;display:none;>
+			<b>Through my eyes:</b>
+			<center><img src=../shared/c1.gif></center>
+			You view the world through your avatar's eyes.  This is similar to your natural point of view.
+		</div>
+		<div id=divFacing style=position:relative;top:6;left:6;display:none;>
+			<b>In front of me:</b>
+			<center><img src=../shared/c2.gif></center>
+			You view yourself as others see you, with the camera staying in front of you as you move around.
+		</div>
+		<div id=divWingMan style=position:relative;top:6;left:6;display:none;>
+			<b>Over my shoulder:</b>
+			<center><img src=../shared/c3.gif></center>
+			You view the world and the back of your own avatar's head and shoulders, as if standing behind your avatar.
+		</div>
+		<div id=divAttached style=position:relative;top:6;left:6;display:none;>
+			You view the world from the object selected.  If this object is moving, your point of view also moves.
+		</div>
+	</div>
+	<button class=bEnabled id=closebtn onclick=DoClose style=top:231;left:260;>Close</button>
+	<a id=lnkHelp onclick=OnHelp href="">
+		<img src=../shared/help.gif id=imgHelp class=vHelp style=top:231;>
+	</a>
+</body>
+</HTML>

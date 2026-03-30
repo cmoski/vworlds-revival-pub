@@ -1,0 +1,1419 @@
+<html>
+<head>
+<LINK Rel=Stylesheet href=../../../../client/shared/global.css>
+<style>
+	.note {font-family:Webdings;color:#cc6600;font-size:14pt;}
+	.task {font-family:Webdings;color:#009900;font-size:14pt;}
+	.alert {font-family:Webdings;color:#cc0000;font-size:14pt;}
+	.helplink {font-family:Verdana;color:#3300cc;cursor:hand;font-size:8pt;font-weight:bold;}
+	.scriptlink {font-family:Verdana;color:#3300cc;cursor:hand;font-size:9pt;font-weight:bold;}
+</style>
+<title>Welcome to the Animation and Lighting Tutorial!</title>
+<script language=vbs src=ComVBScript.htm></script>
+<script LANGUAGE="VBScript">
+
+dim world
+
+sub Window_OnLoad
+	window.settimeout "top.frames(""Btns"").BuildButtons(theBody.MaxSteps)", 0, "vbs"
+	window.settimeout "top.frames(""Tabs"").HighlightItem mid(window.location, instrRev(window.location, ""/"") + 1, len(window.location) - instrRev(window.location, ""/"") - 4)", 0, "vbs"
+	set world = top.goWorld
+	world.tutorial.start_lesson 9
+	world.fireUIEvent world.user, "EventRequest", window
+end sub
+
+sub window_onunload
+    world.fireUIEvent world.user, "EventRequestCancel", window
+end sub
+
+</script>
+</head>
+
+<body id=theBody class=vBody CurrentStep=1 MaxSteps=8>
+	<div class=vh1 Style=position:absolute;left:0;top:10; id=heading>
+		Animation and Lighting
+	</div>
+	<div class=vweb style=position:absolute;left:340;top:1; id=circle>=</div>
+
+<!-- Step 1 -->
+<div id=Step1 style=position:absolute;width:99%;left:0;top:44;>
+	<nobr>
+	<div class=vstep Style=position:absolute;left:351;top:-35; id=divSteps>
+		Step 1 of 8
+	</div>
+	</nobr>
+	<div class=vhh2 style=color:#336666;font-weight:bold;>
+		Step One: Property Animations
+	</div>
+	<br>
+	<div class=vtext style=position:absolute;left:0;top:30;width:99%;>
+		<p>
+		In the previous examples in the tutorial you saw objects move in fairly rudimentary ways to give
+		feedback users. Most of these <b>animations</b> were achieved by changing the property of an object
+		while indicating a duration with a separate <b>Duration</b>property specific to the property we wanted
+		to animate. 
+		<p>
+		Virtual Worlds 1.5 objects can perform complex animations on many of their graphical properties that
+		change the properties over time along a  predetermined <b>path</b>. They can also perform animations that
+		are built into their graphics files, where the animation data is imbedded in the .3-Ds  or .X file
+		format. Properties that can be animated are documented in the Virtual Worlds API under the method
+		<span class=helplink HelpString="vworlds.chm::/API Reference/Exemplars/Thing/StartAnimation.htm"
+		TITLE="Help">StartAnimation</span>,
+		and include among others the <span class=helplink
+		HelpString="vworlds.chm::/API Reference/Exemplars/Thing/Position.htm" TITLE="Help">Position</span>,
+		<span class=helplink HelpString="vworlds.chm::/API Reference/Exemplars/Thing/Scale.htm"
+		 TITLE="Help">Scale</span>, and
+		<span class=helplink HelpString="vworlds.chm::/API Reference/Exemplars/Thing/Direction.htm" TITLE="Help">
+		Direction</span> of an object.
+		<table class=vtext cellspacing=3>
+		<tr>
+			<td valign=top>
+			<span class=task>a</span>
+			</td>
+			<td>
+			Right click the Orange portal and select <b>Go Through</b> to move into the animation
+			<span class=helplink HelpString="vworlds.chm::/API Reference/Exemplars/Room/Room.htm"
+			 TITLE="Help">room</span>.
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=task>a</span>
+			</td>
+			<td>
+			Move to the area near the bridge and click the cube object, labeled <b>Animate Cube</b>.
+			The <b>OnLButtonUp</b> method attached to the cube will trigger a simple animation that moves the
+			cube along a path. 
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=note>$</span>
+			</td>
+			<td>
+			Virtual Worlds has the ability to put text over any object dynamically by manipulating its
+			<span class=helplink HelpString="vworlds.chm::/API Reference/Exemplars/Thing/Label.htm"
+			 TITLE="Help">Label</span> property.
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=task>a</span>
+			</td>
+			<td>
+			Try to click the cube while it is moving. The animation should restart each time you click it. 
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=task>a</span>
+			</td>
+			<td>
+			Watch the <b>Command Window</b> as you click the cube and you will see when the animation starts
+			and whether it completes successfully or is interrupted. Try waiting for the cube to complete
+			and see the message traced in the <b>Command Window</b>.
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=alert>~</span>
+			</td>
+			<td>
+			This message is traced by another method on the
+			cube that is specified as the <b>Callback</b> method in the call to <b>StartAnimation</b>. This method is
+			invoked automatically when the animation completes.
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=task>a</span>
+			</td>
+			<td>
+			If the animation is interrupted by a new
+			animation, this callback is also invoked but it is passed a parameter that indicates the
+			animation was stopped before completing. Animations can also be set to loop indefinitely, in
+			which case the <b>Callback</b> method is only called  when the animation is stopped
+			<b>programmatically</b>. 			
+			</td>
+		</tr>
+		</table>
+		<p>
+		The animation path consists of a series of position vectors stored in a
+		<span class=helplink HelpString="vworlds.chm::/API Reference/PropertyMap/PropertyMap.htm"
+		TITLE="Help">PropertyMap</span>, which is
+		stored in the <b>SimpleAnimMap</b> property of the <b>cube</b> object. 
+		<p>
+		<table class=vtext cellspacing=3>
+		<tr>
+			<td valign=top>
+			<span class=task>a</span>
+			</td>
+			<td>
+			Open the <b>Object Explorer</b>, select the object named 'cube' and look for its
+			<b>SimpleAnimMap</b> property. Notice it is of type <b>Property Map</b>.
+			Double-click the property to view the
+			contents of the map in the property map dialog box. You will see a sequence of vectors
+			each labeled  with a numeric key.  These key value pairs determine the sequence and the relative 
+			timing of the motion of the cube, as they are applied to its <b>Position</b> property. 
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=note>$</span>
+			</td>
+			<td>
+			Notice that the first and last vectors in the <b>PropertyMap</b>, the ones at the lowest and highest key
+			numbers, are the same. This creates the  illusion of a cyclical animation that returns to where it
+			started, so that the next time it is started it appears to be moving from its current position.
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=alert>~</span>
+			</td>
+			<td>
+			Animations do not take into account the actual position of the object when they start unless
+			programmed to do so. If the first key (the  'zero' key) is not the same as the actual position of the
+			object, it will appear to jump, as is the case when you click the cube before it has  returned to
+			the last position in the path and the animation is complete.
+			</td>
+		</tr>
+		</table>		
+		<p>
+		The key values in the property map specify keyframes for the animation. The cube will smoothly move through
+		each of the vectors in the map. Note that the keyframe values range from 0 to 8. This timing
+		information is relative (i.e. the cube does not take 8 seconds to complete the cycle of  keyframes)
+		and depends on additional timescale information provided in the call to <b>StartAnimation</b>.
+		<P>
+		In the next step we will examine the VBScript code for the cube that animates it.
+	</div>
+</div>
+<!--End Step 1-->
+
+
+
+<!--Step 2-->
+<div id=Step2 style=position:absolute;left:0;top:44;width:99%;display:none;>
+	<nobr>
+	<div class=vstep Style=position:absolute;left:351;top:-35; id=divNumSteps>
+		Step 2 of 8
+	</div>
+	</nobr>
+	<div class=vhh2 style=color:#336666;font-weight:bold;>
+		Step Two: Property Animations Continued...
+	</div>
+	<div class=vtext style=position:absolute;left:0;top:30;width:99%;>
+		<p>
+		The animation is started by the cube object's OnLButtonUp method found in the script module 
+		lesson_9_animations.vbs:
+		<p>
+	
+<!--sub cube_onLButtonUp-->
+<table width=610 style=background-color:white;vertical-align:top;padding-left:7;padding-right:5;padding-top:5;width:610;>
+<tr><!--set up the column widths-->
+	<td width=40><img src="Images/spacer.gif" width=40 height=4></td>
+	<td width=40><img src="Images/spacer.gif" width=40 height=4></td>
+	<td width=40><img src="Images/spacer.gif" width=40 height=4></td>
+	<td width=185><img src="Images/spacer.gif" width=185 height=4></td>
+	<td width=305><img src="Images/spacer.gif" width=305 height=4></td>
+</tr>
+<tr>
+ 	<td colspan=4 valign=top><font face=verdana size=2>
+	sub cube_onLButtonUp (hWnd,x,y)</font>
+	</td>
+ 	   	<td width=305>
+	<span CLASS="Outline" ID="Out1-1" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</font></span><br>
+		<DIV ID="Out1-1d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+		' this method animates the cube object on a <br>
+		' simple path when clicked.  note that timescale <br>
+		' value passed in StartAnimation is in keyframes <br>
+		' per millisecond: this animation runs at .001 <br>
+		' keyframes per millisecond, equivalent to 1 <br>
+		' keyframe per second.
+		</div>
+	</td>
+</tr>	
+<tr>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+  		<td colspan=4><font face=verdana size=2>
+		dim time
+	</td>
+</tr>
+<tr>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+  		<td colspan=3><font face=verdana size=2>
+		time = world.getanimationsystemtime()<br>
+	</td>
+	<td><span CLASS="Outline" ID="Out1-2" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</font></span><br>
+		<DIV ID="Out1-2d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+			' the getanimationsystemtime methods returns<br>
+			' the time in ticks since the world was created.				
+		</div>
+	</td>
+</tr>
+<tr>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+  		<td colspan=4><font face=verdana size=2>
+		world.trace "cube animation started at time "& time & " ticks."<br>
+		this.startAnimation "position",this.simpleAnimMap,"animationDone",A_SPLINE,.001,0,8 <br>
+		</font>
+	</td>
+</tr>		
+<tr>
+	<td colspan=5><font face=verdana size=2>
+		end sub
+		</font>
+	</td>
+</tr>		
+<table>
+<!--end sub cube_onLButtonUp-->
+		
+		<p>
+		<table class=vtext cellspacing=3>
+		<tr>
+			<td valign=top>
+			<span class=note>$</span>
+			</td>
+			<td>
+			Pay close attention to the parameters passed to StartAnimation. There are a lot of parameters
+			and together they provide very precise  control of the cube's movement. Many are optional and
+			omitting them produces different results. See StartAnimation in the <b>Virtual Worlds</b> API for 
+			details.
+			</td>
+		</tr>		
+		</table>
+		<p>
+		<table class=vtext border=1 bgcolor=white bordercolor=1>
+		<tr>
+			<th valign=top width=100>
+			1. Position
+			</th>
+			<td>
+			The first parameter "position" indicates that the animation will affect the object's position.
+			There are many other graphical properties that can  also be animated.
+			</td>
+		</tr>
+		<tr>
+			<th valign=top>
+			2. PropertyMap Name
+			</th>
+			<td>
+			The second parameter ("this.simpleAnimMap") specifies the PropertyMap containing the position
+			vectors as the path used for this animation.
+			</td>
+		</tr>
+		<tr>
+			<th valign=top>
+			3. Callback Method Name
+			</th>
+			<td>
+			The third parameter ("animationDone") specifies a callback method, which is a method of the
+			animating object that will execute when the  animation completes or is interrupted.
+			</td>
+		</tr>				
+		<tr>
+			<th valign=top>
+			4. Option Flags
+			</th>
+			<td>
+			The fourth parameter (A_SPLINE) is a flag that indicates that the
+			animation process will use spline functions to interpolate smoothly
+			between the points in the PropertyMap.
+			</td>
+		</tr>				
+		<tr>
+			<th valign=top>
+			5. Time Scale
+			</th>
+			<td>
+			The fifth parameter (.001) specifies the speed that the animation will run in keyframes
+			per millisecond, also known as its 'timescale'. The value  .001 produces an animation
+			speed of .001 keyframes per millisecond, which is one keyframe per second. Since the
+			highest key value in the  PropertyMap is "8", at this timescale the animation will take
+			8 seconds to run completely if it is allowed to run through all of the keyframes.
+			</td>
+		</tr>				
+		<tr>
+			<th valign=top>
+			6 & 7. Start Range and End Range
+			</th>
+			<td>
+			The sixth and seventh parameters (0) and (8) indicate the start and end ranges of the
+			animation applied to this path. These are read by  StartAnimation as the first and last
+			keyframe values to process. In this case we are running the animation from start to finish.
+			</td>
+		</tr>				
+		<tr>
+			<th valign=top>
+			8. Start Index
+			</th>
+			<td>
+			The eighth parameter (0) indicates the starting index in within the specified ranges. In this
+			case we are starting at the beginning of the range.
+			</td>
+		</tr>				
+		</table>
+		<p>
+		<table class=vtext cellspacing=3>
+		<tr>
+			<td valign=top>
+			<span class=note>$</span>
+			</td>
+			<td>
+			You can call <b>StartAnimation</b> directly on any object from the  to test
+			an animation.
+			</td>
+		</tr>		
+		<tr>
+			<td valign=top>
+			<span class=task>a</span>
+			</td>
+			<td>
+			Try executing this animation by typing the following line into the <b>Command Window</b>:
+			<br>
+			<b>
+			&nbsp;&nbsp;&nbsp;&nbsp; dim obj : set obj = user.container.findwithin("cube")<br>
+			&nbsp;&nbsp;&nbsp;&nbsp; obj.startAnimation "position",obj.simpleAnimMap,"animationDone", _<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; A_SPLINE,.001,0,8,0
+			</b>
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=note>$</span>
+			</td>
+			<td>
+			The cube should appear to animate in a fashion similar to when you clicked on it in the 3-D view.
+			</td>
+		</tr>		
+		<tr>
+			<td valign=top>
+			<span class=task>a</span>
+			</td>
+			<td>
+			Try changing the last 4 parameters and watch how the animation behaves differently.
+			For example, changing the speed to .002 will make  the animation run twice as fast.
+			Changing the last 3 parameters will start or stop the animation at different points
+			along the path. 
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=note>$</span>
+			</td>
+			<td>
+			Watch the property 'position' on the cube object in the <b>Object Explorer</b>. Notice that the
+			object's position is set to the closest key value in  the property map indicated by its
+			end range. 
+			</td>
+		</tr>		
+		</table>
+	</div>
+</div>
+<!--End Step 2-->
+
+
+
+
+
+<!--Step 3-->
+<div id=Step3 style=position:absolute;left:0;top:44;width:99%;display:none;>
+	<nobr>
+	<div class=vstep Style=position:absolute;left:351;top:-35; id=divSteps>
+		Step 3 of 8
+	</div>
+	</nobr>
+	<div class=vhh2 style=color:#336666;font-weight:bold;>
+		Step Three: File Animations
+	</div>
+	<div class=vtext style=position:absolute;left:0;top:30;width:99%;>
+	<p>
+	Some graphics files contain built-in animation information which Virtual Worlds can play by specifying
+	"file" as the animation type when calling <b>StartAnimation</b>.  A file animation displays animations embedded
+	in the graphics file itself, at a specified timescale.
+	<table class=vtext cellspacing=3>
+		<tr>
+			<td valign=top>
+			<span class=alert>~</span>
+			</td>
+			<td>
+			These animations do <i>not</i> affect the graphical properties of the object in Virtual Worlds,
+			although objects can appear to move, turn, and  scale in the renderer in ways that could
+			make a user believe these properties have been altered.
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=task>a</span>
+			</td>
+			<td>
+			Find and click the object labeled "grow tree" in the 3-D view. The object will change its
+			geometry smoothly, expand and grow into a  different shape. 
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=note>$</span>
+			</td>
+			<td>
+			All of the parameters to perform this transformation were applied at the time the model for
+			this object was created.  They cannot be viewed or edited in Virtual Worlds but must be altered
+			at the design stage of the graphical model itself!
+			</td>
+		</tr>		
+		<tr>
+			<td valign=top>
+			<span class=note>$</span>
+			</td>
+			<td>
+			If you click the tree again while it is growing, the animation will restart. If you click the tree
+			after it has stopped growing, it will return to its original "seed" state. This behavior is
+			determined by the object's OnLButtonUp method which you can view below:
+			</td>
+		</tr>		
+		</table>
+		<p>
+
+<!--sub treeAnim_onLButtonUp-->
+<table width=610 style=background-color:white;vertical-align:top;padding-left:7;padding-right:5;padding-top:5;width:610;>
+<tr><!--set up the column widths-->
+  	<td width=40><img src="Images/spacer.gif" width=40 height=4></td>
+	<td width=40><img src="Images/spacer.gif" width=40 height=4></td>
+	<td width=40><img src="Images/spacer.gif" width=40 height=4></td>
+	<td width=185><img src="Images/spacer.gif" width=185 height=4></td>
+	<td width=305><img src="Images/spacer.gif" width=305 height=4></td>
+</tr>
+<tr>
+	<td valign=top colspan=4><font face=verdana size=2>		
+	dim isTreeGrown 
+	</font>
+	</td> 	   	
+	<td>
+	<span CLASS="Outline" ID="Out4-0" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+	<DIV ID="Out4-0d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+	' this global variable keeps the state<br>
+	' of the animation of the tree object<br>
+	' between multiple executions of the<br>
+	' method below.
+	</div>
+	</td>
+</tr>
+<tr>
+	<td valign=top colspan=4><font face=verdana size=2>		
+	sub treeAnim_onLButtonUp (hWnd,x,y)<br>
+	</font>
+	</td> 	   	
+	<td>
+	<span CLASS="Outline" ID="Out4-1" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+	<DIV ID="Out4-1d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+	' reset the tree by setting the tree's<br>
+	' animation index to zero. if an animation<br>
+	' has finished, this index set still works<br>
+	' only if its a file animation<br>
+	</div>
+	</td>
+</tr>
+<tr>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	<td valign=top colspan=4><font face=verdana size=2>
+	if isTreeGrown then		
+	</td>
+</tr>		
+<tr>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	<td valign=top colspan=3><font face=verdana size=2>		
+	this.setAnimationIndex "file",0<br>
+	isTreeGrown = false<br>
+	world.trace "tree file animation index set to 0 at time " & _<br>
+	&nbsp; world.getanimationsystemtime() & " ticks."<br>
+	</font>
+	</td> 	   	
+</tr>
+<tr>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	<td valign=top colspan=3><font face=verdana size=2>		
+	else
+	</font>
+	</td> 	   	
+	<td>
+	<span CLASS="Outline" ID="Out4-2" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+	<DIV ID="Out4-2d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+	' grow the tree by running the tree's<br>
+	' file animation<br>
+	</div>
+	</td>
+</tr>
+<tr>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	<td valign=top colspan=3><font face=verdana size=2>		
+	this.startAnimation "file",,,A_SPLINE+A_LOCAL,0.01,0,80<br>
+	isTreeGrown = true<br>
+	world.trace "tree file animation started at time " & _ <br>
+	&nbsp; world.getanimationsystemtime() & " ticks."<br>
+	</font>
+	</td> 	   	
+</tr>
+<tr>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	<td valign=top colspan=4><font face=verdana size=2>		
+	end if
+	</td> 	   	
+</tr>
+<tr>
+	<td valign=top colspan=5><font face=verdana size=2>		
+	end sub
+	</td> 	   	
+</tr>
+</table>
+<!--end sub treeAnim_onLButtonUp-->
+
+	<p>
+	<table class=vtext cellspacing=3>
+		<tr>
+			<td valign=top>
+			<span class=note>$</span>
+			</td>
+			<td>
+			Note that in the call to <b>StartAnimation</b> we did not pass a property map as a parameter as we
+			did with position. File animations do not  accept a <b>PropertyMap</b> since their animating data
+			is actually imbedded in the graphics file. 
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=note>$</span>
+			</td>
+			<td>
+			Also note that in this example we have specified no callback method. In this case we do not wish to
+			run any methods when the object has  completed its animation or is interrupted. In the fourth
+			parameter which accepts the option flags for the animation, we are combining A_SPLINE and A_LOCAL. The A_LOCAL flag causes the animation to run on the client-side. Only the client that is running the animation will see the  object change. Removing the A_LOCAL flag will cause all other clients logged into the room to see the object animate on their machines as  well.
+			</td>
+		</tr>				
+		</table>
+	</div>
+</div>
+<!--End Step 3-->
+
+
+
+
+
+<!--Step 4-->
+<div id=Step4 style=position:absolute;left:0;top:44;width:99%;display:none;>
+	<nobr>
+		<div class=vstep Style=position:absolute;left:351;top:-35; id=divSteps>
+			Step 4 of 8
+		</div>
+	</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step Four: Dynamic Lighting 
+		</div>
+		<div class=vtext style=position:absolute;left:0;top:30;width:99%;>
+		<p>
+		Virtual Worlds supports the use of dynamic lighting of the 3-D space with an exemplar called
+		<span class=helplink HelpString="vworlds.chm::/API Reference/Exemplars/Light/Light.htm"
+		TITLE="Help">Light</span>.
+		Instances of the <b>Light</b> Exemplar can be  positioned and edited to create a multi-colored lit
+		landscape in the <b>3-D</b> view.
+		<p>
+		<table class=vtext cellspacing=3>
+		<tr>
+			<td valign=top>
+			<span class=task>a</span>
+			</td>
+			<td>
+			Open the <b>Object Explorer</b> and select the object <b>DirectionalLight</b> from the <b>Room</b>
+			contents (you should be in the Lesson 9 animation room to  do this). Take a moment to familiarize
+			yourself with the special properties of the <b>Light</b> exemplar, listed alphabetically and
+			beginning with the  word 'Light'. Virtual Worlds supports multiple types of lights and
+			you can customize the color, attenuation, type, and the width of a light if it is a spotlight.
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=task>a</span>
+			</td>
+			<td>
+			Locate the object labeled 'animate light color' in the 3-D view. Its name in the <b>Object Explorer</b>
+			is <b>DirectionalLight</b>
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=alert>~</span>
+			</td>
+			<td>
+			The label of a Virtual Worlds object can be any string; it does not have to refer to the object's
+			name!
+			</td>
+		</tr>		
+		<tr>
+			<td valign=top>
+			<span class=task>a</span>
+			</td>
+			<td>
+			Click the object labeled <b>animate light color</b> and notice how the color of the lighting
+			changes. The <b>onLButtonUp</b> method of the <b>directionalLight</b> object runs a
+			<b>LightColor</b> animation. 
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=task>a</span>
+			</td>
+			<td>
+			Switch to the Geometry Editor by selecting that tab from the tabs immediately below the 3-D view,
+			and make sure that the object 'directionalLight' appears as the selected (highlighted) object in
+			the 3-D view. You may select it by choosing the <b>Select</b> tool
+			<img src="Images/btnSelect.bmp"> from the tool menu
+			immediately above the 3-D view, and then clicking on it in the 3-D view.			
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=task>a</span>
+			</td>
+			<td>
+			With the directionalLight selected, choose the <b>Rotate</b> tool <img src="Images/btnRotate.bmp"> from the tool menu
+			immediately above the 3-D view (you must be in the geometry edit mode by selecting it from the tabs
+			below the 3-D view to accomplish this). 			
+			</td>
+		</tr>				
+		<tr>
+			<td valign=top>
+			<span class=task>a</span>
+			</td>
+			<td>
+			Hold the mouse down on the light object and change its direction by dragging the mouse around. 			
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=note>$</span>
+			</td>
+			<td>
+			Notice how the lighting direction changes on all the surfaces in the 3-D view. This is the nature
+			of a light with a
+			<span class=helplink HelpString="vworlds.chm::/API Reference/Exemplars/Light/LightType.htm"
+			 TITLE="Help">LightType</span> property of '3' ,  which indicates a <b>directional light</b>. Moving the
+			position of a light with this <b>LightType</b> will not affect the lighting, only its orientation. This 
+			creates a  nice atmospheric light effect on all the objects. However, many of the <b>LightTypes</b>
+			supported do use position as a basis for the light. For a detailed description of the light
+			types supported by the <b>Light</b> exemplar, see the help documentation on
+			<span class=helplink HelpString="vworlds.chm::/API Reference/Exemplars/Light/Light.htm"
+			 TITLE="Help">lights</span>.
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=task>a</span>
+			</td>
+			<td>
+			Open the <b>Object Explorer</b> and select the <b>DirectionLight</b> object. Try changing its
+			<b>LightType</b> property to '2'.  Notice how the lighting in the room changes to suit the new type,
+			a spotlight.
+			</td>			
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=task>a</span>
+			</td>
+			<td>
+			Reset the <b>LightType</b> property of the <b>DirectionalLight</b> object to 3 and go to the next
+			step.
+			</td>
+		</tr>
+		</table>
+	</div>
+</div>
+<!--End Step 4-->
+
+
+
+
+
+
+<!--Step 5-->
+<div id=Step5 style=position:absolute;left:0;top:44;width:99%;display:none;>
+	<nobr>
+		<div class=vstep Style=position:absolute;left:351;top:-35; id=divSteps>
+			Step 5 of 8
+		</div>
+	</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step Five: Animating Lights
+		</div>
+		<div class=vtext style=position:absolute;left:0;top:30;width:99%;>
+		<p>
+		Virtual Worlds supports animating the
+		<span class=helplink HelpString="vworlds.chm::/API Reference/Exemplars/Light/LightColor.htm"
+			 TITLE="Help">LightColor</span> and
+		<span class=helplink HelpString="vworlds.chm::/API Reference/Exemplars/Light/LightAttenuation.htm"
+		TITLE="Help">LightAttenuation</span> properties of light objects.
+		 In this example we will animate the LightColor property of a  light. For an in-depth look at
+		 attenuation and its effects, see the Virtual Worlds Documentation for the <b>Light</b> exemplar.
+		<table class=vtext cellspacing=3>
+		<tr>
+			<td valign=top>
+			<span class=note>$</span>
+			</td>
+			<td>
+			As with all property animations, The color values for animating the <b>LightColor</b> property are
+			stored as vectors in a <b>PropertyMap</b>, with  numeric keys to indicate the sequence and
+			relative timing. 
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=task>a</span>
+			</td>
+			<td>
+			Double-click the <b>LightAnimMap</b> property of the <b>DirectionalLight</b> object in the
+			<b>Object Explorer</b> to view the 'path' of light colors performed  by the animation. Notice that it is numbered in much 
+			higher keyframes than the previous property map. This is arbitrary due to the interaction of the 
+			map and the timescale value passed to <b>StartAnimation</b>.
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=note>$</span>
+			</td>
+			<td>
+			This animation is very similar to the position animation applied to the cube earlier.  All we have
+			done differently is to supply a different map  and property name for the animation to use.
+			All complex animations for virtual worlds use the <b>StartAnimation</b> method as their basis.
+			</td>
+		</tr>		
+		<tr>
+			<td valign=top>
+			<span class=task>a</span>
+			</td>
+			<td>
+			Try clicking on the light in the 3-D view to activate its LightColor animation.
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=task>a</span>
+			</td>
+			<td>
+			Take a look at the script below for the <b>DirectionalLight</b> object's <b>onLButtonUp</b>
+			method, found in the script module <b>lesson_9_animations.vbs</b>:
+			</td>
+		</tr>
+		</table>
+		<p>
+
+<!--sub directionalLight_onLButtonUp-->
+<table width=610 style=background-color:white;vertical-align:top;padding-left:7;padding-right:5;padding-top:5;width:610;>
+<tr><!--set up the column widths-->
+  	<td width=40><img src="Images/spacer.gif" width=40 height=4></td>
+	<td width=40><img src="Images/spacer.gif" width=40 height=4></td>
+	<td width=40><img src="Images/spacer.gif" width=40 height=4></td>
+	<td width=185><img src="Images/spacer.gif" width=185 height=4></td>
+	<td width=305><img src="Images/spacer.gif" width=305 height=4></td>
+</tr>
+<tr>
+	<td valign=top colspan=4><font face=verdana size=2>		
+	sub directionalLight_onLButtonUp (hWnd,x,y)
+	</font>
+	</td> 	   	
+	<td>
+	<span CLASS="Outline" ID="Out3-1" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+	<DIV ID="Out3-1d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+	' this method animates the lightColor property<br>
+	' of the DirectionalLight object notice that the<br>
+	' timescale for this animation is one keyframe<br>
+	' per millisecond, because the points in the path<br>
+	' are spaced very widely, i.e. key values in <br>
+	' thousands.	
+	</div>
+	</td>
+</tr>
+<tr>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	<td valign=top colspan=4><font face=verdana size=2>		
+	this.startAnimation "lightColor", this.lightAnimMap, _<br>
+	&nbsp; , A_SPLINE+A_LOCAL, 1, 0, 9000<br>
+	world.trace "directionalLight animation started at time " & _<br>
+	&nbsp; world.getanimationsystemtime() & " ticks."
+	</font>
+	</td>
+</tr>
+<tr>
+	<td valign=top colspan=5><font face=verdana size=2>		
+	end sub
+	</font>
+	</td> 	   	
+</tr>
+</table>
+<!--end sub directionalLight_onLButtonUp-->
+
+		<p>
+		<table class=vtext cellspacing=3>
+		<tr>
+			<td valign=top>
+			<span class=note>$</span>
+			</td>
+			<td>
+			Remember that the keyframe values in the property map were numbered in the thousands, from 0 to
+			9000. The speed value in the <b>StartAnimation</b> statement is 1, which is substantially different
+			than the timescale used in the previous animation examples. This value of 1 means a timescale of
+			one keyframe per millisecond, or 1000 keyframes per second. At this timescale the whole animation
+			will play in about 9 seconds, because it has nine thousand milliseconds of keyframe times
+			specified in the property map.
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=alert>~</span>
+			</td>
+			<td>
+			Numbering the map with higher values gives you much higher
+			resolution timing.  For example you could add a keyframe at key 7005, which would play just 5
+			milliseconds after the  keyframe at 7000!
+			</td>
+		</tr>
+	</table>
+	</div>
+</div>
+<!--End Step 5-->
+
+
+
+
+
+
+<!--Step 6-->
+<div id=Step6 style=position:absolute;left:0;top:44;width:99%;display:none;>
+	<nobr>
+		<div class=vstep Style=position:absolute;left:351;top:-35; id=divSteps>
+			Step 6 of 8
+		</div>
+	</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step Six:  Advanced Animations 
+		</div>
+		<div class=vtext style=position:absolute;left:0;top:30;width:99%;>
+		<p>
+		Multiple properties can be animated simultaneously on a single object (though only one of each
+		property at a time), and multiple objects can be animated along the same path. This functionality
+		can be used (among many other uses) to give the appearance of a single complex articulated object, 
+		from animating simple component objects with varying animation instructions.
+		<p>
+		<table class=vtext cellspacing=3>
+		<tr>
+			<td valign=top>
+			<span class=note>$</span>
+			</td>
+			<td>
+			Find the moray-eel in the 3-D view whose head is labeled 'head'.  It should be comprised of
+			several distinct labeled body parts, each slowly  moving in a sequence about the room. The
+			resulting composite 'fish' swimming slowly around in this lesson demonstrates both of these
+			multi-property and multi-object techniques. 
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=task>a</span>
+			</td>
+			<td>
+			Click the object labeled "show/hide path". Wait a moment as the script running on this object
+			can take a while to complete at first. You should see a series of polygons showing the points
+			of the fish body parts' shared position path. The short side of the triangle indicates the
+			actual point of a vector in the property map used by these body part objects to animate. Clicking
+			on the object labeled <b>show/hide path</b> subsequently draws and hides these points.
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=task>a</span>
+			</td>
+			<td>
+			Now find the object labeled "start/stop fish" in the 3-D view and click it. You should notice
+			the fish jump to an initial position almost immediately and start to move around the path. 
+			it will continue to animate past the starting position because the call to <b>StartAnimation</b> on 
+			each body part included the
+			<span class=helplink HelpString="vworlds.chm::/API Reference/Exemplars/Thing/StartAnimation.htm"
+			 TITLE="Help">A_LOOP</span> flag in its options.  
+			</td>
+		</tr>
+		</table>
+	</div>
+</div>
+<!--End Step 6-->
+
+
+
+
+<!--Step 7-->
+<div id=Step7 style=position:absolute;left:0;top:44;width:99%;display:none;>
+	<nobr>
+		<div class=vstep Style=position:absolute;left:351;top:-35; id=divSteps>
+			Step 7 of 8
+		</div>
+	</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step Seven: Animation Timing
+		</div>
+		<div class=vtext style=position:absolute;left:0;top:30;width:99%;>
+		<table class=vtext cellspacing=3>
+		<tr>
+			<td valign=top>
+			<span class=task>a</span>
+			</td>
+			<td>
+			Click the object labeled <b>start/stop fish</b> again. Since the StartAnimation call specifies
+			the A_LOCAL flag as an option, clicking the “start/stop fish” object stops the position and
+			direction animations on the fish parts immediately. The A_LOCAL flag provides much faster timing
+			since it runs only on this client, and does not synchronize with other clients.
+			</td>
+		</tr>
+		</table>
+		<p>
+		Each of the fish body part objects runs their own position and direction animations with slightly
+		different timing to appear as though they are moving together. All of the fish body parts use the
+		same position <b>PropertyMap</b> and the same direction <b>PropertyMap</b>, which are properties
+		of the <b>Room</b> object.
+		<p>
+		<table class=vtext cellspacing=3>
+		<tr>
+			<td valign=top>
+			<span class=task>a</span>
+			</td>
+			<td>
+			Open the <b>Object Explorer</b> and select the <b>Room</b> object <b>lesson 9-Animation room</b>. Locate the
+			properties 'FishDirMap' and 'FishPosMap' in  the properties of the room. Double-click each property
+			to show the lists of keyframes (vectors) that will apply to the objects as they animate along
+			the path.
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=note>$</span>
+			</td>
+			<td>
+			You may notice that the timing of these keyframes is much more detailed than in previous
+			examples. this produces very subtle details of  acceleration and deceleration as the animation
+			is run at a given timescale, and shows the detail with which a complex animation may be
+			planned out.
+			</td>
+		</tr>
+		</table>
+		Starting the animations is a matter of doing a series of <b>StartAnimation</b> calls on all the objects
+		one immediately after the other to achieve adequate timing. To space the objects apart, their
+		animations are started with different starting index values along the same path. Here is the
+		code from the subroutine <b>StartFish</b> in lesson_9_animations.vbs:
+
+		<table class=vtext cellspacing=3>
+		<tr>
+			<td valign=top>
+			<span class=note>$</span>
+			</td>
+			<td>
+			Note that simply by changing the index value into the same animating path at identical speeds,
+			the objects can be made to 'follow' each  other.
+			</td>
+		</tr>
+		</table>
+
+<!--sub fishSwitch_onLButtonUp-->
+<table width=610 style=background-color:white;vertical-align:top;padding-left:7;padding-right:5;padding-top:5;width:610;>
+<tr><!--set up the column widths-->
+  	<td width=40><img src="Images/spacer.gif" width=40 height=4></td>
+	<td width=40><img src="Images/spacer.gif" width=40 height=4></td>
+	<td width=40><img src="Images/spacer.gif" width=40 height=4></td>
+	<td width=185><img src="Images/spacer.gif" width=185 height=4></td>
+	<td width=305><img src="Images/spacer.gif" width=305 height=4></td>
+</tr>
+<tr>
+	<td valign=top colspan=4><font face=verdana size=2>		
+	dim isFishSwimming<br>
+	</font>
+	</td> 	   	
+	<td>
+	<span CLASS="Outline" ID="Out5-1" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+	<DIV ID="Out5-1d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+	' This global variable keeps track of<br>
+	' the state of the fish for the objects that<br>
+	' control its animation. 
+	</div>
+	</td>
+</tr>
+<tr>
+	<td valign=top colspan=4><font face=verdana size=2>		
+	sub fishSwitch_onLButtonUp (hWnd,x,y)
+	</font>
+	</td> 	   	
+	<td>
+	<span CLASS="Outline" ID="Out5-2" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+	<DIV ID="Out5-2d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+	' this fish_switch object method starts<br>
+	' or stops the fish animations depending<br>
+	' on the state of the isFishSwimming variable.<br>
+	' Since this variable is uninitialized when<br>
+	' this subroutine executes for the first time,<br>
+	' it will fail this comparison and go to the <br>
+	' else block.<br>
+	</div>
+	</td>
+</tr>
+<tr>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	<td valign=top colspan=3>
+	<font face=verdana size=2>		
+    if isFishSwimming = true then	
+	</font>
+	</td> 	   	
+	<td>
+	<span CLASS="Outline" ID="Out5-3" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+	<DIV ID="Out5-3d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+	' the subroutine 'stopFish' called below<br>
+	' stops the fish bodypart animations on each<br>
+	' body part. It is not necessary to make<br>
+	' this subroutine a method of a v-worlds<br>
+	' object to call it from inside an object<br>
+	' method if it is in the same file as the<br>
+	' subroutine of the method. In this case,<br>
+	' 'stopFish' and 'startFish' are merely <br>
+	' subroutines in the same file, and not<br>
+	' visible to the rest of v-worlds. These<br>
+	' kinds of subroutines are often called<br>
+	' 'helper' subs, since only one method<br>
+	' depends on them.<br>
+	</div>
+	</td>	
+</tr>
+<tr>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	<td valign=top colspan=3>
+	<font face=verdana size=2>		
+    stopFish
+	</font>
+	</td>
+</tr>
+<tr>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	<td valign=top colspan=4>
+	<font face=verdana size=2>		
+	else
+	</font>
+	</td>
+</tr>
+<tr>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>	
+	<td valign=top colspan=2>
+	<font face=verdana size=2>		
+    startFish
+	</font>
+	</td>
+	<td>
+	<span CLASS="Outline" ID="Out5-4" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+	<DIV ID="Out5-4d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+	' the helper sub starts the<br>
+	' fish bodypart animations<br>
+	</span>
+	</td>
+</tr>
+<tr>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	<td valign=top colspan=4>
+	<font face=verdana size=2>		
+    end if
+	</font>
+	</td>
+</tr>
+<tr>
+	<td valign=top colspan=5>
+	<font face=verdana size=2>		
+    end sub
+	</font>
+	</td>
+</tr>
+<!--end sub fishSwitch_onLButtonUp-->
+		<p>
+<!--sub startFish-->
+<table width=610 style=background-color:white;vertical-align:top;padding-left:7;padding-right:5;padding-top:5;width:610;>
+<tr><!--set up the column widths-->
+  	<td width=40><img src="Images/spacer.gif" width=40 height=4></td>
+	<td width=40><img src="Images/spacer.gif" width=40 height=4></td>
+	<td width=40><img src="Images/spacer.gif" width=40 height=4></td>
+	<td width=185><img src="Images/spacer.gif" width=185 height=4></td>
+	<td width=305><img src="Images/spacer.gif" width=305 height=4></td>
+</tr>
+<tr>
+	<td valign=top colspan=4><font face=verdana size=2>		
+	sub startFish()
+	</font>
+	</td> 	   	
+	<td>
+	<span CLASS="Outline" ID="Out7-1" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+	<DIV ID="Out7-1d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+	' this helper sub is not a method on an<br>
+	' object, but is called by several methods.<br>
+	' the sub starts the position and direction<br>
+	' animations for the fish body part objects.<br>	
+	</div>
+	</td>
+</tr>
+<tr>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	<td valign=top colspan=4><font face=verdana size=2>		
+	dim posAnimFlags, dirAnimFlags<br>
+	dim speedval, spreadVal, startindexval<br>
+	</font>
+	</td> 	   	
+</tr>
+<tr>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	<td valign=top colspan=3><font face=verdana size=2>		
+	speedval = 0.5<br>
+	</font>
+	</td>
+	<td>
+	<span CLASS="Outline" ID="Out7-2" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+	<DIV ID="Out7-2d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+	' speed (in keyframes per millisecond)<br>
+	' that the animation will run	
+	</div>
+	</td>	   	
+</tr>
+<tr>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	<td valign=top colspan=3><font face=verdana size=2>		
+	spreadVal = 80<br>
+	</font>
+	</td>
+	<td>
+	<span CLASS="Outline" ID="Out7-3" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+	<DIV ID="Out7-3d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+	' distance (in keyframes) each bodypart<br>
+	' is from the next, for proper spacing
+	</div>
+	</td>	   	
+</tr>
+<tr>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	<td valign=top colspan=3><font face=verdana size=2>		
+	</font>
+	</td>
+	<td>
+	<span CLASS="Outline" ID="Out7-4" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+	<DIV ID="Out7-4d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+	' animations with the flag A_LOCAL run with<br>
+	' much better timing since they do not depend<br>
+	' on data from the server to start them.	
+	</div>
+	</td>	   	
+</tr>
+<tr>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	<td valign=top colspan=4><font face=verdana size=2>		
+	posAnimFlags = world.A_LOOP + world.A_SPLINE + world.A_LOCAL<br>
+	dirAnimFlags = world.A_LOOP + world.A_LINEAR + world.A_LOCAL<br>
+<br>
+	world.fishHead.startanimation "Position" , this.container.fishPosMap _<br>
+	&nbsp; , , posAnimFlags, speedval , , ,  spreadVal*8<br>
+	world.fishHead.startanimation "Direction" , this.container.fishDirMap _<br>
+	&nbsp; , , dirAnimFlags, speedval , , ,  spreadVal*8<br>
+	world.fishBody1.startanimation "Position" , this.container.fishPosMap _<br>
+	&nbsp;  , , posAnimFlags, speedval , , ,  spreadVal*7<br>
+	world.fishBody1.startanimation "Direction" , this.container.fishDirMap _<br>
+	&nbsp;  , , dirAnimFlags, speedval , , ,  spreadVal*7<br>
+	world.fishBody2.startanimation "Position" , this.container.fishPosMap _<br>
+	&nbsp;  , , posAnimFlags, speedval , , ,  spreadVal*6<br>
+	world.fishBody2.startanimation "Direction" , this.container.fishDirMap _<br>
+	&nbsp;  , , dirAnimFlags, speedval , , ,  spreadVal*6<br>
+	world.fishBody3.startanimation "Position" , this.container.fishPosMap _<br>
+	&nbsp;  , , posAnimFlags, speedval , , ,  spreadVal*5<br>
+	world.fishBody3.startanimation "Direction" , this.container.fishDirMap _<br>
+	&nbsp;  , , dirAnimFlags, speedval , , ,  spreadVal*5<br>
+	world.fishTail1.startanimation "Position" , this.container.fishPosMap _<br>
+	&nbsp;  , , posAnimFlags, speedval , , ,  spreadVal*4<br>
+	world.fishTail1.startanimation "Direction" , this.container.fishDirMap _<br>
+	&nbsp;  , , dirAnimFlags, speedval , , ,  spreadVal*4v<br>
+	world.fishTail2.startanimation "Position" , this.container.fishPosMap _<br>
+	&nbsp;  , , posAnimFlags, speedval , , ,  spreadVal*3<br>
+	world.fishTail2.startanimation "Direction" , this.container.fishDirMap _<br>
+	&nbsp;  , , dirAnimFlags, speedval , , , spreadVal*3<br>
+	world.fishTail3.startanimation "Position" , this.container.fishPosMap _<br>
+	&nbsp;  , , posAnimFlags, speedval , , ,  spreadVal*2<br>
+	world.fishTail3.startanimation "Direction" , this.container.fishDirMap _<br>
+	&nbsp;  , , dirAnimFlags, speedval , , ,  spreadVal*2<br>
+	world.fishTail4.startanimation "Position" , this.container.fishPosMap _<br>
+	&nbsp;  , , posAnimFlags, speedval , , ,  spreadVal<br>
+	world.fishTail4.startanimation "Direction" , this.container.fishDirMap _<br>
+	&nbsp;  , , dirAnimFlags, speedval , , ,  spreadVal<br>
+	</font>
+	</td>
+</tr>
+<tr>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	<td valign=top colspan=3><font face=verdana size=2>		
+	isFishSwimming = true
+	</font>
+	</td>
+	<td>
+	<span CLASS="Outline" ID="Out7-5" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+	<DIV ID="Out7-5d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+	' sets a global so that other subs used<br>
+	' in this file know that this animation<br>
+	' has started.<br>
+	</div>
+	</td>	   	
+</tr>
+<tr>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	<td valign=top colspan=4><font face=verdana size=2>		
+	world.trace "fish bodypart anims started at time " & _<br>
+	&nbsp; world.getanimationsystemtime() & " ticks."
+	</font>
+	</td>
+</tr>
+<tr>
+	<td valign=top colspan=5><font face=verdana size=2>		
+	end sub
+	</font>
+	</td>
+</tr>
+</table>
+<!-- end sub startFish-->			
+
+	</div>
+</div>
+<!--End Step 7-->
+
+
+
+
+
+<!--Step 8-->
+<div id=Step8 style=position:absolute;left:0;top:44;width:99%;display:none;>
+	<nobr>
+		<div class=vstep Style=position:absolute;left:351;top:-35; id=divSteps>
+			Step 8 of 8
+		</div>
+	</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step Eight: Animating Avatars and 'Chasing' Objects
+		</div>
+		<div class=vtext style=position:absolute;left:0;top:30;width:99%;>
+		<p>
+		Avatars can be animated just like other objects. This chasing animation demonstrates animating
+		the user's avatar and the body parts of the fish simultaneously, thus making the user follow the fish
+		around the room. 
+		<p>
+		Click the object labeled "chase fish" and watch as your avatar follows the fish around the room
+		once and ends up near the starting point.
+		<p>
+		<table class=vtext cellspacing=3>
+		<tr>
+			<td valign=top>
+			<span class=note>$</span>
+			</td>
+			<td>
+			Notice that while your avatar is being animated you cannot navigate with your mouse or keyboard.
+			VWorlds is modifying your avatar's  position and direction and it overrides any manual changes
+			you make until the path has completed. This technique is very useful for guiding  avatars on a
+			cinematic tour of a world or taking them from object to object in a pleasing manner.
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=alert>~</span>
+			</td>
+			<td>
+			Use caution when animating avatars, especially if you are not animating them locally using the
+			A_LOCAL flag. Animations stored on the  server, especially ones that run indefinitely using the
+			A_LOOP flag, can be difficult to get out of and frustrating for the user whose body is being
+			controlled by the animation. 
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+			<span class=task>a</span>
+			</td>
+			<td>
+			To view the paths used for animating the avatar's position and direction, select the the room
+			object <b>lesson 9-Animation room</b> in the <b>Object Explorer</b>. Locate the properties <b>ChaseDirMap</b>
+			and <b>ChasePosMap</b> in the properties of the room. Double-click each property to show the lists of
+			keyframes (vectors) that will apply to the objects as they animate along the path.
+			</td>
+		</tr>		
+		</table>
+		<p>
+		The chasing effect is accomplished by starting position and direction animations on the avatar
+		immediately
+		after starting the fish animations. Rather  than have the avatar simply follow the same path as the
+		fish, another path was generated that makes the effect of looking at the fish more  realistic than
+		following its exact path.
+		<p>
+		Since the keyframes of the avatar path were less complex than the path of the fish, a straight forward
+		 series of numbers can be used for the keyframe values.  Running these animations at .001 keyframes
+		 per millisecond (i.e. 1 keyframe per second) should play back the movements of an observer of
+		 the fish in sync with the fish itself.
+		<p>
+		The OnLButtonUp method of the chaseSwitch object runs the fish animations and user avatar animations
+		very close together and with  A_LOCAL selected as an option for accurate timing:
+		<p>
+
+<!--sub chaseSwitch_onLButtonUp-->
+<table width=610 style=background-color:white;vertical-align:top;padding-left:7;padding-right:5;padding-top:5;width:610;>
+<tr><!--set up the column widths-->
+  	<td width=40><img src="Images/spacer.gif" width=40 height=4></td>
+	<td width=40><img src="Images/spacer.gif" width=40 height=4></td>
+	<td width=40><img src="Images/spacer.gif" width=40 height=4></td>
+	<td width=185><img src="Images/spacer.gif" width=185 height=4></td>
+	<td width=305><img src="Images/spacer.gif" width=305 height=4></td>
+</tr>
+<tr>
+	<td valign=top colspan=4><font face=verdana size=2>		
+	sub chaseSwitch_onLButtonUp (hWnd,x,y)
+	</font>
+	</td> 	   	
+	<td>
+	<span CLASS="Outline" ID="Out6-1" STYLE=cursor:hand;font-family:verdana;font-size:12px;color:gray;text-decoration:underline;>'script comments</span><br>
+	<DIV ID="Out6-1d" STYLE=display:None;font-family:verdana;font-size:12px;color:gray;>
+	' this chase_switch object method starts or<br>
+	' stops animations on the fish body parts <br>
+	' and also the user's avatar, using different<br>
+	' maps for a cinematic effect.<br>
+	</div>
+	</td>
+</tr>
+<tr>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	<td valign=top colspan=4><font face=verdana size=2>		
+	user.container.chasePosMap.property("0") = world.createVector _<br>
+	&nbsp; (user.position.x,user.position.y,user.position.z)<br>
+	user.container.chaseDirMap.property("0") = world.createVector _<br>
+	&nbsp; (user.direction.x,user.direction.y,user.direction.z)<br>
+	startFish<br>
+	user.startAnimation "position", user.container.chasePosMap, , _<br>
+	&nbsp; A_SPLINE+A_LOCAL, .001<br>
+	user.startAnimation "direction", user.container.chaseDirMap, , _<br>
+	&nbsp; A_LINEAR+A_LOCAL, .001<br>
+	world.trace "user chase animations started at time " & _<br>
+	&nbsp; world.getanimationsystemtime() & " ticks."
+	</font>
+	</td>
+<tr>
+<tr>
+	<td valign=top colspan=5><font face=verdana size=2>		
+	end sub
+	</td>
+</tr>
+</table>
+<!--end sub chaseSwitch_onLButtonUp-->
+
+		<p>
+	</div>
+</div>
+<!--End Step 8-->
+
+</body>
+</html>

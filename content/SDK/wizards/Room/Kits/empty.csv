@@ -1,0 +1,5 @@
+style_name:STRING,description:STRING,previewGIF:STRING,gifInfo:STRING,geometry:STRING,quota:INTEGER
+'Empty Room','This one-room world is a template for creating a simple world.   Objects include a ceiling, floor, four walls, and an entry point object (this moves avatars to their original spot on entering the room).  You can change the walls and add objects with the wizards, property pages, and the Object Explorer.
+','empty.gif','View of empty room template:','kits\empty\empty.3ds',12
+'Blank Room','A blank room with no graphics','blank.gif','View of blank room template:','kits\empty\empty.3ds',3
+'Grid Room','The grid world is a template for creating a world with your own design.  It consists of one three-dimensional room.  The grid quadrants are 10 by 10 units (one unit equals one yard) plotted along the x and z axes in a grid format. The entry-point object moves avatars to their original spot on entering the world.  You can change the room by using the wizards, property pages, and the Object Explorer. ','grid2.gif','View of grid room template:','kits\empty\empty.3ds',10

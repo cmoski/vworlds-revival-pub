@@ -1,0 +1,974 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//  File:			ChatBox.htm
+'//  Description:	This file takes care of all the functionality provided 
+'//					in the chat area of the client application.  It hosts 
+'//					chat history to display the actual chat history
+'//  Called by:		client.htm (loaded into ClientChatboxIFrame)
+'////////////////////////////////////////////////////////////////////////-->
+<HTML>
+<HEAD>
+<link rel=stylesheet href=../shared/global.css>
+
+<!--Include scripts-->
+<script language="vbscript" src="../vbs/HTMLFilter.vbs">
+</script>
+<script language="vbscript" src="../vbs/Document_OnSelectStart.vbs">
+</script>
+<script language="vbscript" src="../vbs/ShowDialog.vbs">
+</script>
+<!--End include scripts-->
+
+<SCRIPT LANGUAGE=vbs>
+option explicit
+
+dim quoteChar
+quoteChar = chr(34)
+
+dim buttonWideWidth
+dim buttonNarrowWidth
+buttonWideWidth = 89
+buttonNarrowWidth = 23
+
+dim TextEntryDefaultText	' the "type here" prompt for chat text input
+dim TextEntryUserText		' current content of the chat text input
+
+TextEntryDefaultText = "Type here and press [Enter] to chat"
+TextEntryUserText = TextEntryDefaultText
+
+Dim bShowTraces
+dim currentBtnName
+dim currentBtn
+dim Gestures, Keywords
+dim hasDefaultText			' true if the text entry input contains the initial help text
+dim whispers				' dictionary of whisper windows
+
+dim friendRequestDialog		' modal dialog popped up when someone invites the user to be a friend
+
+public topWin, whispering
+set topWin = window.top
+
+set whispers = CreateObject("Scripting.Dictionary")
+whispering = false
+
+
+'/////////////////////////// NOTE /////////////////////////////
+'Gestures an array or actual gestures the avatars can perform
+'Keywords is a table of what keywords hook up to which gestures.
+
+'the keywords are comma delimited, the keywords map to the gesture 
+'index following the pipe.
+
+'keyword|gestures index, keyword|gestures index
+'/////////////////////////// NOTE /////////////////////////////
+
+				 ' 0  | 1  | 2   | 3   | 4   | 5   | 6   | 7   | 8   |  9    |  10 
+Gestures = split("WAVE|TURN|SMILE|LAUGH|FLIRT|SHRUG|BLUSH|ANGRY|SLEEP|TRICK 3|TRICK 1", "|")
+Keywords = split("wave|0,turn around|1,happy|2,laugh|3,flirt|4,shrug|5,blush|6,sleep|8,bye|0,hello|0,hi|0,goodbye|0,smile|2,lol|3", ",")
+
+
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		window_onLoad
+'//  Purpose:	To initialize the page after all objects are instantiated
+'////////////////////////////////////////////////////////////////////////
+sub window_onLoad
+	if not top.isWorldLoaded then
+		window.setTimeout "window_onload", 500, "vbs"
+		exit sub
+	end if
+	
+	set friendRequestDialog = Nothing
+	top.AddToEventList window
+	top.CurrentVWObjectId = 0
+	bShowTraces = false
+
+	ChatHistory.HandleReport "Welcome to " & top.ClientWorldPtr.worldName & ".", 7
+	ChatHistory.HandleReport "To move around the space, drag your mouse in the 3D view above, or click in the view and use the arrow keys.", 7
+	ChatHistory.HandleReport "You enter " & top.ClientWorldPtr.worldName & ".", 6
+
+	TextBox.Value = TextEntryDefaultText
+	hasDefaultText = true
+	TextBox.Select
+	EnableKeyboardNav
+
+	currentBtnName=""
+	UpdateThumbNailImage
+	window_onresize
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		window_onUnload
+'//  Purpose:	To initialize the page after all objects are instantiated
+'////////////////////////////////////////////////////////////////////////
+Sub window_onUnload
+	closeAllWhispers
+	set whispers = nothing
+	on error resume next
+	' this call will fail if the main client window closes before we do, but then we don't care
+	top.RemoveFromEventList window
+	set topWin = nothing
+end sub
+
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		openWhisper(avName, msg)
+'//  Purpose:	Opens the whisper dialog
+'//  Params:	
+'//		avName	- <string> the avatars name to whisper
+'//		msg		- <string> the initial message to send to the whisper
+'//	 Called by:	HandleUIevent, when the WhisperTo UI event is fired.
+'//				This happens when the user clicks the Whisper To item on an avatar's menu.
+'////////////////////////////////////////////////////////////////////////
+sub openWhisper (avName, msg)
+	' open a whisper dialog and insert the first msg
+	dim n,avNames,whisperWin
+	dim topVal,leftVal
+	' see if we are already whispering to this person
+	avNames = whispers.keys
+	for n = 0 to whispers.Count - 1
+		if avNames(n) = avName then		' found a whisper window for the person; see if it's open
+			set whisperWin = whispers.Item(avName)
+			if whisperWin.closed then	' remove dead window ptr; we will add a new one
+				whispers.Remove avName
+			else						' there is an open whisper window for this person
+				whisperWin.textBox.focus
+				exit sub
+			end if
+		end if
+	next
+	' open a modeless whisper dialog and add it to the list
+	topVal = 50 + (n * 20)
+	leftVal = 50 + (n * 20)
+	set whisperWin = window.showModelessDialog("WhisperBox.htm", array(top, top.ClientUserPtr.container.findwithin(avName), msg), _
+		"dialogTop:" & topVal & "px;dialogLeft:" & leftVal & "px;dialogHeight:250px;dialogWidth:400px;help:no;resizable:no;status:no")
+	whispers.Add avName, whisperWin
+	set whisperWin = nothing
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		closeWhisper(avName)
+'//  Purpose:	Closes the whisper dialog
+'//  Params:	
+'//		avName	- <string> the avatars name to whisper
+'//	 Called by:	CloseAllWhispers
+'////////////////////////////////////////////////////////////////////////
+sub closeWhisper (avName)
+	dim whisperWin
+	set whisperWin = whispers.Item(avName)
+	if not whisperWin.closed then whisperWin.close
+	whispers.Remove avName
+	set whisperWin = nothing
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		closeAllWhispers
+'//  Purpose:	Closes all the whisper dialogs
+'//	 Called by:	window_onLoad
+'////////////////////////////////////////////////////////////////////////
+sub closeAllWhispers
+	' Close any whisper windows that are still open
+	dim n,avNames
+	avNames = whispers.Keys
+	for n = 0 to whispers.Count - 1
+		closeWhisper(avNames(n))
+	next
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		isWhispering (avName)
+'//  Purpose:	test if a user avName is whispering
+'//	 Params: 
+'//		avName - the avatars name
+'//	 Called by:	HandleReport
+'////////////////////////////////////////////////////////////////////////
+function isWhispering (avName)
+	' do we have a whisper window open for this person?
+	dim n,avNames
+	avNames = whispers.Keys
+	for n = 0 to whispers.Count - 1
+		if avNames(n) = avName then 
+			isWhispering = true
+			exit function
+		end if
+	next
+	isWhispering = false
+end function
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		window_onresize
+'//  Purpose:	set's the textbox style and moves the ChatHistory to the bottom
+'//	 Called by:	user clicking the resize buttons or manually resizing the screen by dragging
+'//
+'//  Notes:		recalc the positioning and sizing expressions; this may not be necessary
+'//				but it prevents anomalies from occurring after maximizing the client.
+'////////////////////////////////////////////////////////////////////////
+sub window_onresize
+	document.all.TextBox.style.pixelWidth = document.all.TextBox.parentElement.clientWidth - 24
+	ChatHistory.ScrollToBottom
+	document.recalc
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		MakeFriendRequest (avatar)
+'//  Purpose:	display a chat msg when the user invites someone to be a friend
+'//  Params:
+'//		avatar - pointer to the avatar
+'//	 Called by:	HandleUIEvent, to handle a MakeFriendRequest UI event that is fired
+'//				when the user clicks Make Friend on an avatar's menu.
+'////////////////////////////////////////////////////////////////////////
+sub MakeFriendRequest (avatar)
+	ChatHistory.makeBlurb "blurb" & top.ClientUserPtr.id, top.ClientUserPtr.name, _
+		"You invite " & avatar.name & " to be on your friend list.", "SpokenText", false, 1, 0
+end sub
+
+////////////////////////////////////////////////////////////////////////
+'//  Sub:		ReceiveFriendRequest (avatar)
+'//  Purpose:	show a response dialog when someone asks to be your friend;
+'//				close the dialog automatically after 5 minutes if the user does not respond.
+'//  Params:
+'//		avatar - pointer to the avatar
+'//	 Called by:	HandleUIEvent, to handle a ReceiveFriendRequest UI event that is fired
+'//				when the user's avatar receives a friendship request.
+'////////////////////////////////////////////////////////////////////////
+sub ReceiveFriendRequest (avatar)
+	' pop up a dialog inviting the user to be on the avatar's friend list; close it after 5 minutes
+	set friendRequestDialog = window.showModelessDialog("FriendRequest.htm", array(topWin, avatar, top.ClientUserPtr), _
+	  	"dialogHeight:97px;dialogWidth:250px;help:no;resizable:no;status:no")
+	window.setTimeout "RefuseFriendship", (60*5)*1000	'5 minutes
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		RefuseFriendship
+'//  Purpose:	Automatically decline a friendship offer
+'//	 Called by:	ReceiveFriendRequest
+'////////////////////////////////////////////////////////////////////////
+sub RefuseFriendship
+	on error resume next
+	friendRequestDialog.ReplyToFriendRequest false
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		FriendRequestReturned (avatar, agreed)
+'//  Purpose:	Display response when someone respondes to a friendship request made by the user
+'//	 Params:
+'//		avatar	- the avatar in question.
+'//		agreed	- weather the user agreed to be your friend
+'//	 Called by:	HandleUIEvent, to handle a ReceiveFriendRequest UI event that is fired
+'////////////////////////////////////////////////////////////////////////
+sub FriendRequestReturned (avatar, agreed)
+	dim response
+	if agreed then
+		response = "agrees"
+	else
+		response = "declines"
+	end if
+	ChatHistory.makeBlurb "blurb" & avatar.id, avatar.name, _
+		response & " to be added to your friend list.", "SpokenText", false, 1, 1
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		FriendRequestVerify (avatar, agreed)
+'//  Purpose:	Display an information msg when the user responds to a friendship request
+'//	 Params:
+'//		avatar	- the avatar in question.
+'//		agreed	- weather the user agreed to be your friend
+'////////////////////////////////////////////////////////////////////////
+sub FriendRequestVerify (avatar, agreed)
+	dim response
+	if agreed then
+		response = "agree"
+	else
+		response = "decline"
+	end if
+	ChatHistory.makeBlurb "blurb" & top.ClientUserPtr.id, top.ClientUserPtr.name, _
+		"You " & response & " to be added to " & avatar.name & "'s friend list.", "SpokenText", false, 1, 0
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		HandleUIEvent
+'//  Purpose:	handle UI events passed down from the main client page
+'//  Called by:	client.htm:theclient_OnUIEvent
+'//	 Params:
+'//		who		- the user's avatar
+'//		what	- the event
+'//		args	- arguments for the event
+'//  Called by:	client.htm:theclient_OnUIEvent
+'////////////////////////////////////////////////////////////////////////
+sub HandleUIEvent(byval who, what, byval args)
+	select case What
+		case "IgnoredUser"
+			top.ClientWorldPtr.Report "You are ignoring " & who.name, 6
+		case "UnignoredUser"
+			top.ClientWorldPtr.Report "You are no longer ignoring " & who.name, 6
+		case "IgnoredByUser"
+			top.ClientWorldPtr.Report who.name & " is ignoring you.", 6
+		case "UnignoredByUser"
+			top.ClientWorldPtr.Report who.name & " is no longer ignoring you.", 6
+		case "PortalDestinationNotSet"
+			top.ClientWorldPtr.Report "The Portal '" & who.name & "' has no destination set.", 6
+		case "PortalDestinationInvalid"
+			top.ClientWorldPtr.Report "The Portal '" & who.name & "' has an invalid destination.", 6
+		case "ReconnectFailed"
+			top.ClientWorldPtr.Report "'" & CStr(args) & "' is not valid.", 6
+		case "OnGeometryChanged"			' update the thumbnail only if the avatar is what changed
+			if who is top.ClientUserPtr or who is top.ClientUserPtr.hair then UpdateThumbNailImage
+		case "BodyColorsChanged"
+			UpdateThumbNailImage
+		case "EndedJourney", "CameraDone"	' fired when navigation, camera movements etc finish
+			top.NavigationEnabled = true
+		case "OnEnterInventory"				' who = the recipient
+			' for the OnEnterInventory UI event the new vwObject is passed alone, not in an array
+			HandleEnterInventory args
+		case "MakeFriendRequest"			' you have asked someone to join your friend list
+			MakeFriendRequest who
+		case "ReceiveFriendRequest"			' someone is inviting you to join their friend list
+			ReceiveFriendRequest who
+		case "FriendRequestReturned"		' someone you invited to join your friend list has replied
+			FriendRequestReturned who, args(0)
+		case "FriendRequestVerify"			' you replied y/n to someone's friendship request
+			FriendRequestVerify who, args(0)
+		case "WhisperTo"
+			openWhisper who.name, ""
+	end select
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		HandleEnterInventory (vwObject)
+'//  Purpose:	Write a blurb to chat history, containing a button that displays the 
+'//				object in the My Things section of the My Profile page.
+'//	 Params:
+'//		vwObject	- a gift or a note object.
+'//	 Called by:	HandleUIEvent, to handle the OnEnterInventory UI event that is fired 
+'//				when an object enters the user's contents.
+'////////////////////////////////////////////////////////////////////////
+sub HandleEnterInventory(byval vwObject)
+	dim msg
+	if vwObject.showInContentsList and _
+		vwObject.isValidProperty("from") and vwObject.from <> "nobody" then
+		top.CurrentVWObjectId = vwObject.Id
+		msg = "You have a new " & vwObject.displayName
+		if vwObject.from > "" then 
+			' say who it's from and add a View button
+			msg = msg & " from " & vwObject.from & " <img src=""../images/btnView.gif"" id=lnkLinkToObject vwObjectId=" & vwObject.Id & " style=cursor:hand;>"
+		end if
+		ChatHistory.HandleReport msg, 6
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		HandleTrace(theStr)
+'//  Purpose:	write a debug line to the chat window
+'//	 Params:
+'//		theStr	- string to display
+'//	 Called by:	client.htm, when the VWorlds client object fires a Trace event.
+'////////////////////////////////////////////////////////////////////////
+sub HandleTrace(theStr)
+	if bShowTraces = true then
+		ChatHistory.makeBlurb "blurbInfo", "TRACE", theStr, "TraceText", false, 0, 1
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		HandleReport
+'//  Purpose:	handles reporting a whisper notification
+'//	 Params:
+'//		theStr		- string to display
+'//		reportType	- int only 5 is used for this function
+'//  Called by:	client.htm, when the VWorlds client object fires a Report event.
+'////////////////////////////////////////////////////////////////////////
+sub HandleReport(theStr, reportType)
+	dim whisperToName, whisperFromName, whisperMsg
+	dim nameStart, commaAfterName, firstQuote, lastQuote
+	
+	'bail if it's not a whisper
+	if CLng(reportType) <> 5 then
+		exit sub
+	end if
+	
+	' if the whisper is to the user and we are not already whispering to the sender,
+	' generate a whisper notification message with a reply button
+	nameStart = instr(theStr, "whispers to") + 12
+	commaAfterName = instr(nameStart, theStr, ",")
+	whisperToName = mid(theStr, nameStart, commaAfterName - nameStart)
+	if whisperToName = top.ClientUserPtr.name then
+		whisperFromName = left(theStr, instr(theStr, "whispers to") - 2)
+		if whisperFromName <> topWin.ClientUserPtr.Name then
+			firstQuote = instr(theStr, quoteChar)
+			lastQuote = instrrev(theStr, quoteChar)	
+			whisperMsg = mid(theStr, firstQuote + 1, lastQuote - firstQuote - 1)
+			if isWhispering(whisperFromName) then
+'					if whisperMsg = "CLOSE WHISPER" then
+'						' a person we were whispering with has closed their whisper window
+'						ChatHistory.HandleReport "> " & whisperFromName & " has stopped whispering < ", 6
+'					end if
+			elseif not isIgnoring(whisperFromName) then
+				' we are not already whispering with the person, so notify in regular chat
+				'msgbox whisperMsg
+				ChatHistory.makeBlurb "blurb" & topWin.ClientUserPtr.id, whisperFromName, whisperMsg, "newWhisper", false, 1, 1
+			end if
+		end if
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		isIgnoring (avName)
+'//  Purpose:	test whether or not the user is ignoring another user
+'//	 Params:
+'//		avName	- <string> the avater's name
+'//	 Called by:	HandleReport (above)
+'////////////////////////////////////////////////////////////////////////
+function isIgnoring (avName)
+	dim ignoredList,n
+	set ignoredList = top.clientUserPtr.profile.keyValue("customIgnoreList")
+	for n = 0 to ignoredList.count - 1
+		if avName = ignoredList.property(n).name then
+			isIgnoring = true
+			exit function
+		end if
+	next
+	isIgnoring = false
+	set ignoredList = nothing
+end function
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		ReplaceEmoticonsWithImages(someText)
+'//  Purpose:	replaces certain text with links to images, such as :) and :(
+'//	 Params:
+'//		someText	- <string> the text to replace
+'//	 Return Value: <string> url to the image
+'//	 Called by:	PerformGesture
+'////////////////////////////////////////////////////////////////////////
+function ReplaceEmoticonsWithImages(someText)
+	dim theText
+	theText = someText
+	theText = Replace(theText, ":-)", " <IMG SRC=../Images/icnEmoSmile.gif> ")
+	theText = Replace(theText, ":)", " <IMG SRC=../Images/icnEmoSmile.gif> ")
+	theText = Replace(theText, ":-(", " <IMG SRC=../Images/icnEmoFrown.gif> ")
+	theText = Replace(theText, ":(", " <IMG SRC=../Images/icnEmoFrown.gif> ")
+	theText = Replace(theText, ":P", " <IMG SRC=../Images/icnEmoSilly.gif> ")
+	theText = Replace(theText, ";P", " <IMG SRC=../Images/icnEmoSilly.gif> ")
+	theText = Replace(theText, ":-P", " <IMG SRC=../Images/icnEmoSilly.gif> ")
+	theText = Replace(theText, ";-P", " <IMG SRC=../Images/icnEmoSilly.gif> ")
+	ReplaceEmoticonsWithImages = theText
+end function
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		InsertChar(someText)
+'//  Purpose:	insert a character into the chat text
+'//	 Params:
+'//		theKey	- <int> ASCII code for the key pressed
+'//	 Notes:
+'//	 Called by: Client.htm:SendKeyToTextEntry, which is called by the renderer iframe
+'//				to handle text that the user types while the renderer has focus.
+'////////////////////////////////////////////////////////////////////////
+sub InsertChar(theKey)
+	if theKey = 8 then	' backspace
+		if len(TextBox.Value) > 0 then
+			TextBox.value = left(TextBox.value, len(TextBox.value) - 1)
+		end if
+	else
+		if TextBox.value = TextEntryDefaultText then TextBox.value = ""
+		TextBox.value = TextBox.value & chr(theKey)
+	end if
+	hasDefaultText = false
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		TextBox_OnKeyUp
+'//  Purpose:	keystroke event handler for the text input box
+'////////////////////////////////////////////////////////////////////////
+sub TextBox_OnKeyUp
+	if (window.event.KeyCode = 13) then
+		DoSay
+	end if
+	if not top.GetRenderControl is Nothing then
+		if TextBox.value = "" then
+			top.ClientWorldPtr.Tool("Navigate").KeyboardNavEnabled = True
+		else
+			top.ClientWorldPtr.Tool("Navigate").KeyboardNavEnabled = False
+		end if
+	end if
+	hasDefaultText = false
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		TextBox_OnClick
+'//  Purpose:	click event handler for the text input box
+'////////////////////////////////////////////////////////////////////////
+sub TextBox_onclick
+	if TextBox.value = TextEntryDefaultText then
+		TextBox.value = ""
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		TextBox_onfocus
+'//  Purpose:	Focus event handler for the text input box
+'////////////////////////////////////////////////////////////////////////
+sub TextBox_onfocus
+	if TextBox.value = TextEntryDefaultText then
+		TextBox.select
+	elseif hasDefaultText then
+		TextBox.value = ""
+	elseif len(TextEntryUserText) > 0 then
+		TextBox.value = TextEntryUserText
+		TextEntryUserText = ""
+	end if
+	EnableKeyboardNav
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		EnableKeyboardNav
+'//  Purpose:	tell VWorlds to enable keyboard navigation in the 3d world (arrow keys)
+'////////////////////////////////////////////////////////////////////////
+sub EnableKeyboardNav
+	if (not top.GetRenderControl is Nothing) and (not top.clientWorldPtr is Nothing) then
+		if TextBox.value = "" then
+			top.ClientWorldPtr.Tool("Navigate").KeyboardNavEnabled = True
+		end if
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		TextBox_onfocus
+'//  Purpose:	Blur event handler for the text input box; toggles keyboard navigation
+'////////////////////////////////////////////////////////////////////////
+sub TextBox_onblur
+	TextEntryUserText = TextBox.value
+	' un-highlight the text; there is no element.UnSelect method
+	TextBox.value = ""
+	TextBox.value = TextEntryUserText
+	on error resume next
+	if not top.GetRenderControl is Nothing then
+		top.ClientWorldPtr.Tool("Navigate").KeyboardNavEnabled = False
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		UpdateThumbNailImage
+'//  Purpose:	Replace the thumbnail next to the text entry box
+'//	 Called by:	window_onLoad, to load an avatar's thumbnail image initially;
+'//				HandleUIEvent, to handle OnGeometryChanged and BodyColorsChanged events
+'////////////////////////////////////////////////////////////////////////
+sub UpdateThumbNailImage
+	dim element
+	for each element in AvatarThumbNail.children
+		element.RemoveNode true
+	next
+	top.insertThumbnailElement top.ClientUserPtr, document, AvatarThumbNail
+	ChatHistory.ScrollToBottom
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		DoBtnClick
+'//  Purpose:	OnClick event handler for gesture buttons; performs a gesture 
+'//  Params:
+'//		gestureText - <string> the name of the gesture to perform
+'//	 Called by:	user clicking on a gesture button
+'////////////////////////////////////////////////////////////////////////
+sub DoBtnClick(gestureText)
+	dim theText
+	theText = trim(TextBox.value & "")
+	if len(theText) = 0 or theText = TextEntryDefaultText then
+		top.ClientUserPtr.Emote gestureText
+	else
+		if gestureText > "" then
+			top.ClientUserPtr.Emote gestureText
+		end if
+		TextBox.focus
+	end if
+	ChatHistory.ScrollToBottom
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		ChangeCameraView
+'//  Purpose:	onClick event for the CameraSec button
+'//	 Called by:	user clicking on a camera button
+'////////////////////////////////////////////////////////////////////////
+sub ChangeCameraView
+	if top.NavigationEnabled then
+		top.NavigationEnabled = false
+		top.ClientUserPtr.icam.ToggleShot
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		DoSay
+'//  Purpose:	top level handler for sending chat text
+'//	 Called by:	TextBox_OnKeyUp
+'////////////////////////////////////////////////////////////////////////
+sub DoSay
+	dim theText
+   	dim origText
+	
+	origText = Trim(TextBox.value)
+	theText = HTMLFilter(origText)
+	theText = parseURLs(theText)
+	
+	if (len(theText) > 0) and (theText <> TextEntryDefaultText) then
+		top.wakeUp
+		PerformGesture theText
+		TextBox.value = ""
+		TextBox.Focus
+	elseif len(theText) = 0 and len(origText) <> 0 then
+		top.wakeUp
+		PerformGesture Replace(Replace(origText,">",""),"<","")
+		TextBox.value = ""
+		TextBox.Focus
+	else
+	    TextBox.value = ""
+		TextBox.Focus
+	  	ChatHistory.ScrollToBottom	
+		dim strMsg
+		strMsg = "You must type a message into the chat text box before pressing enter."
+		ShowDialog strMsg, ""
+	end if
+	
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		PerformGesture(SayWhat)
+'//  Purpose:	perform a gesture if it's starts with the a gesture keyword	
+'//	 Params:
+'//		SayWhat	- <string> the text for the gesture
+'//	 Called by:	DoSay
+'////////////////////////////////////////////////////////////////////////
+sub PerformGesture(SayWhat)
+	dim i, Temp, WhatWord, WhatGesture
+	for i=0 to ubound(Keywords)
+		Temp = split(Keywords(i), "|")
+		WhatWord = Temp(0)
+		WhatGesture = Gestures(Temp(1))
+		' Emote a gesture if the spoken text begins with a gesture keyword
+		if BeginsWith(SayWhat & " ", WhatWord) then
+			'speak the text if it contains something besides the keyword, otherwise just blank it
+			if ucase(SayWhat) <> ucase(WhatWord) then
+				top.ClientUserPtr.Say ReplaceEmoticonsWithImages(SayWhat)
+			else
+				TextBox.value = ""
+			end if
+			top.ClientUserPtr.Emote WhatGesture
+			exit sub
+		end if
+	next
+	' we only get here if we did not do a gesture	
+	top.ClientUserPtr.Say ReplaceEmoticonsWithImages(SayWhat)
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		BeginsWith(ByVal strText, Keyword)
+'//  Purpose:	try to match keyword with the start of strtext
+'//	 Params:
+'//		strText	- <string> the string to search
+'//		Keyword - <string> the keyword ta search for
+'//	 Return Value:
+'//		return true if SayWhat begins with Keyword followed by a non-alpha char, else return false
+'//  Called by:	PerformGesture
+'////////////////////////////////////////////////////////////////////////
+function BeginsWith(ByVal strText, Keyword)
+	dim nextChar
+	BeginsWith = false
+	if instr(1,strText, Keyword, 1) = 1 then
+		nextChar = asc(ucase(mid(strText, len(Keyword)+1, 1)))
+		BeginsWith = (nextChar < 65) or (nextChar > 90)
+	end if
+end function
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		ResizeUpDown
+'//  Purpose:	onClick handler for the ResizeSec button 
+'//	 Called by:	user clicking the up/down resize button
+'////////////////////////////////////////////////////////////////////////
+sub ResizeUpDown
+	dim resizingOp	' tells the resize function which edges	to move where
+	select case document.body.all.btnResizeUpDown.style.action
+		case "none" 
+			exit sub
+		case "up"
+			resizingOp = 1	' leftTall
+			document.body.all.btnResizeUpDown.style.action = "down"
+		case "down"
+			resizingOp = 2	' leftShort
+			document.body.all.btnResizeUpDown.style.action = "up"
+	end select
+	top.ResizePane resizingOp
+	top.ClientRendererIFrame.document.all.renderer.focus	' needed to make the change happen; don't know why
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		toggleOverview
+'//  Purpose:	onClick handler for the OverviewSec button; 
+'//				toggle the user's view between in-world and overview, causing the camera
+'//				to zoom between an avatar-level view and a birdseye view of the world.
+'//	 Called by:	user clicking on the overview toggle button
+'////////////////////////////////////////////////////////////////////////
+sub toggleOverview
+	if top.NavigationEnabled then
+		top.NavigationEnabled = false
+		if top.ClientUserPtr.viewType = "inworld" then
+			top.ClientUserPtr.cameraHelper.flyout_start
+			top.ClientStatusBarIFrame.SetLeftStatus "Click on an area of the room to go there"
+			top.ClientStatusBarIFrame.SetRightStatus ""
+		else
+			top.ClientUserPtr.cameraHelper.flyin_start
+		end if
+	end if
+end sub
+
+</SCRIPT>
+</HEAD>
+
+<body bgcolor="#FFFFFF" class=ClientBackgroundMedium>
+
+<table id=ChatBox border=0 cellspacing=0 cellpadding=0 width="100%" height="100%">
+<tr>
+  <td width=9 height=100% valign=top>
+  <div style="position:absolute;left:0;top:0;height:100%;width:1;background-color:#c2d2d2;" ></div>
+  <IMG src="../Images/Lchat.gif" style="position:absolute;left:0;top:0;"></td>
+  <td>
+	<table id=ChatContainer border=0 cellspacing=0 cellpadding=0 width="100%" height="100%">
+	<tr>
+		<td valign=center width="100%" height=28 bgcolor=#6e908f>
+			<table border=0 cellspacing=0 cellpadding=0 width="100%" height="100%">
+			<tr>
+<td id=WaveSec
+	class=btnContainer
+	style="left:10px;width:27px;"
+	onclick=DoBtnClick("Wave")>
+	<img src="../images/btnSmall.gif"
+		class=btnSmImage 
+		valign=center 
+		origSrc="../images/btnSmall.gif"
+		hoverSrc="../images/btnSmall2.gif"
+		pressedSrc="">	
+	<span id=btnWave
+		class=btnTextSm
+		style="width:27px;font-size:10pt;">		
+		<img id=icnWave
+			src="../images/icnWave.gif"
+			class=btnIcon
+			alt="Wave">
+	</span>
+</td>
+<td id=TurnSec
+	class=btnContainer
+	style="left:37px;width:27px;"
+	onclick=DoBtnClick("Turn")>
+	<img src="../images/btnSmall.gif"
+		class=btnSmImage 
+		valign=center 
+		origSrc="../images/btnSmall.gif"
+		hoverSrc="../images/btnSmall2.gif"
+		pressedSrc="">	
+	<span id=btnTurn
+		class=btnTextSm
+		style="width:27px;font-size:10pt;">		
+		<img id=icnTurn
+			src="../images/icnTurn.gif"
+			class=btnIcon
+			alt="Turn Around">
+	</span>
+</td>
+<td id=SmileSec
+	class=btnContainer
+	style="left:64px;width:27px;"
+	onclick=DoBtnClick("Smile")>
+	<img src="../images/btnSmall.gif"
+		class=btnSmImage 
+		valign=center 
+		origSrc="../images/btnSmall.gif"
+		hoverSrc="../images/btnSmall2.gif"
+		pressedSrc="">	
+	<span id=Smile
+		class=btnTextSm
+		style="width:27px;font-size:10pt;">		
+		<img id=icnSmile
+			src="../images/icnSmile.gif"
+			class=btnIcon
+			alt="Smile">
+	</span>
+</td>
+<td id=FlirtSec
+	class=btnContainer
+	style="left:91px;width:27px;"
+	onclick=DoBtnClick("Flirt")>
+	<img src="../images/btnSmall.gif"
+		class=btnSmImage 
+		valign=center 
+		origSrc="../images/btnSmall.gif"
+		hoverSrc="../images/btnSmall2.gif"
+		pressedSrc="">	
+	<span id=btnFlirt
+		class=btnTextSm
+		style="width:27px;font-size:10pt;">		
+		<img id=icnFlirt
+			src="../images/icnFlirt.gif"
+			class=btnIcon
+			alt="Flirt">
+	</span>
+</td>
+<td id=ShrugSec
+	class=btnContainer
+	style="left:118px;width:27px;"
+	onclick=DoBtnClick("Shrug")>
+	<img src="../images/btnSmall.gif"
+		class=btnSmImage 
+		valign=center 
+		origSrc="../images/btnSmall.gif"
+		hoverSrc="../images/btnSmall2.gif"
+		pressedSrc="">	
+	<span id=btnShrug
+		class=btnTextSm
+		style="width:27px;font-size:10pt;">		
+		<img id=icnShrug
+			src="../images/icnShrug.gif"
+			class=btnIcon
+			alt="Shrug">
+	</span>
+</td>
+<td style="BACKGROUND: url(../Images/clrgradient.gif); ; WIDTH: expression(document.body.clientWidth - 5)">
+</td>
+<td id=OverviewSec
+	class=btnContainer
+	style="left:expression(document.body.clientWidth-91);width:27px;"
+	onclick=ToggleOverview>
+	<img src="../images/btnSmall.gif"
+		class=btnSmImage 
+		valign=center 
+		origSrc="../images/btnSmall.gif"
+		hoverSrc="../images/btnSmall2.gif"
+		pressedSrc="">
+	<span id=btnOverview
+		class=btnTextSm
+		style="width:27px;font-size:10pt;">		
+		<img id=icnOverview
+			src="../images/icnOverview.gif"
+			class=btnIcon
+			alt="Toggle map view on/off">
+	</span>
+</td>
+<td id=CameraSec
+	class=btnContainer
+	style="left:expression(document.body.clientWidth-64);width:27px;"
+	onclick=ChangeCameraView>
+	<img src="../images/btnSmall.gif"
+		class=btnSmImage 
+		valign=center 
+		origSrc="../images/btnSmall.gif"
+		hoverSrc="../images/btnSmall2.gif"
+		pressedSrc="">	
+	<span id=btnCamera
+		class=btnTextSm
+		style="width:27px;font-size:10pt;">		
+		<img id=icnCamera
+			src="../images/icnCamera.gif"
+			class=btnIcon
+			alt="Change the camera angle/location">
+	</span>
+</td>
+<td id=ResizeSec
+	class=btnContainer
+	style="left:expression(document.body.clientWidth-37);width:27px;action:up;"
+	onclick=ResizeUpDown>
+	<img src="../images/btnSmall.gif"
+		class=btnSmImage 
+		valign=center 
+		origSrc="../images/btnSmall.gif"
+		hoverSrc="../images/btnSmall2.gif"
+		pressedSrc="">	
+	<span id=btnResizeUpDown
+		class=btnTextSm
+		style="width:27px;font-size:10pt;action:up;">
+		<img id=icnResizeUpDown
+			src="../images/icnResizeUp.gif"
+			class=btnIcon
+			alt="Resize the chat history pane">
+	</span>
+</td>
+</tr>
+</table>
+		</td>
+	</tr>
+	<tr>
+		<td valign=center width="100%" height=1 bgcolor=#395d5c><IMG border=0 height=1 src="../Images/spacer.gif" width=1 ></td>
+	</tr>
+	<tr>
+		<td valign=center width="100%" height="95%">
+			<iframe id=ChatHistory
+				name=ChatHistory 
+	            src="ChatHistory.htm"
+				marginwidth=0
+				marginheight=0
+				frameborder=no
+				width="100%" 
+	            height="100%"
+	           ></iframe>
+		</td>
+	</tr>
+	<tr>
+		<td valign=center width="100%" height=1 bgcolor=#395d5c><IMG border=0 height=1 src="../Images/spacer.gif" width=1 ></td>
+	</tr>
+	<tr>
+		<td valign=center width="100%" height=1 bgcolor=#c6dad1><IMG border=0 height=1 src="../Images/spacer.gif" width=1 ></td>
+	</tr>
+	<tr>
+		<td valign=center width="100%" height=37>
+			<table id=TextBoxContainer border=0 cellspacing=0 cellpadding=0 width="100%" height="100%">
+			  <tr>
+				<td valign=center align=middle width=24 height="100%">
+					<table border=0 cellspacing=0 cellpadding=0 width="100%" height="100%" 
+	                 >
+					<tr>
+						<td valign=top width="100%" height=1><IMG border=0 height=1 src="../Images/spacer.gif" width=1 ></td>
+					</tr>
+					<tr>
+						<td>
+							<div id=AvatarThumbNail style="width:20;" onClick='top.ClientWorldPtr.FireUIEvent top.ClientUserPtr, "SurfToURL", array("MyProfile.htm")'>
+							</div>
+						</td>
+					</tr>
+					</table>
+				</td>
+				<td valign=center width=1 height="100%" bgcolor=#c6dad1><IMG border=0 height=1 src="../Images/spacer.gif" width=1 ></td>
+				<td valign=center align=middle>
+					<input id=TextBox class=ClientTextBlack maxlength=200 size=45>
+				</td>
+			  </tr>
+			</table>
+		</td>
+	</tr>
+    </table>
+  </td>
+  <td width=9 height=100% valign=top><IMG src="../Images/Rchat.gif" ><span style="position:relative;width:8;height:100%;"
+	></span><span style="position:relative;width:1;height:100%;background-color:#c2d2d2;"
+	></span></td>
+</tr>
+<tr>
+	<td colspan=3 width=100% height=1 bgcolor=#C4D2D2></td>
+</tr>
+</table>
+<div id=htmlFilter style="LEFT: 0px; POSITION: absolute; TOP: 0px; VISIBILITY: hidden">
+</div>
+</body>
+</html>

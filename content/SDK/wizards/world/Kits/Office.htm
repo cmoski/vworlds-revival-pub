@@ -1,0 +1,880 @@
+<html>
+<head>
+<LINK Rel=Stylesheet href="..\..\..\..\client\shared\global.css">
+<object id="elements" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
+  <param name="DataURL" value="office.csv">
+  <param name="UseHeader" value="True">
+  <param name="TextQualifier" value="'">
+</object>
+<script language="VBSCRIPT">
+
+option explicit
+
+dim rs
+dim ready
+Dim world
+Dim Lobby
+Dim Conf1
+Dim p_Entry
+Dim StyleName
+Dim selected
+
+ready = False
+
+sub window_onload
+	if top.SelectedStyleIndex <> -1 then
+		lstStyle.selectedIndex = top.SelectedStyleIndex
+	else
+		lstStyle.selectedIndex = 0
+	end if
+	choseName 'since we are selecting first element it will have same effect
+end sub
+
+sub elements_ondatasetcomplete
+	set rs = elements.recordset
+	fillin_select
+	if top.SelectedStyleIndex <> -1 then
+		lstStyle.selectedIndex = top.SelectedStyleIndex
+	end if
+end sub
+
+function verify()
+	verify = ready
+end function
+
+sub fillin_select()
+	dim el
+
+	rs.MoveFirst
+	' interate on world templates
+	Do Until rs.EOF
+			set el = document.CreateElement("OPTION")
+			el.value = rs.Fields(0).value
+			el.text = rs.Fields(0).value
+			lstStyle.add el
+			rs.MoveNext
+	Loop
+end sub
+
+sub choseName()
+	selected = lstStyle.selectedIndex
+	rs.MoveFirst
+	rs.Move selected
+	StyleName = rs.fields(0)
+	top.SelectedStyleIndex = selected
+	ready = true
+end sub
+
+sub finish
+	buildworld
+end sub
+
+sub buildworld
+	if top.buildworld then
+		set world = top.client.world
+
+		parent.StatusMsg "creating lobby"
+		CreateLobby
+
+		parent.StatusMsg "creating conference room"
+		CreateConferenceRoom
+
+		parent.StatusMsg "creating portals"
+		CreatePortals
+
+		' set default room to lobby
+		world.Global.DefaultRoom = Lobby
+
+		'set default entry in lobby
+		world.Global.DefaultPortal = p_Entry
+
+		world.user.MoveInto Lobby
+
+		world.SaveDatabase
+		world.Trace "All done with SaveDatabase"
+		world.Disconnect
+	end if
+end sub
+
+sub CreateLobby
+	set Lobby = world.CreateInstance("Lobby", "Room")
+
+	Select Case StyleName
+		case "Classic"
+			Lobby.BackgroundColor = &HA2BD95
+			Lobby.InitializeGraphics "", 0.0, 0.03, 0.0, 1.0, 0.0, 0.0
+		case "High Tech"
+			Lobby.InitializeGraphics "", 0.0, 0.0, 0.0, 1.0, 1.0, 0.0
+			Lobby.BackgroundColor = &H000000
+	End Select
+
+	World.Trace "done creating Lobby"
+
+	'Now add objects to the Lobby
+	Select Case StyleName
+		case "Classic"
+			Dim floor
+			set floor= World.CreateInstance("floor", "Artifact", Lobby)
+			floor.Description = ""
+			floor.IsUIVisible = False
+			floor.InitializeGraphics "SDK\Library\Models\_OfficeCL\floorcol.x", 0.0, 0.0, 0.0, 1.0, 0.0, 0.0
+			floor.IsMoveable = false
+			CreateFloorCLBoundaries(floor)
+
+			Dim sound
+			set sound= World.CreateInstance("sound", "Artifact", Lobby)
+			sound.Description = ""
+			sound.IsUIVisible = False
+			sound.InitializeGraphics "", 0.0, 2.0, 0.0, 1.0, 0.0, 0.0
+			sound.SetSound "SDK\library\sounds\mystic2.wav", True, 0,0,0
+
+
+			Dim lights
+			set lights= World.CreateInstance("ambient light", "Artifact", Lobby)
+			lights.Description = ""
+			Lights.IsUIVisible = False
+			lights.InitializeGraphics "SDK\Library\Models\lights\lightdown-transparent.3ds", -16.0, -16.0, -16.0, 1.0, 0.0, 0.0
+
+			Dim Entry1
+			set Entry1 = World.CreateInstance("entry point", "artifact", Lobby)
+			Entry1.Description = "Moves you to the spot where you entered this room."
+			Entry1.InitializeGraphics "SDK\Library\Models\_OfficeCL\entrypoint.x", -3.,1,1.07, -1, 0, -0.006
+			Entry1.IsMoveable = False
+
+			Dim overview1
+			set overview1= World.CreateInstance("overview","artifact", Lobby)
+			overview1.InitializeSpriteGraphics "",-6.23,2.08,-5.88,0.77,0.0,0.64
+			overview1.IsUIVisible = False
+			overview1.IsCameraAnchor = True
+
+
+			Dim fan
+			set fan= World.CreateInstance("fan", "artifact", Lobby)
+			fan.Description = ""
+			fan.InitializeGraphics "SDK\Library\Models\_OfficeCL\cfan.x", 0.0, 4.4, 0.0, 0.0, 0.0, -1.0
+			fan.scale.set 1, 1, 1
+			fan.RotationAxis = World.Global.CreateVector(0, 1, 0)
+			fan.RotationRate = 0.07
+			fan.IsUIVisible = False
+
+			Dim ceiling
+			set ceiling= World.CreateInstance("ceiling", "Artifact", Lobby)
+			ceiling.Description = ""
+			ceiling.InitializeGraphics "SDK\Library\Models\_OfficeCL\ceilgcol.x", 0.7, 5.16, 0, 1.0, 0.0, 0.0
+			ceiling.IsUIVisible = False
+			ceiling.IsMoveable = false
+
+			Dim logo
+			set logo= World.CreateInstance("logo", "WebPage", Lobby)
+			logo.Description = "This is a corporate logo. You can display your company's logo here."
+			logo.InitializeGraphics "SDK\Library\Models\_OfficeCL\logocol.x", 10, 3.0, 0, -1.0, 0.0, 0.0
+			logo.HTMLURL = "http://research.microsoft.com/vwg/temp/welcome.htm"
+
+			Dim window1
+			set window1= World.CreateInstance("window1", "Artifact", Lobby)
+			window1.Description = ""
+			window1.InitializeGraphics "SDK\Library\Models\_OfficeCL\windowcol.x", 10.2, 2.75, -3, -1.0, 0.0, 0.0
+			window1.IsUIVisible = False
+
+			Dim window2
+			set window2= World.CreateInstance("window2", "Artifact", Lobby)
+			window2.Description = ""
+			window2.InitializeGraphics "SDK\Library\Models\_OfficeCL\windowcol.x", 10.2, 2.75, 3, -1.0, 0.0, 0.0
+			window2.IsUIVisible = False
+
+			Dim wall
+			set wall= World.CreateInstance("wall1", "Artifact", Lobby)
+			wall.Description = ""
+			wall.InitializeGraphics "SDK\Library\Models\_OfficeCL\wall1col.x", 10.3, 2.6, 0.0, -1.0, 0.0, 0.0
+			wall.IsUIVisible = False
+			wall.IsMoveable = false
+
+			Dim wall2
+			set wall2= World.CreateInstance("wall2", "Artifact", Lobby)
+			wall2.Description = ""
+			wall2.InitializeGraphics "SDK\Library\Models\_OfficeCL\wall2col.x", 5.9, 2.6, -9.2, 0.0, 0.0, 1.0
+			wall2.IsUIVisible = False
+			wall2.IsMoveable = false
+
+			Dim wall3
+			set wall3= World.CreateInstance("wall3", "Artifact", Lobby)
+			wall3.Description = ""
+			wall3.InitializeGraphics "SDK\Library\Models\_OfficeCL\wall3col.x", .83, 2.6, -6.95, 1.0, 0.0, 0.0
+			wall3.IsUIVisible = False
+			wall3.IsMoveable = false
+
+			Dim wall4
+			set wall4= World.CreateInstance("wall4", "Artifact", Lobby)
+			wall4.Description = ""
+			wall4.InitializeGraphics "SDK\Library\Models\_OfficeCL\wall4col.x", .1, 2.59, -5.56, 0.0, 0.0, 1.0
+			wall4.IsUIVisible = False
+			wall4.IsMoveable = false
+
+			Dim wall5
+			set wall5 = World.CreateInstance("wall5", "Artifact", Lobby)
+			wall5.Description = ""
+			wall5.InitializeGraphics "SDK\Library\Models\_OfficeCL\wall5col.x", -0.6, 2.95, -6.3, 1.0, 0.0, 0.0
+			wall5.IsUIVisible = False
+			wall5.IsMoveable = false
+
+			Dim wall6
+			set wall6= World.CreateInstance("wall6", "Artifact", Lobby)
+			wall6.Description = ""
+			wall6.InitializeGraphics "SDK\Library\Models\_OfficeCL\wall6col.x", -6.0, 2.66, 7, 0.0, 0.0, -1.0
+			wall6.IsUIVisible = False
+			wall6.IsMoveable = false
+
+			Dim wall7
+			set wall7= World.CreateInstance("wall7", "Artifact", Lobby)
+			wall7.Description = ""
+			wall7.InitializeGraphics "SDK\Library\Models\_OfficeCL\wall7col.x", -7.4, 2.66, 0, 1.0, 0.0, 0.0
+			wall7.IsUIVisible = False
+			wall7.IsMoveable = false
+
+			Dim wall8
+			set wall8= World.CreateInstance("wall8", "Artifact", Lobby)
+			wall8.Description = ""
+			wall8.InitializeGraphics "SDK\Library\Models\_OfficeCL\wall6col.x", -6.0, 2.66, -7, 0.0, 0.0, 1.0
+			wall8.IsUIVisible = False
+			wall8.IsMoveable = false
+
+			Dim wall9
+			set wall9= World.CreateInstance("wall9", "Artifact", Lobby)
+			wall9.Description = ""
+			wall9.InitializeGraphics "SDK\Library\Models\_OfficeCL\wall5col.x", -0.6, 2.95, 6.15, 1.0, 0.0, 0.0
+			wall9.IsUIVisible = False
+			wall9.IsMoveable = false
+
+			Dim wall10
+			set wall10= World.CreateInstance("wall10", "Artifact", Lobby)
+			wall10.Description = ""
+			wall10.InitializeGraphics "SDK\Library\Models\_OfficeCL\wall4col.x", 0.1, 2.6, 5.42, 0.0, 0.0, -1.0
+			wall10.IsUIVisible = False
+			wall10.IsMoveable = false
+
+			Dim wall11
+			set wall11= World.CreateInstance("wall11", "Artifact", Lobby)
+			wall11.Description = ""
+			wall11.InitializeGraphics "SDK\Library\Models\_OfficeCL\wall3col.x", 0.8, 2.6, 6.8, 1.0, 0.0, 0.0
+			wall11.IsUIVisible = False
+			wall11.IsMoveable = false
+
+			Dim wall12
+			set wall12= World.CreateInstance("wall12", "Artifact", Lobby)
+			wall12.Description = ""
+			wall12.InitializeGraphics "SDK\Library\Models\_OfficeCL\wall2col.x", 5.48, 2.6, 9, 0.0, 0.0, -1.0
+			wall12.IsUIVisible = False
+			wall12.IsMoveable = false
+
+			Dim desk
+			set desk= World.CreateInstance("desk", "Artifact", Lobby)
+			desk.Description = ""
+			desk.IsUIVisible = False
+			desk.InitializeGraphics "SDK\Library\Models\_OfficeCL\deskcol.x", 6.0, .6, 0.0, -1.0, 0.0, 0.0
+
+			Dim columnr
+			set columnr= World.CreateInstance("column1", "Artifact", Lobby)
+			columnr.Description = ""
+			columnr.InitializeGraphics "SDK\Library\Models\_OfficeCL\colmncol.x", 0.0, 2.35, -4.35, 0.0, 0.0, 1.0
+			columnr.IsUIVisible = False
+
+			Dim columnl
+			set columnl= World.CreateInstance("column2", "Artifact", Lobby)
+			columnl.Description = ""
+			columnl.InitializeGraphics "SDK\Library\Models\_OfficeCL\colmncol.x", 0.0, 2.35, 4.5, 0.0, 0.0, -1.0
+			columnl.IsUIVisible = False
+
+			Dim beam
+			set beam= World.CreateInstance("beam", "Artifact", Lobby)
+			beam.Description = ""
+			beam.InitializeGraphics "SDK\Library\Models\_OfficeCL\beamcol.x", 0.0, 5.25, 0.0, -1.0, 0.0, 0.0
+			beam.IsUIVisible = False
+
+		case "High Tech"
+
+			Dim floor1
+			set floor1 = World.CreateInstance("floor", "Artifact", Lobby)
+			floor1.Description = ""
+			floor1.InitializeGraphics "SDK\Library\Models\_OfficeHT\floorhol.x", 0.2, 0.0, 1.1, 1.0, 0.0, 0.0
+			floor1.IsUIVisible = False
+			floor1.IsMoveable = false
+			CreateFloorHTLBoundaries(floor1)
+
+			Dim sound1
+			set sound1= World.CreateInstance("sound", "Artifact", Lobby)
+			sound1.Description = ""
+			sound1.InitializeGraphics "", 0.0, 2.0, 0.0, 1.0, 0.0, 0.0
+			sound1.IsUIVisible = False
+			sound1.SetSound "SDK\library\sounds\mystic2.wav", True, 0,0,0
+
+			Dim lightb
+			set lightb= World.CreateInstance("ambient light", "Artifact", Lobby)
+			lightb.Description = ""
+			lightb.InitializeGraphics "SDK\Library\Models\lights\lightdown-transparent.3ds", 16.0, 16.0, 16.0, 1.0, 0.0, 0.0
+			Lightb.IsUIVisible = False
+
+			Dim Entry2
+			set Entry2= World.CreateInstance("entry point", "artifact", Lobby)
+			Entry2.Description = "Moves you to the spot where you entered this room."
+			Entry2.InitializeGraphics "SDK\Library\Models\_OfficeHT\entrypoint.x", -0.655, .9, 1.34, -0.982, 0.0, 0.186
+			Entry2.IsMoveable = False
+
+			Dim overview2
+			set overview2= World.CreateInstance("overview","artifact", Lobby)
+			overview2.InitializeSpriteGraphics "",-4.63,2.4,-5.54,0.64,0.0,0.77
+			overview2.IsUIVisible = False
+			overview2.IsCameraAnchor = True
+
+
+
+			Dim htldwall
+			set htldwall = World.CreateInstance("message wall", "Artifact", Lobby)
+			htldwall.Description = ""
+			htldwall.InitializeGraphics "SDK\Library\Models\_OfficeHT\walldhol.x", 5.03, 2.53, -0.04, -1, 0.0, 0.0
+			htldwall.IsUIVisible = False
+			htldwall.IsMoveable = false
+
+			Dim htlcling
+			set htlcling = World.CreateInstance("ceiling", "Artifact", Lobby)
+			htlcling.Description = ""
+			htlcling.InitializeGraphics "SDK\Library\Models\_OfficeHT\ceilghol.x", 0.06, 5.224, 0.42, 1, 0, 0
+			htlcling.IsUIVisible = False
+			htlcling.IsMoveable = false
+
+			Dim HiTechView1
+			set HiTechView1 = World.CreateInstance("view1", "Artifact", Lobby)
+			HiTechView1.Description = ""
+			HiTechView1.InitializeGraphics "SDK\Library\Models\_OfficeHT\view1hol.x", 5.09, 2.58, -5.3, -1, 0.0, 0.0
+			HiTechView1.ApproachDistance= 3.0
+			HiTechView1.IsUIVisible = false
+			HiTechView1.IsMoveable = false
+
+			Dim HiTechView2
+			set HiTechView2 = World.CreateInstance("view2", "Artifact", Lobby)
+			HiTechView2.Description = ""
+			HiTechView2.InitializeGraphics "SDK\Library\Models\_OfficeHT\view2hol.x", 4.804, 2.59, 5.663, -1.0, 0.0, 0.0
+			HiTechView2.ApproachDistance= 3.0
+			HiTechView2.IsUIVisible = false
+			HiTechView2.IsMoveable = false
+
+			Dim elvedoor
+			set elvedoor = World.CreateInstance("display", "Artifact", Lobby)
+			elvedoor.Description = ""
+			elvedoor.InitializeSpriteGraphics "SDK\Library\Models\_OfficeHT\sculpture.gif", -4.96, 1.25, 8.065, 0.708, 0.0, -0.705
+			elvedoor.scale.set .35, .35, .35
+			elvedoor.IsUIVisible = false
+
+			Dim wall01
+			set wall01 = World.CreateInstance("wall1", "Artifact", Lobby)
+			wall01.Description = ""
+			wall01.InitializeGraphics "SDK\Library\Models\_OfficeHT\wall1hol.x", 5.53, 2.52, -3.52, 0.0, 0.0, -1.0
+			wall01.IsUIVisible = false
+			wall01.IsMoveable = false
+
+			Dim wall02
+			set wall02 = World.CreateInstance("wall2", "Artifact", Lobby)
+			wall02.Description = ""
+			wall02.InitializeGraphics "SDK\Library\Models\_OfficeHT\wall2hol.x", 3.53, 2.52, -6.5, 1.0, 0.0, 0.0
+			wall02.IsUIVisible = False
+			wall02.IsMoveable = false
+
+			Dim wall03
+			set wall03 = World.CreateInstance("wall3", "Artifact", Lobby)
+			wall03.Description = ""
+			wall03.InitializeGraphics "SDK\Library\Models\_OfficeHT\wall3hol.x", -1.7, 2.52, -5.0, 0, 0, 1
+			wall03.IsUIVisible = False
+			wall03.IsMoveable = false
+
+			Dim wall04
+			set wall04 = World.CreateInstance("wall4", "Artifact", Lobby)
+			wall04.Description = ""
+			wall04.InitializeGraphics "SDK\Library\Models\_OfficeHT\wall4hol.x", -6.09, 2.52, 1.13, 1.0, 0.0, 0.0
+			wall04.IsUIVisible = False
+			wall04.IsMoveable = false
+
+			Dim wall05
+			set wall05 = World.CreateInstance("wall5", "Artifact", Lobby)
+			wall05.Description = ""
+			wall05.InitializeGraphics "SDK\Library\Models\_OfficeHT\wall5hol.x", 0.736, 2.52, 7.659, 0.0, 0.0, -1.0
+			wall05.IsUIVisible = False
+			wall05.IsMoveable = false
+
+			Dim wall06
+			set wall06 = World.CreateInstance("wall7", "Artifact", Lobby)
+			wall06.Description = ""
+			wall06.InitializeGraphics "SDK\Library\Models\_OfficeHT\wall7hol.x", 5.53, 2.55, 3.44, 0.0, 0.0, 1.0
+			wall06.IsUIVisible = False
+			wall06.IsMoveable = false
+
+			Dim wall07
+			set wall07= World.CreateInstance("wall6", "Artifact", Lobby)
+			wall07.Description = ""
+			wall07.InitializeGraphics "SDK\Library\Models\_OfficeHT\wall6hol.x", 3.559, 2.52, 7.41, 1.0, 0.0, 0.0
+			wall07.IsUIVisible = False
+			wall07.IsMoveable = false
+
+			Dim htelevtr
+			set htelevtr = World.CreateInstance("elevator", "Artifact", Lobby)
+			htelevtr.Description = ""
+			htelevtr.InitializeGraphics "SDK\Library\Models\_OfficeHT\wallehol.x", -4.240, 2.53, 7.220, 0.708, 0.0, -0.705
+			htelevtr.IsUIVisible = False
+
+			Dim htlight01
+			set htlight01 = World.CreateInstance("sconce1", "Artifact", Lobby)
+			htlight01.Description = ""
+			htlight01.InitializeGraphics "SDK\Library\Models\_OfficeHT\lightho.x", 2.400, 2.75, -5.75, 0.0, 0.0, 1.0
+			htlight01.IsUIVisible = False
+
+			Dim htlight02
+			set htlight02 = World.CreateInstance("sconce2", "Artifact", Lobby)
+			htlight02.Description = ""
+			htlight02.InitializeGraphics "SDK\Library\Models\_OfficeHT\lightho.x", -3.0, 2.75, -5.75, 0.0, 0.0, 1.0
+			htlight02.IsUIVisible = False
+
+			Dim htlight03
+			set htlight03 = World.CreateInstance("sconce3", "Artifact", Lobby)
+			htlight03.Description = ""
+			htlight03.InitializeGraphics "SDK\Library\Models\_OfficeHT\lightho.x", 0.9, 2.75, 6.670, 0.0, 0.0, -1.0
+			htlight03.IsUIVisible = False
+
+			Dim htdesk
+			set htdesk = World.CreateInstance("desk", "Artifact", Lobby)
+			htdesk.Description = ""
+			htdesk.InitializeGraphics "SDK\Library\Models\_OfficeHT\deskhol.x", 3.0, 0.4, 0.0, -1.0, 0.0, 0.0
+			htdesk.IsUIVisible = False
+			htdesk.RenderQuality=3
+
+			Dim htlogo
+			set htlogo = World.CreateInstance("logo", "WebPage", Lobby)
+			htlogo.Description = "This is a corporate logo. You can display your company's logo here."
+			htlogo.InitializeGraphics "SDK\Library\Models\_OfficeHT\logohol.x", 4.95, 2.52, 0.0, -1.0, 0.0, 0.0
+			htlogo.scale.set .8,.8,.8
+			htlogo.HTMLURL = "http://research.microsoft.com/vwg/temp/welcome.htm"
+
+	End Select
+end sub
+
+
+
+
+
+sub CreateConferenceRoom
+	set conf1 = world.CreateInstance("Conference", "Room")
+
+	Select Case StyleName
+		case "Classic"
+			conf1.InitializeGraphics "", 0.0, 0.0, 0.0, 1.0, 0.0, 0.0
+			conf1.BackgroundColor = 0
+		case "High Tech"
+			conf1.InitializeGraphics "", 0.0, 0.0, 0.0, 1.0, 0.0, 0.0
+			conf1.BackgroundColor = 0
+	End Select
+
+	world.Trace "done creating conf1"
+
+	'Now add objects to the conf1
+	Select Case StyleName
+		case "Classic"
+			Dim floor1
+			set floor1 = World.CreateInstance("floor", "Artifact", conf1)
+			floor1.Description = ""
+			floor1.InitializeGraphics "SDK\Library\Models\_OfficeCL\floorcoc.x", 0.0, 0.0, 0.0, 0.0, 0.0, -1.0
+			floor1.IsUIVisible = False
+			CreateFloorCBoundaries(floor1)
+
+			Dim sound2
+			set sound2= World.CreateInstance("sound", "Artifact", conf1)
+			sound2.Description = ""
+			sound2.InitializeGraphics "", 0.0, 2.0, 0.0, 1.0, 0.0, 0.0
+			sound2.IsUIVisible = False
+			sound2.SetSound "SDK\library\sounds\mystic2.wav", True, 0,0,0
+
+			Dim Entry3
+			set Entry3= World.CreateInstance("entry point", "artifact", conf1)
+			Entry3.Description = "Moves you to the spot where you entered this room."
+			Entry3.InitializeGraphics "SDK\Library\Models\_OfficeCL\entrypoint.x", -2.,1,-0.1, -1.0, 0.0, -0.169
+			Entry3.IsMoveable = False
+
+			Dim overview3
+			set overview3= World.CreateInstance("overview","artifact", conf1)
+			overview3.InitializeSpriteGraphics "",8.9,2.2,-4.28,-0.86,0.0,0.51
+			overview3.IsUIVisible = False
+			overview3.IsCameraAnchor = True
+
+
+
+			Dim fan2
+			set fan2= World.CreateInstance("fan1", "artifact", conf1)
+			fan2.Description = ""
+			fan2.InitializeGraphics "SDK\Library\Models\_OfficeCL\cfan.x", -1.0, 4.4, 0.0, 0.0, 0.0, -1.0
+			fan2.Scale.Set 1, 1, 1
+			fan2.RotationAxis = World.Global.CreateVector(0, 1, 0)
+			fan2.RotationRate = 0.07
+			fan2.IsUIVisible = False
+
+			Dim fan3
+			set fan3= World.CreateInstance("fan2", "artifact", conf1)
+			fan3.InitializeGraphics "SDK\Library\Models\_OfficeCL\cfan.x", 3.5, 4.4, 0.0, 0.0, 0.0, -1.0
+			fan3.Description = ""
+			fan3.Scale.Set 1, 1, 1
+			fan3.RotationAxis = World.Global.CreateVector(0, 1, 0)
+			fan3.RotationRate = 0.07
+			fan3.IsUIVisible = False
+
+			Dim lightc
+			set lightc= World.CreateInstance("ambient light", "Artifact", conf1)
+			lightc.Description = ""
+			lightc.InitializeGraphics "SDK\Library\Models\lights\lightdown-transparent.3ds", 16.0, 16.0, 16.0, 1.0, 0.0, 0.0
+			lightc.IsUIVisible = False
+
+			Dim ceiling1
+			set ceiling1 = World.CreateInstance("ceiling", "Artifact", conf1)
+			ceiling1.Description = ""
+			ceiling1.InitializeGraphics "SDK\Library\Models\_OfficeCL\ceilgcoc.x", 0.0, 5.3, 0.0, 0.0, 0.0, -1.0
+			ceiling1.IsUIVisible = False
+
+			Dim wall1
+			set wall1 = World.CreateInstance("wall1", "Artifact", conf1)
+			wall1.Description = ""
+			wall1.InitializeGraphics "SDK\Library\Models\_OfficeCL\wall1coc.x", -7.0, 2.7, 3.0, 1.0, 0.0, 0.0
+			wall1.IsUIVisible = False
+
+			Dim wall2
+			set wall2 = World.CreateInstance("wall2", "Artifact", conf1)
+			wall2.Description = ""
+			wall2.InitializeGraphics "SDK\Library\Models\_OfficeCL\wall2coc.x", -0.01, 2.7, -6.05, 0.0, 0.0, 1.0
+			wall2.IsUIVisible = False
+
+			Dim wall3
+			set wall3 = World.CreateInstance("wall3", "Artifact", conf1)
+			wall3.Description = ""
+			wall3.InitializeGraphics "SDK\Library\Models\_OfficeCL\wall3coc.x", 10.4, 2.7, 0.0, -1.0, 0.0, 0.0
+			wall3.IsUIVisible = False
+
+			Dim wall4
+			set wall4 = World.CreateInstance("wall4", "Artifact", conf1)
+			wall4.Description = ""
+			wall4.InitializeGraphics "SDK\Library\Models\_OfficeCL\wall4coc.x", -0.01, 2.7, 5.98, 0.0, 0.0, -1.0
+			wall4.IsUIVisible = False
+
+			Dim beam
+			set beam = World.CreateInstance("beam", "Artifact", conf1)
+			beam.Description = ""
+			beam.InitializeGraphics "SDK\Library\Models\_OfficeCL\beamcoc.x", -6.0, 5.1, 0.0, 1.0, 0.0, 0.0
+			beam.IsUIVisible = False
+
+			Dim colmn
+			set colmn = World.CreateInstance("column1", "Artifact", conf1)
+			colmn.Description = ""
+			colmn.InitializeGraphics "SDK\Library\Models\_OfficeCL\colmncoc.x", -6.0, 2.2, 3.3, 1.0, 0.0, 0.0
+			colmn.IsUIVisible = False
+
+			Dim colmn2
+			set colmn2 = World.CreateInstance("column2", "Artifact", conf1)
+			colmn2.Description = ""
+			colmn2.InitializeGraphics "SDK\Library\Models\_OfficeCL\colmncoc.x", -6.0, 2.2, -3.3, 1.0, 0.0, 0.0
+			colmn2.IsUIVisible = False
+
+			Dim window1
+			set window1 = World.CreateInstance("window1", "Artifact", conf1)
+			window1.Description = ""
+			window1.InitializeGraphics "SDK\Library\Models\_OfficeCL\windowcoc.x", 1.75, 2.75, 5.9, 0.0, 0.0, -1.0
+			window1.IsUIVisible = False
+
+			Dim window2
+			set window2 = World.CreateInstance("window2", "Artifact", conf1)
+			window2.Description = ""
+			window2.InitializeGraphics "SDK\Library\Models\_OfficeCL\windowcoc.x", -2.5, 2.75, 5.9, 0.0, 0.0, -1.0
+			window2.IsUIVisible = False
+
+			Dim window3
+			set window3 = World.CreateInstance("window3", "Artifact", conf1)
+			window3.Description = ""
+			window3.InitializeGraphics "SDK\Library\Models\_OfficeCL\windowcoc.x", 10.3, 2.75, -2.8, -1.0, 0.0, 0.0
+			window3.IsUIVisible = False
+
+			Dim window4
+			set window4 = World.CreateInstance("window4", "Artifact", conf1)
+			window4.Description = ""
+			window4.InitializeGraphics "SDK\Library\Models\_OfficeCL\windowcoc.x", 10.3, 2.75, 2.8, -1.0, 0.0, 0.0
+			window4.IsUIVisible = False
+
+			Dim window5
+			set window5 = World.CreateInstance("window5", "Artifact", conf1)
+			window5.Description = ""
+			window5.InitializeGraphics "SDK\Library\Models\_OfficeCL\windowcoc.x", 6.0, 2.75, 5.9, 0.0, 0.0, -1.0
+			window5.IsUIVisible = False
+
+		case "High Tech"
+
+			Dim floorC
+			set floorC = World.CreateInstance("floor", "Artifact", conf1)
+			floorC.Description = ""
+			floorC.InitializeGraphics "SDK\Library\Models\_OfficeHT\floorhoc.x", 0.0, 0.0, 0, 0.0, 0.0, 1.0
+			floorC.IsUIVisible = False
+			CreateFloorHTCBoundaries(floorC)
+
+			Dim sound3
+			set sound3= World.CreateInstance("sound", "Artifact", conf1)
+			sound3.Description = ""
+			sound3.InitializeGraphics "", 0.0, 2.0, 0.0, 1.0, 0.0, 0.0
+			sound3.IsUIVisible = False
+			sound3.SetSound "SDK\library\sounds\mystic2.wav", True, 0,0,0
+
+			Dim lightd
+			set lightd= World.CreateInstance("ambient light", "Artifact", conf1)
+			lightd.Description = ""
+			lightd.InitializeGraphics "SDK\Library\Models\lights\lightdown-transparent.3ds", 16.0, 16.0, 16.0, 1.0, 0.0, 0.0
+			lightd.IsUIVisible = False
+
+			Dim Entry4
+			set Entry4= World.CreateInstance("entry point", "artifact", conf1)
+			Entry4.Description = "Moves you to the spot where you entered this room."
+			Entry4.InitializeGraphics "SDK\Library\Models\_OfficeHT\entrypoint.x", 1.968,0.9,0.0, -0.981,0.0,-0.194
+			Entry4.IsMoveable = False
+
+			Dim overview4
+			set overview4= World.CreateInstance("overview","artifact", conf1)
+			overview4.InitializeSpriteGraphics "",-6.23,0.9,-4.26,0.7,0.0,0.72
+			overview4.IsUIVisible = False
+			overview4.IsCameraAnchor = True
+
+
+
+			Dim View
+			set View = World.CreateInstance("view", "Artifact", conf1)
+			View.Description = ""
+			View.InitializeGraphics "SDK\Library\Models\_OfficeHT\viewhoc.x", 0.37, 1.5, 14, 0.0, 0.0, -1.0
+			View.ApproachDistance= 11.0
+			View.IsUIVisible = False
+
+			Dim Painting1
+			set Painting1 = World.CreateInstance("wall1", "Artifact", conf1)
+			Painting1.Description = ""
+			Painting1.InitializeGraphics "SDK\Library\Models\_OfficeHT\wall1hoc.x", -6.9, 1.98, 0.2, 1.0, 0.0, 0.0
+			Painting1.IsUIVisible = False
+
+			Dim Painting6
+			set Painting6 = World.CreateInstance("wall2", "Artifact", conf1)
+			Painting6.Description = ""
+			Painting6.InitializeGraphics "SDK\Library\Models\_OfficeHT\wall2hoc.x", 0.35, 1.98, -4.8, 0.0, 0.0, 1.0
+			Painting6.IsUIVisible = False
+
+			Dim Painting7
+			set Painting7 = World.CreateInstance("wall3", "Artifact", conf1)
+			Painting7.Description = ""
+			Painting7.InitializeGraphics "SDK\Library\Models\_OfficeHT\wall3hoc.x", 7.3, 1.98, 0.19, -1.0, 0.0, 0.0
+			Painting7.IsUIVisible = False
+
+			Dim cabinet
+			set cabinet = World.CreateInstance("cabinet", "Artifact", conf1)
+			cabinet.Description = ""
+			cabinet.InitializeGraphics "SDK\Library\Models\_OfficeHT\cabinthoc.x", 0.37, 0.5, 4.68, 0.0, 0.0, -1.0
+			cabinet.IsUIVisible = False
+
+			Dim ceiling
+			set ceiling = World.CreateInstance("ceiling", "Artifact", conf1)
+			ceiling.Description = ""
+			ceiling.InitializeGraphics "SDK\Library\Models\_OfficeHT\ceilghoc.x", 0.0, 3.975, 0.15, 0.0, 0.0, 1.0
+			ceiling.IsUIVisible = False
+
+			Dim columnright
+			set columnright = World.CreateInstance("column1", "Artifact", conf1)
+			columnright.Description = ""
+			columnright.InitializeGraphics "SDK\Library\Models\_OfficeHT\postho.x", -2.2, 2.08, 4.9, 0.0, 0.0, -1.0
+			columnright.IsUIVisible = False
+
+			Dim columnleft
+			set columnleft = World.CreateInstance("column2", "Artifact", conf1)
+			columnleft.Description = ""
+			columnleft.InitializeGraphics "SDK\Library\Models\_OfficeHT\postho.x", 3.0, 2.08, 4.9, 0.0, 0.0, -1.0
+			columnleft.IsUIVisible = False
+
+			Dim htlight01
+			set htlight01 = World.CreateInstance("sconce1", "Artifact", conf1)
+			htlight01.Description = ""
+			htlight01.InitializeGraphics "SDK\Library\Models\_OfficeHT\lightho.x", -2.6, 2.25, -4.55, 0.0, 0.0, 1.0
+			htlight01.Scale.Set 0.9,0.9,0.9
+			htlight01.IsUIVisible = False
+
+			Dim htlight02
+			set htlight02 = World.CreateInstance("sconce2", "Artifact", conf1)
+			htlight02.Description = ""
+			htlight02.InitializeGraphics "SDK\Library\Models\_OfficeHT\lightho.x", 0.6, 2.25, -4.55, 0.0, 0.0, 1.0
+			htlight02.Scale.Set 0.9,0.9,0.9
+			htlight02.IsUIVisible = False
+
+			Dim htlight03
+			set htlight03 = World.CreateInstance("sconse3", "Artifact", conf1)
+			htlight03.Description = ""
+			htlight03.InitializeGraphics "SDK\Library\Models\_OfficeHT\lightho.x", 3.6, 2.25, -4.55, 0.0, 0.0, 1.0
+			htlight03.Scale.Set 0.9,0.9,0.9
+			htlight03.IsUIVisible = False
+
+			Dim painting01
+			set painting01 = World.CreateInstance("paintings", "Artifact", conf1)
+			painting01.Description = ""
+			painting01.InitializeGraphics "SDK\Library\Models\_OfficeHT\painting.x", 7.2, 1.2, 0.0, -1.0, 0.0, 0.0
+			painting01.IsUIVisible = False
+
+
+	End Select
+end sub
+
+'classic office floor
+Sub CreateFloorCLBoundaries(thething)
+	Dim theBoundaryList_t
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+		6.4264, -6.88202, -6.4443, -6.67437, -6.41306, -1.12597, -5.28559, -1.10774, _
+		-5.27402, 1.36776, -7.08756, 1.30285, -7.08932, 4.00577, -11.1725, 4.13804, _
+		-11.2096, 7.35132, -6.90646, 7.29179, -6.95368, 9.93137, 7.35779, 9.86186, _
+		7.33523, 7.14931, 10.8243, 7.15902, 10.8215, 4.05805, 7.34414, 4.02094, _
+		7.32806, 1.36997, 5.25751, 1.30461, 5.28959, -1.18273, 6.54933, -1.177_
+		))
+	theBoundaryList_t.HeightUpper = 5.081
+	theBoundaryList_t.HeightLower = 0
+	thething.BoundaryList.Add theBoundaryList_t
+End Sub
+
+'classic conference floor
+Sub CreateFloorCBoundaries(thething)
+	Dim theBoundaryList_t
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+		-10.0002, -5.53156, -9.87972, 5.82646, 6.35929, 5.63716, 6.38188, -5.50616_
+		))
+	theBoundaryList_t.HeightUpper = 5.08171
+	theBoundaryList_t.HeightLower = 0.0
+	thething.BoundaryList.Add theBoundaryList_t
+End Sub
+
+'high-tech lobby floor
+Sub CreateFloorHTLBoundaries(thething)
+
+	Dim theBoundaryList_t
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+		-2.701420, 4.509210, 5.057440, 4.580140, 5.318311, 4.758738, 5.700272, 4.819323, _
+		6.026793, 4.866658, 6.477211, 4.788114, 6.704576, 4.605549, 6.823476, 4.378229, _
+		6.841479, 4.134750, 6.765132, 3.970711, 6.702830, 3.814190, 6.702830, 0.367374, _
+		7.170920, 0.367374, 7.170920, -1.746100, 6.717020, -1.746100, 6.717020, -4.356030, _
+		7.057440, -4.611350, 5.142560, -6.540430, 4.787950, -6.214190, 0.646099, -6.214190, _
+		0.646099, -6.852490, -1.978010, -6.852490, -1.978010, -6.242560, -3.742681, -6.008695, _
+		-4.261700, -5.079440, -4.679833, -4.485044, -5.118931, -4.057416, -5.788682, -3.309831, _
+		-5.977397, -2.816834, -5.893642, -2.249454, -5.623400, -2.058150, -5.651770, 3.672340, _
+		-5.557165, 3.933210, -5.401016, 4.175452, -5.027409, 4.471107, -4.304009, 4.773542, _
+		-3.456763, 4.849277, -2.899136, 4.695959))
+	theBoundaryList_t.HeightUpper = 5.081
+	theBoundaryList_t.HeightLower = 0
+	thething.BoundaryList.Add  theBoundaryList_t
+End Sub
+
+'high-tech conference floor
+Sub CreateFloorHTCBoundaries(thething)
+	Dim theBoundaryList_t
+	set theBoundaryList_t = World.CreateBoundary(Array(_
+		6.92198, 3.82978, -6.19858, 3.82979, -6.19858, 1.14894, -7.03546, 1.14894, _
+		-7.03546, -1.24822, -6.24114, -1.24823, -6.24113, -4.26951, 6.92199, -4.28369_
+		))
+	theBoundaryList_t.HeightUpper = 5.0803474
+	theBoundaryList_t.HeightLower = 0.0
+	thething.BoundaryList.Add theBoundaryList_t
+End Sub
+
+
+
+
+sub CreatePortals
+	set p_Entry = World.CreateInstance("office entry", "Portal", lobby)
+	p_Entry.Description = ""
+
+	' add portal objects to both rooms, pointing towards each other
+	Dim p_lobby_conf
+	set p_lobby_conf = World.CreateInstance("portal to conference room", "Portal", lobby)
+
+	Dim p_conf_lobby
+	set p_conf_lobby = World.CreateInstance("portal to lobby", "Portal", conf1)
+
+	' Set portal properties and destinations (has to be done after both portals are created)
+	p_lobby_conf.Description = "Takes you to the conference room."
+	p_lobby_conf.Destinations.Add p_conf_lobby
+
+	p_conf_lobby.Description = "Takes you to the lobby."
+	p_conf_lobby.Destinations.Add p_lobby_conf
+
+	Select Case StyleName
+		case "Classic"
+			p_Entry.InitializeGraphics "", -7.38, 1.83, -0.1, 1.0, 0.0, 0.0
+			p_Entry.EntryPoint.set -4.56,1,0.07
+			p_Entry.EntryOrientation.set 1, 0, -0.006
+			p_Entry.EntryRadius = 0.5
+			p_Entry.IsUIVisible = False
+
+			p_lobby_conf.InitializeGraphics "SDK\Library\Models\_OfficeCl\portalcl.x", -7.38, 1.38, -0.1, 1.0, 0.0, 0.0
+			p_lobby_conf.EntryPoint.set -4.56,1,0.072
+			p_lobby_conf.EntryOrientation.set 1, 0, -0.006
+			p_lobby_conf.RenderQuality=3
+			p_lobby_conf.EntryRadius = 0.5
+
+			p_conf_lobby.InitializeGraphics "SDK\Library\Models\_OfficeCl\portalcl.x", -7.0, 1.38, 0.0, 1.0, 0.0, 0.0
+			p_conf_lobby.EntryPoint.set -4.5,1,-0.625
+			p_conf_lobby.EntryOrientation.set  0.965, 0.0, 0.263
+			p_conf_lobby.RenderQuality=3
+			p_conf_lobby.EntryRadius = 0.5
+
+		case "High Tech"
+			p_Entry.InitializeGraphics "", -6.890, 1.25, 1.8, 1.0, 0.0, 0.0
+			p_Entry.EntryPoint.set -4.73, .9, 2.4
+			p_Entry.EntryOrientation.set 0.982, 0.0, -0.186
+			p_Entry.EntryRadius = 0.5
+			p_Entry.IsUIVisible = False
+
+			p_lobby_conf.InitializeGraphics "SDK\Library\Models\_OfficeHT\portalht.x", -6.890, 1.25, 1.8, 1.0, 0.0, 0.0
+			p_lobby_conf.EntryPoint.set -4.73, .9, 2.4
+			p_lobby_conf.EntryOrientation.set 0.982, 0.0, -0.186
+			p_lobby_conf.EntryRadius = 0.5
+
+			p_conf_lobby.InitializeGraphics "SDK\Library\Models\_OfficeHT\portalht.x", -7.3, 01.22, 0.0, 1.0, 0.0, 0.0
+			p_conf_lobby.EntryPoint.set -4.992,0.9,-0.066
+			p_conf_lobby.EntryOrientation.set  1,0,0.198
+			p_conf_lobby.EntryRadius = 0.5
+
+	End Select
+	
+	'Create boundaries around each portal
+	p_lobby_conf.IsSolid = True
+	p_conf_lobby.IsSolid = True
+	
+end sub
+
+sub document_onKeyPress
+	select case window.event.keycode
+	case 27
+		top.frames(1).OnCancel
+	case 13
+		top.frames(1).OnFinish
+	case Else
+	end select
+end sub
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+</script>
+</head>
+<body>
+	<div class=vLabel style=top:0;left:10;>Styles:</div>
+	<select id=lstStyle class=vInput style=left:10;top:15;width:120; size=7 onchange=choseName></select>
+	<div class=vLabel style=top:0;left:150;>Preview:</div>
+	<img datafld=previewGIF datasrc="#elements" id=imgPreview style=position:absolute;left:150;top:15;></img>
+	<div id=lblDesc class=vInput datafld="description" datasrc="#elements" style=left:10;top:130;width:400;>
+</body>
+</html>

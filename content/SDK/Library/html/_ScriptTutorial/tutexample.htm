@@ -1,0 +1,168 @@
+<html>
+<head>
+<title>Ant Control Center</title>
+  <script language="JavaScript">
+<!--
+function MM_preloadImages() { //v1.2
+  if (document.images) {
+    var imgFiles = MM_preloadImages.arguments;
+    var preloadArray = new Array();
+    for (var i=0; i<imgFiles.length; i++) {
+      preloadArray[i] = new Image;
+      preloadArray[i].src = imgFiles[i];
+    }
+  }
+}
+
+function MM_swapImage() { //v1.2
+  var i,j=0,objStr,obj,swapArray=new Array,oldArray=document.MM_swapImgData;
+  for (i=0; i < (MM_swapImage.arguments.length-2); i+=3) {
+    objStr = MM_swapImage.arguments[(navigator.appName == 'Netscape')?i:i+1];
+    if ((objStr.indexOf('document.layers[')==0 && document.layers==null) ||
+        (objStr.indexOf('document.all[')   ==0 && document.all   ==null))
+      objStr = 'document'+objStr.substring(objStr.lastIndexOf('.'),objStr.length);
+    obj = eval(objStr);
+    if (obj != null) {
+      swapArray[j++] = obj;
+      swapArray[j++] = (oldArray==null || oldArray[j-1]!=obj)?obj.src:oldArray[j];
+      obj.src = MM_swapImage.arguments[i+2];
+  } }
+  document.MM_swapImgData = swapArray; //used for restore
+}
+//-->
+</script>
+  <script language="JavaScript">
+<!--
+function MM_swapImgRestore() { //v1.2
+  if (document.MM_swapImgData != null)
+    for (var i=0; i<(document.MM_swapImgData.length-1); i+=2)
+      document.MM_swapImgData[i].src = document.MM_swapImgData[i+1];
+}
+//-->
+</script>
+</head>
+<body bgcolor=#660000 text="#CC9900" link="#CC6600" vlink="#669900" alink="#CC6600">
+<OBJECT ID="Helper" CLASSID="clsid:7E3832CF-4F4E-11D0-89AB-00A0C9054129">
+</OBJECT>
+<script LANGUAGE="VBSCRIPT">
+dim our_world
+				' the variable to hold the world should be declared out here
+				' so it is global to all the subs in the file.
+				' Now, once this variable  is initialized
+				' (when the window loads--- see 'window_onload'),
+				' all our subs can get to it to do things in the world...
+				' note that to have any web page talk to the world it always needs
+				' to have the helper object declared above in the '<OBJECT>' tag
+
+sub Ant_Mover (Instruction_Number)
+	dim ant
+	set ant = our_world.user.container.findwithin("lesson_5")
+	select case Instruction_Number
+		case 1:  'positive x
+			ant.direction.set .99,0,.01
+			ant.position.x = ant.position.x + 10
+		case 2:   'negative x
+			ant.direction.set -.99,0,.01
+			ant.position.x = ant.position.x - 10
+		case 3:   'positive z
+			ant.direction.set .01,0,.99
+			ant.position.z = ant.position.z + 10
+		case 4:    'negative z
+			ant.direction.set .01,0,-.99
+			ant.position.z = ant.position.z - 10
+	end select
+end sub
+
+
+sub Window_OnLoad
+	set our_world = helper.client.world
+			'this line gets the world via the helper, so we can talk to it as we
+			'would from any other script.
+	our_world.fireUIEvent helper.client.world.user, "EventRequest", window
+			'this line tells the world that a page is ready to get messages from it.
+			'these messages will get passed into the 'Handle' subroutines below.
+end sub
+
+Sub window_onunload
+    our_world.fireUIEvent helper.client.world.user, "EventRequestCancel", window
+End sub
+
+'here are the methods that respond to things the world is doing-
+'tracing, reporting, or doing a custom 
+'UImethod (the most common thing to handle)
+'The subroutine names need to be named exactly as they appear here
+'(although the arguments inside the parentheses can be called anything you like)
+'you don't have to put any of them here, they are all optional and will work if
+'placed in the script tag for this web page (as long as the 'event request'
+' is sent in the window_onLoad subroutine, as above...)
+
+Sub HandleTrace(theStr)
+	'anything that is said in the world.trace command from any script will
+	'execute this subroutine in the web page and the string that was traced will
+	'show up in the variable 'theStr'
+end sub
+
+Sub HandleReport(theStr, reportTypeNum)
+	'anything that is said in the world.report command from any script will
+	'execute this subroutine in the web page and the string and report type will
+	'be passed into the variables 'theStr' and 'reportTypeNum'
+	
+end sub
+
+
+sub handleUIEvent (byVal who, what, byVal args)
+    	'any time a world.fireUIEvent is called in a script, this subroutine will
+    	'be executed in the web page. we only want it to look for our special events,
+	'so we put in an if statement to filter other stuff.
+	'the variable who is the v-worlds object that executed the uievent
+	'the variable what is the name of the event (a string we passed)
+	'the variable args is a vbscript array for other information you
+	'might want to send along
+
+	if what = "ant_control_showposition" then
+		dim crlf
+		crlf = chr(13) + chr(10) ' this is to make return characters be 
+					  ' added into the form box to have reports appear right...
+
+		MyForm.MytextArea.Value = MyForm.MytextArea.Value + _
+			crlf + who.name + " reporting in from coords " + _
+			cstr(cint(who.position.x))+","+ _
+			cstr(cint(who.position.y))+","+ _
+			cstr(cint(who.position.z))+"..." 
+ 	end if
+end sub
+
+</script>
+<!-- ARROW BUTTONS --> 
+<div id="body" style="position:absolute; left:14px; top:5px; width:295px; height:217px; z-index:1"> 
+  <div id="leftarrow" style="position:absolute; left:110px; top:124px; width:25px; height:24px; z-index:5" onClick=Ant_Mover(1)> 
+    <img src="Images/left_arrow.gif" width="25" height="25" name="leftarrow" onMouseOver="MM_swapImage('document.layers[\'body\'].document.layers[\'leftarrow\'].document.leftarrow','document.leftarrow','left_arrow_hi.gif')" onMouseOut="MM_swapImgRestore()"></div>
+  <div id="uparrow" style="position:absolute; left:135px; top:99px; width:23px; height:25px; z-index:4" onClick=Ant_Mover(4)> 
+    <img src="Images/up_arrow.gif" width="25" height="25" name="uparrow" onMouseOver="MM_swapImage('document.layers[\'body\'].document.layers[\'uparrow\'].document.uparrow','document.uparrow','up_arrow_hi.gif')" onMouseOut="MM_swapImgRestore()"></div>
+  <div id="rightarrow" style="position:absolute; left:160px; top:124px; width:24px; height:24px; z-index:3" onClick=Ant_Mover(2)> 
+    <img src="Images/right_arrow.gif" width="25" height="25" name="rightarrow" onMouseOver="MM_swapImage('document.layers[\'body\'].document.layers[\'rightarrow\'].document.rightarrow','document.rightarrow','right_arrow_hi.gif')" onMouseOut="MM_swapImgRestore()"></div>
+  <div id="downarrow" style="position:absolute; left:135px; top:149px; width:24px; height:25px; z-index:2" onClick=Ant_Mover(3)> 
+    <img src="Images/down_arrow.gif" width="25" height="25" name="downarrow" onMouseOver="MM_swapImage('document.layers[\'body\'].document.layers[\'downarrow\'].document.downarrow','document.downarrow','down_arrow_hi.gif')" onMouseOut="MM_swapImgRestore()"></div>
+  <div id="ant" style="position:absolute; left:135px; top:124px; width:25px; height:27px; z-index:1">
+  	<img src="Images/ant.gif" width="25" height="25"></div>
+
+<!-- BODY COPY -->
+  <p align="center"><font face="Verdana, Arial, Helvetica, sans-serif" size="3"><b>This 
+    is the ant control center. </b></font></p>
+	
+  <p align="center"><font face="Courier New, Courier, mono" size="2">Click on 
+    these buttons to tell the ant what to do. </font></p>
+  <p>&nbsp;</p>
+  <p>&nbsp;</p>
+  <p>&nbsp;</p>
+  <p align="center"><font face="Courier New, Courier, mono" size="2">W</font><font face="Courier New, Courier, mono" size="2">hen 
+    the ant is finished it will tell you. </font></p>
+  </div>
+  
+  <!-- TEXT/MESSAGE BOX -->
+  <div id="message" style="position:absolute; left:8px; top:255px; width:295px; height:107px; z-index:2"> 
+		<form name="MyForm" method="POST" action="">
+		<textarea name="MytextArea" rows=4 cols=54 style=font-family:Verdana;font-size:9;text-indent:4;vertical-align:middle;padding-left:5;></textarea></form>
+	</div>
+</body>
+</html>

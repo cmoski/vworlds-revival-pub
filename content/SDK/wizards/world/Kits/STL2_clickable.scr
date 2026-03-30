@@ -1,0 +1,52 @@
+option explicit
+
+sub make_lesson_2 (lesson_2_graphics)
+
+	set lesson_2_graphics = world.createInstance("lesson_2","artifact")
+	lesson_2_graphics.initializegraphics "" , 10 , -200 , 10 , 0,0,1
+	world.global.addproperty "lesson_2" , lesson_2_graphics
+	 lesson_2_graphics.moveinto home
+	lesson_2_graphics.IsNoticeable = true
+	lesson_2_graphics.description = "a scripting tutorial object"
+	
+	dim lesson_2_box
+	set lesson_2_box = world.createInstance("clickable_box","artifact")
+	lesson_2_box.initializegraphics "SDK\library\models\_ScriptTutorial\box01.3DS" , 0 , 0 , 0 , 0,0,1
+ 	dim vec
+	 set vec = world.createvector(2,2,2)
+	 lesson_2_box.scale = vec
+	lesson_2_box.moveinto lesson_2_graphics
+	lesson_2_box.createandaddmethod World.METHOD_CLIENT, Lesson_2_Module,  "click" , "OnLButtonUp" 
+	lesson_2_box.createandaddmethod World.METHOD_CLIENT, Lesson_2_Module,  "do_Surprise"
+	lesson_2_box.createandaddmethod World.METHOD_CLIENT, Lesson_2_Module,  "stop_Surprise"
+	lesson_2_box.createandaddmethod World.METHOD_CLIENT, Lesson_Manager_Module,  "end_box" ,  "end" 
+	lesson_2_box.IsNoticeable = true
+	
+	dim revolver
+	 set   revolver= world.createinstance ("revolver" ,"artifact")
+	 revolver.initializegraphics "", 0,0,0,0,0,1
+	 revolver.moveinto lesson_2_box
+	revolver.createandaddmethod World.METHOD_CLIENT, Lesson_Manager_Module, "end_revolver" , "end" 
+	revolver.IsNoticeable = true
+
+	dim rotator
+	 set  rotator= world.createinstance ("rotator" ,"artifact")
+	 rotator.initializegraphics "", 0,0,0,0,0,1
+	rotator.moveinto revolver
+	rotator.createandaddmethod World.METHOD_CLIENT, Lesson_Manager_Module, "end_rotator" ,  "end" 
+	rotator.IsNoticeable = true
+
+	dim dolphin
+	 set dolphin = world.createinstance ("dolphin" ,"artifact")
+	 dolphin.initializegraphics "SDK\library\models\_ScriptTutorial\dolphin.3ds", 0,0,0,0,0,1
+	 vec.set .014,.014,.014
+	dolphin.scale = vec
+	dolphin.moveinto rotator
+	dolphin.IsVisible = false
+	dolphin.createandaddmethod World.METHOD_CLIENT, Lesson_Manager_Module, "end_dolphin" , "end" 
+	vec.set 1,0,0
+	dolphin.rotationaxis = vec
+	dolphin.rotationrate = .05
+	dolphin.IsNoticeable = true
+
+end sub

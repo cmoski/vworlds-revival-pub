@@ -1,0 +1,7 @@
+style_name:STRING,description:STRING,previewGIF:STRING,gifInfo:STRING
+'One-room','This one-room world is a template for creating a simple world.   Objects include a ceiling, floor, four walls, and an entry point object (this moves avatars to their original spot on entering the room).  You can change the walls and add objects with the wizards, property pages, and the Object Explorer.
+','empty.gif','View of empty one-room:'
+'Two-room','This two-room world is a template for creating a simple world with two rooms connected by a portal.  Objects in each room include a ceiling, floor, four walls, an entry point (these move avatars to their original spots on entering the rooms), and a portal through which avatars gain entry to the next room.  The walls have a trim section along the ceiling to add a decorative effect. You can change the walls and add objects with the wizards, property pages, and the Object Explorer. 
+','allempty.gif','View of empty two-room:'
+'Grid Space','The grid world is a template for creating a world with your own design.  It consists of one three-dimensional room.  The grid quadrants are 10 by 10 units (one unit equals one yard) plotted along the x and z axes in a grid format. The entry-point object moves avatars to their original spot on entering the world.  You can change the room by using the wizards, property pages, and the Object Explorer. 
+','grid2.gif','View of Grid space:'

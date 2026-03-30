@@ -1,0 +1,167 @@
+<html>
+<head>
+<LINK Rel=Stylesheet href=../../../../client/shared/global.css>
+<style>
+	.note {font-family:Webdings;color:#cc6600;font-size:14pt;}
+	.task {font-family:Webdings;color:#009900;font-size:14pt;}
+	.alert {font-family:Webdings;color:#cc0000;font-size:14pt;}
+	.helplink {font-family:Verdana;color:#3300cc;cursor:hand;font-size:8pt;font-weight:bold;}
+	.scriptlink {font-family:Verdana;color:#3300cc;cursor:hand;font-size:9pt;font-weight:bold;}
+</style>
+<title>Welcome to Clickable Objects Script Tutorial!</title>
+<script language=vbs src=ComVBScript.htm></script>
+<script LANGUAGE="VBSCRIPT">
+
+dim world
+
+sub Window_OnLoad
+	window.settimeout "top.frames(""Btns"").BuildButtons(theBody.MaxSteps)", 0, "vbs"
+	window.settimeout "top.frames(""Tabs"").HighlightItem mid(window.location, instrRev(window.location, ""/"") + 1, len(window.location) - instrRev(window.location, ""/"") - 4)", 0, "vbs"
+	set world = top.goWorld
+	world.tutorial.start_lesson 1
+	world.fireUIEvent world.user, "EventRequest", window
+end sub
+
+Sub window_onunload
+  world.fireUIEvent world.user, "EventRequestCancel", window
+End sub
+
+</script>
+</head>
+<body id=theBody class=vBody CurrentStep=1 MaxSteps=4>
+	<div class=vh1 Style=position:absolute;left:0;top:10; id=heading>
+		Getting Started
+	</div>
+	<div class=vweb style=position:absolute;left:340;top:1; id=circle>=</div>
+
+
+<!-- Step 1 -->
+<div class=vh1 Style=position:absolute;left:0;top:10; id=heading>
+<a name="top">Getting Started</a>
+</div>
+
+<div id=Step1 style=position:absolute;width:99%;height:100%;left:0;top:44;visibility:visible;>
+	<div class=vweb style=position:absolute;left:340;top:-43; id=circle>=</div>
+	<nobr>
+		<div class=vstep Style=position:absolute;left:351;top:-35; id=divSteps>
+			Step 1 of 4
+		</div>
+	</nobr>
+	<span class=vhh2><font color=336666><b>Step One: Script Modules</b></font></span>
+	<div class=vtext id=body style=position:absolute;left:0;top:30;width:99%;height:100%;>
+		<p>The <span class=helplink HelpString="vworlds.chm::/UIREF/objexpl/intrface.htm" TITLE="Help">Object Explorer</span> provides a comprehensive view of all objects in a world. We can start looking at object scripting by examining the modules that contain scripts. In the <b>Object Explorer</b>, notice a long vertical listing of items in the left side of the window. The list describes the object hierarchy of this tutorial world. Each item in the list is a Virtual Worlds object that this tutorial uses. Script <span class=helplink HelpString="vworlds.chm::/Programmer's Guide/methods/Creating a Method from a Module.htm" TITLE="Help">modules</span>, listed close to the top under the heading <b>Modules</b>, are accompanied by a globe icon. These objects have no editable features in Virtual Worlds; they are markers for the text files that contain the script code. By associating subroutines inside these files with objects in the virtual world, you can give these objects interactive behavior. These script files are located in this directory (assuming you chose the defaults during installation):  <i>C:\Program Files\Microsoft Virtual Worlds\Local Content\SDK\Library\vbmodules</i>. A module contains information about how to get to the script file. All Virtual Worlds files must be referenced by valid URL paths for a Virtual Worlds client and server to access them.
+		<p>In most cases, we do not recommend that you place scripts for clients on a local machine path, because if you want to make changes, you must alter the file on every client. However, if you place your scripts on a web server, you need to change only that copy, and the changes are distributed to all clients when you right-click the module to reload it.
+		<table class=vtext cellspacing=3>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Right-click anywhere in the <b>Modules</b> list in the <b>Object 	Explorer</b>. Choose <b>New Module</b>.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>A pop-up web page will appear for you to enter information about a new module. For the name, enter <b>Lesson_1</b>. For the Module URL, enter the line below exactly (note that the line may appear broken, but is one path): <br><i>file://C:\Program Files\Microsoft Virtual Worlds\Local Content\SDK\Library\vbmodules\lesson_1_adding_methods.vbs</i><br>
+			<table class=vtext cellspacing=2>
+				<tr><td valign=top><span class=note>$</span></td>
+					<td>You can copy and paste this path line by highlighting it with the cursor, then right-clicking the selection, choosing <b>Copy</b>, then right-clicking in the <b>Enter Module URL</b> text area, and then choosing <b>Paste</b>.<br></td>
+				</tr>
+			</table>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Leave the other "execute" option unchanged and click <b>OK</b>. Your new module <b>Lesson_1</b> should appear in the <b>Object Explorer</b> now.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Open the vbmodules folder located in <i>\Local Content\SDK\Library\</I> and read the files with Notepad or another text editor. (Their contents are included in the HTML of these lessons for easier reference.) <span class=alert><font size=2>~</font></span>Be careful not to alter them!</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Look at <b>lesson_1_adding_methods.vbs</b> to see that it is, after all, just a text file with a script subroutine in it.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Go on to the next step.</td></tr>
+		</table>
+	</div>
+</div>
+
+<!-- Step 2 -->
+<div id=Step2 style=position:absolute;left:0;top:44;width:99%;display:none;>
+	<div class=vweb style=position:absolute;left:340;top:-43; id=circle>=</div>
+		<nobr>
+		<div class=vstep Style=position:absolute;left:351;top:-35; id=divSteps>
+			Step 2 of 4
+		</div>
+	</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>
+			Step Two: Object Hierarchy
+		</div>
+	<div class=vtext id=body2 style=position:absolute;left:0;top:30;width:99%;height:100%;>
+		<p>The <b>Object Explorer</b>'s vertical list also lists the room you are logged on to: it is called  <b>Tutorial Main Room</b>, and it appears in the list next to a blue cube. Below this, you can see the objects contained in the room you are logged on to; they appear in the list below the room's name, usually accompanied by small red pyramids. These items are actual graphical objects users can see and interact with inside the world. Ignore the door and the people symbols for now; they are portals to other rooms and your own avatar, respectively.
+		<table class=vtext cellspacing=3>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Try selecting different Virtual Worlds objects listed below the room by clicking them.</td></tr>
+			<tr><td valign=top><span class=note>$</span></td>
+			<td>The properties and methods of the selected object appear in the "properties" and "methods" windows in the <b>Object Explorer</b>.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Scroll through these lists to see the kinds of 	properties and 	methods the selected object possesses, but do not try to edit any of them yet.</td></tr>
+			<tr><td valign=top><span class=note>$</span></td>
+			<td>You may notice that some tutorial objects are further expandable by hitting the + button next to them. The contents of these expandable objects appear below them in the hierarchy, and are also Virtual Worlds objects.</td></tr>
+		</table>
+		<p>One object may contain many helper graphical objects within it that make complex behaviors possible; you will see examples of such compound objects in many of the lessons. Some objects contain other objects, which, in turn, contain still other objects, and so on. One benefit of nesting objects inside each other is that changing the position of the "top" or "owner" object from one location to another in a Virtual World causes all the objects inside it to move to the owner's location, yet keep their spatial relationship to each other. Each top-level object in the room usually contains all the graphical objects for the lesson inside it (with one exception), or, if only one graphical object is needed, just that top level object will suffice.
+		<p>When you select a lesson in this web page, the room uses custom <span class=helplink HelpString="vworlds.chm::/Programmer's Guide/methods/Virtual Worlds Methods.htm" TITLE="Help">methods</span> from the script module <b>Lesson_Manager</b> to take care of positioning the objects for each lesson by moving the current lesson's top level object into your view, and then putting it back out of view when you have moved on to another lesson. All the things listed inside that object move with it, which makes the tutorial "housekeeping" very easy. (You don't need to worry about these methods, as they are purely for logistical purposes, but the curious will find the file <b>lesson_manager.vbs</b> in the vbmodules folder inside the sdk library.)
+		<p><span class=task>a</span>Take a minute to look at the object hierarchies for the tutorial room objects, and then go to the next step.<br>
+	</div>
+</div>
+
+<!-- Step 3 -->
+<div id=Step3 style=position:absolute;left:0;top:44;width:99%;display:none;>
+	<nobr>
+		<div class=vstep Style=position:absolute;left:351;top:-35; id=divSteps>
+			Step 3 of 4
+		</div>
+	</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>Step Three: Methods, Modules, and Subs</div>
+	<div class=vtext id=body2 style=position:absolute;left:0;top:30;width:99%;height:100%;>
+		<table class=vtext cellspacing=3>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>First, Select the object for the first lesson, called <b>lesson_1</b> in the <b>Object Explorer</b>.  Expand its contents with the + button.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Next, select the object just below it called <b>blue_planet</b>, so that you can see its methods.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Right-click in the methods list and select <b>New...</b>.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>In the pop-up <b>New Method</b> HTML page that appears, type the exact term <span class=helplink HelpString="vworlds.chm::/API Reference/Events/OnLButtonUp.htm" TITLE="Help">OnLButtonUp</span> in the method name text area. (This is a Virtual Worlds message handler we will discuss later.)</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>The list box below that, next to the heading <b>Module</b>, should now be selectable. Use it to select the name of your module from <b>Step 1</b> (probably <b>lesson_1</b>).</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>A new heading, <b>Subroutine</b>, becomes active under the selected module. In that area, type this exact subroutine name: <b>planet_click</b>. This is the name of the script subroutine in the module.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Click the <b>OK</b> button. (You can ignore other options for now.)</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Find the methods section for the <b>blue_planet</b> object in the Object Explorer, then scroll until you find the method <b>OnLButtonUp</b> listed. Next to that, you will see the name of your lesson 1 module followed by the name of the actual script subroutine (<b>sub</b>) that runs when the <b>OnLButtonUp</b> event is handled, called <b>planet_click</b>.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>In the Virtual Worlds window, find the blue planet and click it several times to see that it responds to each click with a random speed and direction of rotational motion.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Select <b>yellow_planet</b> from inside the <b>Lesson_1</b> object in the<b> Object Explorer</b>. Right-click in its methods list to add a new method.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Enter the same information in the New Method window as you entered for <b>blue_planet</b>.</td></tr>
+			<tr><td valign=top><span class=note>$</span></td>
+			<td>When you are finished, notice that that <b>yellow_planet</b> now has the same <b>OnLButtonUp</b> method as <b>blue_planet</b>. Both share the same script module and subroutine, although they operate independently of each other. That is because a script runs individually for each object. You could add this method to any object in a virtual world. If you use the <b>planet_click </b>subroutine from your <b>lesson_1</b> module along with the method, any object can acquire the clickable behavior that the script provides.</td></tr>
+			<tr><td valign=top><span class=task>a</span></td>
+			<td>Add the <b>OnLButtonUp</b> <span class=helplink HelpString="vworlds.chm::/Programmer's Guide/methods/Virtual Worlds Methods.htm" TITLE="Help">method</span> to the <b>silver_planet</b> object and use the same <span class=helplink HelpString="vworlds.chm::/Programmer's Guide/methods/Creating a Method from a Module.htm" TITLE="Help">module</span> and sub as before, to verify that all three share the same new script method. When you are finished, move on to the next step.</td></tr>
+		</table>
+	</div>
+</div>
+
+<!-- Step 4 -->
+<div id=Step4 style=position:absolute;left:0;top:44;width:99%;display:none;>
+	<nobr>
+		<div class=vstep Style=position:absolute;left:351;top:-35; id=divSteps>
+			Step 4 of 4
+		</div>
+	</nobr>
+		<div class=vhh2 style=color:#336666;font-weight:bold;>Step Four: Managing Methods</div>
+	<div class=vtext id=body2 style=position:absolute;left:0;top:30;width:99%;height:100%;><p>Most of the methods in an object's methods list show a module prefaced by the word <b>&lt;COM&gt;</b>. These are system-level, hard-wired methods that you are unlikely to modify to make custom behaviors, although you might call them within your custom scripts to make use of their actions.
+<P><span class=note>$</span>Look closer for the methods listed that have modules that <b>do not</b> start with <b>&lt;COM&gt;</b>. Usually, they start with the word "lesson" in the files associated with this tutorial. These are custom methods that operate by scripts written for this tutorial. (Such methods are sometimes called <span class=helplink HelpString="vworlds.chm::/Programmer's Guide/Objects/Overriding Exemplar Properties and Methods.htm" TITLE="Help">
+instance</span> methods.)
+		<p><span class=alert>~</span>It is very important to remember that because <b>OnLButtonUp</b> is a generalized method that handles a standard Virtual Worlds event, its name can not be customized. You can, however, associate it with a subroutine of any name.
+		<p>Pre-defined methods that handle events are often described as built-in methods, yet there is still a lot of work to be done if you want to make use of them. In fact, if you look at many of the other objects in the Object Explorer, you will see they do not have the built-in <b>LButtonUp</b> method listed. (Neither did the planets until you added it to them in the previous step.) This is because most event-handling methods do not come defined with any coded behavior; because there are far too many of these available to each object to make this practical.
+		<p>A script subroutine within an external script file (such as <b>sub planet_click</b> inside <b>lesson_1_adding_methods.vbs</b> inside the <i>sdk/library/vbmodules</i> folder) must be associated with the method manually using the <b>Object Explorer</b>. Similarly, a predefined method, such as you might find in the <span class=helplink HelpString="vworlds.chm::/Programmer's Guide/Virtual Worlds Programmers Guide Start Page.htm" TITLE="Help">Programmer's Guide</span>, must also be typed into the <b>Object Explorer</b> by hand.
+	<P>Each new method you add in the <b>Object Explorer</b> has a module and a sub, which describe to Virtual Worlds the way this method finds a script that it has been programmed to run. The module shows Virtual Worlds where to look for the file, and the sub shows it which subroutine in the file to use. Remember that when you add custom methods to an object, Virtual Worlds always requires a script to tell the system exactly what you want the object to do; Virtual Worlds does not add the method without such a script.
+		<p>World builders and scripters will need easy access to the actual text files (such as are found in the vbmodules folder) to know the names of the subroutines in them, and associate them with a built-in Virtual Worlds method. Virtual Worlds will not retrieve the subroutine names for you, however. If the method you are adding has the same name as one of the built-in Virtual Worlds methods, such as are documented in the Programmer's Guide, this association is called <span class=helplink HelpString="vworlds.chm::/Programmer's Guide/Objects/Overriding Exemplar Properties and Methods.htm" TITLE="Help">overriding</span> the method. A method does not have to override a built-in feature; you can add a method called "dancing-fool" or whatever you like to make a custom behavior on an object and associate it with a script. To allow users the ability to use that method, though, you will usually override one of the built-in methods discussed in the <b>User Interactions</b> section of this tutorial. That method's name would then call your custom method to action.
+		<p>One text file (and one Virtual Worlds module) can hold as many script subroutines for as 	many different objects as you like. In fact, one file/module could have contained all the scripts for every lesson in this tutorial. That would have been very difficult to organize conceptually for the world builders, however, since the file is not required to describe the function of each subroutine (unless it is commented well), and it can be confusing to read through the file, which is generally script code.
+		<p><span class=task>a</span>Take a closer look at the relationship between <span class=helplink HelpString="vworlds.chm::/Programmer's Guide/methods/Virtual Worlds Methods.htm" TITLE="Help">methods</span>, VBScript  <span class=helplink HelpString="vworlds.chm::/Programmer's Guide/methods/Creating a Method from a Module.htm" TITLE="Help">modules</span> (not <b>&lt;COM&gt;</b>) and the subs they use by clicking them in the <b>Object Explorer</b>, and then you will be ready to start on the rest of the lessons.
+	</div>
+	</div>
+</div>
+</body>
+</html>

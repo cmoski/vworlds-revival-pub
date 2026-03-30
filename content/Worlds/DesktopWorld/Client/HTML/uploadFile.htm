@@ -1,0 +1,103 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//
+'//  File:			uploadFile.htm
+'//  Description:	this is a small dialog prompted by the web page editor to upload a file. 
+'//					it contains a <file> object that when submitted goes to an .asp page that will handling 
+'//					receiving the image and updating a database. 
+'////////////////////////////////////////////////////////////////////////-->
+<HTML>
+<HEAD>
+<META NAME="GENERATOR" Content="Microsoft Visual Studio 6.0">
+<TITLE>Upload an Image&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TITLE>
+<link rel=stylesheet href=../shared/global.css>
+<script language="vbscript">
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		window_onLoad
+'//  Purpose:  	sets user, imgnum and server location from the query param
+'////////////////////////////////////////////////////////////////////////
+sub window_onLoad
+	dim args, imgNum, avName, server, argCount
+	args = split(mid(document.location.search,2,255),"&")
+	imgNum = args(0)
+	avName = args(1)
+	server = args(2)
+	form1.action = server & "/Website/users/uploadFile.asp"
+	form1.children("user").value = avName
+	form1.children("imgnum").value = imgNum
+	form1.children("file").focus
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		closeWindow
+'//  Purpose:  	close the window (duh)
+'//  Called by:	this is the onClick handler for btnCancel
+'////////////////////////////////////////////////////////////////////////
+sub closeWindow
+	window.close
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		form1_onSubmit
+'//  Purpose:  	check if the image type is ok, then submit the form
+'////////////////////////////////////////////////////////////////////////
+sub form1_onSubmit
+	dim submitOk
+	submitOk = true
+
+	filename = lcase(form1.children("file").value)
+	if left(filename, 7) = "http://" or left(filename, 6) = "ftp://" then
+		msgbox "Sorry, only local files are permitted. Please choose a different file."
+		submitOk = false
+	else
+		form1.children("hidFilename").value = filename
+		if window.opener.setImage (form1.children("imgNum").value, filename) = false then
+			msgbox "Only .gif and .jpg files may be uploaded. Please choose a different file."
+			submitOk = false
+		end if
+	end if
+	
+	if submitOk then
+		form1.submit
+		'window.setTimeout "window.close", 100
+	else
+		window.event.returnValue = false
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		FileKeydown
+'//  Purpose:  	ignore the Enter key
+'//  Called by:	this is the onKeyDown handler for the file control (below)
+'////////////////////////////////////////////////////////////////////////
+sub FileKeydown
+	if window.event.keyCode = 13 then	'CR
+		window.event.returnValue=false
+	end if
+end sub
+
+</script>
+</HEAD>
+<BODY bgcolor="#FFFFFF" class=vtext>
+	<form id=form1 name=form1 enctype="multipart/form-data" method="POST"
+		action="" target=_self>
+	Click the <b>Browse</b> button to find an image file, then click <b>Ok</b> or <b>Cancel</b>.
+	<input type=hidden id=hidFileName name=hidFileName value="">
+	<input type=hidden id=formMode name=formMode value="upload">
+	<input type=hidden id=user name=user value="">
+	<input type=hidden id=imgNum name=imgNum value="">
+	<input type=file id=file name=file class=vtext onkeydown="FileKeydown"><br>
+	<input type=submit id=btnOk class=vtext value="Ok">
+	<input type=button id=btnCancel class=vtext value="Cancel" onClick=CloseWindow>
+	</form>
+</BODY>
+</HTML>

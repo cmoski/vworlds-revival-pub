@@ -1,0 +1,36 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//  File:			BBSSave.htm
+'//  Description:	To save data to the db passed from its parent file, BBS.htm.
+'//  Called by:		bbs.htm
+'////////////////////////////////////////////////////////////////////////-->
+<html>
+<head>
+
+<script language="vbscript">
+option explicit
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		window_onLoad
+'//  Purpose:	Initialize the page
+'////////////////////////////////////////////////////////////////////////
+sub Window_OnLoad
+	Form1.AuthorInvis.value = top.ClientUserPtr.Name
+	Form1.action = top.ClientWorldPtr.BBSServer & "/Website/BBS/BBSSave.asp"
+	' tell the parent page (bbs.htm) to refresh the topics list
+	parent.doRefresh
+end sub
+</script>
+</head>
+
+<body bgcolor="#FFFFFF">
+	<form id="Form1" name="Form1" method="POST">
+		<input id="Title" name="Title" value="">
+		<input id="Author" name="Author" value="">
+		<input id="AuthorInvis" name="AuthorInvis" value="">
+		<input id="Content" name="Content" value="">
+		<input id="IsTopic" name="IsTopic" value="">
+		<input id="TopicId" name="TopicId" value="">
+	</form>
+</body>
+</html>

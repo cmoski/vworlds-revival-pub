@@ -1,0 +1,677 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//
+'//  File:			vwStart.htm
+'//  Description:	Launch the VWorlds client for a user-specified world. 
+'//	 Opened by:		vwStartClient.htm
+'////////////////////////////////////////////////////////////////////////-->
+<html>
+<head>
+<title>Microsoft Virtual Worlds</title>
+<link rel=stylesheet href=../shared/global.css>
+<!-- the client control is used to get a path to VWorlds Help -->
+<object id=theclient classid=clsid:D4898803-20EF-11D0-8A96-00A0C9082583></object>
+<object id=AvatarAccessControl classid=clsid:AF0AD5CC-418B-11D1-BB2B-00C04FC2CAB1></object>
+
+<!--Include Files-->
+<script language="jscript" src="../vbs/CheckNames.js"></script>
+<script language=vbs src="../vbs/document_OnSelectStart"></script>
+<!--End Include Files-->
+
+<script language=vbs>
+
+option explicit
+
+'////////////////////////////////////////////////////////////////////////
+'//  Global constants and variables
+'////////////////////////////////////////////////////////////////////////
+public avatarName
+public oldSelectedIndex
+avatarName = ""
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		window_onLoad
+'//  Purpose:	Initialize the page
+'////////////////////////////////////////////////////////////////////////
+sub window_OnLoad
+	AvatarList.focus
+	DisableUI
+	set AvatarAccessControl.VWClient = theclient.vwclient
+	RefreshAvatarList
+	GetLastUser
+	if screen.width < 800 or screen.height < 600 then
+		msgbox "This Virtual Worlds client may not display properly at resolutions less than 800x600.", vbExclamation, "Microsoft Virtual Worlds"
+	end if
+	if AvatarList.length <= 1 then
+		MsgBox "Before using Virtual Worlds, you must create an avatar.", vbInformation, "Microsoft Virtual Worlds"
+		CreateAvatar
+	end if
+	LastWorld.value = ""
+	if isObject(AvatarAccessControl.currentUser) then
+	  if not (AvatarAccessControl.currentUser is Nothing) then
+		if isObject(AvatarAccessControl.currentUser.profile) then
+			if AvatarAccessControl.currentUser.profile.isValid("LastWorld") then
+				LastWorld.value = AvatarAccessControl.currentUser.profile.KeyValue("LastWorld")
+			end if
+		end if
+	  end if
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		window_onUnload
+'//  Purpose:	Cleanup before closing
+'////////////////////////////////////////////////////////////////////////
+sub window_OnUnload
+	on error resume next
+	set AvatarAccessControl.VWClient = Nothing
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		imgGo_OnClick
+'//  Purpose:	start the client
+'//	 Called by:	this is the onClick handler for the imgGo image tag;
+'//				for some reason making StartClient the onClick handler results in
+'//				an IE error: "object does not support this property or method".
+'////////////////////////////////////////////////////////////////////////
+sub imgGo_OnClick
+	startClient
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		startClient
+'//  Purpose:	start the client page if everything is valid
+'//  Called by:	document_onkeypress
+'//				LastWorld_KeyDown
+'//				imgGo_OnClick
+'////////////////////////////////////////////////////////////////////////
+sub startClient
+	dim curWorldname, logoffURL
+	dim clientWidth, clientHeight
+	curWorldname = trim(LastWorld.Value)
+	
+	if isAvatarSelected = false then
+		msgbox "Select an avatar nickname from the Avatar name list box.", vbInformation, "Microsoft Virtual Worlds"
+		AvatarList.focus
+	elseif (curWorldname = "") or (curWorldname =  "Pick world or type in new one") then
+		msgbox "Enter a destination.", vbInformation, "Microsoft Virtual Worlds"
+		LastWorld.Focus
+	elseif len(curWorldname) > 250 then
+		msgbox "The maximum length for a world name was exceeded. Re-enter a world name.", vbExclamation, "Microsoft Virtual Worlds"
+		LastWorld.Focus
+	elseif not (theClient.vwclient.world.validateworldname(curWorldname)) then
+		msgbox "A world name can not contain a file extension, a space, a tab, or any of the following characters:" & vbcrlf & " : ? "" < > | ! & ' ," & vbcrlf & "Enter a new world name.", vbExclamation, "Microsoft Virtual Worlds"
+		LastWorld.Focus
+	elseif instr(curWorldName, "/") = 0 and instr(curWorldName, "\") = 0 then
+		msgbox "A world name must be in the form of ServerName/WorldName.", vbExclamation, "Microsoft Virtual Worlds"
+	else
+		' start the client
+		AvatarAccessControl.currentUser.profile.KeyValue("LastWorld") = LastWorld.value
+		AvatarAccessControl.DisconnectAvatar
+		document.cookie = "sUser=" & AvatarList.value & ";path=/;expires=Fri, 1 Jan 2038 00:00:00 GMT"
+		document.cookie = "sWorld=" & curWorldname & ";path=/;expires=Fri, 1 Jan 2038 00:00:00 GMT"
+		logoffURL = "sLogoffURL=vwStartClient.htm;path=/;expires=Fri, 1 Jan 2038 00:00:00 GMT"
+		if screen.width < 800 then
+			clientWidth = screen.width
+		else
+			clientWidth = 800
+		end if
+		if screen.height < 600 then
+			clientHeight = screen.height
+		else
+			clientHeight = 600
+		end if
+		window.open "Client.htm?" & LastWorld.value & "&" & trim(AvatarList.value) & "& &" & logoffURL, "_blank", "toolbar=no,location=no,menubar=no,status=no,resizable=yes" &_
+			",width=" & clientWidth &_
+			",height=" & clientHeight &_
+			",top=" & CStr((screen.height - clientHeight) / 2) &_
+			",left=" & CStr((screen.width - clientWidth) / 2)
+		window.close
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		document_onkeypress
+'//  Purpose:	click the OK button when the user presses ENTER
+'////////////////////////////////////////////////////////////////////////
+sub document_onkeypress
+	if window.event.keycode = 13 then
+		if (window.event.srcElement.tagName <> "BUTTON") and not imgGo.disabled then startClient
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		LastWorld_KeyDown(theKey, shift)
+'//  Purpose:	click the OK button when the user presses ENTER;
+'//				this control needs its own key-pressed handler because it does not
+'//				bubble keystrokes up to the document.
+'////////////////////////////////////////////////////////////////////////
+sub LastWorld_KeyDown(theKey, shift)
+	if theKey = 13 then
+		if not imgGo.disabled then startClient
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		CreateAvatar
+'//  Purpose:	Show the create-avatar dialog
+'//  Called by:	window_onLoad
+'//				AvatarList_OnChange
+'//				AvatarList_OnClick
+'////////////////////////////////////////////////////////////////////////
+sub CreateAvatar
+	window.showModalDialog "CreateAvatar.htm", window, "dialogHeight:134px;dialogWidth:292px;help:no;status:no;"
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		deleteAvatar
+'//  Purpose:	Show the delete-avatar dialog
+'//  Called by:	OnConfirmDelete
+'//				this is also the onClick handler for btnDelete
+'////////////////////////////////////////////////////////////////////////
+sub deleteAvatar
+	window.showModalDialog "DeleteAvatar.htm", window, "dialogHeight:94px;dialogWidth:335px;help:no;status:no;"
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		OnConfirmDelete
+'//  Purpose:	Deletes the avatar from list and the local avatar file;
+'//				called from within the deleteAvatar.htm dialog
+'//  Called by:	deleteAvatar.htm:OnOK
+'////////////////////////////////////////////////////////////////////////
+sub OnConfirmDelete
+	dim iCurAvatar
+	iCurAvatar = avatarlist.selectedIndex
+	AvatarAccessControl.DeleteAvatar
+	RefreshAvatarList
+	RedrawPage ""
+	'Now, set current avatar to be the next one on the list
+	'If the deleted avatar was the last one, select the first of element of the list
+	if iCurAvatar < AvatarList.Length - 1 then
+		AvatarList.selectedIndex = iCurAvatar
+	else
+		AvatarList.selectedIndex = 0
+	end if
+	AvatarList_OnChange
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		DeleteBrokenAvatar(deadName)
+'//  Purpose:	Removes an avatar from the user's machine
+'//  Called by:	AvatarList_OnChange
+'////////////////////////////////////////////////////////////////////////
+sub DeleteBrokenAvatar(deadName)
+	dim theResult, iCurAvatar
+	iCurAvatar = avatarlist.selectedIndex
+	theResult = AvatarAccessControl.DeleteDeadAvatar(deadName)
+	if theResult = true then
+		RefreshAvatarList
+		RedrawPage ""
+		' set current avatar to be the next one on the list;
+		' if the deleted avatar was the last one on the list, select the new last one
+		if iCurAvatar < AvatarList.Length - 1 then
+			AvatarList.selectedIndex = iCurAvatar
+		else
+			AvatarList.selectedIndex = AvatarList.Length - 1
+		end if
+		AvatarList_OnChange
+	else
+		msgbox "Virtual Worlds could not delete the broken avatar.", vbCritical, "Microsoft Virtual Worlds"
+		AvatarAccessControl.DisconnectAvatar
+		DisableUI
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		RefreshAvatarList
+'//  Purpose:	Refreshes the avatar select box
+'//  Called by:	window_onLoad
+'//				OnConfirmDelete
+'//				DeleteBrokenAvatar
+'//				OnDoneCreatingAvatar
+///////////////////////////////////////////////////////////////////////
+sub RefreshAvatarList
+	dim element, avName, i
+	for i = 0 to AvatarList.length
+		AvatarList.remove(0)
+	next
+	for each avName in AvatarAccessControl.avatarList
+		set element = document.CreateElement("OPTION")
+		element.value = avName
+		element.text = avName
+		AvatarList.add element, PosInList(AvatarList, element.text)
+	next
+	' create default new user entry
+	set element = document.CreateElement("OPTION")
+	element.value = "(new avatar)"
+	element.text = "(new avatar)"
+	AvatarList.add element
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Function:	isInSelectList
+'//  Purpose:	Checks the Avatar list for the avatar name
+'//  Called by:	OnDoneCreatingAvatar
+'////////////////////////////////////////////////////////////////////////
+function isInSelectList
+	dim i
+	isInSelectList = false
+	for i = 0 to AvatarList.length - 1
+		if AvatarList.options(i).value = avatarName then
+			isInSelectList = true
+			exit for
+		end if
+	next
+end function
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		OnDoneCreatingAvatar
+'//  Purpose:	Validate the avatar name; called from within the CreateAvatar.htm dialog
+'//  Called by:	createAvatar.htm:onOk
+'////////////////////////////////////////////////////////////////////////
+function OnDoneCreatingAvatar
+	' verify the name...
+	dim bReturnVal
+	bReturnVal = true
+	if avatarName <> "" then
+		' Check to make sure length is between 3 and 12 and no spaces or &'s
+		' First case: name is OK
+		if not isInSelectList and checkLength(avatarName) and checkChars(avatarName) then
+			if AvatarAccessControl.CreateNewAvatar(avatarName, "") = true then
+				RefreshAvatarList
+				AvatarList.value = avatarName
+				avatarName = ""
+				AvatarList_OnChange
+				' now, add a key that shows this avatar has never connected
+				AvatarAccessControl.currentUser.AddDefaultKeys
+				PopulateDestinationWorldsList
+			else
+				MsgBox "Unable to create an avatar.  Try using a different avatar name.  If this error persists, check your Virtual Worlds installation.", vbExclamation, "Microsoft Virtual Worlds"
+				bReturnVal = false
+			end if
+		elseif isInSelectList then	'Avatar is already in list
+			MsgBox "This avatar nickname already exists.  Choose a different nickname.", vbInformation, "Microsoft Virtual Worlds"
+			bReturnVal = false
+		elseif not checkChars(avatarName) then	'Length OK but characters not
+			msgbox "An avatar nickname can not contain a space, a tab, or any of the following characters:" & vbcrlf & " / \ : ? "" < > | & " & vbcrlf & "Enter a new nickname.", vbExclamation, "Microsoft Virtual Worlds"
+			bReturnVal = false
+		else	'Third: Length not OK but char's fine
+			MsgBox "Avatar nicknames must be between 3 and 12 characters in length. Enter a new nickname.", vbInformation, "Microsoft Virtual Worlds"
+			bReturnVal = false
+		end if
+	else
+		DisableUI
+		AvatarList.selectedIndex = -1
+	end if
+	OnDoneCreatingAvatar = bReturnVal
+end function
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		DisableUI()
+'//  Purpose:	Turn off some clickable controls
+'//  Called by:	window_onLoad
+'//				RedrawPage
+'//				onDoneCreatingAvatar
+'//				DeleteBrokenAvatar
+'////////////////////////////////////////////////////////////////////////
+sub DisableUI()
+	LastWorld.value = ""
+	LastWorld.enabled = false  'since LastWorld is combo box control, is opposite all other controls
+	btnDelete.disabled = true
+	btnDelete.className = "bDisabled"
+	imgGo.disabled = true
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		EnableUI
+'//  Purpose:	Turn on some clickable controls and refresh the Destination list
+'//  Called by:	RedrawPage
+'////////////////////////////////////////////////////////////////////////
+sub EnableUI
+'	on error resume next
+	LastWorld.enabled = true	 ' the LastWorld combo box control has an Enabled property instead of Disabled
+	btnDelete.disabled = false
+	btnDelete.className = "bEnabled"
+	imgGo.disabled = false
+	' fill the Destination combo box with a list of worlds recently selected for the current avatar
+	PopulateDestinationWorldsList
+	LastWorld.value = AvatarAccessControl.currentUser.profile.KeyValue("LastWorld")
+	err.clear
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		RedrawPage(avatarName)
+'//  Purpose:	Enable or disable the UI based on whether the avatarName is blank
+'//  Called by:	AvatarList_OnChange
+'//				OnConfirmDelete
+'//				DeleteBrokenAvatar
+'////////////////////////////////////////////////////////////////////////
+sub RedrawPage(avatarName)
+	if avatarName <> "" then
+		EnableUI
+	else
+		DisableUI
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		PopulateDestinationWorldsList
+'//  Purpose:	Fill the Destination combo box with worlds recently selected for the current avatar
+'//  Called by:	OnDoneCreatingAvatar
+'//				EnableUI
+'////////////////////////////////////////////////////////////////////////
+sub PopulateDestinationWorldsList
+	dim theList, i
+	set theList = AvatarAccessControl.currentUser.profile.KeyValue("RecentWorlds")
+	'clear combo box of destination worlds
+	for i = 0 to LastWorld.ListCount - 1
+		LastWorld.RemoveItem(0)
+	next
+	'add the new items
+	for i = 0 to theList.Count-1
+		LastWorld.additem theList.property(i)
+	next
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		AvatarList_OnChange
+'//  Purpose:	Handle when the user selects an option in the avatar list
+'////////////////////////////////////////////////////////////////////////
+sub AvatarList_OnChange
+	dim theResult
+	'Toggle between values so onchange event is fired when new avatar is selected 2x in a row
+	if trim(AvatarList.value) = "(new avatar)" then
+		'un-focus the "(new avatar)" option so re-clicking it will trigger OnChange
+		AvatarList.selectedIndex = oldSelectedIndex
+		CreateAvatar
+	elseif AvatarList.value <> "" then
+		if AvatarAccessControl.ConnectAvatar(avatarList.value, "") = false then
+			theResult = MsgBox("The selected avatar could not be loaded. It may be defective. Delete defective avatar now?", vbYesNo + vbQuestion, "Microsoft Virtual Worlds")
+			if theResult = vbYes then
+				DeleteBrokenAvatar avatarList.value
+			else
+				AvatarAccessControl.DisconnectAvatar
+				RedrawPage ""
+			end if
+		else
+			oldSelectedIndex = AvatarList.selectedIndex
+			RedrawPage AvatarList.value
+		end if
+	else
+		AvatarAccessControl.DisconnectAvatar
+		RedrawPage AvatarList.value
+	end if
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		AvatarList_OnClick
+'//  Purpose:	Force the user to create an avatar when the avatar selection list is empty;
+'//				the selection list initially contains only "(new avatar)".
+'////////////////////////////////////////////////////////////////////////
+sub AvatarList_OnClick
+	if AvatarList.length = 1 then
+		CreateAvatar
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		isAvatarSelected
+'//  Purpose:	Check if the user has selected an avatar
+'//  Called by:	startClient
+'////////////////////////////////////////////////////////////////////////
+function isAvatarSelected
+	if trim(AvatarList.value) <> "(new avatar)" and trim(AvatarList.value) <> "" then
+		isAvatarSelected = true
+	else
+		isAvatarSelected = false
+	end if
+end function
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		OnHelp
+'//  Purpose:	Invoke VWorlds Help when the user clicks on the help button
+'//  Called by:	this is the onClick handler for the lnkHelp tag (below)
+'////////////////////////////////////////////////////////////////////////
+sub OnHelp()
+	dim helpString
+	dim global
+	set global = theclient.vwclient.world.global
+	window.event.returnValue = false
+	if Global.IsValidProperty("HelpPath") then
+		helpString = "mk:@MSITStore:" & global.HelpPath
+		helpString = helpString & "vworlds.chm::/UIRef/cliels/loginscr.htm>sdkall"
+		window.showhelp helpString
+	else
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Function:	PosInList
+'//  Purpose:	Find where a new option should be inserted in a selection list
+'//  Called by:	RefreshAvatarList
+'////////////////////////////////////////////////////////////////////////
+function PosInList(list, strNewOption)
+	dim i, strOpt
+	strOpt = lcase(strNewOption)
+	PosInList = list.length
+	for i = 0 to list.length - 1
+		if strOpt < lcase(list.options.item(i).text) then
+			PosInList = i
+			exit for
+		end if
+	next
+end function
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		document_onmouseover
+'//  Purpose:	Mouse rollover behavior
+'////////////////////////////////////////////////////////////////////////
+sub document_onmouseover
+	select case window.event.srcElement.className
+	case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	case "vHelp"
+		imgHelp.src = "../images/helpH.gif"
+	case "vGo"
+		if not window.event.srcElement.disabled then
+			imgGo.src = "../images/go1.gif"
+		else
+			imgGo.style.cursor = "default"
+		end if
+	case "vMenuStart"
+		window.event.srcElement.className = "vwMenuHighlight"
+	case else
+	end select
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		document_onmouseout
+'//  Purpose:	Mouse rollover behavior
+'////////////////////////////////////////////////////////////////////////
+sub document_onmouseout
+	select case window.event.srcElement.className
+	case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	case "vHelp"
+		imgHelp.src = "../images/help.gif"
+	case "vGo"
+		if not window.event.srcElement.disabled then
+			imgGo.src = "../images/go2.gif"
+		else
+			imgGo.style.cursor = ""
+		end if
+	case "vwMenuHighlight"
+		window.event.srcElement.className = "vMenuStart"
+	case else
+	end select
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		GetLastUser
+'//  Purpose:	Get the most recent username, if any, from the document cookie
+'//  Called by:	window_onLoad
+'////////////////////////////////////////////////////////////////////////
+Sub GetLastUser
+	dim cookie, cookieList
+	if navigator.cookieEnabled then
+		cookieList = parseCookie
+		for each cookie in cookieList
+			select case cookie(0)
+			case "sUser"
+				if IsValidCookie(cookie(1))then
+					AvatarList.value = cookie(1)
+					AvatarList_OnChange
+				end if
+			end select
+		next
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		parseCookie
+'//  Purpose:	Split the document cookie into an array
+'//  Called by:	GetLastUser
+'////////////////////////////////////////////////////////////////////////
+function parseCookie
+	on error resume next
+	dim cookie, cookieList, i, nCookies()
+	cookieList = split(document.cookie, ";")
+	redim nCookies(ubound(cookieList))
+	for i = 0 to ubound(cookieList)
+		redim nCookie(1)
+		cookie = split(cookieList(i), "=")
+		nCookie(0) = trim(cookie(0))
+		nCookie(1) = trim(cookie(1))
+		nCookies(i) = nCookie
+	next
+	parseCookie = nCookies
+end function
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		IsValidCookie
+'//  Purpose:	Make sure the document cookie is valid; a VWorlds crash can corrupt it
+'//  Called by:	GetLastUser
+'////////////////////////////////////////////////////////////////////////
+function IsValidCookie(cookie)
+	if VarType(cookie) = vbEmpty or VarType(cookie) = vbNull or VarType(cookie) = vbError then
+		IsValidCookie = false
+	else
+		IsValidCookie = true
+	end if
+end function
+
+</script>
+
+</head>
+<body style=background-color:white;>
+	<img style=position:absolute;left:0;top:0; src="../Images/start.gif">
+	<div class=vMainTitle style=left:70;top:95;>
+		Welcome to Microsoft Virtual Worlds
+	</div>
+		<div class=vH2 style=font-weight:normal;color:#529cab;left:75;top:124;>
+		Developed by the Virtual Worlds Group at Microsoft Research<br>
+		to advance the study of shared virtual environments.
+	</div>
+	<img style=position:absolute;left:55;top:167; src="../Images/startDot.gif">
+	<div class=vLabel style=left:75;top:165;font-size:10pt;>
+		Log on to an existing Virtual World.
+	</div>
+	<div class=vLabel style=left:90;top:195;>
+		Avatar name:
+	</div>
+	<select id=AvatarList class=vInput style=left:180;top:192;width:170;><option>&nbsp;</option></select>
+	<button class=bEnabled id=btnDelete onclick=deleteAvatar style=left:360;top:191;width:69;>
+		<span style=position:relative;top:-1;>Delete</span>
+	</button>
+	<div class=vLabel style=left:90;top:224;>
+		Destination:
+	</div>
+	<!-- Combo box containing Destination World -->
+	<OBJECT classid="CLSID:8BD21D30-EC42-11CE-9E0D-00AA006002F3"
+					id=LastWorld
+					style=position:absolute;height:21;width:250;left:180;top:219;
+					title="Destination Server and World">
+		<PARAM NAME="Accelerator" VALUE="0">
+		<PARAM NAME="BackColor" VALUE="2147483653">
+		<PARAM NAME="BorderColor" VALUE="2147483654">
+		<PARAM NAME="BorderStyle" VALUE="0">
+		<PARAM NAME="BoundColumn" VALUE="1">
+		<PARAM NAME="Caption" VALUE="">
+		<PARAM NAME="cColumnInfo" VALUE="0">
+		<PARAM NAME="ColumnCount" VALUE="1">
+		<PARAM NAME="DisplayStyle" VALUE="3">
+		<PARAM NAME="DropButtonStyle" VALUE="1">
+		<PARAM NAME="FontCharSet" VALUE="0">
+		<PARAM NAME="FontEffects" VALUE="1073741824">
+		<PARAM NAME="FontHeight" VALUE="165">
+		<PARAM NAME="FontName" VALUE="Verdana">
+		<PARAM NAME="FontOffset" VALUE="0">
+		<PARAM NAME="FontPitchAndFamily" VALUE="2">
+		<PARAM NAME="FontWeight" VALUE="400">
+		<PARAM NAME="ForeColor" VALUE="2147483656">
+		<PARAM NAME="GroupName" VALUE="">
+		<PARAM NAME="ListRows" VALUE="8">
+		<PARAM NAME="ListStyle" VALUE="0">
+		<PARAM NAME="ListWidth" VALUE="0">
+		<PARAM NAME="MatchEntry" VALUE="2">
+		<PARAM NAME="MaxLength" VALUE="0">
+		<PARAM NAME="MousePointer" VALUE="0">
+		<PARAM NAME="MultiSelect" VALUE="0">
+		<PARAM NAME="ParagraphAlign" VALUE="0">
+		<PARAM NAME="PasswordChar" VALUE="0">
+		<PARAM NAME="PicturePosition" VALUE="458753">
+		<PARAM NAME="ScrollBars" VALUE="0">
+		<PARAM NAME="ShowDropButtonWhen" VALUE="2">
+		<PARAM NAME="ShowListWhen" VALUE="1">
+		<PARAM NAME="Size" VALUE="5027;556">
+		<PARAM NAME="SpecialEffect" VALUE="2">
+		<PARAM NAME="TextColumn" VALUE="65535">
+		<PARAM NAME="Value" VALUE="Pick world or type in new one">
+		<PARAM NAME="VariousPropertyBits" VALUE="679495707">
+	</OBJECT>
+	<input type=image id=imgGo class=vGo src="../Images/go2.gif" style=left:440;top:217;>
+	<img id=divWebBullet style=position:absolute;left:55;top:362; src="../Images/startDot.gif">
+	<div id=divWeb class=vLabel style=left:75;top:360;font-size:10pt;>
+		Or visit the <a href="http://vworlds.research.microsoft.com" target=_default class=vMenuStart>Virtual Worlds</a> external web site.
+	</div>
+	<div id=divSignature class=vLabel style=left:75;top:395;font-size:10pt;>
+		Enjoy!<br>
+		The Microsoft Virtual Worlds team.
+	</div>
+	<a id=lnkHelp onclick=OnHelp href="">
+		<img src="../Images/help.gif" id=imgHelp class=vHelp style=top:449;>
+	</a>
+	<div id=Copyright class=vCopyTerms style=left:150;top:454;>
+		&#169;1998 Microsoft Corporation. All rights reserved.
+	</div>
+	<script language=vbs>
+		if document.body.clientHeight < 475 then
+			divWebBullet.style.top = 292
+			divWeb.style.top = 290
+			divSignature.style.top = 325
+			imgHelp.style.top = 379
+			Copyright.style.top = 383
+		end if
+	</script>
+</body>
+</html>

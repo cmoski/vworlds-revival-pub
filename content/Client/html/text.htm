@@ -1,0 +1,82 @@
+<html><head>
+<link rel=stylesheet href=../shared/global.css>
+<meta http-equiv="Expires" content="0">
+<SCRIPT LANGUAGE="VBScript">
+
+sub Initialize()
+	TextBox.Value = "Type here and press Enter to speak"
+	TextBox.Select
+	top.SetTextEntryFrame(window)
+end sub
+
+sub DoSay
+	parent.frames(1).DoSay
+end sub
+
+sub InsertChar(theKey)
+	if theKey = 8 then
+		if len(TextBox.Value) > 0 then
+			TextBox.value = left(textbox.value, len(textbox.value) - 1)
+		end if
+	else
+		dim tSel
+		set tSel = document.selection.createRange
+		if len(tSel.text) > 0 then
+			tSel.text = chr(theKey)
+		else
+			TextBox.value = TextBox.value + chr(theKey)
+		end if
+	end if
+	TextBox.focus
+end sub
+
+Sub TextBox_OnKeyUp
+	if ( window.event.KeyCode  = 13 ) then
+		DoSay
+	end if
+	if not top.GetRenderControl is Nothing then
+		if TextBox.value = "" then
+			top.window.theClient.vwclient.world.Tool("Navigate").KeyboardNavEnabled = True
+		else
+			top.window.theClient.vwclient.world.Tool("Navigate").KeyboardNavEnabled = False
+		end if
+	end if
+end sub
+
+sub TextBox_onfocus
+	if not top.GetRenderControl is Nothing then
+		if TextBox.value = "" then
+			top.window.theClient.vwclient.world.Tool("Navigate").KeyboardNavEnabled = True
+		end if
+	end if
+end sub
+
+sub TextBox_onblur
+	on error resume next
+	if not top.GetRenderControl is Nothing then
+			top.window.theClient.vwclient.world.Tool("Navigate").KeyboardNavEnabled = False
+	end if
+end sub
+
+sub window_onload
+	parent.ChildReady(window)
+	window_onresize
+end sub
+
+sub window_onresize
+	TextBox.style.width = document.body.clientWidth - 3
+end sub
+
+</SCRIPT>
+</head>
+<body class=vBody>
+	<input class=vInput maxlength=200 id=TextBox style=position:absolute;left:0;width:600;top:2;>
+</body>
+</html>
+
+
+
+
+
+
+

@@ -1,0 +1,43 @@
+'======================================
+' Desc: This file is used to attach script
+'       to the styles vwThumbnailHist, vwAvatarFriend,
+'       vwAvatarIgnore, vwAvatarOther, vwAvatarSelf,
+'       and vwItem. The routine will either display
+'       a dialog or an informational error message.
+'======================================
+<public:attach event=onclick onevent=DoClick() />
+
+<script language=vbs>
+Option Explicit
+
+
+
+'======================================
+' Name: DoClick
+' Desc: This routine is attached to the onclick
+'       event. It expects the element, to which the
+'       style is applied, to has an attribute called
+'       linkedItemID. The value of this attribute is
+'       used to retrieve an object reference for an item
+'       in the world. This in turn is used to either
+'       display one of the Profile dialogs, the More
+'       About dialog, or an error message.
+'--------------------------------------
+Sub DoClick
+	Dim intObjID, objTarget
+
+	intObjID = CInt(element.linkedItemID)
+	If intObjID <> 0 Then
+		Set objTarget = sobjWorld.ObjectByID(intObjID)
+		If objTarget Is Nothing Then
+			MsgBox "This avatar or object has left the room.", vbInformation, top.sstrAppName
+		ElseIf objTarget Is sobjUser then
+			objTarget.EditProfile
+		Else
+			objTarget.LookAt
+		End If
+	End If
+End Sub
+'======================================
+
+</script>

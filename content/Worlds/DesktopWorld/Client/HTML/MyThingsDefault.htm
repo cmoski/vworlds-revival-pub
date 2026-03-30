@@ -1,0 +1,65 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//
+'//  File:			MyThings.htm
+'//  Description:	This file displays when there is not an actual item in the 
+'//					MyThings iframe.  For my gifts and mynotes.
+'////////////////////////////////////////////////////////////////////////-->
+<HTML>
+<HEAD>
+<TITLE></TITLE>
+
+<link rel=stylesheet href=../shared/global.css>
+
+<script language="vbscript" src="../vbs/document_OnSelectStart.vbs">
+</script>
+
+<script language="vbscript">
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:  		window_Onload
+'//  Purpose:	To determine which message to display in MessageText
+'////////////////////////////////////////////////////////////////////////
+sub window_onload
+	document.all.item("groupName").innerText = parent.groupName 
+	if parent.GroupName = "My Notes" then
+		if top.intNoteCt = 0 then
+			MessageText.innerHTML = "You currently do not have any notes."
+		else
+			MessageText.innerHTML = "Click any item in the legend to view."
+		end if		
+	elseif parent.GroupName = "My Gifts" then
+		if top.intGiftCt = 0 then
+			MessageText.innerHTML = "You currently do not have any gifts."
+		else
+			MessageText.innerHTML = "Click any item in the legend to view."
+		end if
+	else 'if parent.GroupName = "My Things" then
+		MessageText.innerHTML = "This item has already been deleted.  Click any item in the legend to view."
+	end if
+end sub
+
+</script>
+
+</HEAD>
+ 
+
+<body bgcolor=#FFFFFF>
+
+<!--Start Heading Section-->
+<div id=bkgPageHeadingPatch
+	class=bkgPageHeadingPatch>
+</div>
+<div id=bkgPageHeading
+	class=bkgPageHeading
+	style="background-image:url(../images/bkgMyThings.gif);">
+</div>
+
+<span id=groupName class=PageHeading style="position:absolute; left:10;">My Things</span>
+<span class=PageHeadingRt style="position:absolute; left:10; width:expression(document.body.clientWidth-15);"></span>
+<hr class=PageHeadingHR style="position:absolute; left:10; width:expression(document.body.clientWidth-15);">
+<!--End Heading Section-->
+
+<div id=MessageText class=ParaText style="position:absolute; left:10; width:expression(document.body.clientWidth-15);" Copyable=true>
+</div>
+</BODY>
+</HTML>

@@ -1,0 +1,649 @@
+<html>
+<head>
+<title>Import Microsoft Virtual Worlds database</title>
+<link rel=stylesheet href=..\..\..\client\shared\global.css>
+<object id=theclient classid=clsid:d4898803-20ef-11d0-8a96-00a0c9082583></object>
+<object id=helper classid=clsid:7e3832cf-4f4e-11d0-89ab-00a0c9054129></object>
+<object id=scriptocx classid=clsid:0e5d5946-020f-11d1-83ab-00c04fb6fa46></object>
+<object id=fileaccesstool classid=clsid:f5b9e8d3-74c4-11d1-b344-00c04fb6a5c8></object>
+<script language=vbs>
+
+Option Explicit
+
+
+'world building stuff
+Public bUsingWizard, page, adminNickname, adminPassword, World, Client, WorldFileExtensionLength
+Public MaxPath, fMouseClicked
+
+' For the ".bak.vwc" that is added to each worldname
+WorldFileExtensionLength = 8
+MaxPath = 256
+dim bUIdead
+dim bScriptError
+
+bUIdead = false
+bScriptError = false
+
+Sub window_onload
+	' initialize globals
+	Set Client = Window.TheClient.VWClient
+	' init the file object
+	txtServer.value = "localhost"
+	txtWorldName.focus
+	if len(txtPassword1.value) > 0 then
+		txtPassword2.disabled = false
+	else
+		txtPassword2.disabled = true
+		txtPassword2.value = ""
+	end if
+
+End Sub
+
+Sub window_onunload
+	On Error Resume Next
+	Set world = Nothing
+	Client.World.Disconnect
+	Client.Disconnect
+	Set ScriptOCX.VWClient = Nothing
+	Set Client = Nothing
+	Window.theclient.VWClient = Nothing
+End Sub
+
+
+' world building stuff
+
+Function createWorldPath(worldname, serverURL)
+	createWorldPath = serverURL & "/" & worldname
+End Function
+
+'====================================
+' UpdateAvatarProfile
+' Updates the profile of the current avatar
+' by saving their most recent world
+
+Sub UpdateAvatarProfile(worldURL)
+	On Error Resume Next
+	Dim user, worldlist, foundit, i, listcount
+	' Set the "LastWorld" key to this world
+	Set user = window.theClient.vwclient.world.user
+	user.AddDefaultKeys
+	user.profile.KeyValue("LastWorld") = worldURL
+	user.profile.AddKey "CameraPreference", "*FIRSTPERSON*"
+	' also, add this to the recent world list if it isn't already there
+	Set worldlist = user.profile.KeyValue("RecentWorlds")
+	foundit = 0
+	listcount = worldlist.count
+	If worldlist.count > 0 Then
+		For i = 0 To worldlist.count - 1
+			If worldURL = worldList.property(i) Then
+				foundit = 1
+				Exit For
+			End If
+		Next
+	End If
+	If foundit = 0 Then
+		worldlist.Add worldURL
+	End If
+End Sub
+
+Sub Finish
+	Client.Disconnect
+	If Not failedtobuild Then
+		MsgBox "The world was generated.", vbInformation, "Microsoft Virtual Worlds"
+		DoCancel
+	End If
+End Sub
+
+'-------------------------------------------------------------------
+' Sub CreateBareWorld( filename )
+'
+' Sets up an initial world database with only the core exemplars installed
+'
+' Parameters:
+'	filename	File to use for world database
+'-------------------------------------------------------------------
+Function CreateBareWorld(worldname)
+	On Error Resume Next
+	'Disconnect from temp world
+	Client.World.Disconnect
+	Client.Disconnect
+	' Connect to server (with authentication)
+	Dim Admin
+	Set Admin = Client.ConnectToServer(txtServer.value, True)
+	If Not IsObject(Admin) Then
+		window.status = "Error: Unable to Create World."
+		MsgBox "Could not connect to server. Check the server name entered and confirm that a Virtual Worlds server is running on that computer.", vbExclamation, "Microsoft Virtual Worlds"
+		CreateBareWorld = False
+		client.Disconnect
+		Exit Function
+	End If
+	' Check for valid worldname
+	' Create the world
+	Err.Clear
+	Set World = Client.CreateWorld(worldname)
+	If Err.Number <> 0 Then
+		CreateBareWorld = False
+		Err.Clear
+		Exit Function
+	End If
+	If Not IsObject(World) Then
+		window.status = "Error: Unable to Create World."
+		MsgBox "World name is already in use on this server. Choose another name for your Virtual World.", vbExclamation, "Microsoft Virtual Worlds"
+		CreateBareWorld = False
+		Set Admin = Nothing
+		client.Disconnect
+		Exit Function
+	Else
+		CreateBareWorld = True
+	End If
+	' Set the Trace level for diagnostics
+	World.TraceLevel("*") = 4
+End Function
+
+'-------------------------------------------------------------------
+' Sub CreateWorld( filename )
+'
+' Sets up an initial world database
+'
+' Parameters:
+'	filename	File to use for world database
+'-------------------------------------------------------------------
+Function CreateWorld(filename)
+	Dim worldpath, adminuser
+	On Error Resume Next
+	If CreateBareWorld(filename) Then
+		' Logon as the admin avatar
+		Set adminuser = World.Connect(txtAdminName.value, txtPassword1.value)
+		If Not IsObject(adminuser) Then
+			MsgBox "Error connecting avatar to world.", vbExclamation, "Microsoft Virtual Worlds"
+			client.Disconnect
+			createWorld = False
+			Exit Function
+		End If
+		' can't do this because of security
+		'adminuser.IsAuthor = True
+		window.status = "Done connecting Admin avatar"
+		worldpath = CreateWorldPath(filename, txtServer.value)
+		UpdateAvatarProfile worldpath
+		createWorld = True
+	Else
+		client.Disconnect
+		createWorld = False
+	End If
+End Function
+
+'--------------------------------------
+' Code to handle UI events
+' Bubbles them to the script window (load.htm)
+
+Sub theclient_OnTrace(theStr)
+	On Error Resume Next
+	HandleTrace theStr
+End Sub
+
+Sub theclient_OnReport(strMsg, lType)
+	On Error Resume Next
+	HandleReport strMsg, lType
+End Sub
+
+Sub window_onbeforeunload
+	If bUsingWizard Then
+		window.event.returnValue = "You will end the VBScript file import by leaving this page."
+	End If
+End Sub
+
+Sub OnCancel
+	helper.closewindow
+End Sub
+
+Function VerifyWorldName
+	Dim verifyOK, NewWorldName, WorldPathLength, NewWorldNameLength, WorldFileExtensionLength, TotalLength
+	verifyOK = True
+	NewWorldName = txtWorldName.Value
+	' First, check that world name is valid
+	If NewWorldName = "" Then
+		verifyOK = False
+		MsgBox "Enter a name for the world.", vbInformation, "Microsoft Virtual Worlds"
+		txtWorldName.select
+		txtWorldName.focus
+	ElseIf Not world.validateworldName(NewWorldName) Then
+		verifyOK = False
+		MsgBox "A world name can not contain a file extension, a tab, or any of the following characters:" & vbCrLf & "< > % ? , . ; : | '" & vbCrLf & "Enter a new world name.", vbExclamation, "Microsoft Virtual Worlds"
+		HandleTrace "Invalid world name. Aborting import."
+		txtWorldName.select
+		txtWorldName.focus
+	Else
+		'Check that the path to worlds plus the world name plus the file extensions added by the server is not more than the max path (256)
+		' Get path to world in registry
+		If TypeName(World) <> "Nothing" Then
+			WorldPathLength = Len(World.Global.WorldPath)
+		End If
+		'Get length of name just entered
+		NewWorldNameLength = Len(NewWorldName)
+		TotalLength = WorldPathLength + NewWorldNameLength + WorldFileExtensionLength
+		If TotalLength > MaxPath Then
+			verifyOK = False
+			MsgBox "The maximum length for the world path (name and file extension) was exceeded. Re-enter a world name.", vbExclamation, "Microsoft Virtual Worlds"
+			HandleTrace "World path + world name too long. Aborting import."
+			txtWorldName.select
+			txtWorldName.focus
+		End If
+	End If
+	' Now do check for valid server name
+	If verifyOK = True Then
+		If txtServer.value = "" Then
+			verifyOK = False
+			MsgBox "Enter a Virtual Worlds server name.", vbInformation, "Microsoft Virtual Worlds"
+			txtServer.select
+			txtServer.focus
+		End If
+	End If
+	VerifyWorldName = verifyOK
+End Function
+
+Function VerifyAdminName
+	If txtAdminName.value = "" Then
+		MsgBox "Enter the administrator nickname.", vbInformation, "Microsoft Virtual Worlds"
+		txtAdminName.select
+		txtAdminName.focus
+		VerifyAdminName = False
+		Exit Function
+	End If
+	If Not CheckLength(txtAdminName.value) Then
+		MsgBox "Administrator nicknames must be between 3 and 12 characters in length. Enter a new nickname.", vbInformation, "Microsoft Virtual Worlds"
+		HandleTrace "Invalid administrator name. Aborting import."
+		txtAdminName.select
+		txtAdminName.focus
+		VerifyAdminName = False
+		Exit Function
+	End If
+	If Not CheckChars(txtAdminName.value) Then
+		MsgBox "An avatar nickname can not contain a space, a tab, or any of the following characters:" & vbCrLf & " / \ : ? "" < > | & " & vbCrLf & "Enter a new nickname.", vbExclamation, "Microsoft Virtual Worlds"
+		HandleTrace "Invalid administrator name. Aborting import."
+		txtAdminName.select
+		txtAdminName.focus
+		VerifyAdminName = False
+		Exit Function
+	End If
+	VerifyAdminName = True
+End Function
+
+Function VerifyPassword
+	If txtPassword1.value <> txtPassword2.value Then
+		MsgBox "Passwords do not match.", vbExclamation, "Microsoft Virtual Worlds"
+		HandleTrace "Passworlds do not match. Aborting import."
+		txtPassword2.value = ""
+		txtPassword1.select
+		txtPassword1.focus
+		VerifyPassword = False
+	Else
+		VerifyPassword = True
+	End If
+End Function
+
+Function VerifyScriptFilename
+	If txtScriptFile.value = "" Then
+		MsgBox "Enter a script filename.", vbInformation, "Microsoft Virtual Worlds"
+		txtScriptFile.select
+		txtScriptFile.focus
+		VerifyScriptFilename = False
+		Exit Function
+	ElseIf FileAccessTool.FileExists(txtScriptFile.value) = False Then
+		MsgBox "The specified script file can not be found. Check the filename.", vbExclamation, "Microsoft Virtual Worlds"
+		HandleTrace "Script file can not be found. Aborting import."
+		txtScriptFile.select
+		txtScriptFile.focus
+		VerifyScriptFilename = False
+		Exit Function
+	Else
+		VerifyScriptFilename = True
+	End If
+End Function
+
+Function Verify
+	If VerifyWorldName = False Then
+		Verify = False
+		Exit Function
+	End If
+	If VerifyAdminName = False Then
+		Verify = False
+		Exit Function
+	End If
+	If VerifyPassword = False Then
+		Verify = False
+		Exit Function
+	End If
+	If VerifyScriptFilename = False Then
+		Verify = False
+		Exit Function
+	End If
+	verify = True
+End Function
+
+Sub OnImport
+	ShowWatchCursor
+	window.setTimeout "OnRealImport", 100, "VBScript"
+end sub
+
+sub scriptOCX_onError(theErr, errMsg)
+	bScriptError = true
+end sub
+
+sub OnRealImport
+	On Error Resume Next
+	Dim scriptName
+	bScriptError = false
+	scriptName = txtScriptFile.value
+	fraOutput.document.body.innerHTML = ""
+	HandleTrace "Starting import..."
+	Set World = Client.ConnectLocal("~Temp")
+	If verify = False Then
+		world.Disconnect
+		Client.Disconnect
+		set window.theClient.vwclient = Nothing
+		RestoreCursor
+		Exit Sub
+	End If
+	' ok, create the world
+	If CreateWorld(txtWorldName.value) = False Then
+		HandleTrace "Failed to create world. Aborting import."
+		MsgBox "Unable to create the world. A world with the same name may already exist.", vbCritical, "Microsoft Virtual Worlds"
+	Else
+		' ok, now we have a world - apply the script to it...
+		HandleTrace "Loading Script file """ & scriptName & """"
+		Set ScriptOCX.VWClient = Client
+		scriptocx.ScriptURL = scriptName
+		if bScriptError = false then
+			scriptocx.Invoke "AutoRun"
+			scriptocx.ScriptURL = ":VBScript"
+			Set ScriptOCX.VWClient = Nothing
+			HandleTrace "Done Creating world """ & txtWorldName.value & """"
+			' Set global properties
+			' finally, clean up
+			world.Disconnect
+			world.SaveDatabase
+			Client.Disconnect
+			set window.theClient.vwclient = Nothing
+			if bScriptError = true then
+				MsgBox "Finished creating the world """ & txtWorldName.value & """.  Some errors were encountered.", vbInformation, "Microsoft Virtual Worlds"
+			else
+				MsgBox "Finished creating the world """ & txtWorldName.value & """ with no errors.", vbInformation, "Microsoft Virtual Worlds"
+			end if
+			DisableUI
+		else
+			msgbox "Error parsing specified script file.", vbCritical, "Microsoft Virtual Worlds"
+			scriptocx.ScriptURL = ":VBScript"
+			Set ScriptOCX.VWClient = Nothing
+			world.Disconnect
+			Client.Disconnect
+			' TO DO: delete the bogus world
+			set window.theClient.vwclient = Nothing
+		end if
+	End If
+	RestoreCursor
+End Sub
+
+sub DisableUI
+	DisableButton(btnImport)
+	btnCancel.children(0).innerHTML = "Close"
+	DisableButton(btnBrowse)
+	txtWorldName.disabled = true
+	txtScriptFile.disabled = true
+	txtAdminName.disabled = true
+	txtPassword1.disabled = true
+	txtPassword2.disabled = true
+	txtServer.disabled = true
+	bUIDead = true
+end sub
+
+
+Sub OnBrowse
+	Dim newFileName, oldFileName
+	oldFileName = txtScriptFile.value
+	If oldFileName = "" Then
+		oldFileName = FileAccessTool.GetWorldPath
+	End If
+	If Right(oldFileName, 1) = "\" Then
+		oldFileName = oldFileName & "*.vbs"
+	End If
+	newFileName = FileAccessTool.OpenFileDialog(oldFileName, 0, "VBScript files (*.vbs)|*.vbs|All files (*.*)|*.*||")
+	If newFileName <> "" Then
+		txtScriptFile.value = newFileName
+	End If
+	If txtWorldName.value = "" Or txtServer.value = "" Or txtAdminName.value = "" Or txtScriptFile.value = "" Then
+		DisableButton btnImport
+	Else
+		EnableButton btnImport
+	End If
+End Sub
+
+Sub OnHelp
+	window.event.returnValue = False
+	dim helppath
+	helppath = FileAccessTool.GetHelpPath
+	helppath = "mk:@MSITStore:" & helppath & "vworlds.chm::/UIRef/adminui/import.htm>sdkall"
+	window.showhelp helppath
+End Sub
+
+'---------------------------------------------
+' Subs to handle displaying messages
+
+Sub HandleTrace(theStr)
+	Dim newHTML
+	newHTML = Spanify(theStr, "vsPromptText")
+	AppendHTML newHTML, ""
+End Sub
+
+Sub HandleReport(theStr, reportType)
+	Dim msg, overStyle, newHTML, msgStyle
+	msg = ""
+	overStyle = ""
+	Select Case reportType
+		Case -1
+			msg = "*** " & theStr
+			msgStyle = "vsErrorText"
+			overStyle = "TextMessage"
+		Case 0  ' return value
+			msg = Spanify(theStr, "vsReturnText")
+		Case 1	' echo
+			msg = Spanify(">> " & theStr, "vsEchoText")
+		Case 2  ' result (if any)
+			msg = Spanify(theStr, "vsReturnText")
+		Case 3  ' prompt
+			msg = Spanify(theStr, "vsPromptText")
+		Case 5 ' whisper
+		Case Else
+			msg = "REPORT(" & CStr(reportType) & "):  " & theStr
+			msgStyle = "vsReportText"
+	End Select
+	If msg <> "" Then
+		newHTML = Spanify(msg, msgstyle)
+		AppendHTML newHTML, overStyle
+	End If
+End Sub
+
+Function Spanify(theText, theClass)
+	Dim theHTML
+	theHTML = "<" & "SPAN class="
+	theHTML = theHTML & theClass & ">"
+	theHTML = theHTML & theText & "</SPAN>"
+	Spanify = theHTML
+End Function
+
+Sub AppendHTML(newHTML, overSpanStyle)
+	If overSpanStyle <> "" Then
+		newHTML = Spanify(newHTML, overSpanStyle)
+	End If
+	newHTML = "<div><nobr>" & newHTML & "</nobr></div>"
+	fraOutput.document.body.insertAdjacentHTML "BeforeEnd", newHTML
+	fraOutput.document.body.all(fraOutput.document.body.all.length - 1).scrollIntoView False
+End Sub
+
+Sub document_onmousedown
+	If window.event.srcElement.tagName = "INPUT" Then
+		fMouseClicked = True
+	End If
+End Sub
+
+Sub document_onmouseup
+	fMouseClicked = False
+End Sub
+
+Sub TxtFocus
+	If window.event.srcElement.tagName = "INPUT" Then
+		Select Case window.event.srcElement.type
+		Case "text", "password"
+			If Not fMouseClicked Then
+				window.event.srcElement.select
+			End If
+		Case Else
+		End Select
+		if len(txtPassword1.value) > 0 then
+			txtPassword2.disabled = false
+		else
+			txtPassword2.disabled = true
+			txtPassword2.value = ""
+		end if
+	End If
+End Sub
+
+Sub document_onmouseover
+	Select Case window.event.srcElement.className
+	Case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	Case "vHelp"
+		imgHelp.src="..\..\..\client\shared\helpH.gif"
+	Case Else
+	End Select
+End Sub
+
+Sub document_onmouseout
+	Select Case window.event.srcElement.className
+	Case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	Case "vHelp"
+		imgHelp.src="..\..\..\client\shared\help.gif"
+	Case Else
+	End Select
+End Sub
+
+Sub DisableButton(btn)
+	btn.disabled = True
+	btn.className = "bDisabled"
+End Sub
+
+Sub EnableButton(btn)
+	if bUIdead = false then
+		btn.disabled = False
+		btn.className = "bEnabled"
+	else
+		DisableButton btn
+	end if
+End Sub
+
+Sub document_onkeyup
+	Select Case window.event.srcElement.id
+	Case "txtWorldName", "txtServer", "txtAdminName", "txtScriptFile"
+		If txtWorldName.value = "" Or txtServer.value = "" Or txtAdminName.value = "" Or txtScriptFile.value = "" Then
+			DisableButton btnImport
+		Else
+			EnableButton btnImport
+		End If
+	Case Else
+	End Select
+	if len(txtPassword1.value) > 0 then
+		txtPassword2.disabled = false
+	else
+		txtPassword2.disabled = true
+		txtPassword2.value = ""
+	end if
+End Sub
+
+Sub document_onkeypress
+	Select Case window.event.keyCode
+	Case 27
+		OnCancel
+	Case 13
+		If window.event.srcElement.tagName <> "BUTTON" And Not btnImport.disabled Then OnImport
+	Case Else
+	End Select
+End Sub
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+sub ShowWatchCursor
+	dim curEl
+	document.body.style.cursor = "wait"
+	for each curEl in document.body.children
+		curEl.style.cursor = "wait"
+	next
+end sub
+
+sub RestoreCursor
+	dim curEl
+	document.body.style.cursor = ""
+	for each curEl in document.body.children
+		curEl.style.cursor = ""
+	next
+end sub
+
+</script>
+<!-- Include file for common character-checking functions - also used in login.htm -->
+<script language="jscript" src="../../../Client/HTML/CheckNames.htm"></script>
+</head>
+<body>
+	<div id=lblDesc1 class=vH2 style=left:18;top:7;>
+		Enter your world name and server location
+	</div>
+	<hr color=#A7A795 style=position:absolute;top:14;left:300;width:200; size=1>
+	<div id=lblWorldName class=vLabel style=left:45;top:33;>World name:</div>
+	<input id=txtWorldName maxlength=255 class=vInput style=left:127;top:30;width:120; onfocus=TxtFocus>
+	<div id=lblServer class=vLabel style=left:45;top:56;>Server:</div>
+	<input id=txtServer class=vInput maxlength=255 style=left:127;top:53;width:250; onfocus=TxtFocus>
+
+	<div id=lblDesc2 class=vH2 style=left:18;top:109;>
+		Setup your world administrator logon
+	</div>
+	<hr color=#A7A795 style=position:absolute;top:116;left:264;width:236; size=1>
+	<div id=lblAdminName class=vLabel style=left:45;top:132;>Administrator name:</div>
+	<input id=txtAdminName maxlength=255 class=vInput style=left:171;top:129;width:120; onfocus=TxtFocus>
+	<div id=lblPassword1 class=vLabel style=left:45;top:155;>Password:</div>
+	<input id=txtPassword1 type=password class=vInput maxlength=255 style=left:171;top:152;width:120; onfocus=TxtFocus>
+	<div id=lblPassword1Opt class=vLabelSmall style=left:295;top:155;>(Optional)</div>
+	<div id=lblPassword2 class=vLabel style=left:45;top:178;>Confirm password:</div>
+	<input id=txtPassword2 type=password class=vInput maxlength=255 style=left:171;top:175;width:120; onfocus=TxtFocus>
+
+	<div id=lblDesc3 class=vH2 style=left:18;top:208;>
+		Enter the name of the exported database to import
+	</div>
+	<hr color=#A7A795 style=position:absolute;top:215;left:350;width:150; size=1>
+	<div id=lblScriptFile class=vLabel style=left:45;top:231;>Script filename:</div>
+	<input id=txtScriptFile maxlength=255 class=vInput style=left:146;top:228;width:279; onfocus=TxtFocus>
+	<button class=bEnabled id=btnBrowse onclick=OnBrowse style=left:430;top:227;width:70;>
+		<span style=position:relative;top:-1;>Browse...</span>
+	</button>
+	<div id=lblScriptEvents class=vLabel style=left:18;top:254;>Script events:</div>
+	<iframe id=fraOutput src="LSoutput.htm" style=position:absolute;height:120;width:482;left:18;top:269;></iframe>
+
+	<button class=bDisabled id=btnImport onclick=OnImport style=left:370;top:399; disabled>
+		<span style=position:relative;top:-1;>Import</span>
+	</button>
+	<button class=bEnabled id=btnCancel onclick=OnCancel style=left:440;top:399;>
+		<span style=position:relative;top:-1;>Cancel</span>
+	</button>
+	<a id=lnkHelp onclick=OnHelp href="">
+		<img src=../../../client/shared/help.gif id=imgHelp class=vHelp style=top:399;>
+	</a>
+</body>
+</html>

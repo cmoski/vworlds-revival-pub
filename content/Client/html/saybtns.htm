@@ -1,0 +1,132 @@
+
+<HTML>
+<HEAD>
+</HEAD>
+<SCRIPT LANGUAGE="VBScript">
+dim currentBtnName
+dim currentBtn
+
+sub Initialize()
+	SetDefaultBtn window.SayBtn
+end sub
+
+sub window_onload
+	parent.ChildReady(window)
+end sub
+
+sub DoMouseEnter
+	window.event.srcElement.src = window.event.srcElement.HiliteImg
+	window.status = window.event.srcElement.alt + " text in entry pane."
+end sub
+
+sub DoMouseOut
+	if currentBtnName = "" then
+		window.event.srcElement.src = window.event.srcElement.DefaultImg
+	elseif currentBtnName = window.event.srcElement.name then
+		currentBtn.src = currentBtn.StuckImg
+	else
+		window.event.srcElement.src = window.event.srcElement.DefaultImg
+	end if
+	window.status = ""
+end sub
+sub DoDblClk
+	SetDefaultBtn(window.event.srcElement)
+end sub
+
+sub SetDefaultBtn (whichBtn)
+	if currentBtnName <> whichBtn.name then
+		if currentBtnName <> "" then
+			currentBtn.src = currentBtn.DefaultImg
+		end if
+		set currentBtn = whichBtn
+		currentBtnName = currentBtn.name
+		currentBtn.src = currentBtn.StuckImg
+	end if
+end sub
+
+' now the code particular to the whisper btns..
+
+sub DoSay()
+	theText = parent.frames(0).TextBox.value
+	theText = Trim(theText)
+	if (theText <> "") and (not (isWhiteSpace(theText))) and (theText <> "Type here and press Enter to speak")  then
+		top.theclient.VWClient.World.User.Say theText
+	else
+		msgbox "Enter text to say something.", vbOKOnly + vbInformation, "Microsoft Virtual Worlds"
+	end if
+	parent.frames(0).TextBox.value = ""
+	parent.frames(0).TextBox.Focus
+end sub
+
+Sub DoEmote()
+	theText = parent.frames(0).TextBox.value
+	theText = Trim(theText)
+	if (theText <> "") and (not (isWhiteSpace(theText))) and (theText <> "Type here and press Enter to speak")  then
+		top.theclient.VWClient.World.User.SayGesture theText
+	else
+		msgbox "Enter text to emote something.", vbOKOnly + vbInformation, "Microsoft Virtual Worlds"
+	end if
+	parent.frames(0).TextBox.value = ""
+	parent.frames(0).TextBox.Focus
+end sub
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE ="JavaScript">
+//=================================
+// isWhiteSpace
+// checks for spaces in a string
+function isWhiteSpace(text)
+	{
+	var numChars = text.length;
+	var count=0;
+
+	for (i=0; i<numChars; i++)
+		{
+		// check for spaces
+		if (text.charAt(i)==" ")
+			count++
+		}
+	if (count==numChars)
+		return true;
+	else
+		return false;
+	}
+</SCRIPT>
+
+
+<BODY bgcolor="F4F4E8" leftmargin="0" topmargin="0">
+<TABLE CELLPADDING=0 CELLSPACING=0 FRAME=VOID>
+<TR>
+<TD> <IMG	BORDER=NO SRC="say.gif" NAME="SayBtn" ALT="Speak" ID=SayBtn width=24 height=24
+			OnClick=DoSay OnMouseOver="DoMouseEnter" OnMouseOut="DoMouseOut" OnDblClick="DoDblClk"
+			DefaultImg="say.gif"
+			HiliteImg="sayo.gif"
+			StuckImg="say.gif"
+			>&nbsp;
+<TD> <IMG	BORDER=NO SRC="emote.gif" NAME="ShoutBtn" ALT="Emote" width=24 height=24
+			OnClick=DoEmote OnMouseOver="DoMouseEnter" OnMouseOut="DoMouseOut" OnDblClick="DoDblClk"
+			DefaultImg="emote.gif"
+			HiliteImg="emoteo.gif"
+			StuckImg="emote.gif"
+			>
+</TR></TABLE></BODY></HTML>
+
+
+
+
+
+

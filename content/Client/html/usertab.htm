@@ -1,0 +1,185 @@
+<html>
+<head>
+<link rel=stylesheet href=../shared/global.css>
+<script language=vbs>
+
+dim currentBtnName
+dim currentBtn
+dim world, user
+
+sub Initialize()
+	currentBtnName = "UserTab"
+	set currentBtn=document.all.item("UserTab")
+	if ( user.IsAuthor = false or not world.IsSDKInstalled) then
+		Author.style.visibility = "hidden"
+	else
+		Author.style.FontSize = 9
+		InvTab.style.FontSize = 9
+		RoomTab.style.FontSize = 9
+		UserTab.style.FontSize = 9
+	end if
+	set top.UserTab = window
+	' now, the default user view...
+	usertab.src = "../shared/usersL.gif"
+	InvTab.src = "../shared/roomD.gif"
+	RoomTab.src = "../shared/thingsD.gif"
+	Author.src = "../shared/authorD.gif"
+	document.all("UserTab").click
+end sub
+
+Sub window_onload
+	on error resume next
+	set world = Nothing
+	set user = Nothing
+	set world = top.theclient.vwclient.world
+	set user = world.user
+	parent.ChildReady(window)
+	top.AddToEventList window
+End sub
+
+Sub window_onUnLoad()
+	set top.UserTab = Nothing
+    top.RemoveFromEventList window
+End sub
+
+'---------------------------------------
+' HandleUIEvent
+' Change UI if IsAuthor status changes
+Sub HandleUIEvent(byval who, what, byval args)
+	If what = "OnIsAuthorChanged" or what = "OnEnterRoom" or what = "OnEnterWorld" or what = "OnLeaveWorld" then
+		If what = "OnEnterRoom" Then
+			If (args.id <> user.Id) then
+				Exit Sub
+			End If
+		Elseif what = "OnEnterWorld" or what = "OnLeaveWorld" Then
+			If (who.id <> top.theclient.vwclient.world.user.id) Then
+				Exit Sub
+			End If
+		End If
+
+		' If author, show author tab
+		If user.IsAuthor = true and world.IsSDKInstalled then
+			Author.style.visibility = "visible"
+		'Else hide author tab, go to avatar list
+		Else
+			Author.style.visibility = "hidden"
+			SetDefaultBtn document.all("UserTab")
+			parent.frames(1).document.all("UserList").style.display = ""
+			parent.frames(1).document.all("InvList").style.display = "none"
+			parent.frames(1).document.all("RoomList").style.display = "none"
+			parent.frames(1).document.all("StudTab").style.display = "none"
+		End if
+	End if
+End sub
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+Sub HandleOnConnect(byVal newworld)
+	if not newworld is nothing then
+		set world = top.theclient.vwclient.world
+		set user = Nothing
+	end if
+end sub
+
+Sub HandleUserConnect(byVal theUser)
+	if theUser is world.User then
+		set user = theUser
+		Initialize
+	end if
+end sub
+
+sub SetDefaultBtn(whichBtn)
+	if not currentBtn is nothing then
+		currentBtn.src = currentBtn.regsrc
+	end if
+	set currentBtn = whichBtn
+	if whichBtn is nothing then
+		currentBtnName = ""
+	else
+		currentBtnName = currentBtn.name
+		currentBtn.src = currentBtn.hisrc
+	end if
+end sub
+
+sub document_OnMouseOver
+	if window.event.srcElement.tagName = "IMG" then
+		window.status = "Show " + window.event.srcElement.alt
+	end if
+end sub
+
+sub document_OnMouseout
+	if window.event.srcElement.tagName = "IMG" then
+		window.status = ""
+	end if
+end sub
+
+sub document_onclick
+	if window.event.srcElement.tagName = "IMG" then
+		on error resume next
+		if typename(currentBtn) = "Nothing" or typename(currentBtn) = "Empty" then
+			exit sub
+		end if
+		select case window.event.srcElement.ActionNum
+		case 1
+			' user view
+			parent.frames(1).document.all("InvList").style.display = "none"
+			parent.frames(1).document.all("RoomList").style.display = "none"
+			parent.frames(1).document.all("StudTab").style.display = "none"
+			parent.frames(1).lblTitle.innerText = "Avatars"
+			parent.frames(1).lblTitle.style.left = 54
+			parent.frames(1).lblTitle.style.width = 65
+			parent.frames(1).lblTitleHelp.style.display = ""
+			parent.frames(1).document.all("UserList").style.display = ""
+		case 2
+			parent.frames(1).document.all("UserList").style.display = "none"
+			parent.frames(1).document.all("RoomList").style.display = "none"
+			parent.frames(1).document.all("StudTab").style.display = "none"
+			parent.frames(1).lblTitle.innerText = "My Things"
+			parent.frames(1).lblTitle.style.left = 46
+			parent.frames(1).lblTitle.style.width = 82
+			parent.frames(1).lblTitleHelp.style.display = ""
+			parent.frames(1).document.all("InvList").style.display = ""
+		case 3
+			parent.frames(1).document.all("UserList").style.display = "none"
+			parent.frames(1).document.all("InvList").style.display = "none"
+			parent.frames(1).document.all("StudTab").style.display = "none"
+			parent.frames(1).lblTitle.innerText = "Things in Room"
+			parent.frames(1).lblTitle.style.left = 24
+			parent.frames(1).lblTitle.style.width = 125
+			parent.frames(1).lblTitleHelp.style.display = ""
+			parent.frames(1).document.all("RoomList").style.display = ""
+		case 4
+			parent.frames(1).document.all("UserList").style.display = "none"
+			parent.frames(1).document.all("InvList").style.display = "none"
+			parent.frames(1).document.all("RoomList").style.display = "none"
+			parent.frames(1).lblTitle.innerText = "Authoring Tools"
+			parent.frames(1).lblTitle.style.left = 23
+			parent.frames(1).lblTitle.style.width = 128
+			parent.frames(1).lblTitleHelp.style.display = "none"
+			parent.frames(1).document.all("StudTab").style.display = ""
+		case else
+		end  select
+		SetDefaultBtn window.event.srcElement
+	end if
+end sub
+
+</script>
+</head>
+<body style=background-color:#003366>
+	<img id=UserTab ActionNum=1 src=../shared/usersL.gif hisrc=../shared/usersL.gif regsrc=../shared/usersD.gif alt="Avatars" style=position:absolute;top:0;left:0;>
+  <img  id=InvTab ActionNum=3 src=../shared/roomD.gif hisrc=../shared/roomL.gif regsrc=../shared/roomD.gif alt="Things in Room" style=position:absolute;top:0;left:39;>
+	<img id=RoomTab ActionNum=2 src=../shared/thingsD.gif hisrc=../shared/thingsL.gif regsrc=../shared/thingsD.gif alt="My Things" style=position:absolute;top:0;left:78;>
+	<img id=Author ActionNum=4 src=../shared/authorD.gif hisrc=../shared/authorL.gif regsrc=../shared/authorD.gif alt="Authoring Tools" style=position:absolute;top:0;left:117;>
+</body>
+</html>

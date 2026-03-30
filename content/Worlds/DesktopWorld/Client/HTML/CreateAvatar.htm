@@ -1,0 +1,100 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//
+'//  File:			CreateAvatar.htm
+'//  Description:	This file helps create a new avatar before entering the world
+'//					This file is popped up in a new window.
+'////////////////////////////////////////////////////////////////////////-->
+<html>
+<head>
+<title>New Avatar</title>
+<link rel=stylesheet href=../shared/global.css>
+<!--include scripts-->
+<script language="vbscript" src="../vbs/document_OnSelectStart.vbs">
+</script>
+<!--end include scripts-->
+<script language="VBscript">
+Option Explicit
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		window_onLoad
+'//  Purpose:	Initialize textbox to last name a user entered in case
+'//				of invalid name 
+'////////////////////////////////////////////////////////////////////////
+sub window_onload
+	txtName.value = window.dialogArguments.avatarName
+	txtName.focus
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Subs:		document_onMouseOver and document_onMouseOut
+'//  Purpose:	Highlight the element or unhighlight the element
+'////////////////////////////////////////////////////////////////////////
+sub document_onMouseOver
+	if window.event.srcElement.className = "bEnabled" then
+		window.event.srcElement.className = "bHighlight"
+	end if
+end sub
+sub document_onmouseout
+	if window.event.srcElement.className = "bHighlight" then
+		window.event.srcElement.className = "bEnabled"
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		document_onKeyPress
+'//  Purpose:	To treat particular key hits as btn presses
+'////////////////////////////////////////////////////////////////////////
+sub document_onKeyPress
+	select case window.event.keycode
+	case 27
+		OnCancel
+	case 13
+		if window.event.srcElement.tagname <> "BUTTON" then OnOK
+	case else
+	end select
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		OnCancel
+'//  Purpose:	Close the window if they hit the cancel btn
+'////////////////////////////////////////////////////////////////////////
+sub OnCancel
+	window.close
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		OnOK
+'//  Purpose:	check if the avatar is done being made, otherwise sets to focus to the name box
+'////////////////////////////////////////////////////////////////////////
+sub OnOK
+	window.dialogArguments.avatarName = txtName.value
+	if window.dialogArguments.OnDoneCreatingAvatar then
+		window.close
+	else
+		txtName.focus
+		txtName.select
+	end if
+end sub
+
+</script>
+</head>
+<body bgcolor="#FFFFFF" style=background-color:white;>
+	<div class=vH2 style=left:18;top:7;>
+		Enter your new nickname.
+	</div>
+	<div class=vLabel style=left:18;top:25;color:gray;>
+		(Must be 2 to 12 characters.)
+	</div>
+	<div class=vLabel style=top:54;left:24;>
+		Nickname:
+	</div>
+	<input class=vInput style=top:51;left:97;width:145; id=txtName maxlength=12>
+	<button class=bEnabled id=btnOK onclick=OnOK style=left:112;top:80;>OK</button>
+	<button class=bEnabled id=btnCancel onclick=OnCancel style=left:182;top:80;>Cancel</button>
+</BODY>
+</HTML>

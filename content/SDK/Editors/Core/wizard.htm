@@ -1,0 +1,187 @@
+<html>
+<head>
+<link rel=stylesheet href=..\..\..\client\shared\global.css>
+<script language=vbs>
+
+Option Explicit
+
+Public ctlBottom, ctlTop, fIsDirty, oWorld, Target
+
+Set Target = Parent.Helper.Arg
+Set oWorld = Parent.Helper.Client.World
+
+' Need to keep track of initial host state so we don't try to make/unmake a host unnecessarily
+' (causes misleading script errors on server)
+Dim bInitialHostState
+bInitialHostState = False
+
+Sub window_onload
+	On Error Resume Next
+	
+	dim bIsVWorldsHost 
+	dim bIsVWorldsAvatar 
+	
+	' Initialize values
+	Set ctlTop = chkWizard
+	Set ctlBottom = chkHost
+	bIsVWorldsHost = False
+	bIsVWorldsAvatar = False
+	
+	chkWizard.checked = Target.IsWizard
+	If (Target.CheckPropertySecurity("IsWizard", oWorld.PS_WRITE) = False) Then
+		chkWizard.disabled = True
+		lblWizard.style.color = "gray"
+		Set ctlTop = chkAuthor
+	End If
+	
+	chkAuthor.checked = Target.IsAuthor
+	If (Target.CheckPropertySecurity("IsAuthor", oWorld.PS_WRITE) = False) Then
+		chkAuthor.disabled = True
+		lblAuthor.style.color = "gray"
+		Set ctlTop = chkHost
+	End If
+	
+	If (Target.Exemplar.Name = "Host_Exemplar") Then
+		bIsVWorldsHost = True
+		bInitialHostState = True
+	End If 
+	' Can only change host status for avatars or hosts
+	If (Target.Exemplar.Name = "Avatar_Exemplar") or (Target.Exemplar.Name = "Host_Exemplar") Then
+		bIsVWorldsAvatar = True
+	End If
+		
+	chkHost.checked = bIsVWorldsHost
+	If (not bIsVWorldsAvatar) Then
+		chkHost.disabled = True
+		lblHost.style.color = "gray"
+	End If
+	
+	InitFocus
+	fIsDirty = False
+End Sub
+
+Sub InitFocus
+	If parent.fraTabs.fMouseClicked Then
+		ctlTop.focus
+		parent.fraTabs.fMouseClicked = False
+	End If
+End Sub
+
+Sub Reset
+	window_onload
+End Sub
+
+Sub Apply
+	If (Target.CheckPropertySecurity("IsWizard", oWorld.PS_WRITE)= True) Then
+		Target.IsWizard = chkWizard.checked
+	End If
+	
+	If (Target.CheckPropertySecurity("IsWizard", oWorld.PS_WRITE)= True) Then
+		Target.IsAuthor = chkAuthor.checked
+	End If
+	
+	' Check if host state has changed. If is has, do make/unmake as appropriate
+	If chkHost.checked <> bInitialHostState Then
+		If chkHost.checked Then
+			oWorld.Global.MakeHost(Target)
+			bInitialHostState = True
+		Else
+			oWorld.Global.UnMakeHost(Target)
+			bInitialHostState = False
+		End If
+	End if
+	
+	fIsDirty = False
+End Sub
+
+Sub window_onunload
+End Sub
+
+Function GetHelpURL
+	GetHelpURL = "vworlds.chm::/uiref/proppage/wizard.htm>sdkall"
+End Function
+
+Function GetHelpTopic
+	GetHelpTopic = "Host"
+End Function
+
+Function verify
+	verify = True
+End Function
+
+Sub document_onkeypress
+	Select Case window.event.keyCode
+	Case 27
+		parent.btnCancel.click
+	Case 13
+		parent.btnOK.click
+	Case 9
+		window.event.returnValue = False
+		Select Case window.event.srcElement.id
+		Case "chkWizard"
+			If window.event.shiftKey Then
+				parent.Tabs.ctlBottom.focus
+			Else
+				chkAuthor.focus
+			End If
+		Case "chkAuthor"
+			If window.event.shiftKey Then
+				chkWizard.focus
+			Else
+				chkHost.focus
+			End If
+		Case "chkHost"
+			If window.event.shiftKey Then
+				If Not chkAuthor.disabled Then
+					chkAuthor.focus
+				Else
+					parent.Tabs.ctlBottom.focus
+				End If
+			Else
+				parent.ctlTop.focus
+			End If
+		Case Else
+			ctlTop.focus
+		End Select
+	Case Else
+	End Select
+End Sub
+
+Sub document_onclick
+	If window.event.srcElement.tagName = "INPUT" Then
+		If Not fIsDirty Then
+			parent.PageDirty
+			fIsDirty = True
+		End If
+	End If
+End Sub
+
+</script>
+</head>
+<body>
+	<div id=lblDesc class=vLabel style=left:13;top:10;>
+		Change <script language=vbs>document.write target.name</script>'s privileges.
+	</div>
+	<div id=lblThisAv class=vLabel style=left:13;top:40;>This avatar:</div>
+	<input type=checkbox id=chkWizard style=position:absolute;left:91;top:37;>
+	<div style=position:absolute;left:115;top:42;>
+		<label id=lblWizard class=vInputLbl for=chkWizard>
+			&nbsp;Is a Wizard (Can access any object in&nbsp;<br>
+			&nbsp;the world).&nbsp;
+		</label>
+	</div>
+	<input type=checkbox id=chkAuthor style=position:absolute;left:91;top:71;>
+	<div style=position:absolute;left:115;top:76;>
+		<label id=lblAuthor class=vInputLbl for=chkAuthor>
+			&nbsp;Is an Author (Can use tools to create,&nbsp;<br>
+			&nbsp;modify, or delete their own objects).&nbsp;
+		</label>
+	</div>
+	<input type=checkbox id=chkHost style=position:absolute;left:91;top:105;>
+	<div style=position:absolute;left:115;top:110;>
+		<label id=lblHost class=vInputLbl for=chkHost>
+			&nbsp;Is a Host (Can log off other avatars).&nbsp;
+		</label>
+	</div>
+</body>
+</html>

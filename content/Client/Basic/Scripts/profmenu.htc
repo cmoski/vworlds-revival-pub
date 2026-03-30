@@ -1,0 +1,65 @@
+'======================================
+' Desc: This file is used to attached
+'       to the style vvProfMenu. The routines are
+'       designed for the menu items in the Profile dialogs.
+'       The three routines affect the menu items during
+'       mouse rollovers and clicks.
+'======================================
+<public:attach event=onmouseover onevent=DoMouseOver() />
+<public:attach event=onmouseout onevent=DoMouseOut() />
+<public:attach event=onclick onevent=DoClick() />
+
+<script language=vbs>
+Option Explicit
+
+
+
+'======================================
+' Name: DoMouseOver
+' Desc: This routine is attached to the onmouseover
+'       event. It underlines the text of the element,
+'       to which the style is applied.
+'--------------------------------------
+Sub DoMouseOver
+	If element.style.backgroundColor <> "#9c9b8b" Then
+		element.style.textDecoration = "underline"
+	End If
+End Sub
+'======================================
+
+
+
+'======================================
+' Name: DoMouseOut
+' Desc: This routine is attached to the onmouseout
+'       event. It removes the underline from the text
+'       of the element,to which the style is applied.
+'--------------------------------------
+Sub DoMouseOut
+	If element.style.backgroundColor <> "#9c9b8b" Then
+		element.style.textDecoration = ""
+	End If
+End Sub
+'======================================
+
+
+
+'======================================
+' Name: DoClick
+' Desc: This routine is attached to the onclick
+'       event. It expects a routine, called SetHighlight,
+'       to be included in the script associated with the
+'       page that contains the element, to which the
+'       style is applied. It calls SetHighlight if the
+'       menu item is not currently selected, determined by
+'       the background color, and passes a reference of
+'       the element that was clicked.
+'--------------------------------------
+Sub DoClick
+	If element.style.backgroundColor <> "#9c9b8b" Then
+		SetHighlight(element)
+	End If
+End sub
+'======================================
+
+</script>

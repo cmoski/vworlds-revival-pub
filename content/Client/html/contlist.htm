@@ -1,0 +1,455 @@
+<html>
+<head>
+<link rel=stylesheet href=..\shared\global.css>
+<STYLE ID=SpeakingStyles>
+.submenuStyle {
+	position: relative;
+	left: -30;
+	list-style-type: none;
+	line-height: 10pt;
+	font-size: 8pt;
+	cursor: default;
+	margin-top: 0;
+	padding-top: 0;
+	margin-bottom: 0;
+	padding-bottom: 0;
+	font-weight: normal;
+}
+.ThumbNailImage {cursor: default; margin-left: 4; margin-right: 4; border: 0; width: 16; height: 16}
+</STYLE>
+<script language=vbs>
+
+sub HandleUIEvent(byval who, what, byval args)
+	select case what
+	case "OnNameChanged", "OnUIElementChanged", "OnGeometryChanged"
+		HandleNameChange who
+	case "OnWear", "OnUnWear"
+		HandleNameChange args
+	case "OnEnterInventory"
+		HandleEnterInventory args
+	case "OnLeaveInventory"
+		HandleLeaveInventory args
+	case else
+	end select
+end sub
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+sub DoItemClick
+	on error resume next
+	dim curUser, curWorld, objID
+	set curWorld = top.theclient.vwclient.world
+	set curUser = curWorld.user
+	dim targetObj
+	set targetObj = Nothing
+	objID = clng(window.event.srcElement.linkedUserID)
+	if objID > 0 then
+		set targetObj = curWorld.objectbyID(objID)
+		if targetObj is Nothing then
+			'error state, I think...
+		else
+			targetObj.lookat
+		end if
+	end if
+end sub
+
+sub document_onClick
+	on error resume next
+	dim curElement
+	set curElement = window.event.srcElement
+	curElType = typeName(curElement)
+	select case curElType
+		case "HTMLImg"
+			if curElement.name = "Thumbnail" then
+				DoItemClick
+			end if
+		case "HTMLSpanElement"
+			DoShowHideMenu curElement
+		case "HTMLLIElement"
+			curObjID = -1
+			curObjID = clng(curElement.linkedObj)
+			if curObjID > -1 then
+				DoMenuSelect curElement
+			end if
+		case else
+			if window.event.srcElement.id = "divLI" Then
+				curObjID = -1
+				curObjID = clng(window.event.srcElement.parentElement.parentElement.linkedObj)
+				if curObjID > -1 then
+					DoMenuSelect window.event.srcElement.parentElement.parentElement
+				end if
+			End If
+	end select
+end sub
+
+sub DoMenuSelect(byVal srcElement)
+	dim curWorld
+	dim curObj
+	set curWorld = top.theClient.vwClient.world
+	curObjID = clng(srcElement.linkedObj)
+	set curObj = curWorld.objectByID(curObjID)
+	if curObj is Nothing then
+		msgbox "Error:  Object could not be found.", vbExclamation, "Microsoft Virtual Worlds"
+	else
+		curMenuNum = clng(srcElement.whichMenu)
+		parentNum = clng(srcElement.whichParent)
+		dim curMenuItem
+		if parentNum > -1 then
+			set curMenuItem = curObj.GetMenuList.property(parentNum).subMenu.property(curMenuNum)
+		else
+			set curMenuItem = curObj.GetMenuList.property(curMenuNum)
+		end if
+		if curMenuItem is nothing then
+			msgBox "Error: Invalid menu item.", vbExclamation, "Microsoft Virtual Worlds"
+		else
+			curMenuItem.Execute
+		end if
+	end if
+end sub
+
+sub document_onMouseOver
+	on error resume next
+	curElType = typeName(window.event.srcElement)
+	if curElType = "HTMLSpanElement" or curElType = "HTMLLIElement" or window.event.srcElement.id = "divLI" then
+		window.event.srcElement.style.textdecoration = "underline"
+	end if
+end sub
+
+sub document_onMouseOut
+	on error resume next
+	curElType = typeName(window.event.srcElement)
+	if curElType = "HTMLSpanElement" or curElType = "HTMLLIElement" or window.event.srcElement.id = "divLI" then
+		window.event.srcElement.style.textdecoration = "none"
+	end if
+end sub
+
+function MenuHTML(byVal curMenuItem, byVal curPerson, curItmCnt, curParentCnt)
+	newHTML = ""
+	bSubMenu = false
+	if typename(curMenuItem.subMenu) <> "Nothing" then
+		bSubMenu = true
+		if curMenuItem.subMenu.count = 0 then
+			MenuHTML = newHTML
+			exit function
+		end if
+	end if
+	if curMenuItem.menuText = "" then
+		newHTML = ""
+	elseif clng(curMenuItem.flags) AND 1 then
+		newHTML = ""
+	elseif clng(curMenuItem.flags) AND 2 then
+		newHTML = ""
+	elseif clng(curMenuItem.flags) AND 4 then
+		newHTML = ""
+	elseif clng(curMenuItem.flags) AND 8 then
+		newHTML = ""
+	elseif clng(curMenuItem.flags) AND 2048 then
+		newHTML = ""
+	else
+		' update the menu
+		newHTML = newHTML & "<LI linkedObj=" & cstr(curPerson.id) & " whichMenu=" & cstr(curItmCnt) & " whichParent=" & cstr(curParentCnt) & "><nobr><div id=divLI style=position:relative;left:-5;overflow:hidden;width:115; title=""" & _
+		curMenuItem.menuText & """>" & curMenuItem.menuText & "</div></nobr></LI>"
+		' now, check to see if it is a sub-menu
+		if bSubMenu then
+			newHTML = newHTML + ObjMenuHTML(curMenuItem.subMenu, curPerson, "subMenuStyle", curItmCnt)
+		end if
+	end if
+	MenuHTML = newHTML
+end function
+
+function ObjMenuHTML(byVal curMenuList, byVal curPerson, overStyle, parentNum)
+	on error resume next
+	newHTML = ""
+	newHTML = "<UL class=""" & overStyle & """ name=""ObjMenu"">"
+	dim curMenuItem
+	curItmCnt = 0
+	for each curMenuItem in curMenuList
+		newHTML = newHTML + MenuHTML(curMenuItem, curPerson, curItmCnt, parentNum)
+		curItmCnt = curItmCnt+1
+	next
+	newHTML = newHTML + "</UL>"
+	ObjMenuHTML = newHTML
+end function
+
+sub InsertObjMenu(byVal parentEl, byVal curPerson)
+	newHTML = ObjMenuHTML(curPerson.getMenuList, curPerson, "vThingSubMenu", -1)
+	parentEl.InsertAdjacentHTML "BeforeEnd", newHTML
+end sub
+
+sub DoShowHideMenu(theObj)
+	on error resume next
+	dim curWorld, curPerson, parentEl
+	set parentEl = theObj.parentElement.parentElement.parentElement
+	set curWorld = top.theclient.vwclient.world
+	curName = parentEl.name
+	curID = clng(right(curName, len(curName)-4))
+	set curPerson = curWorld.objectbyid(curID)
+	' set the control manager
+	if top.ControlManager is Nothing and curWorld.IsValidTool("ControlManager") then
+		set top.ControlManager = curWorld.tool("ControlManager")
+	end if
+	if curPerson is nothing then
+		exit sub
+	else
+		lastSpanName = ""
+		dim lastEl
+		set lastEl = parentEl.children(parentEl.children.length-1)
+		lastSpanName = lastEl.name
+		if lastSpanName = "ObjMenu" then
+			lastEl.outerHTML = ""
+		else
+			InsertObjMenu parentEl, curPerson
+			if not top.ControlManager is Nothing then
+				top.ControlManager.select(curPerson)
+			end if
+		end if
+		If parentEl.offsetHeight > document.body.clientHeight Then
+			parentEl.scrollIntoView
+		ElseIf parentEl.offsetTop + parentEl.offsetHeight > document.body.scrollTop + document.body.clientHeight Then
+			parentEl.scrollIntoView False
+		ElseIf parentEl.offsetTop - document.body.scrollTop < 0 Then
+			parentEl.scrollIntoView
+		End If
+	end if
+end sub
+
+sub DoMouseDown(theObj)
+	dim curWorld
+	dim curPerson
+	set curWorld = top.theclient.vwclient.world
+	curName = theObj.parentElement.name
+	curID = clng(right(curName, len(curName)-4))
+	set curPerson = curWorld.objectbyid(curID)
+	if curPerson is nothing then
+		exit sub
+	else
+		top.webhelper.TrackThingMenu curPerson
+	end if
+end sub
+
+sub window_onload()
+	top.AddToEventList window
+	DoPosition
+	window.settimeout "RegenerateObjectTable", 100, "VBScript"
+end sub
+
+function Spanify(theText, theClass)
+	theHTML = "<" + "SPAN class="
+	theHTML = theHTML + theClass + ">"
+	theHTML = theHTML + theText + "</SPAN>"
+	Spanify = theHTML
+end function
+
+Sub window_onUnLoad()
+	top.RemoveFromEventList window
+end sub
+
+sub HandleNameChange(byval theItem)
+	RefreshListItem theItem
+end sub
+
+sub HandleEnterInventory(byval what)
+	dim curUser
+	set curUser = top.theClient.vwclient.world.user
+	if what.IsUIVisible = true and what.container.id = curUser.id then
+		AddUserToList(what)
+	end if
+end sub
+
+sub HandleLeaveInventory(byval what)
+	RemoveUserFromList(what)
+end sub
+
+sub HandleUserConnect(byVal theUser)
+	dim curWorld
+	set curWorld = top.theClient.vwclient.world
+	if theUser is curWorld.user then
+		RegenerateObjectTable
+	end if
+end sub
+
+sub HandleUserDisconnect(byVal theUser)
+	dim curWorld
+	set curWorld = top.theClient.vwclient.world
+	if theUser is curWorld.user then
+		ClearAvatarTable
+	end if
+end sub
+
+function ObjectImageHTML(byval theObj)
+	on error resume next
+	newHTML = ""
+	imgFile = objectImage(theObj)
+	quote = chr(34)
+	imgHTML = "<IMG class=" & quote & "ThumbNailImage" & quote & " linkedUserID = " & quote & cstr(theObj.id) & quote & " name=" & quote & "Thumbnail" & quote & " SRC=" & quote & imgFile & quote & "></IMG>"
+	newHTML = imgHTML
+	ObjectImageHTML = newHTML
+end function
+
+function IsObjLessThan(curTop, newObj)
+	if strcomp(newObj.name, curTop.name, 1) = -1 then
+		IsObjLessThan = true
+	else
+		IsObjLessThan = false
+	end if
+end function
+
+sub InsertSpanSorted(theSpan, byVal theRefObj)
+	dim curSpan
+	dim curObj
+	dim curWorld
+	set curWorld = top.theclient.vwclient.world
+	for each curSpan in document.all("AvatarList").children
+		curID = clng(right(curSpan.name, len(curSpan.name)-4))
+		set curObj = curWorld.objectbyid(curID)
+		if IsObjLessThan(curObj, theRefObj) = true then
+			curSpan.InsertAdjacentHTML "BeforeBegin", theSpan
+			exit sub
+		end if
+	next
+	' if we got here, we are at the end of the list
+	AppendHTML theSpan
+end sub
+
+sub RefreshListItem(byval whichObj)
+	on error resume next
+	dim curSpan
+	spanName = "USER" + cstr(whichObj.id)
+	set curSpan = document.all("AvatarList").children(spanName)
+	if curSpan is nothing then
+		HandleEnterInventory whichObj
+	else
+		dim curWorld
+		set curWorld = top.theClient.vwclient.world
+		curSpan.outerHTML = ""
+		if whichObj.IsUIVisible = true and not curWorld.isAvatar(whichObj) then
+			newHTML = GenerateObjectHTML(whichObj)
+			InsertSpanSorted newHTML, whichObj
+		end if
+	end if
+end sub
+
+function GenerateObjectHTML(byVal whichUser)
+	on error resume next
+	newHTML = ""
+	newHTML = Spanify(whichUser.name, "vThing")
+	newHTML = ObjectImageHTML(whichUser) + newHTML
+	newHTML = "<LI class=vThing style=list-style-type:none; id=""USER" & cstr(whichUser.id) & _
+		""" Name=""USER" & cstr(whichUser.id) & """><nobr><div style=position:relative;left:5;overflow:hidden;width:155; title=""" & _
+		whichUser.name & """>" & newHTML & "</div></nobr></LI>"
+	GenerateObjectHTML = newHTML
+end function
+
+sub AppendHTML(newHTML)
+	AvatarList.insertAdjacentHTML "BeforeEnd", newHTML
+end sub
+
+sub AddUserToList(byval whichUser)
+	on error resume next
+	newHTML = GenerateObjectHTML(whichUser)
+	InsertSpanSorted newHTML, whichUser
+end sub
+
+sub RemoveUserFromList(byval whichUser)
+	on error resume next
+	dim curSpan
+	spanName = "USER" + cstr(whichUser.id)
+	set curSpan = document.all("AvatarList").children(spanName)
+	curSpan.outerHTML = ""
+end sub
+
+sub RegenerateObjectTable()
+	ClearAvatarTable
+	on error resume next
+	dim curPerson, curUser, peerList, curWorld
+	set curWorld = top.theClient.vwclient.world
+	if typename(curWorld) = "IWorld" then
+		set curUser = curWorld.user
+		if typename(curUser) = "IThing" then
+			set peerList = curUser.contents
+			for each curPerson in peerlist
+				curName = ""
+				curName = curPerson.name
+				if curName <> "" then
+					if curPerson.IsUIVisible = true then
+						AddUserToList curPerson
+					end if
+				end if
+			next
+			window.setTimeOut "RegenerateIcons", 1000, "VBScript"
+		end if
+	end if
+end sub
+
+function objectImage(byval curObj)
+	imgFile = "iconthng.gif"
+	if curObj.isOfType("Portal") then
+		imgFile = "icondoor.gif"
+	elseif curObj.isOfType("Artifact") then
+		if curObj.IsAccessory then
+			imgFile = "iconunwr.gif"
+			if curObj.IsWorn then imgFile = "iconwear.gif"
+		end if
+	end if
+	objectImage = imgFile
+end function
+
+sub RegenerateIcons
+	on error resume next
+	' ok, walk the image DIVs and redo their icons
+	dim imgList
+	dim curImg
+	dim curObj, curObjID, curWorld
+	dim curUser
+	set curWorld = top.theclient.vwclient.world
+	set curUser = curWorld.user
+	set imgList = document.all("AvatarList").all("Thumbnail")
+	select case typename(imgList)
+		case  "HTMLImg"
+			curObjID = clng(imgList.linkedUserID)
+			set curObj = curWorld.objectByID(curObjID)
+			imgList.src = objectImage(curObj)
+		case "IHTMLElementCollection", "DispHTMLElementCollection"
+			for each curImg in imgList
+				curObjID = clng(curImg.linkedUserID)
+				set curObj = curWorld.objectByID(curObjID)
+				curImg.src = objectImage(curObj)
+			next
+	end select
+end sub
+
+sub ClearAvatarTable()
+	AvatarList.innerHTML = ""
+end sub
+
+sub window_onresize
+	DoPosition
+end sub
+
+sub DoPosition
+exit sub
+	newH = document.body.offsetHeight - 50
+	newV = document.body.offsetWidth
+	if newH > 0 then
+		document.all("AvatarList").style.height = newH
+		document.all("AvatarList").style.width = newv
+	end if
+end sub
+
+</script>
+</head>
+<body>
+	<ul id=AvatarList name=AvatarList style=overflow:auto;margin:0;padding:0;></ul>
+</body>
+</html>

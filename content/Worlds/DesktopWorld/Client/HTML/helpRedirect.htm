@@ -1,0 +1,25 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//
+'//  File:			HelpRedirect.htm
+'//  Description:	Redirects to help.htm in the parent window. 
+'//					This file makes it possible for server-side pages to open help topics.
+'//  Called by:		Server-resident content pages. 
+'//	 Notes:	Client-side pages can call top.LinkToHelp, but server-side pages cannot.
+'////////////////////////////////////////////////////////////////////////-->
+<HTML>
+<HEAD>
+<META NAME="GENERATOR" Content="Microsoft Visual Studio 6.0">
+<TITLE>Help Redirect</TITLE>
+<script language="vbscript">
+
+sub window_onLoad
+	parent.navigate "help.htm"
+end sub
+
+</script>
+</HEAD>
+<BODY bgcolor="#FFFFFF">
+
+</BODY>
+</HTML>

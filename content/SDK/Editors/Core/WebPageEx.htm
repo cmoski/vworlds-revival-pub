@@ -1,0 +1,156 @@
+<html>
+<head>
+<link rel=stylesheet href=..\..\..\client\shared\global.css>
+<script language=vbs>
+
+Option Explicit
+
+Public ctlTop, ctlBottom, fIsDirty, obj, oWorld
+dim bLoaded
+bLoaded = false
+
+Sub window_onload
+	On Error Resume Next
+	Set obj = parent.Helper.Arg
+	Set oWorld = parent.Helper.client.world
+	' Set up state values from obj (the WebPage exemplar object)
+	' Populate form with current values
+	txtHTMLURL.value = obj.HTMLURL
+	Set ctlTop = optShowURL
+	' Security checks
+	If obj.CheckPropertySecurity("HTMLURL", oWorld.PS_WRITE) = False  Then
+		txtHTMLURL.disabled = False
+		txtHTMLURL.readOnly = True
+		txtHTMLURL.style.color = "gray"
+		lblHTMLURL.style.color = "gray"
+		Set ctlTop = txtHTMLURL
+	End If
+	Set ctlBottom = txtHTMLURL
+	InitFocus
+	fIsDirty = False
+	bLoaded = true
+End Sub
+
+Sub InitFocus
+	If parent.fraTabs.fMouseClicked Then
+		if not txtHTMLURL.disabled then
+			txtHTMLURL.focus
+			txtHTMLURL.select
+		End If
+		parent.fraTabs.fMouseClicked = False
+	End If
+End Sub
+
+Sub window_onunload
+End Sub
+
+Sub Apply
+	if bLoaded = false or fIsDirty = false then
+		exit sub
+	end if
+	On Error Resume Next
+	If Not txtHTMLURL.readOnly Then
+		obj.HTMLURL = txtHTMLURL.value
+	End If
+'The lines below commented out below are associated with the commented HTML at the bottom of page.
+'	If boxIsModal.checked = true Then
+'		obj.IsModal = true
+'	Else
+'		obj.IsModal = false
+'	End if
+
+'	If Not txtWindowFeatures.readOnly Then obj.PopupWindowFeatures = txtWindowFeatures.value
+	fIsDirty = false
+End Sub
+
+Sub Reset
+	window_onload
+End Sub
+
+Function GetHelpURL
+	GetHelpURL = "vworlds.chm::/uiref/proppage/webpage.htm>sdkall"
+End Function
+
+Function verify
+	verify = True
+End Function
+
+Sub document_onkeypress
+	Select Case window.event.keyCode
+	Case 27
+		parent.btnCancel.click
+	Case 13
+		parent.btnOK.click
+	Case 9
+		window.event.returnValue = False
+		Select Case window.event.srcElement.id
+		Case "txtHTMLURL"
+			If window.event.shiftKey Then
+				parent.fraTabs.ctlBottom.focus
+
+			End If
+		Case "optShowHTML"
+			If window.event.shiftKey Then
+				parent.fraTabs.ctlBottom.focus
+			Else
+				txtShowHTML.focus
+				txtShowHTML.select
+			End If
+		Case "txtShowHTML"
+			If window.event.shiftKey Then
+				If Not optShowHTML.disabled Then
+					optShowHTML.focus
+				Else
+					txtShowURL.focus
+					txtShowURL.select
+				End If
+			Else
+				txtTop.focus
+				txtTop.select
+			End If
+		Case Else
+			If Not optShowURL.disabled Then
+				If optShowURL.checked Then
+					optShowURL.focus
+				Else
+					optShowHTML.focus
+				End If
+			Else
+				txtShowURL.focus
+				txtShowURL.select
+			End If
+		End Select
+	Case Else
+		If strComp(parent.Helper.Arg.HTMLURL, txtHTMLURL.value, vbTextCompare) <> 0 Then
+			If Not fIsDirty Then
+				parent.PageDirty
+				fIsDirty = True
+			End If
+		End If
+	End Select
+End Sub
+
+</script>
+</head>
+<body>
+	<div style=position:absolute;top:7;left:4;>
+		<label id=lblShowURL class=vInputLbl id=lblSpinOn for=txtHTMLURL>
+			&nbsp;HTML URL&nbsp;
+		</label>
+	</div>
+	<input id=txtHTMLURL class=vInput style=left:33;top:30;width:320;>
+
+<!--
+	<input id=boxIsModal type=checkbox class=vInput style=position:absolute;top:70;left:4;>
+	<label id=lblShowURL class=vInputLbl id=lblSpinOn for=boxIsModal style=position:absolute;top:70;left:20;>
+		&nbsp;Is a Modal Dialog&nbsp;
+	</label>
+
+	<label id=lblShowURL class=vInputLbl id=lblWindowFeatures for=txtWindowFeatures style=position:absolute;top:100;left:4>
+		&nbsp;Window Features&nbsp;
+	</label>
+	<input id=txtWindowFeatures class=vInput style=position:absolute;top:120;left:33;width:320;>
+-->
+
+</body>
+</html>

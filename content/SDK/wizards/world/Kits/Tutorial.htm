@@ -1,0 +1,247 @@
+<html>
+<head>
+<LINK Rel=Stylesheet href="..\..\..\..\client\shared\global.css">
+<object id="elements" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
+  <param name="DataURL" value="tutorial.csv">
+  <param name="UseHeader" value="True">
+  <param name="TextQualifier" value="'">
+</object>
+<SCRIPT LANGUAGE="VBScript" SRC="STL1_methods.scr"></SCRIPT>
+<SCRIPT LANGUAGE="VBScript" SRC="STL2_clickable.scr"></SCRIPT>
+<SCRIPT LANGUAGE="VBScript" SRC="STL3_timer.scr"></SCRIPT>
+<SCRIPT LANGUAGE="VBScript" SRC="STL4_chat.scr"></SCRIPT>
+<SCRIPT LANGUAGE="VBScript" SRC="STL5_web.scr"></SCRIPT>
+<SCRIPT LANGUAGE="VBScript" SRC="STL6_collision.scr"></SCRIPT>
+<SCRIPT LANGUAGE="VBScript" SRC="STL7_entry.scr"></SCRIPT>
+<SCRIPT LANGUAGE="VBScript" SRC="STL8_create.scr"></SCRIPT>
+<SCRIPT LANGUAGE="VBScript" SRC="STL9_animations.scr"></SCRIPT>
+<script language="VBSCRIPT">
+
+option explicit
+
+dim rs
+dim ready
+Dim world
+Dim StyleName
+Dim selected
+Dim Lesson_Manager_Module
+Dim Lesson_1_Module, Lesson_2_Module, Lesson_3_Module, Lesson_4_Module, Lesson_5_Module, Lesson_6_Module, Lesson_7_Module, Lesson_8_Module, Lesson_9_Module
+Dim Names_Module
+Dim Home
+Dim SubRoom
+Dim AnimationRoom
+
+ready = False
+
+sub window_onload
+	if top.SelectedStyleIndex <> -1 then
+		lstStyle.selectedIndex = top.SelectedStyleIndex
+	else
+		lstStyle.selectedIndex = 0
+	end if
+	choseName 'since we are selcting first element it will have same effect
+end sub
+
+sub elements_ondatasetcomplete
+	set rs = elements.recordset
+	fillin_select
+	if top.SelectedStyleIndex <> -1 then
+		lstStyle.selectedIndex = top.SelectedStyleIndex
+	end if
+end sub
+
+function verify()
+	verify = ready
+end function
+
+sub fillin_select()
+	dim el
+
+	rs.MoveFirst
+	' interate on world templates
+	Do Until rs.EOF
+			set el = document.CreateElement("OPTION")
+			el.value = rs.Fields(0).value
+			el.text = rs.Fields(0).value
+			lstStyle.add el
+			rs.MoveNext
+	Loop
+end sub
+
+sub choseName()
+	selected = lstStyle.selectedIndex
+	rs.MoveFirst
+	rs.Move selected
+	StyleName = rs.fields(0)
+	top.SelectedStyleIndex = selected
+	ready = true
+end sub
+
+sub finish
+	buildworld
+end sub
+
+sub buildworld
+	if top.buildworld then
+		set world = top.client.world
+		parent.StatusMsg "creating tutorial"
+		CreateTutorial
+		parent.StatusMsg "done..."
+		world.Global.DefaultRoom = home
+		world.user.MoveInto home
+		world.SaveDatabase
+		world.Trace "All done with SaveDatabase"
+		world.disconnect
+	end if
+end sub
+
+sub CreateTutorial
+
+	set  Lesson_Manager_Module = World.CreateScriptModule("Lesson_Manager", "SDK\Library\vbmodules\lesson_manager.vbs",  World.MODULE_CLIENT)
+	'set  Lesson_1_Module = World.CreateScriptModule("Lesson_1", "SDK\Library\vbmodules\lesson_1_adding_methods.vbs",  World.MODULE_CLIENT)
+	set  Lesson_2_Module = World.CreateScriptModule("Lesson_2", "SDK\Library\vbmodules\lesson_2_clickable_objects.vbs",  World.MODULE_CLIENT)
+	set  Lesson_3_Module = World.CreateScriptModule("Lesson_3", "SDK\Library\vbmodules\lesson_3_timer_objects.vbs",  World.MODULE_CLIENT)
+	set  Lesson_4_Module = World.CreateScriptModule("Lesson_4", "SDK\Library\vbmodules\lesson_4_chat_objects.vbs",  World.MODULE_CLIENT)
+	set  Lesson_5_Module = World.CreateScriptModule("Lesson_5", "SDK\Library\vbmodules\lesson_5_web_objects.vbs",  World.MODULE_CLIENT)
+	set  Lesson_6_Module = World.CreateScriptModule("Lesson_6", "SDK\Library\vbmodules\lesson_6_collision_objects.vbs",  World.MODULE_CLIENT)
+	set  Lesson_7_Module = World.CreateScriptModule("Lesson_7", "SDK\Library\vbmodules\lesson_7_entry_and_exit.vbs",  World.MODULE_CLIENT)
+	set  Lesson_8_Module = World.CreateScriptModule("Lesson_8", "SDK\Library\vbmodules\lesson_8_dynamic_objects.vbs",  World.MODULE_SERVER)
+	set  Lesson_9_Module = World.CreateScriptModule("Lesson_9", "SDK\Library\vbmodules\lesson_9_animations.vbs",  World.MODULE_CLIENT + World.MODULE_SERVER)
+
+
+	World.exemplar("Artifact").RenderQuality = 3
+
+	World.global.addproperty "Current_Lesson" , 0
+
+	set Home = World.CreateInstance("Tutorial Main Room", "Room")
+	Home.InitializeGraphics "SDK\library\models\_ScriptTutorial\1_by_1_grid.3ds",  0.0 ,0.0, 0.0, 0.0, 0.0, 1.0
+	Home.BackgroundColor = &H00000096
+	Home.RenderQuality = 1
+
+	world.user.CreateAndAddMethod World.METHOD_CLIENT, Lesson_Manager_Module,  "OnConnect"
+	world.user.CreateAndAddMethod World.METHOD_CLIENT, Lesson_Manager_Module,  "OnDisconnect"
+	world.user.CreateAndAddMethod World.METHOD_CLIENT, Lesson_Manager_Module,  "OnPeerConnect"
+
+	world.user.CreateAndAddMethod World.METHOD_CLIENT, Lesson_Manager_Module, "Start_Lesson"
+	world.user.CreateAndAddMethod World.METHOD_CLIENT, Lesson_Manager_Module, "End_Lesson"
+	world.user.CreateAndAddMethod World.METHOD_CLIENT, Lesson_Manager_Module, "Start_1"
+	world.user.CreateAndAddMethod World.METHOD_CLIENT, Lesson_Manager_Module, "End_1"
+	world.user.CreateAndAddMethod World.METHOD_CLIENT, Lesson_Manager_Module, "Start_2"
+	world.user.CreateAndAddMethod World.METHOD_CLIENT, Lesson_Manager_Module, "End_2"
+	world.user.CreateAndAddMethod World.METHOD_CLIENT, Lesson_Manager_Module, "Start_3"
+	world.user.CreateAndAddMethod World.METHOD_CLIENT, Lesson_Manager_Module, "End_3"
+	world.user.CreateAndAddMethod World.METHOD_CLIENT, Lesson_Manager_Module, "Start_4"
+	world.user.CreateAndAddMethod World.METHOD_CLIENT, Lesson_Manager_Module, "End_4"
+	world.user.CreateAndAddMethod World.METHOD_CLIENT, Lesson_Manager_Module, "Start_5"
+	world.user.CreateAndAddMethod World.METHOD_CLIENT, Lesson_Manager_Module, "End_5"
+	world.user.CreateAndAddMethod World.METHOD_CLIENT, Lesson_Manager_Module, "Start_6"
+	world.user.CreateAndAddMethod World.METHOD_CLIENT, Lesson_Manager_Module, "End_6"
+	world.user.CreateAndAddMethod World.METHOD_CLIENT, Lesson_Manager_Module, "Start_7"
+	world.user.CreateAndAddMethod World.METHOD_CLIENT, Lesson_Manager_Module, "End_7"
+	world.user.CreateAndAddMethod World.METHOD_CLIENT, Lesson_Manager_Module, "Start_8"
+	world.user.CreateAndAddMethod World.METHOD_CLIENT, Lesson_Manager_Module, "End_8"
+	world.user.CreateAndAddMethod World.METHOD_CLIENT, Lesson_Manager_Module, "Start_9"
+	world.user.CreateAndAddMethod World.METHOD_CLIENT, Lesson_Manager_Module, "End_9"
+
+	World.Global.DefaultRoom = home
+	World.global.addproperty("tutmainroom"), home
+
+	set SubRoom =  World.CreateInstance("lesson 7 Sub-Room", "Room")
+	SubRoom.InitializeSpriteGraphics "",  0.0 ,0.0, 0.0, 0.0, 0.0, 1.0
+	SubRoom.BackgroundColor = &H00ADFFFF
+	SubRoom.RenderQuality = 3
+	world.global.addproperty "tutorial" , world.user
+	world.global.addproperty "sub4" , SubRoom
+	'world.global.makehost world.user
+
+	set AnimationRoom =  World.CreateInstance("lesson 9 Animation-Room", "Room")
+	AnimationRoom.InitializeSpriteGraphics "",  0.0 ,0.0, 0.0, 0.0, 0.0, 1.0
+	AnimationRoom.backgroundColor = rgb(200,90,60)
+	AnimationRoom.RenderQuality = 3
+	world.global.addproperty "animationRoom" , AnimationRoom
+	'world.global.makehost world.user
+
+
+'--------------ROOM OBJECTS---------------
+
+	dim lesson_1_graphics
+	make_lesson_1  lesson_1_graphics
+	lesson_1_graphics.IsUiVisible = false
+
+	dim lesson_2_graphics
+	make_lesson_2 lesson_2_graphics
+	lesson_2_graphics.IsUiVisible = false
+
+	dim lesson_3_graphics
+	make_lesson_3 lesson_3_graphics
+	lesson_3_graphics.IsUiVisible = false
+
+	dim lesson_4_graphics
+	make_lesson_4 lesson_4_graphics
+	lesson_4_graphics.IsUiVisible = false
+
+	dim lesson_5_graphics
+	make_lesson_5 lesson_5_graphics
+	lesson_5_graphics.IsUiVisible = false
+
+	dim lesson_6_graphics
+	make_lesson_6 lesson_6_graphics
+
+	dim lesson_7_graphics
+	make_lesson_7 lesson_7_graphics
+
+	dim lesson_8_graphics
+	make_lesson_8 lesson_8_graphics
+	lesson_8_graphics.IsUiVisible = false
+
+	dim lesson_9_graphics
+	make_lesson_9 lesson_9_graphics
+'	lesson_9_graphics.IsUiVisible = false
+
+	dim  texture_plane
+	set  texture_plane = World.CreateInstance("texture_plane","artifact", subroom)
+	texture_plane.InitializeGraphics "SDK\library\models\_ScriptTutorial\texture_plane.3DS" , 0 , -4 , 0 , 0,0,1
+	texture_plane.Scale.Set 3.0, 3.0, 3.0
+	texture_plane.RenderQuality = 1
+
+	dim  key
+	set  key  = World.CreateInstance("key","artifact", subroom)
+	key.InitializeGraphics "SDK\library\models\other\key.x" , 5 , 1 , 5 , 0,0,1
+	key.Scale.Set 3.0, 3.0, 3.0
+	key.RenderQuality = 3
+	key.IsTakeable = true   'can be taken
+end sub
+
+sub document_onKeyPress
+	select case window.event.keycode
+	case 27
+		top.frames(1).OnCancel
+	case 13
+		top.frames(1).OnFinish
+	case Else
+	end select
+end sub
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+</script>
+</head>
+<body>
+	<div class=vLabel style=top:0;left:10;>Styles:</div>
+	<select id=lstStyle class=vInput style=left:10;top:15;width:120; size=7 onchange=choseName></select>
+	<div class=vLabel style=top:0;left:150;>Preview:</div>
+	<img datafld=previewGIF datasrc="#elements" id=imgPreview style=position:absolute;left:150;top:15;></img>
+	<div id=lblDesc class=vInput datafld="description" datasrc="#elements" style=left:10;top:130;width:400;>
+</body>
+</html>

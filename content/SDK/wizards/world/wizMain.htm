@@ -1,0 +1,345 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta http-equiv="Expires" content="0">
+
+<title>Create a World Wizard</title>
+
+<object id="theclient"
+	name="theclient" classid="clsid:D4898803-20EF-11D0-8A96-00A0C9082583"
+	border="0" width="0" height="0">
+	</object>
+<object id="htmlpopup"
+	classid="clsid:7E3832CD-4F4E-11D0-89AB-00A0C9054129"
+	border="0"	width="0" height="0">
+</object>
+<object id="webhelper"
+	classid="clsid:7886A636-606B-11d1-BB36-00C04FC2CAB1"
+	border="0"	width="0" height="0">
+</object>
+<OBJECT ID="helper"
+	CLASSID="CLSID:7E3832CF-4F4E-11D0-89AB-00A0C9054129"
+	WIDTH=0 HEIGHT=0 border=0 >
+</OBJECT>
+
+<script language="VBSCRIPT">
+option explicit
+
+'world building stuff
+Dim page
+Dim worldName
+Dim WorldServerURL
+'Dim worldSite
+Dim adminNickname
+Dim adminPassword
+Dim rootURL
+
+Dim AutoLogon
+Dim PageArray
+Dim PageArraySize
+Dim FinishPage
+Dim FailedToBuild
+
+Dim World
+Dim Client
+Dim WorldFileExtensionLength
+Dim MaxPath
+
+page = 0
+PageArray = Array("page1.htm", "page2.htm", "page4.htm", "page3.htm")
+PageArraySize = 4
+AutoLogon = true
+FinishPage = "page3.htm"
+FailedToBuild = false
+WorldServerURL = "localhost"
+' For the ".bak.vwc" that is added to each worldname
+WorldFileExtensionLength = 8
+MaxPath = 256
+rootURL = ""
+'Variables to keep track of current world type/style selection
+Dim WorldType
+Dim WorldStyle
+Dim SelectedStyleIndex
+
+WorldType = "None"
+WorldStyle = "None"
+SelectedStyleIndex = 0
+
+'Variable to determine if test script for WorldMaker is running
+Dim bIsWorldMaker
+bIsWorldMaker = false
+
+' common error constants associated with building worlds
+const vb_VWSERVER_E_WORLDPREVIOUSLYREGISTERED	=	&H80040403
+const vb_VWSERVER_E_ERRORCREATINGWORLD			=	&H80040404
+const vb_VWSERVER_E_INVALIDWORLDNAME			=	&H80040405
+
+sub window_onload
+	' initialize globals
+	Dim WorldPath
+	set Client = Window.TheClient.VWClient
+	set World = Client.ConnectLocal("~Temp")
+	' initialize helper control
+	htmlpopup.Initialize Client
+end sub
+
+sub window_OnUnload()
+	' shutdown html windows
+	htmlpopup.CloseAll
+	if Not Client.World Is Nothing then
+		Client.World.Disconnect
+		' disconnect from server
+		Client.Disconnect
+	end if
+	set Client = Nothing
+end sub
+
+sub DoHelp()
+	msgbox "HELP!"
+end sub
+
+' world building stuff
+
+function createWorldPath(worldname, serverURL)
+	createWorldPath = serverURL + "/" + worldname
+end function
+
+sub toggle(e)
+	if e.style.visibility = "hidden" then
+		e.style.visibility = "visible"
+	else
+		e.style.visibility = "hidden"
+	end if
+end sub
+
+'====================================
+' UpdateAvatarProfile
+' Updates the profile of the current avatar
+' by saving their most recent world
+
+sub UpdateAvatarProfile(worldURL)
+	on error resume next
+	dim user, worldlist, foundit, i, listcount
+	' set the "LastWorld" key to this world
+	set user = window.theClient.vwclient.world.user
+	user.AddDefaultKeys
+	user.profile.KeyValue("LastWorld") = worldURL
+	' also, add this to the recent world list if it isn't already there
+	set worldlist = user.profile.KeyValue("RecentWorlds")
+	foundit = 0
+	listcount = worldlist.count
+	if worldlist.count > 0 then
+		for i = 0 to worldlist.count - 1
+			if worldURL = worldList.property(i) then
+				foundit = 1
+				exit for
+			end if
+		next
+	end if
+	if foundit = 0 then
+		worldlist.Add worldURL
+	end if
+end sub
+
+sub Finish
+	Dim worldpath, cookiePath
+	' make sure that the last page gets loaded
+	if not page = PageArraySize then
+		if (top.main.verify) then
+			top.main.navigate(top.PageArray(PageArraySize - 1))
+		end if
+	else
+		'Call Finish sub in world kit
+		Top.Main.Finish
+		Client.Disconnect
+		if not failedtobuild then
+			if autologon then
+				' set the cookies that will be looked for in the Logon page
+				document.cookie = "sUser=" & adminNickname & ";path=/;expires=Fri, 1 Jan 2038 00:00:00 GMT"
+				document.cookie = "sPassword=" & adminPassword & ";path=/;expires=Fri, 1 Jan 2038 00:00:00 GMT"
+				document.cookie = "sWorld=" & worldServerURL & "/" & worldName & ";path=/;expires=Fri, 1 Jan 2038 00:00:00 GMT"
+				document.cookie = "sLogoffURL=vwStartSDK.htm;path=/;expires=Fri, 1 Jan 2038 00:00:00 GMT"
+				window.open "..\..\..\client\html\client.htm", null, "toolbar=no,location=no,menubar=no,status=yes,resizable=yes"
+				Helper.closewindow
+			else
+				theclient.VWClient.disconnect
+				msgbox worldName & " was created successfully.", vbInformation, "Microsoft Virtual Worlds"
+				if not bIsWorldMaker then
+					helper.CloseWindow
+				end if
+			end if
+		else
+			'MSGBOX "Wizard reporting that it failed to build. (RAID 5183)"
+		end if
+	end if
+	'Helper.closewindow
+end sub
+
+
+'-------------------------------------------------------------------
+' sub CreateBareWorld( filename )
+'
+' Sets up an initial world database with only the core exemplars installed
+'
+' Parameters:
+'	filename	File to use for world database
+'-------------------------------------------------------------------
+function CreateBareWorld(filename)
+	On Error Resume Next
+	'Disconnect from temp world
+	if (top.World.WorldName = "~Temp") then
+		Client.World.Disconnect
+		Client.Disconnect
+	end if
+	' Connect to server (with authentication)
+	dim Admin
+	set Admin = Client.ConnectToServer(worldServerURL, True)
+	if not IsObject(Admin) then
+		main.StatusMsg "Error: Unable to Create World."
+		msgbox "Could not connect to the server. Check the server name entered and confirm that Virtual Worlds server is running on that computer.", vbExclamation, "Microsoft Virtual Worlds"
+		CreateBareWorld = false
+		Client.Disconnect
+		'Reconnect to temporary world
+		set World = Client.ConnectLocal("~Temp")
+		ReloadFinishFrames
+		exit function
+	end if
+	' Check for valid worldname
+	Set World = Nothing
+	Err.Clear
+	' Create the world
+	set World = Client.CreateWorld(filename)
+	if World is Nothing then
+		Dim ErrorMsg
+		ErrorMsg = "Unable to create the world on " & worldServerURL
+		main.StatusMsg "Error: Unable to Create World."
+		Select Case Err.Number
+			Case vb_VWSERVER_E_ERRORCREATINGWORLD
+				ErrorMsg = ErrorMsg & ". Verify Virtual Worlds Server is properly installed and functioning correctly."
+			Case vb_VWSERVER_E_WORLDPREVIOUSLYREGISTERED
+				ErrorMsg = ErrorMsg & ": """ & filename & """ already exists. Choose another world name."
+			Case vb_VWSERVER_E_INVALIDWORLDNAME
+				ErrorMsg = ErrorMsg & ". Check that your world name is valid and does not exceed the maximum length."
+			Case Else
+				ErrorMsg = ErrorMsg & ". (Error returned: 0x" & Hex(Err.Number) & ")"
+		End Select
+		msgbox ErrorMsg, vbExclamation, "Microsoft Virtual Worlds"
+		CreateBareWorld = false
+		set Admin = Nothing
+		Client.Disconnect
+		'Reconnect to temporary world
+		set World = Client.ConnectLocal("~Temp")
+		ReloadFinishFrames
+		exit function
+	else
+		CreateBareWorld = true
+	end if
+	' Set the Trace level for diagnostics
+	World.TraceLevel("*") = 4
+end function
+
+'-------------------------------------------------------------------
+' sub CreateWorld( filename )
+'
+' Sets up an initial world database
+'
+' Parameters:
+'	filename	File to use for world database
+'-------------------------------------------------------------------
+function CreateWorld( filename )
+	'On Error Resume Next
+	if CreateBareWorld(worldName) then
+		' Logon as the admin avatar
+		Dim adminuser
+		set adminuser = World.Connect(adminNickname, adminPassword)
+		if not IsObject(adminuser) then
+			msgbox "Error connecting avatar to the world.", vbCritical, "Microsoft Virtual Worlds"
+			client.Disconnect
+			createWorld = false
+			failedtobuild = true
+		end if
+		main.StatusMsg "Done connecting Admin avatar"
+		main.StatusMsg "Creating Exemplars..."
+		Dim multimediaModule
+		set multimediaModule = World.CreateCOMModule("Multimedia", "VWSYSTEM.MultimediaEx.1", World.MODULE_CLIENT + World.MODULE_SERVER)
+		main.StatusMsg "Done Creating Multimedia"
+		Dim studioModule
+		set studioModule = World.CreateCOMModule("Studio", "VWSTUDIO.StudioEx.1", World.MODULE_CLIENT + World.MODULE_SERVER)
+		main.StatusMsg "Done Creating Studio"
+		Dim foundationModule
+		set foundationModule = World.CreateCOMModule("Foundation", "VWEXEMP.FoundationExemplars.1", World.MODULE_CLIENT + World.MODULE_SERVER)
+		main.StatusMsg "Done Creating Foundation Exemplars"
+		main.StatusMsg "Done setting up world: " + filename
+		' Set global properties
+		World.Global.DefaultSpriteFile = "default.spr"
+		' set avatar exemplar to defaults
+		world.Global.DefaultAvatarExemplar.InitializeSpriteGraphics world.Global.DefaultSpriteFile, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0
+		main.StatusMsg "Done setting up global object methods"
+		Dim worldpath
+		worldpath = CreateWorldPath(filename, worldServerURL)
+		UpdateAvatarProfile worldpath
+		if rootURL <> "" then
+			world.global.rootURL = rootURL
+		end if
+		createWorld = true
+	else
+		main.StatusMsg "Error: Unable to Create World."
+		client.Disconnect
+		createWorld = false
+		failedtobuild = true
+		exit function
+	end if
+
+end function
+
+function buildworld()
+	failedtobuild = false
+	if CreateWorld(worldName) then
+		buildworld = true
+	else
+		buildworld = false
+		failedtobuild = true
+	end if
+end function
+
+'---------------------------------------------------------------
+' ReloadFinishFrames
+' Reloads current frames to eliminate hourglass cursor
+'---------------------------------------------------------------
+sub ReloadFinishFrames
+	window.main.location.reload()
+	window.buttons.location.reload()
+end sub
+
+'---------------------------------------------------------------
+' Code to handle UI events
+' Bubbles them to the script window (load.htm)
+'---------------------------------------------------------------
+sub theclient_OnTrace(theStr)
+	on error resume next
+	window.main.kit.HandleTrace theStr
+end sub
+
+sub theclient_OnReport(strMsg, lType)
+	on error resume next
+	window.main.kit.HandleReport strMsg, lType
+end sub
+
+</script>
+<script language=jscript>
+	function StripString(sInput)
+	{
+		var Output;
+		Output = unescape(sInput);
+		return Output;
+	}
+</script>
+<!-- Include file for common character-checking functions - also used in login.htm -->
+<SCRIPT LANGUAGE="JScript" SRC="../../../Client/HTML/CheckNames.htm"></SCRIPT>
+
+</head>
+<frameset rows="*,37" framespacing=0 frameborder=no>
+  <frame NAME="main" SRC="page1.htm" NORESIZE SCROLLING="no">
+  <frame id="buttons" NAME="buttons" SRC="buttons.htm" NORESIZE SCROLLING="no">
+</frameset>
+</html>

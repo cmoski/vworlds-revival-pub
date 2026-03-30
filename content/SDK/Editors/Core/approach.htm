@@ -1,0 +1,191 @@
+<html>
+<head>
+<link rel=stylesheet href=..\..\..\client\shared\global.css>
+<script language=vbs>
+
+Option Explicit
+
+Public ctlBottom, ctlTop, fIsDirty, Obj, oWorld
+dim bLoaded
+bLoaded = false
+
+Sub window_onload
+	' Establish communication
+	Set oWorld = parent.Helper.Client.World
+	Set Obj = parent.Helper.Arg
+	Set ctlTop = txtDistance
+	Set ctlBottom = chkFront
+	' Display
+	chkFront.checked = Obj.ApproachToFront
+	If Obj.CheckPropertySecurity("ApproachToFront", oWorld.PS_WRITE) = False Then
+		chkFront.disabled = True
+		lblFront.style.color = "gray"
+		Set ctlBottom = txtRadius
+	End If
+	txtDistance.value = Obj.ApproachDistance
+	If Obj.CheckPropertySecurity("ApproachDistance", oWorld.PS_WRITE) = False Then
+		txtDistance.readOnly = True
+		txtDistance.style.color = "gray"
+	End If
+	txtRadius.value = Obj.ApproachRadius
+	If Obj.CheckPropertySecurity("ApproachRadius", oWorld.PS_WRITE) = False Then
+		txtRadius.readOnly = True
+		txtRadius.style.color = "gray"
+	End If
+	InitFocus
+	fIsDirty = False
+	bLoaded = true
+End Sub
+
+Sub InitFocus
+	If parent.fraTabs.fMouseClicked Then
+		txtDistance.focus
+		txtDistance.select
+		parent.fraTabs.fMouseClicked = False
+	End If
+End Sub
+
+Sub window_onunload
+End Sub
+
+Sub Apply
+	if bLoaded = false or fIsDirty = false then
+		exit sub
+	end if
+	if typename(obj) <> "Empty" then
+		If Not chkFront.disabled Then Obj.ApproachToFront = chkFront.checked
+		If Not txtDistance.readOnly Then Obj.ApproachDistance = CSng(txtDistance.value)
+		If Not txtRadius.readOnly Then Obj.ApproachRadius = CSng(txtRadius.value)
+		fIsDirty = false
+	end if
+End Sub
+
+Sub Reset
+	window_onload
+End Sub
+
+Function GetHelpURL
+	GetHelpURL = ""
+End Function
+
+Function GetHelpTopic
+	GetHelpTopic = "approach"
+End Function
+
+Function Verify
+	Verify = True
+	If document.readyState = "complete" Then
+		If Not ValidVectorVal(txtDistance, "Approach distance", 1000) Then
+			verify = False
+		ElseIf Not ValidVectorVal(txtRadius, "Random scatter distance", 1000) Then
+			verify = False
+		End If
+	End If
+End Function
+
+Function ValidVectorVal(control, sDesc, iMaxVal)
+	ValidVectorVal = True
+	If Len(control.value) = 0 Then
+		MsgBox "The " & sDesc & " value is missing. Re-enter the value.", vbInformation, "Microsoft Virutal Worlds"
+		control.focus
+		ValidVectorVal = False
+	ElseIf Not IsNumeric(control.value) Or Right(control.value, 1) = "-" Then
+		control.select
+		MsgBox "Not a valid " & sDesc & " value. Re-enter the value.", vbExclamation, "Microsoft Virtual Worlds"
+		control.focus
+		ValidVectorVal = False
+	ElseIf CDbl(control.value) >= iMaxVal Then
+		control.select
+		MsgBox "The " & sDesc & " value must be less than " & iMaxVal & ". Re-enter the value.", vbExclamation, _
+			"Microsoft Virtual Worlds"
+		control.focus
+		ValidVectorVal = False
+	ElseIf CDbl(control.value) <= -(iMaxVal) Then
+		control.select
+		MsgBox "The " & sDesc & " value must be greater than -" & iMaxVal & ". Re-enter the value.", vbExclamation, _
+			"Microsoft Virtual Worlds"
+		control.focus
+		ValidVectorVal = False
+	End if
+End Function
+
+Sub chkFront_onclick
+	If Not fIsDirty Then
+		parent.PageDirty
+		fIsDirty = True
+	End If
+End Sub
+
+Sub document_onkeypress
+	Select Case window.event.keyCode
+	Case 27
+		parent.btnCancel.click
+	Case 13
+		parent.btnOK.click
+	Case 9
+		window.event.returnValue = False
+		Select Case window.event.srcElement.id
+		Case "txtDistance"
+			If window.event.shiftKey Then
+				parent.Tabs.ctlBottom.focus
+			Else
+				txtRadius.focus
+				txtRadius.select
+			End If
+		Case "txtRadius"
+			If window.event.shiftKey Then
+				txtDistance.focus
+				txtDistance.select
+			Else
+				If Not chkFront.disabled Then
+					chkFront.focus
+				Else
+					parent.ctlTop.focus
+				End If
+			End If
+		Case "chkFront"
+			If window.event.shiftKey Then
+				txtRadius.focus
+				txtRadius.select
+			Else
+				parent.ctlTop.focus
+			End If
+		Case Else
+			txtDistance.focus
+			txtDistance.select
+		End Select
+	Case Else
+		Select Case window.event.srcElement.id
+		Case "txtDistance", "txtRadius"
+			Select Case window.event.keyCode
+			Case 8, 46	'backspace, period
+			Case 48, 49, 50, 51, 52, 53, 54, 55, 56, 57 'number
+			Case Else
+				window.event.returnValue = False
+			End Select
+			If window.event.returnValue = "" Then
+				If Not fIsDirty Then
+					parent.PageDirty
+					fIsDirty = True
+				End If
+			End If
+		Case else
+		End Select
+	End Select
+End Sub
+
+</script>
+</head>
+<body>
+	<div id=lblDistance class=vLabel style=left:13;top:10;>Approach distance:</div>
+	<input id=txtDistance class=vInput style=left:175;top:7;width:55; maxlength=7>
+	<div id=lblRadius class=vLabel style=left:13;top:33;>Random scatter distance:</div>
+	<input id=txtRadius class=vInput style=left:175;top:30;width:55; maxlength=7>
+	<div style=position:absolute;left:4;top:53;>
+		<input type=checkbox id=chkFront style=position:relative;left:6;>
+		<label id=lblFront class=vInputLbl for=chkFront>
+			&nbsp;Approach to the front of the object&nbsp;
+		</label>
+	</div>
+</body>
+</html>

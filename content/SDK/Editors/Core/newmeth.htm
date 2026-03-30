@@ -1,0 +1,234 @@
+<html>
+<head>
+<title>New Method</title>
+<link Rel=Stylesheet href=../../../client/shared/global.css>
+<script language=vbs>
+
+dim Thing
+dim World
+
+set Thing = window.dialogArguments.editThing
+set World = window.dialogArguments.goWorld
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+sub Window_OnLoad
+	divObject.innerText = Thing.name
+end sub
+
+sub Window_OnUnload
+end sub
+
+sub OnOk
+	on error resume next 'need this to filter for errors in ValidateMethodName
+	bselect = false
+	flags = 0
+	dim prompt
+	dim perms
+
+	perms = world.PS_SCRIPTDEFAULTMETHOD
+
+	' set flags
+	if ExecList.SelectedIndex = 0 then
+		flags = flags or World.METHOD_CLIENT
+		flags = flags and not World.METHOD_SERVER
+	elseif ExecList.SelectedIndex = 1 then
+		flags = flags or World.METHOD_SERVER
+		flags = flags and not World.METHOD_CLIENT
+	elseif ExecList.SelectedIndex = 2 then
+		flags = flags or World.METHOD_SERVER or World.METHOD_CLIENT
+	end if
+
+	if chkAllExec.checked = true then
+		perms = perms + world.PS_ALL_E
+	end if
+
+	if methName.value = "" then
+		msgbox "Enter a name for the new method.", vbExclamation, "Microsoft Virtual Worlds"
+		methName.focus
+		exit sub
+	else
+		If (not (World.ValidateMethodName(methName.value, flags))) Then
+			If (Err.number = &H8004025e) Then
+				MsgBox "Failed to add method. On<Property>Access methods must be marked as executable on both Client and Server."
+			Else
+				Msgbox "The method name entered is not valid. A valid name must begin with a letter and can contain numbers, letters, and the underscore character.", vbExclamation, "Microsoft Virtual Worlds"
+			End If
+
+			methName.focus
+			methName.select
+			Exit Sub
+		End If
+	end if
+
+	if ModList.value = ":VBScript" then
+		set method = World.CreateInlineMethod(flags, "VBScript", methName.value & CStr(Thing.id), "Sub " & methName.value & CStr(Thing.id) & "()" & vbcrlf & "   'TODO: Add code here" & vbcrlf & "   'this.InvokeSuperMethod(Array(arg1, arg2, ...))" & vbcrlf & "End Sub" & vbcrlf)
+	else
+		if subValue.value <> "" then
+			set method = World.CreateMethod(flags, ModList.value, subValue.value)
+		else
+			msgbox "Enter a name for the subroutine.", vbExclamation, "Microsoft Virtual Worlds"
+			exit sub
+		end if
+	end if
+
+	if Thing.IsValidMethod(methName.value) then
+		dim bits
+		dim security
+
+		set security = Thing.MethodSecurity(methName.value)
+		bits = security.Bits
+
+		if bits and World.PSBIT_HIDDEN then
+			msgbox "This method name is reserved by the system. Enter a different one.", vbExclamation, "Microsoft Virtual Worlds"
+			methName.focus
+			methName.select
+			exit sub
+		end if
+
+		prompt = msgbox("A method of this name already exists." & vbcrlf & "Overwrite?", vbYesNo + vbQuestion, "Microsoft Virtual Worlds")
+		if prompt = 6 then
+			if not Thing.CheckMethodsSecurity(world.PS_WRITE) then
+				msgbox "Insufficient permission to overwrite methods on this object.", vbExclamation, "Microsoft Virtual Worlds"
+			else
+				if Thing.CheckMethodSecurity(methName.value, world.PS_WRITE) then
+					Thing.Method(methName.value) = method
+					bselect = true
+				else
+					msgbox "Insufficient permission to overwrite this method.", vbExclamation, "Microsoft Virtual Worlds"
+				end if
+			end if
+		end if
+	else
+		if not Thing.CheckMethodsSecurity(world.PS_ADD) then
+			msgbox "Insufficient permission to add a method to this object.", vbExclamation, "Microsoft Virtual Worlds"
+		else
+			Thing.AddMethod methName.value, method, world.PSBIT_SCRIPTDEFAULTMETHOD, perms
+			bselect = true
+		end if
+	end if
+
+	if bselect then
+		dim selectionList
+		set selectionList = World.CreatePropertyList
+		selectionList.Add methName.value
+		window.dialogArguments.methodlist.selectionList = selectionList
+		window.dialogArguments.methodlist.DoFocus
+	end if
+
+	window.close
+end sub
+
+sub OnModuleSelect
+	if Modlist.value = ":VBScript" then
+		subValue.disabled = true
+		lblSubValue.style.color = "gray"
+		subValue.style.backgroundcolor = "#D3D3D3"
+	else
+		subValue.disabled = false
+		lblSubValue.style.color = ""
+		subValue.style.backgroundcolor = ""
+	end if
+end sub
+
+sub OnHelp
+	Dim helpstringsList
+	window.event.returnValue = false
+	on error resume next
+	set helpstringsList = world.global.CreatePropertyList
+	helpstringsList.add "Authoring"
+	helpstringsList.add "Object Explorer"
+	helpstringsList.add "New Method"
+	world.FireUIEvent world.user, "Help", helpstringsList
+end sub
+
+sub document_OnMouseOver
+	select case window.event.srcElement.className
+	case "bEnabled"
+		window.event.srcElement.className = "bHighlight"
+	case "vHelp"
+		imgHelp.src="../../../client/shared/helpH.gif"
+	case else
+	end select
+end sub
+
+sub document_OnMouseOut
+	select case window.event.srcElement.className
+	case "bHighlight"
+		window.event.srcElement.className = "bEnabled"
+	case "vHelp"
+		imgHelp.src="../../../client/shared/help.gif"
+	case else
+	end select
+end sub
+
+sub document_onkeypress
+	select case window.event.keyCode
+	case 27
+		window.close
+	case 13
+		if window.event.srcElement.tagName <> "BUTTON" and window.event.srcElement.tagName <> "A" then OnOK
+	case else
+	end select
+end sub
+
+</script>
+</head>
+<body class=vBody>
+	<div class=vLabel style=left:18;top:7;>Object:</div>
+	<div id=divObject class=vLabel style=left:120;top:7;></div>
+	<div class=vLabel style=left:18;top:28;>Method Name:</div>
+	<input id=methName class=vInput style=left:120;top:25;width:125; maxlength=50>
+	<div class=vLabel style=left:18;top:49;>Module:</div>
+	<select id=ModList style=left:120;top:46;width:125; class=vInput onchange=OnModuleSelect>
+		<option value=":VBScript">Inline Module</option>
+	</select>
+	<script language=vbs>
+		set modulemap = World.modules
+		for each moduleName in modulemap
+			set oModule = modulemap.Property(moduleName)
+			modType = oModule.ModuleType
+			if modType = 1 then
+				set oOption = document.createElement("OPTION")
+				oOption.text = moduleName
+				oOption.value = moduleName
+				ModList.options.add oOption
+			end if
+		next
+	</script>
+	<div id=lblSubValue class=vLabel style=left:18;top:70;color:gray;>Subroutine:</div>
+	<input id=subValue class=vInput maxlength=50 style=left:120;top:67;width:125;background-color:#D3D3D3; disabled>
+	<div class=vLabel style=left:18;top:91;>Execute on:</div>
+	<select id=ExecList style=left:120;top:88;width:125; class=vInput>
+		<option>Client</option>
+		<option>Server</option>
+		<option>Client and Server</option>
+	</select>
+	<div style=position:absolute;top:110;left:8;>
+		<input type=checkbox id=chkAllExec style=position:relative;left:6;>
+		<label class=vInputLbl for=chkAllExec>
+			&nbsp;Executable by all Users&nbsp;
+		</label>
+	</div>
+	<button class=bEnabled id=btnOK style=left:115;top:147; onclick=OnOk>
+		<span style=position:relative;top:-1;>OK</span>
+	</button>
+	<button class=bEnabled id=btnCancel style=left:185;top:147; onclick=window.close>
+		<span style=position:relative;top:-1;>Cancel</span>
+	</button>
+	<a id=lnkHelp onclick=OnHelp href="">
+		<img src=../../../client/shared/help.gif id=imgHelp class=vHelp style=top:147;>
+	</a>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<html>
+<head>
+<link rel=stylesheet href=..\..\..\..\client\shared\global.css>
+<script language=vbs>
+
+top.newDesc = "State Machine"
+top.newType = "StateMachine"
+top.newFile = "SDK\Library\models\shapes\state.x"
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+sub document_onKeyPress
+	select case window.event.keycode
+	case 27
+		top.DoCancel
+	case 13
+		top.DoCreate
+	case else
+	end select
+end sub
+
+</script>
+</head>
+<body class=vBody>
+<div class=vH1 align=center>
+	State Machine
+</div>
+<div class=vLabel Style=top:35;padding-right:5;>
+	State machines are objects that can change according to stimulus around them. These objects can respond to methods, events, and actions performed on them as triggers to change their properties or behavior.
+	<p>State machines can be customized in the Object Explorer. An examples of a state machine is a greeting robot that responds to the arrival of avatars.
+	<p>The default appearance of the state machine is a light green pyramid with a pulsing light inside.
+</div>
+</body>
+</html>

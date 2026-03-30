@@ -1,0 +1,697 @@
+<html>
+<head>
+<link rel=stylesheet href=../../../client/shared/global.css>
+<object id=webhelper classid=clsid:7886a636-606b-11d1-bb36-00c04fc2cab1></object>
+<script language=vbs>
+
+Option Explicit
+
+Public ctlTop, ctlBottom, CurrentCat, CurrentCh, CurrentURL, fIsDirty
+Public obj, oWorld, pthContent, pthContentShort, pthModels, pthWorldContent, ShowURL
+Public InitialURL, InetFileTool
+
+dim bLoadFail
+dim bLoaded
+
+bLoaded = false
+bLoadFail = false
+
+preLoad
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+Sub preLoad
+	On Error Resume Next
+	Dim splitPath
+	Set oWorld = parent.Helper.client.world
+	Set webhelper.vwclient = parent.Helper.client
+	Set obj = parent.Helper.Arg
+	pthContent = LCase(Right(oWorld.global.contentPath, Len(oWorld.global.contentPath) - 7))
+	pthWorldContent = LCase(Right(oWorld.global.worldcontentpath, Len(oWorld.global.worldcontentpath) - 7))
+	pthContentShort = parent.Helper.GetShortPathName(pthContent)
+	pthModels = "sdk\library\models\"
+
+	if oWorld.IsValidTool("INetFile") then
+		set INetFileTool = oWorld.tool("INetFile")
+	else
+		set INetFileTool = nothing
+	end if
+
+	If IsObject(obj.Geometry) And Not (obj.Geometry is nothing) Then
+		CurrentURL = obj.GeometryName
+	End If
+	If CurrentURL <> "" Then
+		If Left(CurrentURL, Len(pthContent) - 1) = Left(pthContent, Len(pthContent) - 1) Then
+			CurrentURL = Right(CurrentURL, Len(CurrentURL) - Len(pthContent))
+		End If
+		splitPath = Split(CurrentURL, "\")
+		CurrentCh = splitPath(UBound(splitPath))
+		if UBound(splitPath) < 1 then
+			CurrentCat = ""
+		else
+			CurrentCat = splitPath(UBound(splitPath) - 1)
+		end if
+
+		if not INetFileTool is nothing then
+			err.clear
+			ShowURL = INetFileTool.GetFile(CurrentURL, true)
+			if err.number <> &H00000000 then
+				ShowURL = ""
+			end if
+		else
+			If FileExists(pthContentShort & CurrentURL) Then
+				ShowURL = pthContentShort & CurrentURL
+			ElseIf FileExists(pthContentShort & "worlds\" & oWorld.worldName & "\" & CurrentURL) Then
+				ShowURL = pthContentShort & "worlds\" & oWorld.worldName & "\" & CurrentURL
+			ElseIf FileExists(CurrentURL) Then
+				ShowURL = CurrentURL
+			Else
+				' didn't find the file, show the error message
+				'window.setTimeOut "Over3D.InnerHTML = ""<center><br><br><font color=#FF0000><b>Could Not<br>Load File</b></font></center>""", 100, "VBScript"
+				bLoadFail = true
+				ShowURL = pthContent & "client\shared\empty.x"
+			End If
+		end if
+
+		' always load the empty.x so that we're pretty sure that
+		' we will always initialize DA correctly...
+		InitialURL = pthContent & "client\shared\empty.x"
+		If Not VerifyXFile(ShowURL) Then
+			ShowURL = pthContent & "client\shared\empty.x"
+			' window.setTimeOut "Over3D.InnerHTML = ""<center><br><br><font color=#FF0000><b>Could Not<br>Load File</b></font></center>""", 100, "VBScript"
+			bLoadFail = true
+		End If
+	Else
+		CurrentCh = ""
+		CurrentCat = ""
+		ShowURL = pthContent & "client\shared\empty.x"
+		InitialURL = pthContent & "client\shared\empty.x"
+		' window.setTimeOut "Over3D.InnerHTML = ""<center><br><br><font color=#FF0000><b>Could Not<br>Load File</b></font></center>""", 100, "VBScript"
+		bLoadFail = true
+	End If
+End Sub
+
+Sub window_onload
+	If obj.IsValidProperty("RenderQuality") Then
+		lstRender.selectedIndex = obj.RenderQuality
+		If obj.CheckPropertySecurity("RenderQuality", oWorld.PS_WRITE) = False Then
+			lstRender.disabled = True
+			Set ctlBottom = txtFilePath
+		Else
+			Set ctlBottom = lstRender
+		End If
+	Else
+		lstRender.selectedIndex = -1
+		lstRender.disabled = True
+		Set ctlBottom = txtFilePath
+	End If
+	InitFocus
+	fIsDirty = False
+	bLoaded = true
+	SelectExisting
+End Sub
+
+Sub InitFocus
+	If parent.fraTabs.fMouseClicked Then
+		txtFilePath.focus
+		txtFilePath.select
+		parent.fraTabs.fMouseClicked = False
+	End If
+End Sub
+
+Function GetFileExtension(filename)
+	Dim pos, ext
+	pos = InStrRev(filename, ".", -1, vbTextCompare)
+	If pos > 0 Then
+		ext = Right(filename, Len(filename) - pos)
+		GetFileExtension = ext
+	Else
+		GetFileExtension = ""
+	End If
+End Function
+
+Function VerifyXFile(filename)
+	Dim pos, ext
+	VerifyXFile = False
+	ext = GetFileExtension(filename)
+	If Len(ext) > 0 Then
+		If StrComp(LCase(ext), "x", vbTextCompare) = 0 Then
+			VerifyXFile = True
+		End If
+	End If
+End Function
+
+Function verify
+	verify = True
+End Function
+
+Sub CatChange(UserClick)
+	Dim fileList, fileName
+	If UserClick Then
+		CurrentCat = lstCat.item(lstCat.selectedIndex).text
+	End If
+	lstChoice.selectedIndex = -1
+	Do While lstChoice.length > 0
+		lstChoice.remove(0)
+	Loop
+	Set fileList = webHelper.GetFileNames(pthContent & pthModels & CurrentCat & "\", "*.x,*.3ds,*.spr")
+	If fileList.count = 0 Then
+		lstChoice.disabled = True
+	Else
+		For Each fileName In fileList
+			GenerateHTML LCase(fileName), lstChoice
+		Next
+		PreSelect lstChoice, CurrentCh
+		If lstChoice.selectedIndex = -1 And UserClick Then
+			lstChoice.options(0).selected = True
+		End If
+		If obj.CheckPropertySecurity("GeometryName", oWorld.PS_WRITE) = False Then
+			lstChoice.disabled = True
+		Else
+			lstChoice.disabled = False
+		End If
+		ChChange UserClick
+	End If
+End Sub
+
+Sub ChChange(UserClick)
+	If UserClick Then
+		If lstChoice.selectedIndex > -1 Then
+			CurrentCh = lstChoice.item(lstChoice.selectedIndex).text
+			CurrentURL = pthModels & CurrentCat & "\" & CurrentCh
+			ShowURL = pthContentShort & CurrentURL
+			If VerifyXFile(ShowURL) Then
+				ChangeGeom(ShowURL)
+				Over3D.InnerHTML = ""
+			Else
+				' "Can not preview files of type " & getFileExtension(ShowURL) & ".", vbCritical, "Microsoft Virtual Worlds"
+				Over3D.InnerHTML = "<center><br><br><font color=#FF0000><b>Can not preview files of type: ." & getFileExtension(ShowURL) & "</b></font></center>"
+				ChangeGeom(pthContent & "client\shared\empty.x")
+			End If
+		End If
+	End If
+	txtFilePath.value = CurrentURL
+	If document.readyState = "complete" Then
+		If Not fIsDirty Then
+			parent.PageDirty
+			fIsDirty = True
+		End If
+	End If
+End Sub
+
+Sub PreSelect(tagName, oldItem)
+	Dim i
+	For i = 0 To tagName.length - 1
+		If LCase(oldItem) = LCase(tagName.options.item(i).text) Then
+			tagname.options(i).selected = True
+			Exit For
+		End If
+	Next
+End Sub
+
+Sub GenerateHTML(byval sItem, byval tagName)
+	Dim newElement
+	Set newElement = document.createElement("OPTION")
+	newElement.text = sItem
+	tagName.add newElement, PosInList(tagName, sItem)
+End Sub
+
+Function PosInList(tagName, sItem)
+	Dim i
+	PosInList = tagName.length
+	For i = 0 To tagName.length - 1
+		If StrComp(sItem, tagName.options.item(i).text, vbTextCompare) = -1 Then
+			PosInList = i
+			Exit For
+		End If
+	Next
+End Function
+
+Sub window_onunload
+End Sub
+
+Sub Reset
+	bLoadFail = false
+	preLoad
+	LoadCat
+	LoadChoice_FilePath
+	CatChange False
+	txtFilePath.value = CurrentURL
+	ChangeGeom(ShowURL)
+	if (bLoadFail) then
+		Over3D.InnerHTML = "<center><br><br><font color=#FF0000><b>Can not preview files of type: ." & getFileExtension(CurrentURL) & "</b></font></center>"
+	end if
+	window_onload
+End Sub
+
+Sub Apply
+	on error resume next
+	if bLoaded = false or fIsDirty = false then
+		exit sub
+	end if
+	If Not txtFilePath.readOnly Then
+		txtFilePath_onchange
+		if StrComp(obj.GeometryName, CurrentURL, vbTextCompare) <> 0 then
+			obj.GeometryName = CurrentURL
+			' so we wait until prop change has been executed
+			oWorld.Synchronize
+		end if
+	End If
+	If Not lstRender.disabled Then obj.RenderQuality = CInt(lstRender.selectedIndex)
+	fIsDirty = False
+End Sub
+
+Function GetHelpURL
+	GetHelpURL = ""
+End Function
+
+Function GetHelpTopic
+	GetHelpTopic = "geometry"
+End Function
+
+Function FileExists(FilePath)
+	Dim fileList, FileName, DirName, splitPath
+	FileExists = False
+	splitPath = Split(FilePath, "\")
+	FileName = splitPath(UBound(splitPath))
+	DirName = Left(FilePath, Len(FilePath) - Len(FileName))
+	Set fileList = webHelper.GetFileNames(DirName, FileName)
+	If fileList.count = 1 Then FileExists = True
+End Function
+
+Sub txtFilePath_onchange
+	On Error Resume Next
+	If StrComp(CurrentURL, txtFilePath.value, vbTextCompare) Then
+		CurrentURL = txtFilePath.value
+		SelectExisting
+		If txtFilePath.value <> "" Then
+			If not INetFileTool is nothing then
+				err.clear
+				ShowURL = INetFileTool.GetFile(CurrentURL, true)
+				if err.number <> &H00000000 then
+					ShowURL = ""
+				end if
+				If ShowURL <> "" then
+					If Not VerifyXFile(ShowURL) then
+						Over3D.InnerHTML = "<center><br><br><font color=#FF0000><b>Can not preview files of type: ." & getFileExtension(CurrentURL) & "</b></font></center>"
+						ShowURL = pthContent & "client\shared\empty.x"
+					Else
+						Over3D.InnerHTML = ""
+					End IF
+				Else
+					' didn't find the file, show the error message
+					Over3D.InnerHTML = "<center><br><br><font color=#FF0000><b>Could not locate file:<br>" & CurrentURL & "</b></font></center>"
+					ShowURL = pthContent & "client\shared\empty.x"
+				End If
+				ChangeGeom(ShowURL)
+			else
+				If FileExists(pthContentShort & CurrentURL) Then
+					ChangeGeom(pthContentShort & CurrentURL)
+				ElseIf FileExists(pthContentShort & "worlds\" & oWorld.worldName & "\" & CurrentURL) Then
+					ChangeGeom(pthContentShort & "worlds\" & oWorld.worldName & "\" & CurrentURL)
+				ElseIf FileExists(CurrentURL) Then
+					ChangeGeom(CurrentURL)
+				Else
+					' didn't find the file, show the error message
+					Over3D.InnerHTML = "<center><br><br><font color=#FF0000><b>Could not locate file: " & CurrentURL & "</b></font></center>"
+					ChangeGeom(pthContent & "client\shared\empty.x")
+				End If
+			End If
+		End If
+	End If
+End Sub
+
+Sub SelectExisting
+	Dim chFound, catFound, j, fileList, fileName, splitPath
+	chFound = False
+	catFound = False
+	if currentURL <> "" then
+		splitPath = Split(CurrentURL, "\")
+		If UBound(splitPath) = 0 Then
+			CurrentCat = splitPath(0)
+		Else
+			CurrentCat = splitPath(UBound(splitPath) - 1)
+			CurrentCh = splitPath(UBound(splitPath))
+		End If
+		For j = 0 To lstCat.length - 1
+			If LCase(lstCat(j).text) = LCase(CurrentCat) Then
+				catFound = True
+				Exit For
+			End If
+		Next
+	end if
+	If catFound Then
+		Set fileList = webHelper.GetFileNames(pthContent & pthModels & lstCat(j).text & "\", "*.*")
+		If fileList.count <> 0 Then
+			For Each fileName In fileList
+				If LCase(fileName) = LCase(CurrentCh) Then
+					chFound = True
+					lstCat.selectedIndex = j
+					CatChange False
+					Exit For
+				End If
+			Next
+		End If
+	End If
+	If Not chFound Then
+		Do While lstChoice.length > 0
+			lstChoice.remove(0)
+		Loop
+		lstCat.selectedIndex = -1
+	End If
+End Sub
+
+Sub document_onkeypress
+	Select Case window.event.keyCode
+	Case 27
+		parent.btnCancel.click
+	Case 13
+		parent.btnOK.click
+	Case 9
+		window.event.returnValue = False
+		Select Case window.event.srcElement.id
+		Case "lstCat"
+			If window.event.shiftKey Then
+				parent.Tabs.ctlBottom.focus
+			Else
+				If Not lstChoice.disabled Then
+					lstChoice.focus
+				ElseIf Not txtFilePath.disabled Then
+					txtFilePath.focus
+					txtFilePath.select
+				ElseIf Not lstRender.disabled Then
+					lstRender.focus
+				Else
+					parent.ctlTop.focus
+				End If
+			End If
+		Case "lstChoice"
+			If window.event.shiftKey Then
+				lstCat.focus
+			Else
+				If Not txtFilePath.disabled Then
+					txtFilePath.focus
+					txtFilePath.select
+				ElseIf Not lstRender.disabled Then
+					lstRender.focus
+				Else
+					parent.ctlTop.focus
+				End If
+			End If
+		Case "txtFilePath"
+			If window.event.shiftKey Then
+				If Not lstChoice.disabled Then
+					lstChoice.focus
+				ElseIf Not lstCat.disabled Then
+					lstCat.focus
+				Else
+					parent.Tabs.ctlBottom.focus
+				End If
+			Else
+				If Not lstRender.disabled Then
+					lstRender.focus
+				Else
+					parent.ctlTop.focus
+				End If
+			End If
+		Case "lstRender"
+			If window.event.shiftKey Then
+				If Not txtFilePath.disabled Then
+					txtFilePath.focus
+					txtFilePath.select
+				ElseIf Not lstChoice.disabled Then
+					lstChoice.focus
+				ElseIf Not lstCat.focus Then
+					lstCat.focus
+				Else
+					parent.Tabs.ctlBottom.focus
+				End If
+			Else
+				parent.ctlTop.focus
+			End If
+		Case Else
+			ctlTop.focus
+			If ctlTop Is txtFilePath Then ctlTop.select
+		End Select
+	Case Else
+		Select Case window.event.srcElement.id
+		Case "txtFilePath"
+			If Len(txtFilePath.value) > 255 Then
+				MsgBox "The file path can not be longer than 255 characters.", vbExclamation, "Microsoft Virtual Worlds"
+				window.event.returnValue = False
+			End If
+			If Not txtFilePath.readOnly Then
+				If window.event.keyCode = 8 Then	'backspace
+				ElseIf window.event.keyCode > 31 And window.event.keyCode < 127 Then
+				Else
+					window.event.returnValue = False
+				End If
+				If window.event.returnValue = "" Then
+					If Not fIsDirty Then
+						parent.PageDirty
+						fIsDirty = True
+					End If
+				End If
+			End If
+		Case Else
+		End Select
+	End Select
+End Sub
+
+Sub lstRender_onchange
+	If Not fIsDirty Then
+		parent.PageDirty
+		fIsDirty = True
+	End If
+End Sub
+
+Sub LoadCat
+	Dim folderList, folder
+	Set folderList = webHelper.GetSubFolderNames(pthContent & pthModels & "*.*")
+	Do While lstCat.length > 0
+		lstCat.remove(0)
+	Loop
+	If folderList.count = 0 Then
+		lstCat.disabled = True
+	Else
+		Set ctlTop = lstCat
+		For Each folder In folderList
+			If folder <> "." And folder <> ".." Then
+				GenerateHTML LCase(folder), lstCat
+			End If
+		Next
+	End If
+End Sub
+
+Sub LoadChoice_FilePath
+	Dim fileList, fileName
+	Set fileList = webHelper.GetFileNames(pthContent & pthModels & CurrentCat & "\", "*.x,*.3ds,*.spr")
+	If fileList.count <> 0 Then
+		For Each fileName In fileList
+			If LCase(fileName) = LCase(CurrentCh) then
+				PreSelect lstCat, CurrentCat
+				CatChange False
+				If txtFilePath.value <> "" Then
+					ShowURL = pthContentShort & pthModels & CurrentCat & "\" & CurrentCh
+				End If
+				' make sure that we don't try to preview a non .x file
+				If Not VerifyXFile(ShowURL) Then
+					ShowURL = pthContent & "client\shared\empty.x"
+					' didn't find the file, show the error message
+					' window.setTimeOut "Over3D.InnerHTML = ""<center><br><br><font color=#FF0000><b>Could not<br>load file.</b></font></center>""", 100, "VBScript"
+					bLoadFail = true
+				End If
+				Exit For
+			End If
+		Next
+	End If
+	If lstCat.disabled Then
+		set ctlTop = txtFilePath
+	End If
+	If txtFilePath.value = "" Then txtFilePath.value = CurrentURL
+	If obj.CheckPropertySecurity("GeometryName", oWorld.PS_WRITE) = False Then
+		txtFilePath.readOnly = True
+		txtFilePath.style.color = "gray"
+		lstCat.disabled = True
+		lstChoice.disabled = True
+		Set ctlTop = txtFilePath
+	End If
+End Sub
+
+</script>
+<script language=jscript>
+<!--
+
+function Load_mdlViewer()
+{
+	m = mdlViewer.MeterLibrary;
+	clr = m.ModifiableBehavior(m.ImportGeometry(InitialURL));
+	cube();
+}
+
+function ChangeGeom(file)
+{
+	geo = m.ImportGeometry(file);
+	diffX = m.Sub(geo.BoundingBox.Max.X, geo.BoundingBox.Min.X);
+	diffY = m.Sub(geo.BoundingBox.Max.Y, geo.BoundingBox.Min.Y);
+	diffZ = m.Sub(geo.BoundingBox.Max.Z, geo.BoundingBox.Min.Z);
+	geo = m.Cond(m.GT(diffX, diffY),
+		m.Cond(m.GT(diffX, diffZ),
+		geo.transform(m.Scale3UniformAnim(m.Div(m.DANumber(1), diffX))),
+		geo.transform(m.Scale3UniformAnim(m.Div(m.DANumber(1), diffZ)))),
+		m.Cond(m.GT(diffY, diffZ),
+		geo.transform(m.Scale3UniformAnim(m.Div(m.DANumber(1), diffY))),
+		geo.transform(m.Scale3UniformAnim(m.Div(m.DANumber(1), diffZ)))));
+	clr.SwitchTo(geo);
+}
+
+function cube()
+{
+	geo = clr;
+
+	// Import the geometry. This is a 1-meter cube
+
+//	geo = geo.Transform(m.Translate3(0,-.5,0));
+
+	// Let there be light.
+	pLight = m.PointLight.Transform(m.Translate3(0,0,4));
+	dLight = m.DirectionalLight.Transform(m.Rotate3(m.YVector3, 0.5));
+
+	// Scale the geometry down (the rest of the scaling is done with the camera)
+	geo=geo.Transform(m.Scale3Uniform(0.5));
+
+	// Create the cube and start the rotation. Rotating the cube makes it easier to see that it's a 3D object.
+	srate = m.Mul(m.LocalTime, m.DANumber(9));
+	// Offset the cube by 2 on the z-axis (this brings it closer) and  rotate it around the y-axis
+	cube1 = geo.Transform(m.Compose3(m.Translate3(0, 0, 2), m.Rotate3Anim(m.Vector3(0, 1, 0),
+		m.Mul(m.DANumber(0.04), srate))));
+
+	finalgeo = cube1;
+	// Set up the perspective camera
+	// The focal distance (first number) should be slightly larger than the near clip number
+	// For an object around .5 to 1 meters in size, set the camera around 5 meters away
+	// The scaling is to fit a very large cube into the the very small viewport
+	// The x and y axes are the same so that the cube isn't distorted
+	// As the scale numbers become smaller, the image becomes larger. This is because
+	// it is filling up more of the camera "lens"
+	Camera = m.PerspectiveCamera(5.5,4.5).Transform(m.Scale3(50, 50, 1));
+
+	// Combine the lights and the geomery. There is no default lighting which means
+	// that every geometry must explicitly be combined with some sort of light
+	finalgeo = m.UnionGeometry(finalgeo, pLight);
+
+	// Render and display the image.
+	rendered_geo = finalgeo.Render(Camera);
+
+	// Set the image.
+	mdlViewer.Image = m.Overlay(rendered_geo, m.SolidColorImage(m.White));
+
+	// Set the background in case of a non-windowless browser (like IE3).
+	mdlViewer.BackgroundImage=m.SolidColorImage(m.Blue);
+
+	// Start the animation.
+	mdlViewer.Start();
+}
+
+//-->
+</script>
+</head>
+<body>
+	<div id=lblModel class=vLabel style=left:13;top:10;>Models:</div>
+	<select id=lstCat class=vInput onchange=CatChange(true) style=left:95;top:7;width:125;></select>
+	<script language=vbscript>LoadCat</script>
+	<select id=lstChoice class=vInput size=2 onchange=ChChange(true) style=left:95;top:30;width:125;height:100; disabled>
+	</select>
+	<div style="background-color: white;
+							border-bottom-color: ThreeDHighlight;
+							border-left-color: ThreeDShadow;
+							border-right-color: ThreeDHighlight;
+							border-style: solid;
+							border-top-color: ThreeDShadow;
+							border-width: 1;
+							height: 120;
+							left: 230;
+							position: absolute;
+							top: 7;
+							width: 120;">
+	<div style="background-color: white;
+							border-bottom-color: ThreeDLightShadow;
+							border-left-color: ThreeDDarkShadow;
+							border-right-color: ThreeDLightShadow;
+							border-style: solid;
+							border-top-color: ThreeDDarkShadow;
+							border-width: 1;
+							height: 118;
+							position: absolute;
+							top: 0.5;
+							width: 118;" id=Under3D>
+	</div>
+	</div>
+	<object classid=clsid:B6FFC24C-7E13-11D0-9B47-00C04FC2F51D
+					id=mdlViewer
+					style=position:absolute;left:232;top:9;height:116;width:116;
+					tabindex=-1>
+	</object>
+	<script language = vbs>
+		' have to set this through script because of DA IE5 Bug
+		' however the control doesn't support any of these properties directly
+		' wonder what happens if we do not set any of them
+		' mdlViewer.SRC=""
+		' mdlViewer.AnimationSpeed=30.0
+		' mdlViewer.UIMode = 1
+		' mdlViewer.EnableLighting = 1
+		' mdlViewer.BackColor = 16053480
+	</script>
+
+	<div id=lblFilePath class=vLabel style=left:13;top:140;>File path:</div>
+	<input id=txtFilePath class=vInput style=left:95;top:137;width:255>
+	<script language=vbscript>Load_mdlViewer : LoadChoice_FilePath : ChangeGeom(ShowURL)</script>
+	<hr id=lntMaterial color=#b5b564 style=position:absolute;left:7;top:164;height:1;width:95%;>
+	<hr id=lnbMaterial color=white style=position:absolute;left:7;top:165;height:1;width:95%;>
+
+	<div id=lblRender class=vLabel style=left:13;top:180;>Render as:</div>
+	<select id=lstRender class=vInput style=left:95;top:177;width:125;>
+		<option>Wireframe</option>
+		<option>Solid (unlit)</option>
+		<option>Solid (lit)</option>
+		<option>Gouraud</option>
+		<option>Phong</option>
+	</select>
+
+	<div style="			left: 233;
+							position: absolute;
+							top: 7.5;
+							height: 118;
+							position: absolute;
+							width: 115;" id=Over3D>
+<script language = vbs>
+	if bLoadFail then
+		if not VerifyXFile(CurrentURL) then
+			if CurrentURL <> "" then
+				document.writeln "<center><br><br><font color=#FF0000><b>Can not preview files of type: ." & getFileExtension(CurrentURL) & "</b></font></center>"
+			else
+				document.writeln "<center><br><br><font color=#FF0000><b>GeometryName property is empty.</b></font></center>"
+			end if
+		else
+			document.writeln "<center><br><br><font color=#FF0000><b>Could not load file.</b></font></center>"
+		end if
+	end if
+</script>
+
+
+	</div>
+
+
+</body>
+</html>

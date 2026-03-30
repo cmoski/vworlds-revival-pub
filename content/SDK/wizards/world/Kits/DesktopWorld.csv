@@ -1,0 +1,2 @@
+style_name:STRING,description:STRING,previewGIF:STRING,gifInfo:STRING
+'DesktopWorld','Explore multiple modes of communication in this sample world. Please note that DesktopWorld requires a special client to view correctly. It is recommended that you do not select "Login automatically" from the world wizard in step 2.','DesktopWorld.gif','The DesktopWorld lobby:'

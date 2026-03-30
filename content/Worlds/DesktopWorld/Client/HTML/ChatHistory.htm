@@ -1,0 +1,433 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//  File:			ChatHistory.htm
+'//  Description:	Records and displays chat data in the chat box area of
+'//					the client app.  Parent is ChatBox.htm 
+'//  Called by:		chatBox.htm, whisperBox.htm
+'////////////////////////////////////////////////////////////////////////-->
+<html>
+<head>
+<link rel=stylesheet href=..\shared\global.css>
+
+<BGSOUND id=bgSoundId src="">
+
+<!--include scripts-->
+<script language="vbscript" src="../vbs/WordBreak.vbs">
+</script>
+<!--End include scripts-->
+
+<STYLE ID=SpeakingStyles>
+.TextGesture {display: "none";}
+.TextMessage {display: "none";}
+.TextEvent {color: DarkBlue; font: normal normal bold 8pt/11pt verdana, sans-serif}
+.BotMessage {color: Green; font: normal normal bold 8pt/11pt verdana, sans-serif}
+.MyName {color: 000000; font: normal normal bold 8pt/11pt verdana, sans-serif}
+.SpeakerName {color: 000000; font: normal normal bold 8pt/11pt verdana, sans-serif}
+.SpokenText {color: 000000; font: normal normal normal 8pt/11pt verdana, sans-serif}
+.EmoteText {color: 000000; font: normal normal normal 8pt/11pt verdana, sans-serif}
+.ReportText {color: DarkBlue; font: normal normal bold 8pt/11pt verdana, sans-serif}
+.ErrorText {color: 1e729a; font: normal normal bold 8pt/11pt verdana, sans-serif;}
+.TraceText {color: gray; font-size: 8pt; font-family: Verdana, Sans-Serif;}
+.MsgText {color: Brown; font: normal normal bold 8pt/11pt verdana, sans-serif;}
+.ActionText {color: DarkBlue; font: normal normal bold 8pt/11pt verdana, sans-serif}
+.ThumbNailImage {margin-left: 4; margin-right: 4; border: 0; width: 16; height: 16;}
+
+</STYLE>
+<script language=vbs>
+
+option explicit
+
+' WhisperBox.htm and ChatBox.htm both use this page in an iframe. 
+' We cannot get the top window simply by referring to top, because top depends on the calling page. 
+' If the caller is ChatBox, top = client.htm;
+' if the caller is WhisperBox, top = WhisperBox.htm because WhisperBox is a separate window.
+' ChatBox and WhisperBox each have a public var called topWin which contains a ptr to client.htm;
+' this page refers to parent.topWin instead of top.
+
+' Handling whisper msgs:
+' WhisperBox only sends this page whispered msgs from the person we are whispering with;
+' it directly calls this page's HandleTell.
+' ChatBox only sends this page whispered msgs from people we are not already whispering with;
+' this page displays a "so-and-so is whispering to you" blurb with a Reply button. The whispered
+' text itself is not displayed, but the Reply button has a "whisperText" attribute containing
+' the text; clicking the button opens a WhisperBox and passes it the text.
+
+'////////////////////////////////////////////////////////////////////////
+'//  Global variables (local to this file)
+'////////////////////////////////////////////////////////////////////////
+dim topWin
+dim whispering
+dim quoteChar
+dim prevSpeaker
+dim HistoryCount		' how many "blurbs" (chat messages) are in history
+CONST HistoryMax = 300	' truncate history at the top when HistoryCount reaches this limit
+CONST HistoryTrim = 50	' number of blurbs to remove each time truncation is performed
+
+quoteChar = chr(34)
+prevSpeaker = ""
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		window_onLoad
+'//  Purpose:	To initialize the page after all objects are instantiated
+'////////////////////////////////////////////////////////////////////////
+sub window_onLoad
+	if not IsObject(window.parent.topWin) then
+		window.setTimeout "window_onload", 500, "vbs"
+		exit sub
+	end if
+	set topWin = window.parent.topWin
+	if not topWin.isWorldLoaded then
+		window.setTimeout "window_onload", 500, "vbs"
+		exit sub
+	end if
+	whispering = window.parent.whispering
+	if whispering then
+		if window.parent.initialText > "" then 
+			makeBlurb "blurb" & window.parent.whisperee.id, window.parent.whisperee.name, window.parent.initialText, "SpokenText", true, 2,2
+		end if
+	end if
+	topWin.AddToEventList window
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		window_onUnload
+'//  Purpose:	To remove this window from the event list when the page unloads
+'////////////////////////////////////////////////////////////////////////
+Sub window_onUnload
+	on error resume next
+	' this call will fail if the main client window closes before we do, but then we don't care
+	topWin.RemoveFromEventList window
+	set TopWin = nothing
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		document_onClick
+'//  Purpose:	To handle clicks on different elements within the page.
+'////////////////////////////////////////////////////////////////////////
+sub document_onClick
+	dim elem
+	set elem = window.event.srcElement
+	if elem.tagName = "A" then
+		if lcase(left(elem.href,7)) = "http://" then
+			topWin.LinkTo elem.href
+			window.event.returnValue = false
+		end if
+	end if
+	if elem.id = "WhisperViewButton" then
+		topWin.ClientChatBoxIFrame.OpenWhisper elem.ReplyTo, elem.whisperText
+	elseif elem.id = "lnkLinkToObject" then
+		topWin.LinkToObject elem.getAttribute("vwObjectId")
+		topWin.ClientMainToolsIFrame.btnMyThings.click
+	elseif elem.className = "ThumbNailImage" then
+		ApproachAvatar elem.linkedUser
+	end if
+	set elem = nothing
+end sub
+
+sub PlayChimes
+	bgSoundID.src = "..\..\sounds\chimes.wav"
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		ScrollToBottom
+'//  Purpose:	Scrolls the chat history to the bottom of the content
+'//	 Called by:	makeBlurb
+'////////////////////////////////////////////////////////////////////////
+sub ScrollToBottom
+	ContentContainer.scrollIntoView false
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		MakeBlurb
+'//  Purpose:	Create an HTML element and append it to the chat history.
+'//	 Called by:	HandleTell, HandleReport, HandleUIEvent (various UI events, see below)
+'//				chatBox.htm:MakeFriendRequest
+'//				chatBox.htm:FriendRequestReturned
+'//				chatBox.htm:FriendRequestVerify
+'//				chatBox.htm:HandleTrace
+'//				chatBox.htm:HandleReport
+'//				whisperBox.htm:HandleTrace
+'//				whisperBox.htm:HandleReport
+'//
+'//	 Notes: 	blurbId is assigned to the new blurb; can be "".
+'//  	speakerName; will be displayed or not depending on showSpeaker. can be blank ""
+'// 	if nonblank and not a valid avatar name, it is displayed as is
+'//  	if speakerName is not a valid avatar name it will be displayed anyway, but no thumbnail will appear.
+'//  	addQuotes = true/false put quotes around blurbText
+'//  	showThumbnail/showSpeaker = display the speaker's thumbnail image and name;
+'//  	0=no, 1=yes, 2=auto.
+'//  	auto means insert the thumbnail and name if the current speaker is different
+'//  	from the last blurb in the chat history. 
+'//  	textClass = name of the style class for blurbText
+'////////////////////////////////////////////////////////////////////////
+sub makeBlurb (blurbId, speakerName, inBlurbText, textClass, addQuotes, showThumbnail, showSpeaker)
+	dim elem
+	dim speakerChanged
+	dim blurbText
+	speakerChanged = (speakerName <> prevSpeaker)
+	set elem = document.createElement("span")
+	elem.id = blurbId
+	elem.className = "chatBlurb"
+	elem.style.position = "relative"
+	elem.style.display = "block"
+	document.all("ContentContainer").insertAdjacentElement "BeforeEnd", elem
+	if showThumbnail = 1 or (showThumbnail = 2 and speakerChanged) then
+		appendThumbnail speakerName, elem
+	end if
+	if showSpeaker = 1 or (showSpeaker = 2 and speakerChanged) then
+		appendSpeakerName speakerName & ":&nbsp; ", elem
+	elseif (showSpeaker = 2 and not speakerChanged) then
+		appendSpeakerName "&nbsp;&nbsp;&nbsp;...", elem
+	end if
+	if textClass = "newWhisper" then
+		' Someone we are not currently whispering to has whispered to us; display a notifying
+		' blurb with a View button and hide the actual whispered text in the button. When the
+		' user clicks the button we will open whisperBox.htm and pass it the whispered text.
+		inBlurbText = trim(inBlurbText)
+		blurbText = "[whispers to you]&nbsp;<img id=WhisperViewButton ReplyTo=""" & speakerName & """ whisperText='" & inBlurbText & "' src=""../Images/btnView.gif"" style=""cursor:hand;"" border=0>"
+		textClass = "whisperText"
+	else
+		blurbText = inBlurbText
+	end if
+	appendBlurbText blurbText, textClass, addQuotes, elem
+	ScrollToBottom
+	prevSpeaker = speakerName
+	HistoryCount = HistoryCount + 1
+	TruncateHistory
+	set elem = nothing
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		TruncateHistory
+'//  Purpose:	Trims elements off the top of chat history if it gets too big
+'//  Called by:	MakeBlurb
+'////////////////////////////////////////////////////////////////////////
+sub TruncateHistory
+	dim n, element
+	if HistoryCount > HistoryMax then
+		for n = 1 to HistoryTrim
+			set element = document.all("ContentContainer").firstChild
+			if mid(element.className,1,9) = "chatBlurb" then
+				HistoryCount = HistoryCount - 1
+				set element = element.removeNode(true)
+			end if
+			set element = Nothing
+		next
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		AppendThumbnail
+'//  Purpose:	Adds the speakers thumbnail to the element
+'//  Args:		avName - the name of the avatar
+'//				toElement - the elem to add the tnail to
+'//  Called by:	MakeBlurb
+'////////////////////////////////////////////////////////////////////////
+sub AppendThumbnail (avName, toElement)
+	dim avatar
+	set avatar = topWin.ClientUserPtr.container.findwithin(avName)
+	if not (avatar is Nothing) then
+		topWin.insertThumbnailElement avatar, document, toElement
+	end if
+	set avatar = nothing
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		AppendSpeakerName
+'//  Purpose:	Adds the speakers name to the element
+'//  Args:		speakerName - the name of the avatar
+'//				toElement - the elem to add the tnail to
+'//  Called by:	MakeBlurb
+'////////////////////////////////////////////////////////////////////////
+sub AppendSpeakerName (speakerName, toElement)
+	dim elem
+	if speakerName = "" then exit sub
+	set elem = document.createElement("span")
+	elem.className = "SpeakerName"
+	elem.innerHTML = speakerName
+	elem.style.display = "inline"
+	toElement.insertAdjacentElement "BeforeEnd", elem
+	set elem = nothing
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		AppendBlurbText
+'//  Purpose:	Adds the blurb text to the element
+'//  Args:		blurbText - the text to add
+'//				textClass - the css class of the text
+'//				addQuotes - should it add quotes
+'//				toElement - add it to this elem
+'//  Called by:	MakeBlurb
+'////////////////////////////////////////////////////////////////////////
+sub appendBlurbText (blurbText, textClass, addQuotes, toElement)
+	dim elem 
+	blurbText = WordBreak(blurbText,23)
+	set elem = document.createElement("span")
+	elem.className = textClass
+	elem.style.display = "inline"
+	if addQuotes then
+		elem.innerHTML = chr(34) & blurbText & chr(34)
+	else
+		elem.innerHTML = blurbText
+	end if
+	toElement.insertAdjacentElement "BeforeEnd", elem
+	set elem = nothing
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		ApproachAvatar
+'//  Purpose:	Moves the user's avatar close to the specified avatar
+'//  Args:		avName - the avatar to be approached
+'//  Called by:	document_onClick, when user clicks on a thumbnail beside a blurb
+'////////////////////////////////////////////////////////////////////////
+sub ApproachAvatar (avName)
+	dim theAvatar
+	set theAvatar = Nothing
+'	on error resume next
+	if avName <> "" then
+		set theAvatar = topWin.ClientUserPtr.container.findwithin(avName)
+		' Click the People button, setting CurrentAvatarId so people.htm will know who to display
+		topWin.CurrentAvatarId = theAvatar.id
+		topWin.ClientMainToolsIFrame.document.all.item("btnPeople").click
+		if not theAvatar.IsValidProperty("IsConnected") then
+			msgbox avName & " is not currently logged in.", vbInformation, "Sample World"
+		elseif not (theAvatar is topWin.ClientUserPtr) then
+			topWin.ClientUserPtr.ApproachAnother theAvatar
+		end if
+	end if
+	set theAvatar = nothing
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		HandleTell(saidfrom, saidto, msg, msgtype)
+'//  Purpose:	hanles the world "tell" event and dispatchs the message text
+'//  Args:		
+'//		saidfrom	- <string> the user the message is from
+'//		saidto		- <string> the user the message is going too
+'//		msg			- <string> the actual message
+'//		msgtype		- <int> index of the message type
+'//  Called by:	client.htm:theclient_OnUIEvent to handle a Tell event from VWorlds
+'////////////////////////////////////////////////////////////////////////
+sub HandleTell(saidfrom, saidto, msg, msgtype)
+
+	if msg = "does nothing." then exit sub		' suppress waking-up msg 
+	if topWin.ClientUserPtr.IsInUserProfileList(saidFrom, "customIgnoreList") then exit sub
+	select case msgType
+		case 0	' tcSay
+			if not whispering then makeBlurb "blurb" & saidFrom.id, saidFrom.Name, msg, "SpokenText", true, 2,2
+		case 1	' tcSay
+			if not whispering then makeBlurb "blurb" & saidFrom.id, saidFrom.Name, msg, "EmoteText", false, 2,2
+		case 2	' tcThink
+		case 3	' tcWhisper	-- not used
+		case 4  ' tcAnnounce
+		case 5  ' tcGesture
+		case 6  ' tcShout
+		case 7	' tcReport
+			if saidfrom is topWin.ClientUserPtr then
+				makeBlurb "blurb" & saidFrom.id, saidFrom.Name, "[reports] " & msg, "MyName", false, 2,2
+			else
+				makeBlurb "blurb" & saidFrom.id, saidFrom.Name, "[reports] " & msg, "SpeakerName", false, 2,2
+			end if
+		case 8  ' tcAction
+			makeBlurb "blurb" & saidFrom.id, saidFrom.Name, msg, "ActionText", false, 2,2
+		case 9 ' tcLogOff
+			makeBlurb "blurb" & saidFrom.id, saidFrom.Name, "Host logging off " + saidto.name + ".  Reason: " & msg, "TextEvent", false, 2,2
+		case 10 ' tcBot
+			makeBlurb "blurb" & saidFrom.id, saidFrom.Name, msg, "BotMessage", false, 0,2
+	end select
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		HandleReport
+'//  Purpose:	handles report events from the world
+'//  Args:		theStr		- <string> string of the report
+'//				reportType	- <int> report type
+'//  Called by:	client.htm:theclient_OnUIEvent to handle a vworlds Report event
+'////////////////////////////////////////////////////////////////////////
+sub HandleReport(theStr, reportType)
+	select case CLng(reportType)
+		case -1
+			if topWin.bShowSysMsgs then makeBlurb "blurbInfo", "*** Error", theStr, "ErrorText", false, 0, 1
+		case 0  ' return value
+		case 1	' echo
+		case 2  ' result (if any)
+		case 3  ' prompt
+		case 5	' whisper
+'			HandleWhisper (theStr)
+		case 6	' informational messages
+			makeBlurb "blurbInfo", "", theStr, "ReportText", false, 0, 0
+		case 7 ' welcome message
+			makeBlurb "blurbWelcome", "", theStr, "ReportText", false, 0, 0
+		case else
+			makeBlurb "blurbMisc", "REPORT(" & cstr(reportType) & ")", theStr, "ReportText", false, 0, 1
+	end select
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		HandleUIEvent
+'//  Purpose:	handle UI events passed down from the main client page
+'//  Args:		who - the avatar that caused the event to happen
+'//				what - the name of the event
+'//				args - extra info passed as an array
+'//  Called by:	client.htm:theclient_OnUIEvent
+'////////////////////////////////////////////////////////////////////////
+sub HandleUIEvent(byval who, what, byval args)
+	select case What
+		case "OnTell"
+			HandleTell args.property(0), args.property(1), args.property(2), args.property(3)
+		case "OnBotTell"
+			HandleTell args(0), args(1), args(2), 10
+		case "OnLogOff"
+			HandleTell args.property(0), args.property(1), args.property(2), 9
+		case "YouRemovedFriend"				' you took someone off your friend list
+			makeBlurb "blurb" & topWin.ClientUserPtr.id, topWin.ClientUserPtr.name, _
+				"You removed " & who.name & " from your friend list.", "SpokenText", false, 1, 0
+		case "NotifyRemovedFriend"			' someone took you off their friend list
+			makeBlurb "blurb" & topWin.ClientUserPtr.id, topWin.ClientUserPtr.name, _
+				"You have been removed from " & who.name & "'s friend list.", "SpokenText", false, 1, 0
+		case "OnEnterWorld"
+			PlayChimes
+
+			if (not whispering and not (who is topWin.ClientUserPtr)) then
+				makeBlurb "blurb" & who.id, who.name, who.name & " has connected.", "TextEvent", false, 0, 0
+			elseif whispering then
+				' keep this clause separate; window.parent.whisperee is undefined if we are not whispering
+				if who is window.parent.whisperee then
+					makeBlurb "blurb" & who.id, who.name, who.name & " has connected.", "TextEvent", false, 0, 0
+				end if
+			end if
+		case "OnLeaveWorld"
+			if (not whispering and not (who is topWin.ClientUserPtr)) then
+				makeBlurb "blurb" & who.id, who.name, who.name & " has disconnected.", "TextEvent", false, 0, 0
+			elseif whispering then
+				' keep this clause separate; window.parent.whisperee is undefined if we are not whispering
+				if who is window.parent.whisperee then
+					makeBlurb "blurb" & who.id, who.name, who.name & " has disconnected.", "TextEvent", false, 0, 0
+				end if
+			end if
+	end select
+end sub
+
+</script>
+</head>
+
+<body bgcolor="#FFFFFF" class=ClientBackgroundWhite style=margin:4px;>
+
+<div id=ContentContainer class=ClientTextBlack style="position:absolute;top:0;left:0;width:expression(document.body.offsetWidth - 16);">
+</div>
+
+</body>
+</html>

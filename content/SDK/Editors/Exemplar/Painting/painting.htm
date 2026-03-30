@@ -1,0 +1,59 @@
+<HTML>
+<HEAD>
+<TITLE>Choose a new painting</TITLE>
+
+<SCRIPT LANGUAGE=VBScript>
+sub window_OnLoad
+	parent.page=1
+	parent.buttons.UpdateButtons
+	PaintComboBox.additem "http://vwg/Worlds/godzilla/gw1.gif"
+	PaintComboBox.additem "http://vwg/Worlds/ContentTesting/Home/kids.gif"
+	PaintComboBox.additem "http://vwg/Worlds/ContentTesting/rainbow/herhome2.gif"
+	PaintComboBox.additem "http://vwg/Worlds/Avatars/kiss.gif"
+	PaintComboBox.additem "http://vwg/Worlds/kathtest/sched430.gif"
+
+	painting.src = parent.PaintingSelection
+
+	PaintComboBox.value = parent.PaintingSelection
+
+end sub
+
+sub window_OnUnload
+	parent.UpdatePainting
+end sub
+
+</SCRIPT>
+
+</HEAD>
+<BODY>
+<CENTER>
+<H1>
+Customize your painting!
+</H1>
+Type in a URL, or choose from the list.<br><br>
+<OBJECT ID="PaintComboBox" WIDTH=350 HEIGHT=24
+ CLASSID="CLSID:8BD21D30-EC42-11CE-9E0D-00AA006002F3">
+    <PARAM NAME="VariousPropertyBits" VALUE="746604571">
+    <PARAM NAME="MaxLength" VALUE="150">
+    <PARAM NAME="DisplayStyle" VALUE="3">
+    <PARAM NAME="Size" VALUE="6456;635">
+    <PARAM NAME="MatchEntry" VALUE="1">
+    <PARAM NAME="ShowDropButtonWhen" VALUE="2">
+    <PARAM NAME="Value" VALUE="Pick from the list, or type in a new URL">
+    <PARAM NAME="FontCharSet" VALUE="0">
+    <PARAM NAME="FontPitchAndFamily" VALUE="2">
+    <PARAM NAME="FontWeight" VALUE="0">
+</OBJECT>
+<BR><BR>
+<INPUT TYPE=button NAME=BtnUpdatePainting VALUE="Preview painting" onclick="parent.UpdatePainting">
+<BR><BR>
+<TABLE HEIGHT=168 WIDTH=168 BGCOLOR="#666666" STYLE:"z-index:0"><TR><TD></TD></TR></TABLE>
+<TABLE STYLE="position: relative; top:-148px; z-index:1" HEIGHT=128 WIDTH=128 BGCOLOR="#000000"><TR><TD></TD></TR></TABLE>
+<IMAGE STYLE="position: relative; top:-276px; z-index:2" ID="painting" HEIGHT=128 WIDTH=128>
+
+<BR><BR>
+<DIV STYLE="position: relative; top:-270px">You may customize your frame on page 2.
+</DIV>
+</CENTER>
+</BODY>
+</HTML>

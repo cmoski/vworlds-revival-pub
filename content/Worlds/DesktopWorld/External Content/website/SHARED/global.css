@@ -1,0 +1,1826 @@
+
+.ClientBackgroundAddressBar
+{
+    BACKGROUND-COLOR: #bbd1ce;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px
+}
+.ClientBackgroundWhite
+{
+    BACKGROUND-COLOR: #ffffff;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px
+}
+.ClientBackgroundDark
+{
+    BACKGROUND-COLOR: #587f7e;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px
+}
+.ClientBackgroundMainTools
+{
+    BACKGROUND-COLOR: #6e908f;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px
+}
+.ClientBackgroundMedium
+{
+    BACKGROUND-COLOR: #81a19f;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px
+}
+.ClientBackgroundLight
+{
+    BACKGROUND-COLOR: #eef2f1;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px
+}
+.ClientBackgroundHilite
+{
+    BACKGROUND-COLOR: #e8ed95;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px
+}
+.ClientBackgroundTexture
+{
+    BACKGROUND-COLOR: #81a19f;
+    BACKGROUND-IMAGE: url(../Images/grntile2.gif);
+    COLOR: #587f7e;
+    FONT-SIZE: 8pt;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px
+}
+.ClientFakeBorder
+{
+    BACKGROUND-COLOR: #c4d2d1;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px
+}
+.FakeLink
+{
+    COLOR: #587f7e;
+    CURSOR: hand;
+    FONT: bold 8pt/11pt verdana, sans-serif;
+    TEXT-DECORATION: underline
+}
+.ClientHeader
+{
+    COLOR: #587f7e;
+    FONT: bold 11pt/11pt verdana, sans-serif
+}
+.ClientSubHeader
+{
+    COLOR: #587f7e;
+    FONT: bold 8pt/11pt verdana, sans-serif
+}
+.ClientTextBlack
+{
+    COLOR: #000000;
+    FONT: 8pt/11pt verdana, sans-serif
+}
+.ClientTextMedium
+{
+    COLOR: #eef2f1;
+    FONT: 8pt/11pt verdana, sans-serif
+}
+.ClientTextWhite
+{
+    COLOR: #ffffff;
+    FONT: 8pt/11pt verdana, sans-serif
+}
+.ColorPickerHilite
+{
+    COLOR: #ff0000;
+    FONT: 8pt/8pt verdana, sans-serif
+}
+.NotePadFakeButton
+{
+    BACKGROUND-COLOR: white;
+    BORDER-BOTTOM: #713252 1px solid;
+    BORDER-LEFT: #713252 1px solid;
+    BORDER-RIGHT: #713252 1px solid;
+    BORDER-TOP: #713252 1px solid;
+    COLOR: black;
+    CURSOR: hand;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    HEIGHT: 20px;
+    TEXT-ALIGN: center;
+    TOP: 9px;
+    WIDTH: 60px
+}
+.ProfileHeader
+{
+    COLOR: #587f7e;
+    FONT: bold 11pt/11pt verdana, sans-serif
+}
+.ProfileComment
+{
+    COLOR: black;
+    CURSOR: default;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: normal;
+    POSITION: relative
+}
+.ProfileFakeButton
+{
+    BACKGROUND: #bbd1d0;
+    BORDER-BOTTOM: #345a59 1px solid;
+    BORDER-LEFT: #ffffff 1px solid;
+    BORDER-RIGHT: #345a59 1px solid;
+    BORDER-TOP: #ffffff 1px solid;
+    COLOR: #000000;
+    CURSOR: hand;
+    FONT: 8pt/11pt verdana, sans-serif;
+    TEXT-ALIGN: center
+}
+.ProfileInfo
+{
+    COLOR: black;
+    CURSOR: default;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: normal;
+    POSITION: relative
+}
+.ProfileInput
+{
+    COLOR: black;
+    CURSOR: default;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: normal;
+    POSITION: relative
+}
+.ProfileTableBackground
+{
+    BACKGROUND-COLOR: #d9e2e2
+}
+.ProfileTableBorderDark
+{
+    BACKGROUND-COLOR: #587f7e
+}
+.ProfileTextLight
+{
+    COLOR: #5b7e7e;
+    FONT: 8pt/11pt verdana, sans-serif
+}
+.ProfileTextMedium
+{
+    COLOR: #5c8a8a;
+    FONT: bold 8pt/11pt verdana, sans-serif
+}
+.SliderPointer
+{
+    COLOR: #000000;
+    CURSOR: hand;
+    FONT: 28pt webdings
+}
+.StatusBarText
+{
+    COLOR: #78ff8b;
+    FONT: 8pt/8pt verdana, sans-serif
+}
+.TemplateHeader
+{
+    COLOR: #587f7e;
+    FONT: bold 16pt verdana, sans-serif
+}
+.TemplateInfoBlock
+{
+    BACKGROUND-COLOR: #81a19f;
+    BORDER-BOTTOM: #c4d2d1 1px solid;
+    BORDER-LEFT: #c4d2d1 1px solid;
+    BORDER-RIGHT: #c4d2d1 1px solid;
+    BORDER-TOP: #c4d2d1 1px solid;
+    COLOR: #ffffff;
+    FONT: 10pt/24pt verdana, sans-serif
+}
+.xTemplateFakeLink
+{
+    COLOR: #587f7e;
+    CURSOR: hand;
+    FONT: 8pt/11pt verdana, sans-serif;
+    TEXT-DECORATION: underline
+}
+.bDisabled
+{
+    BACKGROUND-COLOR: white;
+    BORDER-BOTTOM: #713252 1px solid;
+    BORDER-LEFT: #713252 1px solid;
+    BORDER-RIGHT: #713252 1px solid;
+    BORDER-TOP: #713252 1px solid;
+    COLOR: #555a47;
+    FILTER: alpha(opacity=60);
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    HEIGHT: 20px;
+    POSITION: absolute;
+    TEXT-ALIGN: center;
+    TOP: 9px;
+    WIDTH: 60px
+}
+.bEnabled
+{
+    BACKGROUND-COLOR: white;
+    BORDER-BOTTOM: #713252 1px solid;
+    BORDER-LEFT: #713252 1px solid;
+    BORDER-RIGHT: #713252 1px solid;
+    BORDER-TOP: #713252 1px solid;
+    COLOR: black;
+    CURSOR: hand;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    HEIGHT: 20px;
+    POSITION: absolute;
+    TEXT-ALIGN: center;
+    TOP: 9px;
+    WIDTH: 60px
+}
+.bGesture
+{
+    BACKGROUND-COLOR: transparent;
+    BORDER-BOTTOM: 0px;
+    BORDER-LEFT: 0px;
+    BORDER-RIGHT: 0px;
+    BORDER-TOP: 0px;
+    COLOR: #713252;
+    CURSOR: hand;
+    HEIGHT: 27px;
+    LEFT: 18px;
+    POSITION: absolute;
+    TOP: 9px;
+    WIDTH: 27px
+}
+.bHelp
+{
+    BACKGROUND-COLOR: transparent;
+    BORDER-BOTTOM: 0px;
+    BORDER-LEFT: 0px;
+    BORDER-RIGHT: 0px;
+    BORDER-TOP: 0px;
+    COLOR: #713252;
+    CURSOR: hand;
+    HEIGHT: 20px;
+    LEFT: 18px;
+    POSITION: absolute;
+    TOP: 9px;
+    WIDTH: 46px
+}
+.bHighlight
+{
+    BACKGROUND-COLOR: white;
+    BORDER-BOTTOM: #713252 1px solid;
+    BORDER-LEFT: #713252 1px solid;
+    BORDER-RIGHT: #713252 1px solid;
+    BORDER-TOP: #713252 1px solid;
+    COLOR: mediumvioletred;
+    CURSOR: hand;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    HEIGHT: 20px;
+    POSITION: absolute;
+    TEXT-ALIGN: center;
+    TOP: 9px;
+    WIDTH: 60px
+}
+.bMain
+{
+    BACKGROUND-COLOR: transparent;
+    BORDER-BOTTOM: #003366 0px;
+    BORDER-LEFT: #003366 0px;
+    BORDER-RIGHT: #003366 0px;
+    BORDER-TOP: #003366 0px;
+    CURSOR: hand;
+    HEIGHT: 20px;
+    POSITION: absolute;
+    TOP: 1px
+}
+.vAvFriend
+{
+    COLOR: #587f7e;
+    CURSOR: default;
+    FONT-FAMILY: verdana, sans-serif;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: bold
+}
+.vAvIgnore
+{
+    COLOR: #587f7e;
+    CURSOR: default;
+    FONT-FAMILY: verdana, sans-serif;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: bold
+}
+.vAvOther
+{
+    COLOR: #587f7e;
+    CURSOR: default;
+    FONT-FAMILY: verdana, sans-serif;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: bold
+}
+.vAvSelf
+{
+    COLOR: #587f7e;
+    CURSOR: default;
+    FONT-FAMILY: verdana, sans-serif;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: bold
+}
+.vMainEnabled
+{
+    COLOR: #a8a896;
+    CURSOR: hand;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: none;
+    TOP: 4px
+}
+.vMainHighlight
+{
+    COLOR: white;
+    CURSOR: hand;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: none;
+    TOP: 4px
+}
+.vBody
+{
+    BACKGROUND-COLOR: #587f7e;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px
+}
+.vCopyTerms
+{
+    COLOR: #555a47;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 7pt;
+    POSITION: absolute
+}
+.vGo
+{
+    BORDER-BOTTOM-STYLE: none;
+    BORDER-LEFT-STYLE: none;
+    BORDER-RIGHT-STYLE: none;
+    BORDER-TOP-STYLE: none;
+    CURSOR: hand;
+    POSITION: absolute
+}
+.vH1
+{
+    COLOR: #eef2f1;
+    CURSOR: default;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 11pt;
+    FONT-WEIGHT: bold;
+    POSITION: absolute
+}
+.vH2
+{
+    COLOR: #555a47;
+    CURSOR: default;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: bold;
+    POSITION: absolute
+}
+.vHelp
+{
+    BORDER-BOTTOM-STYLE: none;
+    BORDER-LEFT-STYLE: none;
+    BORDER-RIGHT-STYLE: none;
+    BORDER-TOP-STYLE: none;
+    CURSOR: hand;
+    LEFT: 18px;
+    POSITION: absolute;
+    TOP: 9px
+}
+.vInput
+{
+    COLOR: black;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    POSITION: absolute
+}
+.vInputLbl
+{
+    COLOR: black;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    LEFT: 0px;
+    POSITION: relative;
+    TOP: -2px
+}
+.vLabel
+{
+    COLOR: black;
+    CURSOR: default;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: normal;
+    POSITION: absolute
+}
+.vLabelSmall
+{
+    COLOR: black;
+    CURSOR: default;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 7pt;
+    FONT-WEIGHT: normal;
+    POSITION: absolute
+}
+.vMainTitle
+{
+    COLOR: #002f5f;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 14pt;
+    POSITION: absolute
+}
+.vMenuStart
+{
+    COLOR: #002f5f;
+    CURSOR: hand;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: underline
+}
+.vStep
+{
+    COLOR: #a1927f;
+    CURSOR: default;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: bold;
+    POSITION: absolute
+}
+.vStepBackGround
+{
+    COLOR: #ddd8c8;
+    FONT-FAMILY: webdings;
+    FONT-SIZE: 22pt;
+    FONT-WEIGHT: bold;
+    POSITION: absolute
+}
+.vTab
+{
+    COLOR: #555a47;
+    CURSOR: hand;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: normal;
+    TEXT-DECORATION: none
+}
+.vTabHightlight
+{
+    COLOR: #555a47;
+    CURSOR: hand;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: normal;
+    TEXT-DECORATION: underline
+}
+.vTabSelect
+{
+    BACKGROUND-COLOR: #9c9b8b;
+    COLOR: white;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: normal
+}
+.vText
+{
+    COLOR: black;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt
+}
+.vThing
+{
+    COLOR: #484635;
+    CURSOR: default;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: normal
+}
+.vThingSubMenu
+{
+    COLOR: #484635;
+    CURSOR: default;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 7pt;
+    FONT-WEIGHT: normal;
+    LEFT: 0px;
+    LINE-HEIGHT: 9pt;
+    LIST-STYLE: none;
+    MARGIN-BOTTOM: 0px;
+    MARGIN-TOP: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-TOP: 0px;
+    POSITION: relative
+}
+.vTitle
+{
+    COLOR: #002f5f;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 11pt;
+    FONT-WEIGHT: bold;
+    POSITION: absolute
+}
+.vtCode
+{
+    COLOR: black;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 10pt
+}
+.vtComment
+{
+    COLOR: gray;
+    CURSOR: hand;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 10pt
+}
+.vwMyName
+{
+    COLOR: blue;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: bold
+}
+.vwMyWhisper
+{
+    COLOR: blue;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt
+}
+.vwOtherName
+{
+    COLOR: black;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: bold
+}
+.vwOtherWhisper
+{
+    COLOR: black;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt
+}
+.vpSymbol
+{
+    COLOR: #e2dbcd;
+    CURSOR: default;
+    FONT-FAMILY: wingdings;
+    FONT-SIZE: 65pt;
+    POSITION: absolute
+}
+.vsReportText
+{
+    COLOR: gray;
+    FONT-FAMILY: courier;
+    FONT-SIZE: 7pt;
+    FONT-WEIGHT: bold
+}
+.vsReturnText
+{
+    COLOR: black;
+    FONT-FAMILY: courier;
+    FONT-SIZE: 7pt
+}
+.vsErrorText
+{
+    COLOR: red;
+    FONT-FAMILY: courier;
+    FONT-SIZE: 7pt
+}
+.vsTraceText
+{
+    COLOR: gray;
+    FONT-FAMILY: courier;
+    FONT-SIZE: 7pt;
+    FONT-STYLE: italic
+}
+.vsEchoText
+{
+    COLOR: black;
+    FONT-FAMILY: courier;
+    FONT-SIZE: 7pt;
+    FONT-WEIGHT: bold
+}
+.vsPromptText
+{
+    COLOR: black;
+    FONT-FAMILY: courier;
+    FONT-SIZE: 8pt
+}
+.vwMenuHighlight
+{
+    COLOR: mediumvioletred;
+    CURSOR: hand;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: underline
+}
+.Help
+{
+    BACKGROUND-COLOR: transparent;
+    COLOR: #713252;
+    CURSOR: hand;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    HEIGHT: 19px;
+    LEFT: 11px;
+    POSITION: absolute;
+    TEXT-ALIGN: center;
+    TOP: 8px;
+    WIDTH: 60px
+}
+.bSay
+{
+    BACKGROUND-COLOR: transparent;
+    BORDER-BOTTOM: #713252 0px;
+    BORDER-LEFT: #713252 0px;
+    BORDER-RIGHT: #713252 0px;
+    BORDER-TOP: #713252 0px;
+    COLOR: #713252;
+    CURSOR: hand;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    HEIGHT: 22px;
+    LEFT: 18px;
+    POSITION: absolute;
+    TEXT-ALIGN: center;
+    TOP: 9px;
+    WIDTH: 28px
+}
+.bDisabledStyle2
+{
+    BACKGROUND-COLOR: white;
+    BORDER-BOTTOM: #713252 1px solid;
+    BORDER-LEFT: #713252 1px solid;
+    BORDER-RIGHT: #713252 1px solid;
+    BORDER-TOP: #713252 1px solid;
+    FILTER: alpha(opacity=60);
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    HEIGHT: 20px;
+    POSITION: absolute;
+    TEXT-ALIGN: center;
+    TOP: 9px;
+    WIDTH: 60px
+}
+.bDisabledStyle
+{
+    BACKGROUND-COLOR: white;
+    BORDER-BOTTOM: #713252 1px solid;
+    BORDER-LEFT: #713252 1px solid;
+    BORDER-RIGHT: #713252 1px solid;
+    BORDER-TOP: #713252 1px solid;
+    COLOR: #555a47;
+    FILTER: alpha(opacity=60);
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    HEIGHT: 20px;
+    POSITION: absolute;
+    TEXT-ALIGN: center;
+    TOP: 9px;
+    WIDTH: 80px
+}
+.bHighlightStyle
+{
+    BACKGROUND-COLOR: white;
+    BORDER-BOTTOM: #713252 1px solid;
+    BORDER-LEFT: #713252 1px solid;
+    BORDER-RIGHT: #713252 1px solid;
+    BORDER-TOP: #713252 1px solid;
+    COLOR: mediumvioletred;
+    CURSOR: hand;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    HEIGHT: 20px;
+    POSITION: absolute;
+    TEXT-ALIGN: center;
+    TOP: 9px;
+    WIDTH: 60px
+}
+.bHighlightStyle1
+{
+    BACKGROUND-COLOR: white;
+    BORDER-BOTTOM: #713252 1px solid;
+    BORDER-LEFT: #713252 1px solid;
+    BORDER-RIGHT: #713252 1px solid;
+    BORDER-TOP: #713252 1px solid;
+    COLOR: mediumvioletred;
+    CURSOR: hand;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    HEIGHT: 20px;
+    POSITION: absolute;
+    TEXT-ALIGN: center;
+    TOP: 9px;
+    WIDTH: 80px
+}
+.bStyle1
+{
+    BACKGROUND-COLOR: white;
+    BORDER-BOTTOM: #713252 1px solid;
+    BORDER-LEFT: #713252 1px solid;
+    BORDER-RIGHT: #713252 1px solid;
+    BORDER-TOP: #713252 1px solid;
+    COLOR: black;
+    CURSOR: hand;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    HEIGHT: 20px;
+    POSITION: absolute;
+    TEXT-ALIGN: center;
+    TOP: 9px;
+    WIDTH: 80px
+}
+.bStyle2
+{
+    BACKGROUND-COLOR: white;
+    BORDER-BOTTOM: #713252 1px solid;
+    BORDER-LEFT: #713252 1px solid;
+    BORDER-RIGHT: #713252 1px solid;
+    BORDER-TOP: #713252 1px solid;
+    COLOR: black;
+    CURSOR: hand;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    HEIGHT: 20px;
+    POSITION: absolute;
+    TEXT-ALIGN: center;
+    TOP: 9px;
+    WIDTH: 35px
+}
+.bStyle
+{
+    BACKGROUND-COLOR: white;
+    BORDER-BOTTOM: #713252 1px solid;
+    BORDER-LEFT: #713252 1px solid;
+    BORDER-RIGHT: #713252 1px solid;
+    BORDER-TOP: #713252 1px solid;
+    COLOR: black;
+    CURSOR: hand;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    HEIGHT: 20px;
+    POSITION: absolute;
+    TEXT-ALIGN: center;
+    TOP: 9px;
+    WIDTH: 60px
+}
+.onHelp
+{
+    BACKGROUND-COLOR: transparent;
+    COLOR: mediumvioletred;
+    CURSOR: hand;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    HEIGHT: 19px;
+    LEFT: 11px;
+    POSITION: absolute;
+    TEXT-ALIGN: center;
+    TOP: 8px;
+    WIDTH: 60px
+}
+.vHighlightinput2
+{
+    BACKGROUND-COLOR: gray;
+    COLOR: black;
+    FONT-FAMILY: arial;
+    FONT-SIZE: 8pt
+}
+.vastep
+{
+    COLOR: #747466;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 7.5pt;
+    FONT-WEIGHT: bold
+}
+.vauthor
+{
+    COLOR: #002f5f;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 11pt;
+    FONT-WEIGHT: bold
+}
+.vcomment
+{
+    COLOR: black;
+    FONT-FAMILY: arial;
+    FONT-SIZE: 7pt
+}
+.vhh1
+{
+    COLOR: #810043;
+    CURSOR: default;
+    FONT-FAMILY: georgia;
+    FONT-SIZE: 15pt;
+    FONT-WEIGHT: bold;
+    POSITION: absolute
+}
+.vhh2
+{
+    COLOR: #747466;
+    CURSOR: default;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 9pt;
+    FONT-WEIGHT: bold
+}
+.vinput1
+{
+    COLOR: black;
+    FONT-FAMILY: arial;
+    FONT-SIZE: 8pt
+}
+.vlabelh2
+{
+    COLOR: #555a47;
+    CURSOR: default;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: bold
+}
+.vlabelh3
+{
+    COLOR: #555a47;
+    CURSOR: default;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 9pt;
+    FONT-WEIGHT: bold
+}
+.vplabelh2
+{
+    COLOR: white;
+    CURSOR: default;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: bold;
+    PADDING-TOP: 2px
+}
+.vplabel
+{
+    COLOR: #798e87;
+    CURSOR: default;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt
+}
+.vprofile1
+{
+    COLOR: #4f5e59;
+    FONT-FAMILY: georgia;
+    FONT-SIZE: 15pt;
+    FONT-WEIGHT: bold
+}
+.vsmall
+{
+    COLOR: black;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 7pt
+}
+.vweb1
+{
+    COLOR: #713252;
+    CURSOR: hand;
+    FONT-FAMILY: webdings;
+    FONT-SIZE: 22pt;
+    FONT-WEIGHT: bold
+}
+.vweb2
+{
+    COLOR: white;
+    CURSOR: hand;
+    FONT-FAMILY: webdings;
+    FONT-SIZE: 8pt
+}
+.vweb
+{
+    COLOR: #ddd8c8;
+    FONT-FAMILY: webdings;
+    FONT-SIZE: 22pt;
+    FONT-WEIGHT: bold
+}
+.vworld2
+{
+    COLOR: #5f66bb;
+    FONT-FAMILY: arial;
+    FONT-SIZE: 8pt
+}
+.vworldwiz3
+{
+    COLOR: #555a47;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 10pt;
+    FONT-WEIGHT: bold
+}
+.vworld
+{
+    COLOR: #5f66bb;
+    CURSOR: default;
+    FONT-FAMILY: georgia;
+    FONT-SIZE: 9pt;
+    FONT-WEIGHT: bold
+}
+.TemplateLogoBG
+{
+    BACKGROUND-COLOR: #c0f0f0
+}
+.btnNarrow
+{
+    BACKGROUND-IMAGE: url(../images/smbutton.gif);
+    COLOR: white;
+    CURSOR: hand;
+    FONT-FAMILY: Verdana;
+    FONT-SIZE: 8pt;
+    TEXT-ALIGN: center
+}
+.btnWide
+{
+    BACKGROUND-IMAGE: url(../Images/bigbutton1.gif);
+    COLOR: white;
+    CURSOR: hand;
+    FONT-FAMILY: Verdana;
+    FONT-SIZE: 8pt;
+    TEXT-ALIGN: center
+}
+.vwObjectBlock
+{
+    COLOR: #587f7e;
+    FONT-FAMILY: Verdana
+}
+.vwMenuHeading
+{
+    COLOR: #587f7e;
+    FONT-FAMILY: Verdana;
+    FONT-SIZE: 10pt;
+    FONT-WEIGHT: bold
+}
+.vPageHeading
+{
+    COLOR: #587f7e;
+    FONT-FAMILY: Tahoma;
+    FONT-SIZE: 14pt;
+    FONT-WEIGHT: normal
+}
+.vSectionHeading1
+{
+    COLOR: #587f7e;
+    FONT-FAMILY: Verdana;
+    FONT-SIZE: 10pt;
+    FONT-WEIGHT: bold
+}
+.bltCube
+{
+    FONT-FAMILY: webdings;
+    FONT-SIZE: 5px;
+    LINE-HEIGHT: 5px;
+    TEXT-ALIGN: center;
+    TEXT-DECORATION: none;
+    WIDTH: 12px
+}
+.bltCubeII
+{
+    FONT-FAMILY: webdings;
+    FONT-SIZE: 5px;
+    LINE-HEIGHT: 5px;
+    MARGIN-LEFT: 8px;
+    TEXT-ALIGN: center;
+    TEXT-DECORATION: none;
+    WIDTH: 12px
+}
+.bltCubeIII
+{
+    FONT-FAMILY: Verdana;
+    FONT-SIZE: 5px;
+    LINE-HEIGHT: 5px;
+    MARGIN-LEFT: 16px;
+    TEXT-ALIGN: center;
+    TEXT-DECORATION: none;
+    WIDTH: 12px
+}
+.bltArrow
+{
+    FONT-FAMILY: webdings;
+    FONT-SIZE: 9px;
+    LINE-HEIGHT: 9px;
+    TEXT-ALIGN: center;
+    TEXT-DECORATION: none;
+    WIDTH: 12px
+}
+.bltArrowII
+{
+    FONT-FAMILY: webdings;
+    FONT-SIZE: 9px;
+    LINE-HEIGHT: 9px;
+    MARGIN-LEFT: 8px;
+    TEXT-ALIGN: center;
+    TEXT-DECORATION: none;
+    WIDTH: 12px
+}
+.btnWide
+{
+    LEFT: 0px;
+    POSITION: absolute;
+    TOP: 0px;
+    ;
+    WIDTH: expression(btnWidth)
+}
+.btnImage
+{
+    HEIGHT: 28px;
+    WIDTH: 82px
+}
+.btnContainer
+{
+    BEHAVIOR: url(../htc/ToolbarRollover.htc);
+    CURSOR: hand;
+    POSITION: absolute;
+    TOP: 0px;
+    WIDTH: 82px
+}
+.btnContainer_CLK
+{
+    CURSOR: default;
+    POSITION: absolute;
+    TOP: 0px;
+    WIDTH: 82px
+}
+.btnText
+{
+    COLOR: #ffffff;
+    FONT-FAMILY: "Verdana";
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: bold;
+    LEFT: 0px;
+    LINE-HEIGHT: 26px;
+    POSITION: absolute;
+    TEXT-ALIGN: center;
+    TOP: 0px;
+    WIDTH: 82px
+}
+.btnTextSm
+{
+    COLOR: #ffffff;
+    FONT-FAMILY: "Webdings";
+    FONT-SIZE: 10pt;
+    FONT-WEIGHT: bold;
+    LEFT: 0px;
+    LINE-HEIGHT: 27px;
+    POSITION: absolute;
+    TEXT-ALIGN: center;
+    TOP: 0px;
+    WIDTH: 27px
+}
+.MenuII
+{
+    BACKGROUND-COLOR: #6c8484;
+    BEHAVIOR: url("../htc/SideLinksRollover.htc");
+    BORDER-LEFT: #3b5d5c 1px solid;
+    BORDER-RIGHT: #3b5d5c 1px solid;
+    CURSOR: hand;
+    DISPLAY: block;
+    HEIGHT: 25px;
+    LEFT: 5px;
+    WIDTH: 115px
+}
+.MenuII_Help
+{
+    BACKGROUND-COLOR: #6c8484;
+    BEHAVIOR: url("../htc/SideLinksRollover.htc");
+    BORDER-LEFT: #3b5d5c 1px solid;
+    BORDER-RIGHT: #3b5d5c 1px solid;
+    COLOR: #ffffff;
+    CURSOR: hand;
+    DISPLAY: block;
+    FONT-FAMILY: "Verdana";
+    FONT-SIZE: 8pt;
+    HEIGHT: 15px;
+    LINE-HEIGHT: 12px;
+    OVERFLOW-X: hidden;
+    TEXT-DECORATION: underline;
+    WIDTH: 115px
+}
+.MenuII_Help_MO
+{
+    BACKGROUND-COLOR: #6c8484;
+    BEHAVIOR: url("../htc/SideLinksRollover.htc");
+    BORDER-LEFT: #3b5d5c 1px solid;
+    BORDER-RIGHT: #3b5d5c 1px solid;
+    COLOR: #78fe8b;
+    CURSOR: hand;
+    DISPLAY: block;
+    FONT-FAMILY: "Verdana";
+    FONT-SIZE: 8pt;
+    HEIGHT: 15px;
+    LINE-HEIGHT: 12px;
+    OVERFLOW-X: hidden;
+    TEXT-DECORATION: underline;
+    WIDTH: 115px
+}
+.MenuII_Help_CLK
+{
+    BACKGROUND-COLOR: #6c8484;
+    BEHAVIOR: none;
+    BORDER-LEFT: #3b5d5c 1px solid;
+    BORDER-RIGHT: #3b5d5c 1px solid;
+    COLOR: #78fe8b;
+    CURSOR: default;
+    DISPLAY: block;
+    FONT-FAMILY: "Verdana";
+    FONT-SIZE: 8pt;
+    HEIGHT: 15px;
+    LINE-HEIGHT: 12px;
+    OVERFLOW-X: hidden;
+    TEXT-DECORATION: underline;
+    WIDTH: 115px
+}
+.MenuII_Help_X_CLK
+{
+    BACKGROUND-COLOR: #6c8484;
+    BEHAVIOR: none;
+    BORDER-LEFT: #3b5d5c 1px solid;
+    BORDER-RIGHT: #3b5d5c 1px solid;
+    COLOR: #78fe8b;
+    CURSOR: default;
+    DISPLAY: block;
+    FONT-FAMILY: "Verdana";
+    FONT-SIZE: 8pt;
+    HEIGHT: 15px;
+    LINE-HEIGHT: 12px;
+    OVERFLOW-X: hidden;
+    TEXT-DECORATION: underline;
+    WIDTH: 115px;
+}
+.MenuIII_Help
+{
+    BACKGROUND-COLOR: #6c8484;
+    BEHAVIOR: url("../htc/SideLinksRollover.htc");
+    BORDER-LEFT: #3b5d5c 1px solid;
+    BORDER-RIGHT: #3b5d5c 1px solid;
+    COLOR: #78fe8b;
+    CURSOR: hand;
+    DISPLAY: block;
+    FONT-FAMILY: Verdana;
+    FONT-SIZE: 8pt;
+    LEFT: 0px;
+    LINE-HEIGHT: 15px;
+    POSITION: relative;
+    WIDTH: 115px
+}
+.MenuII_Help_Pad
+{
+    BACKGROUND-COLOR: #6c8484;
+    BORDER-BOTTOM: #3b5d5c 1px solid;
+    BORDER-LEFT: #3b5d5c 1px solid;
+    BORDER-RIGHT: #3b5d5c 1px solid;
+    DISPLAY: block;
+    HEIGHT: 5px;
+    LEFT: 0px;
+    LINE-HEIGHT: 1px;
+    POSITION: relative;
+    WIDTH: 115px
+}
+.MenuII_Pad
+{
+    BACKGROUND-COLOR: #6c8484;
+    BORDER-LEFT: #3b5d5c 1px solid;
+    BORDER-RIGHT: #3b5d5c 1px solid;
+    DISPLAY: block;
+    HEIGHT: 0px;
+    LEFT: 0px;
+    LINE-HEIGHT: 5px;
+    POSITION: relative;
+    WIDTH: 115px
+}
+.MenuII_Tnail
+{
+    DISPLAY: inline;
+    MARGIN-LEFT: 12px;
+    MARGIN-TOP: 5px;
+    WIDTH: 22px
+}
+.MenuII_Title
+{
+    COLOR: white;
+    CURSOR: hand;
+    DISPLAY: inline;
+    FONT-FAMILY: "Verdana";
+    FONT-SIZE: 8pt;
+    LINE-HEIGHT: 12px;
+    MARGIN-TOP: 5px;
+    OVERFLOW-X: hidden;
+    TEXT-DECORATION: underline;
+    WIDTH: 77px
+}
+.MenuII_Title_CLK
+{
+    COLOR: #78fe8b;
+    CURSOR: hand;
+    DISPLAY: inline;
+    FONT-FAMILY: "Verdana";
+    FONT-SIZE: 8pt;
+    LINE-HEIGHT: 12px;
+    MARGIN-TOP: 5px;
+    OVERFLOW-X: hidden;
+    TEXT-DECORATION: underline;
+    WIDTH: 77px
+}
+.MenuII_Title_MO
+{
+    COLOR: #78fe8b;
+    CURSOR: hand;
+    DISPLAY: inline;
+    FONT-FAMILY: "Verdana";
+    FONT-SIZE: 8pt;
+    LINE-HEIGHT: 12px;
+    MARGIN-TOP: 5px;
+    OVERFLOW-X: hidden;
+    TEXT-DECORATION: underline;
+    WIDTH: 77px
+}
+.MenuIII
+{
+    COLOR: #78fe8b;
+    CURSOR: hand;
+    DISPLAY: block;
+    FONT-FAMILY: Verdana;
+    FONT-SIZE: 8pt;
+    LEFT: 29px;
+    LINE-HEIGHT: 15px;
+    POSITION: relative;
+    WIDTH: 83px
+}
+.MenuIII_BtmPad
+{
+    BACKGROUND-COLOR: #6c8484;
+    DISPLAY: block;
+    HEIGHT: 5px;
+    LEFT: 0px;
+    LINE-HEIGHT: 5px;
+    POSITION: relative;
+    WIDTH: 113px
+}
+.MenuI_BtmPad
+{
+    BACKGROUND-COLOR: white;
+    BORDER-BOTTOM: #3b5d5c 1px solid;
+    BORDER-LEFT: #3b5d5c 1px solid;
+    BORDER-RIGHT: #3b5d5c 1px solid;
+    DISPLAY: block;
+    HEIGHT: 1px;
+    LEFT: 0px;
+    LINE-HEIGHT: 1px;
+    POSITION: relative;
+    WIDTH: 115px
+}
+.MenuI
+{
+    BACKGROUND-COLOR: #bad2ce;
+    BEHAVIOR: url("../htc/SideLinksRollover.htc");
+    BORDER-BOTTOM: #3b5d5c 1px solid;
+    BORDER-LEFT: #3b5d5c 1px solid;
+    BORDER-RIGHT: #3b5d5c 1px solid;
+    COLOR: #3b5d5c;
+    CURSOR: hand;
+    FONT-FAMILY: "Verdana";
+    FONT-SIZE: 8pt;
+    HEIGHT: 18px;
+    LINE-HEIGHT: 18px;
+    POSITION: relative;
+    TEXT-DECORATION: none;
+    TOP: 0px;
+    WIDTH: 115px
+}
+.MenuI_MO
+{
+    BACKGROUND-COLOR: #6c8484;
+    BEHAVIOR: url("../htc/SideLinksRollover.htc");
+    BORDER-BOTTOM: #3b5d5c 1px solid;
+    BORDER-LEFT: #3b5d5c 1px solid;
+    BORDER-RIGHT: #3b5d5c 1px solid;
+    COLOR: #ffffff;
+    CURSOR: hand;
+    FONT-FAMILY: "Verdana";
+    FONT-SIZE: 8pt;
+    HEIGHT: 18px;
+    LINE-HEIGHT: 18px;
+    POSITION: relative;
+    TEXT-DECORATION: none;
+    TOP: 0px;
+    WIDTH: 115px
+}
+.MenuI_CLK
+{
+    BACKGROUND-COLOR: #6c8484;
+    BEHAVIOR: none;
+    BORDER-BOTTOM: #3b5d5c 1px solid;
+    BORDER-LEFT: #3b5d5c 1px solid;
+    BORDER-RIGHT: #3b5d5c 1px solid;
+    COLOR: #ffffff;
+    CURSOR: default;
+    FONT-FAMILY: "Verdana";
+    FONT-SIZE: 8pt;
+    HEIGHT: 18px;
+    LINE-HEIGHT: 18px;
+    POSITION: relative;
+    TEXT-DECORATION: none;
+    TOP: 0px;
+    WIDTH: 115px
+}
+.MenuI_X_CLK
+{
+    BACKGROUND-COLOR: #6c8484;
+    BEHAVIOR: none;
+    BORDER-BOTTOM: #bad2ce 1px solid;
+    BORDER-LEFT: #3b5d5c 1px solid;
+    BORDER-RIGHT: #3b5d5c 1px solid;
+    COLOR: #ffffff;
+    CURSOR: default;
+    FONT-FAMILY: "Verdana";
+    FONT-SIZE: 8pt;
+    HEIGHT: 18px;
+    LINE-HEIGHT: 18px;
+    POSITION: relative;
+    TEXT-DECORATION: none;
+    TOP: 0px;
+    WIDTH: 115px;
+    note-the-bottom-border-is-different-than-above: x
+}
+.MenuBlock
+{
+    BACKGROUND-COLOR: #6c8484;
+    BORDER-BOTTOM: #3b5d5c 1px solid;
+    HEIGHT: 1px;
+    LINE-HEIGHT: 1px;
+    WIDTH: 115px
+}
+.NewImg
+{
+    DISPLAY: none;
+    LEFT: 105px;
+    POSITION: absolute
+}
+.icnNewThing
+{
+    CURSOR: hand;
+    ;
+    LEFT: 75px;
+    POSITION: absolute;
+    TOP: 5px
+}
+.imgThumb2
+{
+    DISPLAY: inline;
+    FILTER: light();
+    HEIGHT: 16px;
+    LEFT: 0px;
+    POSITION: relative;
+    TOP: 0px;
+    WIDTH: 20px
+}
+.imgThumb1
+{
+    FILTER: light();
+    HEIGHT: 16px;
+    LEFT: 0px;
+    POSITION: absolute;
+    TOP: 0px;
+    WIDTH: 20px
+}
+.SideLinks
+{
+    HEIGHT: expression(document.body.offsetHeight);
+    LEFT: 0px;
+    OVERFLOW-Y: auto;
+    POSITION: absolute;
+    TOP: 0px;
+    WIDTH: 130px;
+	z-index:100;	
+}
+.bkgMenu
+{
+    BACKGROUND-IMAGE: url(../Images/bkgMenu.gif);
+    HEIGHT: 100%;
+    WIDTH: 115px;
+}
+.InfoIFrame
+{
+    BORDER:none;
+    HEIGHT: 100%;
+    LEFT: 131px;
+	TOP: 0px;
+    MARGIN: 0px;
+    POSITION: absolute;
+    WIDTH: expression(parent.body.clientWidth-131);
+    IDTH: expression(document.body.clientWidth-131);
+	VERFLOW-X: scroll;
+    VERFLOW-Y: hidden;	
+}
+.PageHeading
+{
+    COLOR:#587f7e;
+    FONT-FAMILY:Tahoma;
+    FONT-SIZE:13pt;
+    LEFT:0px;
+    LETTER-SPACING:0.5pt;
+    POSITION:absolute;
+    TOP:18px;
+	WIDTH:expression(document.body.clientWidth-15);
+    CURSOR: default;	
+}
+.bkgPageHeading
+{
+    BACKGROUND-POSITION:right top;
+    BACKGROUND-REPEAT:no-repeat;
+    HEIGHT:100%;
+    LEFT:0px;
+    POSITION:absolute;
+    TOP:0px;
+    WIDTH:expression(document.body.clientWidth);
+	Z-INDEX:-100;
+    CURSOR: default;
+}
+.bkgPageHeadingPatch
+{
+    BACKGROUND:#FFFFFF;
+    HEIGHT:41px;
+    LEFT:0px;
+    POSITION:absolute;
+    TOP:0px;
+    WIDTH:expression(document.body.clientWidth);
+    Z-INDEX:-101;
+    CURSOR: default;	
+}
+.PageHeadingRt
+{
+    COLOR: black;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    LEFT: 0px;
+    MARGIN-RIGHT: 16px;
+    POSITION: absolute;
+    TEXT-ALIGN: right;
+    TOP: 24px;
+    WIDTH:expression(document.body.clientWidth-15);
+    CURSOR: default;
+}
+.PageHeadingHR
+{
+    HEIGHT: 1px;
+    LEFT: 0px;
+    MARGIN-RIGHT: 16px;
+    POSITION: absolute;
+    TOP: 35px;
+    WIDTH:expression(document.body.clientWidth-15);
+}
+.ParaHeading
+{
+    COLOR: #587f7e;
+    FONT-FAMILY: Tahoma;
+    FONT-SIZE: 10pt;
+    FONT-STYLE: italic;
+    POSITION: relative
+}
+.ParaHeadingII
+{
+    FONT-FAMILY: Tahoma;
+    FONT-SIZE: 10pt;
+    FONT-STYLE: italic;
+    POSITION: relative
+}
+.ParaText
+{
+    COLOR: black;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    LEFT: 0px;
+    MARGIN-RIGHT: 16px;
+    MARGIN-TOP: 10px;
+    POSITION: relative;
+    TOP: 45px
+}
+.ParaText2
+{
+    COLOR: black;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    MARGIN-RIGHT: 16px;
+}
+.btnDialog_MO
+{
+    BEHAVIOR: url(../htc/DialogButtons.htc);
+    BORDER-BOTTOM-WIDTH: 1px;
+    BORDER-LEFT-WIDTH: 1px;
+    BORDER-RIGHT-WIDTH: 1px;
+    BORDER-TOP-WIDTH: 1px;
+    COLOR: black;
+    CURSOR: hand;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    HEIGHT: 18px;
+    LINE-HEIGHT: 18px;
+    TEXT-ALIGN: center;
+    WIDTH: 50px
+}
+.btnDialog_CLK
+{
+    BORDER-BOTTOM-WIDTH: 1px;
+    BORDER-LEFT-WIDTH: 1px;
+    BORDER-RIGHT-WIDTH: 1px;
+    BORDER-TOP-WIDTH: 1px;
+    COLOR: white;
+    CURSOR: hand;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    HEIGHT: 18px;
+    LINE-HEIGHT: 18px;
+    TEXT-ALIGN: center;
+    WIDTH: 50px
+}
+.btnDialog
+{
+    BEHAVIOR: url(../htc/DialogButtons.htc);
+    BORDER-BOTTOM-WIDTH: 1px;
+    BORDER-LEFT-WIDTH: 1px;
+    BORDER-RIGHT-WIDTH: 1px;
+    BORDER-TOP-WIDTH: 1px;
+    COLOR: black;
+    CURSOR: hand;
+    FONT-FAMILY: verdana;
+    FONT-SIZE: 8pt;
+    HEIGHT: 18px;
+    LINE-HEIGHT: 18px;
+    TEXT-ALIGN: center;
+    WIDTH: 50px
+}
+.btnDialog_DIS
+{
+    BORDER-BOTTOM-WIDTH: 1px;
+    BORDER-LEFT-WIDTH: 1px;
+    BORDER-RIGHT-WIDTH: 1px;
+    BORDER-TOP-WIDTH: 1px;
+    COLOR:gray;
+    FONT-FAMILY:verdana;
+    FONT-SIZE:8pt;
+    HEIGHT:18px;
+    LINE-HEIGHT:18px;
+    TEXT-ALIGN: center;
+    WIDTH: 50px
+}
+
+.btnTeal
+{
+	BEHAVIOR: url(../htc/FormButtons.htc);
+	width:50;
+	BACKGROUND-COLOR:#BAD2CE;
+	BORDER:#FFFFFF 1px outset;
+	FONT-FAMILY:Verdana;
+	FONT-SIZE:8pt;
+	color:#000000;
+	height:20;
+	margin-left:2;
+	margin-right:2;	
+}
+
+.btnTeal_MO
+{
+	BEHAVIOR: url(../htc/FormButtons.htc);
+	width:50;
+	BACKGROUND-COLOR:#6C8484;
+	BORDER:#FFFFFF 1px inset;
+	FONT-FAMILY:Verdana;
+	FONT-SIZE:8pt;
+	color:#FFFFFF;
+	height:20;
+	margin-left:2;
+	margin-right:2;	
+}
+
+.btnGreen
+{
+	BEHAVIOR: url(../htc/FormButtons.htc);
+	width:50;
+	BACKGROUND-COLOR:#9CC692;
+	BORDER:#FFFFFF 1px outset;
+	FONT-FAMILY:Verdana;
+	FONT-SIZE:8pt;
+	color:#000000;
+	height:20;
+	margin-left:2;
+	margin-right:2;	
+}
+
+.btnGreen_MO
+{
+	BEHAVIOR: url(../htc/FormButtons.htc);
+	width:50;
+	BACKGROUND-COLOR:#83947F;
+	BORDER:#FFFFFF 1px inset;
+	FONT-FAMILY:Verdana;
+	FONT-SIZE:8pt;
+	color:#FFFFFF;
+	height:20;
+	margin-left:2;
+	margin-right:2;	
+}
+
+.btnBlue
+{
+	BEHAVIOR: url(../htc/FormButtons.htc);
+	width:50;
+	BACKGROUND-COLOR:#91CAF1;
+	BORDER:#FFFFFF 1px outset;
+	FONT-FAMILY:Verdana;
+	FONT-SIZE:8pt;
+	color:#000000;
+	height:20;
+	margin-left:2;
+	margin-right:2;	
+}
+
+.btnBlue_MO
+{
+	BEHAVIOR: url(../htc/FormButtons.htc);
+	width:50;
+	BACKGROUND-COLOR:#5A81A1;
+	BORDER:#FFFFFF 1px inset;
+	FONT-FAMILY:Verdana;
+	FONT-SIZE:8pt;
+	color:#FFFFFF;
+	height:20;
+	margin-left:2;
+	margin-right:2;	
+}
+
+.btnYellow
+{
+	BEHAVIOR: url(../htc/FormButtons.htc);
+	width:50;
+	BACKGROUND-COLOR:#EBED00;
+	BORDER:#FFFFFF 1px outset;
+	FONT-FAMILY:Verdana;
+	FONT-SIZE:8pt;
+	color:#000000;
+	height:20;
+	margin-left:2;
+	margin-right:2;	
+}
+
+.btnYellow_MO
+{
+	BEHAVIOR: url(../htc/FormButtons.htc);
+	width:50;
+	BACKGROUND-COLOR:#ADA632;
+	BORDER:#FFFFFF 1px inset;
+	FONT-FAMILY:Verdana;
+	FONT-SIZE:8pt;
+	color:#FFFFFF;
+	height:20;
+	margin-left:2;
+	margin-right:2;	
+}
+
+.btnView
+{
+	BEHAVIOR: url(../htc/FormButtons.htc);
+	width:50;
+	BACKGROUND-COLOR:#91CAF1;
+	BORDER:#FFFFFF 1px outset;
+	FONT-FAMILY:Verdana;
+	FONT-SIZE:8pt;
+	color:#000000;
+	height:15;
+	margin-left:2;
+	margin-right:2;
+	line-height:30;			
+}
+
+.btnView_MO
+{
+	BEHAVIOR: url(../htc/FormButtons.htc);
+	width:50;
+	BACKGROUND-COLOR:#5A81A1;
+	BORDER:#FFFFFF 1px inset;
+	FONT-FAMILY:Verdana;
+	FONT-SIZE:8pt;
+	color:#FFFFFF;
+	height:15;
+	margin-left:2;
+	margin-right:2;
+	line-height:30;	
+}
+
+.NotePaper_Sun
+{
+    BACKGROUND: url(../Images/noteSun.gif) #f9f3dd no-repeat right top;
+    BORDER-BOTTOM: #7c786b 1px solid;
+    BORDER-LEFT: #7c786b 1px solid;
+    BORDER-RIGHT: #7c786b 1px solid;
+    BORDER-TOP: #7c786b 1px solid;
+    FONT-FAMILY: "Comic Sans MS"
+	font:11pt normal #7C786B
+}
+.NotePaper_Plain
+{
+    BACKGROUND: #ffffff;
+    BORDER-BOTTOM: black 1px solid;
+    BORDER-LEFT: black 1px solid;
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: black 1px solid
+}
+.NotePaper_Floral
+{
+    BACKGROUND: url(../Images/noteFloral.gif);
+    BORDER-BOTTOM: black 1px solid;
+    BORDER-LEFT: black 1px solid;
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: black 1px solid
+}
+.NotePaper_Painter
+{
+    BACKGROUND: url(../Images/noteBrush.gif) no-repeat;
+    BORDER-BOTTOM: #e90029 1px solid;
+    BORDER-LEFT: #e90029 1px solid;
+    BORDER-RIGHT: #e90029 1px solid;
+    BORDER-TOP: #e90029 1px solid
+}
+.NotePaper_Clouds
+{
+    BACKGROUND: url(../Images/noteClouds.gif) #a0c8d9 repeat-x;
+    BORDER-BOTTOM: #2c62a3 1px solid;
+    BORDER-LEFT: #2c62a3 1px solid;
+    BORDER-RIGHT: #2c62a3 1px solid;
+    BORDER-TOP: #2c62a3 1px solid;
+    FONT: 12pt normal #2C62A3
+}
+
+.LinkTo
+{
+    COLOR: blue;
+	text-decoration:underline;
+	cursor:hand;
+}
+.LinkTo_MO
+{
+    COLOR: #587F7E;
+	text-decoration:underline;
+	cursor:hand;
+}
+
+A
+{
+    COLOR: #587f7e
+}
+:link
+{
+    COLOR: blue
+}
+:visited
+{
+    COLOR: #587f7e
+}
+:hover
+{
+    COLOR: #587f7e
+}
+:active
+{
+    COLOR: #587f7e
+}

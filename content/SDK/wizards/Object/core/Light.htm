@@ -1,0 +1,44 @@
+<html>
+<head>
+<link rel=stylesheet href=..\..\..\..\client\shared\global.css>
+<script language=vbs>
+
+top.newDesc = "Light"
+top.newType = "Light"
+top.newFile = "SDK\Library\models\shapes\artifact.x"
+
+sub document_OnSelectStart
+	Select Case window.event.srcElement.tagName
+	case "INPUT", "TEXTAREA"
+		select case window.event.srcElement.type
+		case "text", "textarea", "file", "password"
+		case else
+			window.event.returnValue = false
+		end select
+	case Else
+		window.event.returnValue = false
+	end select
+end sub
+
+sub document_onKeyPress
+	select case window.event.keycode
+	case 27
+		top.DoCancel
+	case 13
+		top.DoCreate
+	case else
+	end select
+end sub
+
+</script>
+</head>
+<body class=vBody>
+<div class=vH1 align=center>
+	Light
+</div>
+<div class=vLabel Style=top:35;padding-right:5;>
+	Light objects mimic the behavior of natural light, providing a much more realistic and visually appealing 3-dimensional space.
+	<p>The effects of Light objects are cumulative and are rendered on other objects that have their RenderQuality property set to 3 or above.
+	<p>The default appearance of a Light object is a light green pyramid.</div>
+</body>
+</html>

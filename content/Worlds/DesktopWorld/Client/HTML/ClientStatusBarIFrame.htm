@@ -1,0 +1,159 @@
+<!--'////////////////////////////////////////////////////////////////////
+'// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+'//
+'//  File:			ClientStatusBarIFrame.htm
+'//  Description:	The client status display, a 1-line iframe between the chat area
+'// 				and the 3d renderer.
+'//
+'////////////////////////////////////////////////////////////////////////-->
+<html>
+<head>
+<title>ClientStatusBarIFrame</title>
+<link rel=stylesheet href=../shared/global.css>
+<!--include scripts-->
+<script language="vbscript" src="../vbs/document_OnSelectStart.vbs">
+</script>
+<!--end include scripts-->
+<script language=vbs>
+
+option explicit
+
+' This frame displays informational msgs and the name of the area the user has navigated to.
+' The two fields are overlaid, with the info msg left-justified and area name right-justified.
+' This lets either piece of text take up however much of the line it needs, and we depend on
+' the design of the messages for them not to superimpose on each other.
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		window_onload
+'//  Purpose:	add this window to the list of pages that want to receive UI events 
+'////////////////////////////////////////////////////////////////////////
+sub window_onLoad
+	if not top.isWorldLoaded then
+		window.setTimeout "window_onload", 500, "vbs"
+		exit sub
+	elseif not isObject(top.ClientUserPtr.container) then
+		window.setTimeout "window_onload", 500, "vbs"
+		exit sub
+	end if
+	top.AddToEventList window
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		window_onUnload
+'//  Purpose:	removes itself from the event list
+'////////////////////////////////////////////////////////////////////////
+sub window_onUnload
+	top.RemoveFromEventList window
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		SetLeftStatus(msg)
+'//  Purpose:	sets the text for the left side of the status display
+'//	 Params:
+'//		msg		- <string> the message	
+'//  Called by:	ShowStatus
+'//				ShowAreaStatus
+'//				chatbox.htm:toggleOverview
+'////////////////////////////////////////////////////////////////////////
+sub SetLeftStatus(msg)
+	LeftInfo.innerHTML = msg
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		SetRightStatus(msg)
+'//  Purpose:	sets the text for the right side of the status display
+'//	 Params:
+'//		msg		- <string> the message	
+'//  Called by:	ShowStatus
+'//				ShowAreaStatus
+'//				chatbox.htm:toggleOverview
+'////////////////////////////////////////////////////////////////////////
+sub SetRightStatus(msg)
+	RightInfo.innerHTML = msg
+end sub
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		SetRightStatus(msg)
+'//  Purpose:	Display two strings left and right justified in the status window;
+'//	 Params:
+'//		strCameraInfo		- <string> left side status message
+'//		strAreaDestination	- <string> right side status message
+'//		intMillisec			- <int> how long to display 
+'//  Called by:	HandleUIEvent, for the "CameraStatus" event
+'//  Notes:
+'//  blank the left one after intMilliseconds.
+'//	 It is up to the caller to ensure the strings are not so long that they overlap.
+'////////////////////////////////////////////////////////////////////////
+sub ShowStatus (strCameraInfo, strAreaDestination, intMillisec)
+
+	dim n, room
+	if top.isWorldLoaded then
+		set room = top.ClientUserPtr.container
+		n = room.AreaDestination.Find(strAreaDestination)
+		LeftInfo.innerHTML = strCameraInfo
+		RightInfo.innerHTML = room.AreaName.property(n)
+	end if
+	window.setTimeout "SetLeftStatus("" "")", intMillisec, "VBScript"
+end sub
+
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		SetRightStatus(msg)
+'//  Purpose:	Display two strings left and right justified in the status window;
+'//	 Params:
+'//		strCameraInfo		- <string> left side status message
+'//		strAreaDestination	- <string> right side status message
+'//		intMillisec			- <int> how long to display 
+'//  Called by:	HandleUIEvent, for the StatusReport and EndedJourney events
+'//  Notes:
+'//  blank the left one after intMilliseconds.
+'//	 It is up to the caller to ensure the strings are not so long that they overlap.
+'////////////////////////////////////////////////////////////////////////
+sub ShowAreaStatus (strAreaDestination, intMillisec)
+	' Display an AreaName and AreaStatus based on AreaDestination value;
+	' Area-related property lists are properties of the Lobby Room, as defined in status_functions.vbs.
+	dim n, room
+	if top.isWorldLoaded then
+		set room = top.ClientUserPtr.container
+		n = room.AreaDestination.Find(strAreaDestination)
+		LeftInfo.innerHTML = room.AreaStatus.property(n)
+		RightInfo.innerHTML = room.AreaName.property(n)
+		window.setTimeout "SetLeftStatus("" "")", intMillisec, "VBScript"
+	end if
+end sub
+
+
+'////////////////////////////////////////////////////////////////////////
+'//  Sub:		HandleUIEvent(byval Who, What, byval Args)
+'//  Purpose:	handles world events for status updates, usually moving from room to room
+'//	 Params:
+'//		who		- <user object> who the event is from
+'//		what	- <string> stream id of the event
+'//		args	- <array> list of arguments
+'//  Called by:	client.htm:theclient_OnUIEvent
+'////////////////////////////////////////////////////////////////////////
+sub HandleUIEvent(byval Who, What, byval Args)
+	select case What
+		case "StatusReport" 
+			ShowAreaStatus Args(1), 3000
+			' If we happen to move to the lobby we still want to start auto-nav moves from the Seattle Desk
+'			if Args(1) = "Lobby" then top.ClientUserPtr.from = "SeattleDesk"
+		case "CameraStatus"
+			ShowStatus Args(0), Args(1), 3000
+		case "EndedJourney"
+			' Display the Name and Status of the area where we just arrived
+			ShowAreaStatus Args(0), 3000
+		case else
+	end select
+end sub
+
+</script>
+</head>
+
+<body bgcolor="#FFFFFF" class=ClientBackgroundDark>
+<div id=LeftInfo class=StatusBarText style="position:absolute;top:3;left:0;width:100%;height:100%;text-align:left;">Click on an area of the room to go there</div>
+<div id=RightInfo class=StatusBarText style="position:absolute;top:3;left:0;width:100%;height:100%;text-align:right;"></div>
+</body>
+</html>

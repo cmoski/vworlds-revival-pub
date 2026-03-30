@@ -1,0 +1,290 @@
+<HTML>
+<HEAD>
+
+<TITLE>ComboBox Scriptlet</TITLE>
+</HEAD>
+
+<SCRIPT LANGUAGE=javascript>
+    var inScriptlet = (typeof(window.external.version) == "string");
+    
+    var iSearchTimeoutID = null;
+    var mTheEvent;
+    var mSearchClobbered = false;
+    var mDropdownVisible;
+    var mDelOrBack;
+
+    var mPrevHighlight = null;
+    var mSelectedItem = null;
+    var mBackColor = "white";
+    var mForeColor = "black";
+    var mNumRows = 0;
+    var mLastSearch = null;
+    var mLastMatch = "";
+    var mLastMatchRow = -1;
+
+    mShowValueTooltip = true;
+
+    function public_get_value() {
+        if(mSelectedItem != null) {
+            return mSelectedItem.getAttribute("value");
+        } else {
+            return null;
+        }
+    }
+    
+
+    function public_put_showValueTooltip(stValue) {
+        if(stValue != mShowValueTooltip) {
+            mShowValueTooltip = stValue;
+
+            if(stValue)
+                for(iRow = 0; iRow < listTable.rows.length; iRow += 1) 
+                    listTable.rows[iRow].cells[0].title = listTable.rows[iRow].cells[0].getAttribute("value");
+            else
+                for(iRow = 0; iRow < listTable.rows.length; iRow += 1) 
+                    listTable.rows[iRow].cells[0].title = "";
+        }
+
+    }
+
+
+                
+
+            
+
+
+    function public_removeItem(stItem) {
+        
+        for(rowNumber = 0; rowNumber < listTable.rows.length; rowNumber += 1) {
+            if(listTable.rows[rowNumber].cells[0].innerText == stItem) {
+                listTable.deleteRow(rowNumber);
+                mNumRows -= 1;
+                mSearchClobbered = true;
+                break;
+            }
+        }
+    }
+
+
+    function public_addItem(stItem, stValue) {
+        listTable.insertRow();
+        rowNumber = listTable.rows.length - 1;
+       
+        listTable.rows[rowNumber].insertCell();
+        current = listTable.rows[rowNumber].cells[0]
+        
+        current.innerHTML = stItem;
+        
+        if(stValue == "" || stValue == null) {
+            stValue = stItem;
+        }
+        
+        current.noWrap = true;
+        current.setAttribute("value", stValue);
+        if(mShowValueTooltip)
+            current.title = stValue;
+
+        mSearchClobbered = true;
+        mNumRows += 1;
+    }
+
+    function public_put_ForeColor(stColor) {
+        mForeColor = stColor;
+        listTable.style.color = stColor;
+        if(mPrevHighlight != null)
+            mPrevHighlight.style.backgroundColor = stColor;
+        
+        for(iIndex = 0; iIndex < listTable.rows.length; iIndex += 1)
+            if(listTable.rows[iIndex].cells[0] != mPrevHighlight)
+                listTable.rows[iIndex].cells[0].style.color = stColor;
+
+    }
+
+
+
+    function public_put_BackColor(stColor) {
+        mBackColor = stColor;
+        document.bgColor = stColor;
+        listTable.style.backgroundColor = stColor;
+        if(mPrevHighlight != null)
+            mPrevHighlight.style.color = stColor;
+        
+        for(iIndex = 0; iIndex < listTable.rows.length; iIndex += 1)
+            if(listTable.rows[iIndex].cells[0] != mPrevHighlight)
+                listTable.rows[iIndex].cells[0].style.backgroundColor = stColor;
+        
+    }
+
+    function public_Init(fDropdownVisible) {
+        
+        if(mPrevHighlight != null) {
+            mPrevHighlight.style.backgroundColor = mBackColor;
+            mPrevHighlight.style.color = mForeColor;
+        }      
+        
+        if(mSelectedItem != null) {
+            mSelectedItem.style.backgroundColor = mForeColor;
+            mSelectedItem.style.color = mBackColor;
+            
+            mPrevHighlight = mSelectedItem;
+
+            // only want to scrollIntoView if the dropdown is visible
+            // note that this will fail anyway if the browser hasn't increased the height
+            // of the list yet... oh well
+            if(fDropdownVisible)
+                mSelectedItem.scrollIntoView();
+
+            
+            
+        }
+        
+    }
+
+    function listClick() {
+        current = window.event.srcElement;
+        if(current.tagName == "TD") {
+            mSelectedItem = current;
+            mPrevHighlight = mSelectedItem;
+
+            if(inScriptlet) {
+                external.raiseEvent("hideDropdown", null);
+                external.raiseEvent("itemSelect", current.innerText);
+            }
+        }
+    }
+
+    function mseOver() {
+        current = window.event.srcElement;
+
+        if(current.tagName == "TD") {
+            if(mSelectedItem != null) {
+                mSelectedItem.style.backgroundColor = mBackColor;
+                mSelectedItem.style.color = mForeColor;
+            }
+            if(mPrevHighlight != null) {
+                mPrevHighlight.style.backgroundColor = mBackColor;
+                mPrevHighlight.style.color = mForeColor;
+            }
+            mPrevHighlight = current;
+            current.style.backgroundColor = mForeColor;
+            current.style.color = mBackColor;
+        }
+    }
+
+    function public_search(stSearchStr, theEvent, fDropdownVisible, fDelOrBack) {
+        
+        // must set up these global variables so the expression to setTimeout can access them
+        mSearchStr = stSearchStr;
+        mDropdownVisible = fDropdownVisible;
+        mTheEvent = theEvent;
+        mDelOrBack = fDelOrBack;
+
+        // see if the search string still matches the beginning of the selection
+        // and if the the same length or longer than the last
+
+        if(mSearchStr != "") {
+            if(mSelectedItem != null && !mSearchClobbered && mLastMatch.length <= stSearchStr.length && mSelectedItem.innerText.substring(0, stSearchStr.length).toUpperCase() == stSearchStr.toUpperCase()) {
+                // if they are equal, we do not need to search
+                // just cancel the onkeypress event to reduce flashing
+                if(theEvent != null)
+                    theEvent.returnValue = 0;
+            
+                public_Init(fDropdownVisible);
+
+                mLastMatch = stSearchStr;    
+                
+                
+                if(inScriptlet)
+                    // only auto-complete if the key was not backspace or delete
+                    if(fDelOrBack)
+                        external.raiseEvent("noMatchFound", mSearchStr);
+                    else
+                        external.raiseEvent("matchFound", mSelectedItem.innerText);
+            
+            } else if(!mSearchClobbered && mLastMatch == "" && stSearchStr.substring(0, stSearchStr.length - 1) == mLastSearch) {
+                // we've already searched for this and didn't find it, so don't search again
+                if(mTheEvent != null)
+                    mTheEvent.returnValue = 0;
+                if(inScriptlet)
+                    external.raiseEvent("noMatchFound", stSearchStr);
+        
+            } else if(!mSearchClobbered && mLastMatch.length <= stSearchStr.length && stSearchStr.substring(0, mLastMatch.length).toUpperCase() == mLastMatch.toUpperCase()) {
+                
+                mTheEvent = null;
+                
+                iSearchTimeoutID = setTimeout("doSearch(mSearchStr, mDropdownVisible, mLastMatchRow);", 1);
+            
+            
+            } else {
+                // give the user a chance to interrupt the search by typing another key
+                
+                mTheEvent = null;
+                iSearchTimeoutID = setTimeout("doSearch(mSearchStr, mDropdownVisible, 0);", 1);
+            
+            }
+            mLastSearch = stSearchStr;
+        } else {
+            if(inScriptlet)
+                external.raiseEvent("noMatchFound", "");
+        }
+
+
+    }
+
+
+
+    function doSearch(stSearchStr, fDropdownVisible, iFirstRow) {
+        if(mSearchClobbered)
+            iFirstRow = 0;
+        
+        mSearchClobbered = false;
+        
+        for(iRow = 0; iRow < listTable.rows.length; iRow += 1) {
+            stCurRowText = listTable.rows[iRow].cells[0].innerText;
+
+            if(stCurRowText.substring(0, mSearchStr.length).toUpperCase() == mSearchStr.toUpperCase()) {
+                mSelectedItem = listTable.rows[iRow].cells[0];
+                
+                mLastMatchRow = iRow;
+
+                clearTimeout(iSearchTimeoutID);
+                
+                // cancel the onkeypress event to reduce the "Flashing" effect
+                if(mTheEvent != null) 
+                    mTheEvent.returnValue = 0;
+                
+                mLastMatch = stSearchStr;
+                
+                public_Init(fDropdownVisible);
+                
+         
+                if(inScriptlet)
+                    // only auto-complete if the key was something other than backspace or delete
+                    if(mDelOrBack)
+                        external.raiseEvent("noMatchFound", mSearchStr);
+                    else
+                        external.raiseEvent("matchFound", mSearchStr + stCurRowText.substring(mSearchStr.length, stCurRowText.length));
+                
+                return;
+            }
+            
+        }
+        
+        // didn't find a match
+        // need to tell the container we're done searching
+        mLastMatch = "";
+        mSelectedItem = null;
+        if(mDropdownVisible)
+            public_Init(mDropdownVisible);
+        if(inScriptlet)
+            external.raiseEvent("noMatchFound", stSearchStr);
+        
+    }
+        
+</SCRIPT>
+<BODY>
+<TABLE id="listTable" CELLSPACING=0 STYLE="position:absolute;top:0" WIDTH=100% COLS=1 BORDER=0 onclick=listClick() onmouseover=mseOver()>
+    
+</TABLE>
+</BODY>
+</HTML>

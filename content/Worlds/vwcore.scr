@@ -1,0 +1,64 @@
+option explicit
+
+'-------------------------------------------------------------------
+' Global objects
+'-------------------------------------------------------------------
+
+' client and world objects
+Dim Client
+Dim World
+
+' initialize
+set Client = Nothing
+set World = Nothing
+
+'-------------------------------------------------------------------
+' sub CreateWorld( filename )
+'
+' Sets up an initial world database
+'
+' Parameters:
+'	filename	File to use for world database
+'-------------------------------------------------------------------
+sub CreateWorld( filename )
+
+	'On Error Resume Next
+
+	' Connect
+	set Client = XObject
+	set World = Client.ConnectLocal(filename)
+
+	World.EnableRoamingProfiles = False
+
+	' Set the Trace level for diagnostics
+	World.TraceLevel("*") = 4
+
+	World.Trace "Current V-Worlds version is " + World.Version
+
+	World.Trace "Done setting up world: " + filename
+
+	World.Trace "Done with CreateWorld"
+
+end sub
+
+'-------------------------------------------------------------------
+' sub ConnectToWorld( url )
+'
+' Connects to server world database
+'
+' Parameters:
+'	url		URL to use for world database
+'-------------------------------------------------------------------
+sub ConnectToWorld( url )
+
+	'On Error Resume Next
+
+	' Connect
+	set Client = XObject
+	set World = Client.Connect(url)
+
+	' Set the Trace level for diagnostics
+	World.TraceLevel("*") = 4
+
+	World.Trace "Done connecting to world: " + url
+end sub

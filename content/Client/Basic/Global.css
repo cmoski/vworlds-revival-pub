@@ -1,0 +1,308 @@
+/* Set the base color and spacing for all documents */
+body {
+	background-color: #f4f4e8;
+	cursor: default;
+	margin: 0px;
+	padding: 0px;
+}
+/* used for input boxes, list-boxes */
+.vwInput {
+	color: window-text;
+	background-color: window;
+	font-family: verdana;
+	font-size: 8pt;
+}
+/* menubar items */
+.vwMenuItem {
+	background-color: #003366;
+	behavior: url(scripts/menu.htc);
+	color: #a8a896;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+	text-align: center;
+	text-decoration: none;
+	width: 10px;
+}
+/* background for menubar & tabs */
+.vwMenuBarBack {
+	background-color: #003366;
+}
+/* for display area on the right of the menus, world:room names */
+.vwMenuWorldRoom {
+	background-color: #003366;
+	color: lightblue;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+	text-align: right;
+	text-decoration: none;
+}
+/* gesture buttons */
+.vwGestureButton {
+	behavior: url(scripts/gesture.htc);
+	cursor: hand;
+	height: 25px;
+	width: 25px;
+}
+/* chat buttons */
+.vwChatButton {
+	behavior: url(scripts/chat.htc);
+	cursor: hand;
+	height: 18px;
+	width: 24px;
+}
+/* Control tabs */
+.vwControlTab {
+	behavior: url(scripts/tab.htc);
+	cursor: hand;
+	height: 25px;
+	width: 39px;
+}
+/* Generic text for labels, descriptions */
+.vwText {
+	color: black;
+	cursor: default;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: normal;
+}
+/* Generic text for labels, descriptions */
+.vwButton {
+	cursor: hand;
+	font-family: verdana;
+	font-size: 8pt;
+	width: 60px;
+}
+/* Heading used in dialogs and some lists */
+.vwHead1 {
+	color: #555a47;
+	cursor: default;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+}
+/* Chat/Whisper history for speaker's name on speaker's client */
+.vwMyName {
+	color: blue;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+}
+/* Chat/Whisper history for speaker's name on other's client */
+.vwOtherName {
+	color: black;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+}
+/* Chat/Whisper history text */
+.vwSpokenText {
+	color: black;
+	font-family: verdana;
+	font-size: 8pt;
+}
+/* Chat/Whisper history image */
+.vwThumbnailHist {
+	height: 16px;
+	margin-left: 4px;
+	margin-right: 5px;
+	width: 16px;
+}
+/* Chat history emoticon image */
+.vwEmoticonImage {
+	height: 16px;
+	width: 16px;
+}
+/* Whisper history emoticon image */
+.vwEmoticonImageWhisp {
+	height: 12px;
+	width: 12px;
+}
+/* Chat/Whisper history whisper text */
+.vwWhisperText {
+	color: blue;
+	font-family: verdana;
+	font-size: 8pt;
+}
+/* Chat history emote text */
+.vwEmoteText {
+	color: darkblue;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+}
+/* Chat history thinking text */
+.vwThinkText {
+	color: gray;
+	font-family: verdana;
+	font-size: 8pt;
+}
+/* Chat history announce text */
+.vwAnnounceText {
+	color: red;
+	font-family: verdana;
+	font-size: 8pt;
+}
+/* Chat history gesture text */
+.vwGestureText {
+	color: indigo;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+}
+/* Chat history shout text */
+.vwShoutText {
+	color: red;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+}
+/* Chat history action text */
+.vwActionText {
+	color: darkslateblue;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+}
+/* Chat history message text */
+.vwMsgText {
+	color: red;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+}
+/* Chat history error text */
+.vwErrorText {
+	color: red;
+	font-family: verdana;
+	font-size: 8pt;
+	font-style: italic;
+	font-weight: bold;
+}
+/* Chat history welcome text */
+.vwWelcomeText {
+	color: blue;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+}
+/* Avatar list item text for avatars who are friends */
+.vwAvatarFriend {
+	color: #348230;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 10pt;
+	font-weight: bold;
+}
+/* Avatar list item text for avatars being ignored */
+.vwAvatarIgnore {
+	color: #b0b098;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 10pt;
+	font-weight: bold;
+}
+/* Avatar list item text for other avatars */
+.vwAvatarOther {
+	color: #484635;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 10pt;
+	font-weight: bold;
+}
+/* Avatar list item text for self */
+.vwAvatarSelf {
+	color: blue;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 10pt;
+	font-weight: bold;
+}
+/* Thumbnail image */
+.vwThumbnailLarge {
+	height: 24px;
+	margin-left: 4px;
+	margin-right: 5px;
+	width: 24px;
+}
+/* Room list item */
+.vwItem {
+	behavior: url(scripts/list.htc) url(scripts/LeftClickAction.htc);
+	color: #484635;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: normal;
+}
+/* Room list image */
+.vwThumbnailSmall {
+	height: 16px;
+	margin-left: 4px;
+	margin-right: 5px;
+	width: 16px;
+}
+/* Tab heading text */
+.vwHead2 {
+	color: #002f5f;
+	cursor: default;
+	font-family: verdana;
+	font-size: 11pt;
+	font-weight: bold;
+	margin-bottom: 2px;
+	text-align: center;
+	width: 100%;
+}
+/* Sub heading text */
+.vwSubHead1 {
+	color: gray;
+	cursor: default;
+	font-family: verdana;
+	font-size: 7pt;
+	font-weight: normal;
+	margin-bottom: 7px;
+	width: 100%;
+}
+/* Tab sub heading text */
+.vwSubHead2 {
+	color: black;
+	cursor: default;
+	font-family: verdana;
+	font-size: 7pt;
+	font-weight: normal;
+	margin-bottom: 7px;
+	text-align: center;
+	width: 100%;
+}
+/* Welcome dialog title text */
+.vwHead3 {
+	color: #002f5f;
+	cursor: default;
+	font-family: verdana;
+	font-size: 11pt;
+	font-weight: bold;
+	margin-bottom: 2px;
+	width: 100%;
+}
+/* Link style choices (used in Welcome dialog...) */
+.vwLink {
+	behavior: url(scripts/link.htc)
+	color: #555a47;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: bold;
+	text-decoration: underline;
+}
+/* Profile dialog menu style */
+.vvProfMenu {
+	behavior: url(scripts/profmenu.htc)
+	background-color: default;
+	color: #555a47;
+	cursor: hand;
+	font-family: verdana;
+	font-size: 8pt;
+	font-weight: normal;
+	text-decoration: none;
+}
