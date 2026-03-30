@@ -348,10 +348,22 @@ STDMETHODIMP CMultimediaExemplarObject::ActorPlayAnimation(BSTR bstrAnimFile)
         }
     }
 
-    // Fallback: try direct path
+    // Fallback: try registry ContentPath
     if (strFullPath.IsEmpty()) {
-        CString basePath = "F:\\VWorlds\\Microsoft Virtual Worlds\\Local Content\\";
-        strFullPath = basePath + strFile;
+        HKEY hKey = NULL;
+        CString basePath;
+        if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\V-Worlds\\Paths",
+                          0, KEY_READ | KEY_WOW64_32KEY, &hKey) == ERROR_SUCCESS) {
+            char buf[MAX_PATH] = {0};
+            DWORD bufSize = sizeof(buf);
+            if (RegQueryValueExA(hKey, "ContentPath", NULL, NULL, (LPBYTE)buf, &bufSize) == ERROR_SUCCESS)
+                basePath = buf;
+            RegCloseKey(hKey);
+        }
+        if (!basePath.IsEmpty()) {
+            if (basePath.Right(1) != "\\") basePath += "\\";
+            strFullPath = basePath + strFile;
+        }
     }
 
     // Open and parse the .anim file
@@ -644,8 +656,20 @@ STDMETHODIMP CMultimediaExemplarObject::ActorPlayAllAnimations()
     int dot = fileName.ReverseFind('.');
     CString setupID = (dot >= 0) ? fileName.Left(dot) : fileName;
 
-    // Build the directory path
-    CString dirPath = "F:\\VWorlds\\Microsoft Virtual Worlds\\Local Content\\";
+    // Build the directory path from registry ContentPath
+    CString dirPath;
+    {
+        HKEY hKey = NULL;
+        if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\V-Worlds\\Paths",
+                          0, KEY_READ | KEY_WOW64_32KEY, &hKey) == ERROR_SUCCESS) {
+            char buf[MAX_PATH] = {0};
+            DWORD bufSize = sizeof(buf);
+            if (RegQueryValueExA(hKey, "ContentPath", NULL, NULL, (LPBYTE)buf, &bufSize) == ERROR_SUCCESS)
+                dirPath = buf;
+            RegCloseKey(hKey);
+        }
+        if (!dirPath.IsEmpty() && dirPath.Right(1) != "\\") dirPath += "\\";
+    }
     CString geomDir = geomPath.Left(lastSlash >= 0 ? lastSlash : 0);
     dirPath += geomDir;
 

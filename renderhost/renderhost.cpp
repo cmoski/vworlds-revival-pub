@@ -791,6 +791,25 @@ BEGIN_MESSAGE_MAP(CRenderFrame, CFrameWnd)
     ON_WM_TIMER()
 END_MESSAGE_MAP()
 
+// Read a VWorlds registry path value
+static CString GetVWorldsPath(const char* valueName, const char* fallback = "")
+{
+    HKEY hKey = NULL;
+    CString result;
+    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\V-Worlds\\Paths",
+                      0, KEY_READ | KEY_WOW64_32KEY, &hKey) == ERROR_SUCCESS) {
+        char buf[MAX_PATH] = {0};
+        DWORD bufSize = sizeof(buf);
+        if (RegQueryValueExA(hKey, valueName, NULL, NULL, (LPBYTE)buf, &bufSize) == ERROR_SUCCESS)
+            result = buf;
+        RegCloseKey(hKey);
+    }
+    if (result.IsEmpty()) result = fallback;
+    // Ensure trailing backslash
+    if (!result.IsEmpty() && result.Right(1) != "\\") result += "\\";
+    return result;
+}
+
 // MFC App
 class CRenderApp : public CWinApp
 {
@@ -1020,7 +1039,12 @@ public:
                             OLECHAR* rootURLName = L"RootURL";
                             hr = vTool.pdispVal->GetIDsOfNames(IID_NULL, &rootURLName, 1, LOCALE_USER_DEFAULT, &dispid);
                             if (SUCCEEDED(hr)) {
-                                CComVariant vURL("file://F:\\VWorlds\\Microsoft Virtual Worlds\\Local Content\\Client\\Shared\\;file://F:\\VWorlds\\Microsoft Virtual Worlds\\Local Content\\Avatar Graphics\\;file://F:\\VWorlds\\Microsoft Virtual Worlds\\Local Content\\");
+                                CString contentPath = GetVWorldsPath("ContentPath");
+                                CString avatarPath = GetVWorldsPath("AvatarGraphicsPath");
+                                CString rootURLs;
+                                rootURLs.Format("file://%sClient\\Shared\\;file://%s;file://%s",
+                                    (LPCSTR)contentPath, (LPCSTR)avatarPath, (LPCSTR)contentPath);
+                                CComVariant vURL((LPCSTR)rootURLs);
                                 DISPID putid2 = DISPID_PROPERTYPUT;
                                 DISPPARAMS dpURL = { &vURL, &putid2, 1, 1 };
                                 hr = vTool.pdispVal->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT,
