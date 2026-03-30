@@ -1,5 +1,5 @@
 @echo off
-REM Launch VWorlds with a Drudge actor as your avatar
+REM Launch VWorlds with a Drudge actor as your avatar + observer to see yourself
 REM Usage: launch_drudge_avatar.bat [worldname]
 REM RUN FROM ELEVATED (ADMIN) COMMAND PROMPT
 setlocal
@@ -41,13 +41,19 @@ echo Starting server...
 start "VWorlds Server" "%BUILD%\serverV2.exe"
 timeout /t 3 /nobreak >nul
 
-echo Launching renderer with Drudge avatar...
+echo Launching Drudge avatar (you)...
+start "Drudge Avatar" "%BUILD%\renderhost.exe" --trace --autoconnect --server localhost --world %WORLD% --user Drudge --actor "worlds\ACMonsters\02000034.x" --cmdwin
+timeout /t 3 /nobreak >nul
+
+echo Launching Observer (to see the Drudge)...
 echo.
-echo   After connecting, type in Command Window:
-echo     Set me = World.User
-echo     me.InitializeActor
-echo     me.PlayAllAnimations
+echo   In the Drudge window Command Window:
+echo     Set me2 = World.User
+echo     me2.InitializeActor
+echo     me2.PlayAllAnimations
 echo.
-"%BUILD%\renderhost.exe" --trace --autoconnect --server localhost --world %WORLD% --user Drudge --actor "worlds\ACMonsters\02000034.x" --cmdwin
+echo   The Observer window shows what you look like!
+echo.
+"%BUILD%\renderhost.exe" --trace --autoconnect --server localhost --world %WORLD% --user Observer --avatar alice.spr
 
 taskkill /f /im serverV2.exe 2>nul
