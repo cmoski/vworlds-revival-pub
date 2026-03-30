@@ -8,7 +8,7 @@ Back in 1999-2000, Microsoft Research built one of the first collaborative 3D vi
 
 Then the project was shelved. Microsoft Research released the source code under a research license, and the world moved on to newer APIs and different visions of virtual reality.
 
-Twenty-six years later, I found the source code again. Visual C++ 6.0, COM/ATL, Direct3D Retained Mode, Windows 98 — none of it builds on anything modern. But the code was still there, and the vision was still interesting. So I set out to resurrect it: get it compiling on Visual Studio 2022, running on Windows 11, rendering real 3D worlds, with multi-user networking, the original scripting system, and even bone animation imported from Asheron's Call.
+Twenty-six years later, I found the source code again. Visual C++ 6.0, COM/ATL, Direct3D Retained Mode, Windows 98 — none of it builds on anything modern. But the code was still there, and the vision was still interesting. So I set out to resurrect it: get it compiling on Visual Studio 2022, running on Windows 11, rendering real 3D worlds, with multi-user networking, the original scripting system, and even the unfinished bone animation system brought to life.
 
 This project is a preservation effort. One of the earliest collaborative virtual environments, brought back to life so people can see what we were building at the turn of the millennium.
 
