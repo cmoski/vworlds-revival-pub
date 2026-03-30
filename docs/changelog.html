@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Changelog - VWorlds Revival</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="VWstyle.css" type="text/css">
+</head>
+
+<body bgcolor="#f9f8f4">
+
+<table border="0" cellpadding="0" cellspacing="0" width="98%">
+    <tr>
+        <td valign="top" colspan="3">
+            <a href="index.html"><img border="0" src="images/vwglogo.png" alt="Virtual Worlds Logo" style="vertical-align:middle;margin-right:8px;"></a>
+            <span style="font-size:22px; font-weight:bold; color:#003366; vertical-align:middle;">Virtual Worlds</span>
+            <span style="font-size:11px; color:#666666; vertical-align:middle;"> Revival</span>
+        </td>
+        <td valign="top" align="right">
+            <br>
+            <a class="Link" href="index.html">[Home]</a>
+        </td>
+    </tr>
+    <tr><td colspan="4">&nbsp;</td></tr>
+</table>
+<hr>
+
+<table border="0" cellpadding="2" cellspacing="0" width="98%">
+    <tr>
+        <td valign="Top">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b>Changelog &mdash; Changes Since the Original v1.5 Release (Feb 2000)</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <br>
+                    This documents all changes made to modernize the original Visual C++ 6.0 / Windows 98
+                    codebase for Visual Studio 2022 / Windows 11.<br>
+                    <br>
+                    </td>
+                </tr>
+
+                <!-- PHASE 0: BUILD SYSTEM -->
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b>Phase 0: CMake Build System</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <ul>
+                        <li>Replaced 20+ VC6 .dsp/.dsw project files with a single CMakeLists.txt</li>
+                        <li>Auto-discovers MFC/ATL toolsets (including spectre-mitigated libs)</li>
+                        <li>All MIDL compilation (49 IDL files) integrated into CMake</li>
+                        <li>Win32/x86 target enforced (code casts pointers to <code>long</code>)</li>
+                    </ul>
+                    </td>
+                </tr>
+
+                <!-- PHASE 1: CORE PLATFORM -->
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b>Phase 1: Core Platform Compiling</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <ul>
+                        <li>vwsystem.dll, sengine.exe, serverV2.exe, vwfound.dll all compile on VS2022</li>
+                        <li>Removed <code>atlimpl.cpp</code>/<code>atlctl.cpp</code>/<code>atlwin.cpp</code> includes from all stdafx.cpp (ATL 7+ bundles these)</li>
+                        <li><code>CComModule</code> compat via <code>_ATL_ALLOW_DEPRECATED_FUNCTIONS</code></li>
+                        <li>Added <code>typename</code> for dependent return types in templates (vwtempl.h)</li>
+                        <li>Added MFC <code>ConstructElements</code>/<code>DestructElements</code> shims</li>
+                        <li><code>CFileException</code> catch by pointer (not value) in marshbuf.cpp</li>
+                        <li>Hoisted <code>for(int i...)</code> variables used outside loop scope</li>
+                        <li><code>OLECHAR*</code> / <code>unsigned short*</code> cast fixes</li>
+                        <li><code>InterlockedCompareExchange</code> &rarr; <code>InterlockedCompareExchangePointer</code> in fastcomm</li>
+                        <li>Removed <code>issperr.h</code> (merged into sspi.h), <code>wpapi.h</code>, <code>rpcndr.lib</code>/<code>rpcns4.lib</code></li>
+                        <li><code>CComBSTR::Length</code> &rarr; <code>Length()</code>, <code>CFile::hFileNull</code> is HANDLE not UINT</li>
+                        <li><code>strstr</code> const correctness, missing return types, <code>fstream.h</code> &rarr; <code>&lt;fstream&gt;</code></li>
+                        <li><code>HtmlHelp</code> &rarr; <code>::HtmlHelpA</code> (4-arg Win32 form)</li>
+                        <li>MIDL strictness: <code>[in,out]</code> &rarr; <code>[in]</code> for non-double-indirect interface pointers</li>
+                    </ul>
+                    </td>
+                </tr>
+
+                <!-- PHASE 2: STUBS & PROPS -->
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b>Phase 2: D3DRM Stubs &amp; Property Types</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <ul>
+                        <li>Created <code>compat/</code> directory with D3DRM math shims and opaque type stubs for non-graphics targets</li>
+                        <li>vwprops.dll built with 5 property types: Vector, Sound, PickData, AccessoryData, IntersectData</li>
+                        <li>Boundary property deferred (deep coupling to vwmm resource IDs)</li>
+                    </ul>
+                    </td>
+                </tr>
+
+                <!-- PHASE 3: OCX CONTROLS -->
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b>Phase 3: OCX Controls</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <ul>
+                        <li>objexplr.dll (Object Explorer) compiles and registers</li>
+                        <li>uictrl.dll compiles (VWSelfVw initially excluded, later fixed)</li>
+                        <li>VWSelfView root cause: compat/ddraw.h stub shadowed real ddraw.h; fixed with <code>include_d3drm_only</code> + <code>DIRECT3D_VERSION=0x0700</code></li>
+                    </ul>
+                    </td>
+                </tr>
+
+                <!-- PHASE 4: STATIC LIBS -->
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b>Phase 4: Static Libraries</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <ul>
+                        <li>jpeglib.lib (JPEG codec) and d2dutils.lib (utility library) compile</li>
+                    </ul>
+                    </td>
+                </tr>
+
+                <!-- PHASE 5: REAL D3DRM -->
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b>Phase 5: Real D3DRM Runtime</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <ul>
+                        <li>Bundled legacy d3drm.dll (352KB) from original DirectX runtime in <code>third_party/d3drm_legacy/x86/</code></li>
+                        <li>vwmm.dll built against real D3DRM headers/libs &mdash; 21 CLSIDs registered</li>
+                        <li>vwstudio.dll (studio authoring tools) compiles</li>
+                        <li>vwrendvw.dll (Render View OCX) compiles</li>
+                        <li>CoCreateInstance succeeds for VWRenderRoot, Vector, VWGeometry</li>
+                        <li>Removed <code>_MERGE_PROXYSTUB</code> from vwmm (not needed for in-process COM)</li>
+                        <li>CLSID_Boundary integrated into vwmm.dll</li>
+                    </ul>
+                    </td>
+                </tr>
+
+                <!-- PHASE 6: WORLD CREATION -->
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b>Phase 6: World Creation</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <ul>
+                        <li><b>HashKey&lt;BSTR&gt; fix</b> (propbase.h) &mdash; MFC's default template hashes the pointer, not the string content. Changed to proper template specialization. This was the root cause of all "Property doesn't exist" failures</li>
+                        <li>First <code>testworld.vwc</code> (39KB) created by sengine.exe</li>
+                        <li>System module installed with 70+ methods and properties</li>
+                        <li>serverV2.exe loads the world and reports "ready to receive users"</li>
+                        <li>Headless world creation: <code>cscript.exe</code> with VBScript replaces sengine &mdash; <code>CreateObject("VWSYSTEM.Client.1")</code> works standalone</li>
+                    </ul>
+                    </td>
+                </tr>
+
+                <!-- PHASE 7: RENDERING & MULTI-USER -->
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b>Phase 7: Rendering, Multi-User, Content</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <b>Rendering:</b>
+                    <ul>
+                        <li>renderhost.exe: MFC-based render host via <code>CWnd::CreateControl</code> on VWRenderView OCX</li>
+                        <li>D3DRM initializes, DirectDraw surfaces created, paint thread running at ~60fps</li>
+                        <li>Client connects to server, enters world, renders scene</li>
+                        <li>Sprite textures load: <code>default.spr</code> &rarr; <code>default.gif</code> for avatars and artifacts</li>
+                        <li>3D textured objects: <code>.x</code> files with TextureFilename references load via async callback chain</li>
+                        <li>Background rendering: windows keep rendering when alt-tabbed</li>
+                    </ul>
+                    <b>Multi-user:</b>
+                    <ul>
+                        <li>Two renderhost clients (Alice + Bob) connect to same server, see each other's avatar sprites</li>
+                        <li>Cross-client chat via Say/Tell events with CClientEventSink (IVWClientSite vtable + IDispatch)</li>
+                        <li>OnUserConnect/OnUserDisconnect show join/leave messages</li>
+                    </ul>
+                    <b>World content:</b>
+                    <ul>
+                        <li>5 renderable worlds: Gallery, Home, Landscape, Office, DesktopWorld</li>
+                        <li>DesktopWorld: 60+ .X models (lobby, walls, ceiling, patio, tables, furniture) + Music Garden</li>
+                        <li>All coordinates from original SDK wizard kits</li>
+                        <li>Room geometry fix: Rooms must have <code>GeometryName = ""</code> (empty) &mdash; room itself is invisible</li>
+                    </ul>
+                    <b>Connection stability:</b>
+                    <ul>
+                        <li>Property map atomic swap during UnMarshall &mdash; eliminated 21 "Invalid property map" errors per connection</li>
+                        <li>EnableSecurity silenced &mdash; eliminated 21 "Property doesn't exist" errors per connection</li>
+                        <li>Content path fix: <code>Client\Shared\</code> added to InetFileManager search paths</li>
+                        <li>CreateTools resilience: tolerates pre-existing tools via <code>get_ToolExt</code> fallback</li>
+                        <li>ReportError rate limiting: first occurrence logged, duplicates suppressed with periodic summary</li>
+                    </ul>
+                    <b>Object Explorer:</b>
+                    <ul>
+                        <li>ThingTree + TPList OCX hosted as split popout window</li>
+                        <li>Click objects in tree &rarr; properties update in real-time</li>
+                        <li><code>USE_CONTROLMANAGER</code> must be defined on objexplr.dll</li>
+                    </ul>
+                    <b>Sound:</b>
+                    <ul>
+                        <li>DirectSound initializes, downloads WAVs via InetFile, plays through speakers</li>
+                        <li>Ambient room audio with looping support</li>
+                    </ul>
+                    <b>Studio editing:</b>
+                    <ul>
+                        <li>vwstudio.dll loads via <code>--edit</code> flag</li>
+                        <li>Select, Translate3D, Rotate3D, Scale3D, Zoom tools</li>
+                        <li>Right-click context menus on objects</li>
+                    </ul>
+                    <b>Persistence:</b>
+                    <ul>
+                        <li><code>World.SaveDatabase</code> writes .vwc checkpoint via <code>IVWObjectRepository::Commit()</code></li>
+                        <li>Ctrl+S in renderhost saves; worlds reload on restart</li>
+                    </ul>
+                    <b>Avatar customization:</b>
+                    <ul>
+                        <li><code>--avatar alice.spr</code> flag with <code>InitializeSpriteGraphics</code></li>
+                        <li>Full animated sprites: alice, bob, charles, eve, gracie, kevin, etc.</li>
+                    </ul>
+                    <b>Command Window:</b>
+                    <ul>
+                        <li>Live VBScript console via <code>--cmdwin</code> flag</li>
+                        <li>Raw IActiveScript/IActiveScriptParse hosting</li>
+                        <li>World object exposed with SCRIPTITEM_GLOBALMEMBERS</li>
+                        <li><code>World.Global.DefaultRoom.Fog = True</code> changes 3D view in real-time</li>
+                    </ul>
+                    <b>Original HTML client:</b>
+                    <ul>
+                        <li>webclient.exe hosts WebBrowser (IE/Trident) OCX</li>
+                        <li>Navigates to <code>Local Content\Client\Basic\Client.htm</code></li>
+                        <li>Login, rendering, Things tab, sound all functional</li>
+                    </ul>
+                    <b>Bone animation (Actor exemplar):</b>
+                    <ul>
+                        <li>Wired up the NULL <code>pfUpdateJoint</code> callback to D3DRM frame transforms</li>
+                        <li>Actor exemplar with <code>InitializeActor</code>, <code>PlayAnimation</code>, <code>SetJointRotation</code></li>
+                        <li><code>.anim</code> file format: per-frame euler rotations + positions per bone</li>
+                        <li>Joint re-init on world reload, rest-pose reset after animation</li>
+                    </ul>
+                    <b>Security changes:</b>
+                    <ul>
+                        <li><code>SUPPORT_CHECKPROPERTYSECURITY</code> and <code>SUPPORT_INVOKEONPROPERTYACCESS</code> disabled for local use</li>
+                        <li>SaveDatabase owner check disabled</li>
+                    </ul>
+                    <b>Automation:</b>
+                    <ul>
+                        <li><code>launch_world.bat [name]</code> &mdash; any world</li>
+                        <li><code>launch_multiuser.bat</code> &mdash; two-client test</li>
+                        <li><code>launch_editor.bat</code> &mdash; editor with studio tools</li>
+                        <li><code>create_allworlds.vbs</code> / <code>create_desktopworld.vbs</code> &mdash; headless creation</li>
+                    </ul>
+                    </td>
+                </tr>
+
+                <!-- PHASE 8 -->
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b>Phase 8: Polish (TODO)</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <ul>
+                        <li>Safe CRT migration (108 unsafe calls: strcpy, sprintf, etc.)</li>
+                        <li>VersionHelpers modernization</li>
+                        <li>Unicode support</li>
+                    </ul>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<br>
+<hr>
+<table border="0" width="100%">
+    <tr>
+        <td class="Copyright">
+            Originally developed by <a href="https://web.archive.org/web/19990224073729/http://www.research.microsoft.com/vwg/">Microsoft Research</a>, 2000.
+            Modernized 2026.<br>
+            Built with Virtual Worlds technology developed by Microsoft Research and contributors.
+            Original site archived at the <a href="https://web.archive.org/web/20000617130722/http://www.vworlds.org/">Wayback Machine</a> (now offline).
+        </td>
+        <td align="Right">
+            <a href="index.html"><img border="0" src="images/vworldslogo_sm.png" alt="Home Page"></a>
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>

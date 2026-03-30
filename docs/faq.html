@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>FAQ - VWorlds Revival</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="VWstyle.css" type="text/css">
+</head>
+
+<body bgcolor="#f9f8f4">
+
+<table border="0" cellpadding="0" cellspacing="0" width="98%">
+    <tr>
+        <td valign="top" colspan="3">
+            <a href="index.html"><img border="0" src="images/vwglogo.png" alt="Virtual Worlds Logo" style="vertical-align:middle;margin-right:8px;"></a>
+            <span style="font-size:22px; font-weight:bold; color:#003366; vertical-align:middle;">Virtual Worlds</span>
+            <span style="font-size:11px; color:#666666; vertical-align:middle;"> Revival</span>
+        </td>
+        <td valign="top" align="right">
+            <br>
+            <a class="Link" href="index.html">[Home]</a>
+        </td>
+    </tr>
+    <tr><td colspan="4">&nbsp;</td></tr>
+</table>
+<hr>
+
+<table border="0" cellpadding="2" cellspacing="0" width="98%">
+    <tr>
+        <td width="70%" valign="Top">
+            <table border="0" cellpadding="0" cellspacing="0">
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top" colspan="1">
+                    <b>Overview</b><br>
+                    <a href="#faq1">Who was the Microsoft Virtual Worlds Group?</a><br>
+                    <a href="#faq2">What was vworlds.org?</a><br>
+                    <a href="#faq3">What is the Virtual Worlds platform?</a><br>
+                    <a href="#faq4">What are the platform requirements?</a><br>
+                    <a href="#faq5">What is VWorlds Revival?</a><br>
+                    <p>
+                    <b>Source &amp; Building</b><br>
+                    <a href="#faq6">For what version is the source code?</a><br>
+                    <a href="#faq7">How do I build from source?</a><br>
+                    <a href="#faq8">Do I need to install DirectX?</a><br>
+                    <a href="#faq9">Why x86 only?</a><br>
+                    <a href="#faq10">What is Direct3D Retained Mode?</a><br>
+                    <p>
+                    <b>Technical</b><br>
+                    <a href="#faq11">What TCP port does VWorlds use?</a><br>
+                    <a href="#faq12">What is the Spuck bone animation system?</a><br>
+                    <a href="#faq13">What about the original HTML client?</a><br>
+                    <p>
+                    <b>Licensing &amp; Participation</b><br>
+                    <a href="#faq14">What is the license?</a><br>
+                    <a href="#faq15">Will you allow commercial use?</a><br>
+                    <a href="#faq16">How do I report bugs or contribute?</a><br>
+                    <p>
+                    <b>Questions from the Year 2000</b><br>
+                    <a href="#faq17">I'm running WinME or IE5.5 and having graphics problems. What's wrong?</a><br>
+                    <a href="#faq18">How can I submit crypto related code?</a><br>
+                    <a href="#faq19">What's with all the downloads?</a><br>
+                    <br>
+                    </td>
+                </tr>
+
+                <!-- OVERVIEW -->
+
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b><a name="faq1"></a>Who was the Microsoft Virtual Worlds Group?</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    A team within Microsoft Research, researching and developing tools for
+                    communication, collaboration, and community on the internet. They built
+                    one of the first collaborative 3D virtual world platforms &mdash; years before
+                    Second Life, a decade before VRChat. The group released the platform source
+                    code under a research license in February 2000, and the original site at
+                    vworlds.org ran until roughly 2005 before going offline. Their research site
+                    was at <a class="LinkSmall" href="https://web.archive.org/web/19990224073729/http://www.research.microsoft.com/vwg/">research.microsoft.com/vwg/</a>.<br><br>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b><a name="faq2"></a>What was vworlds.org?</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    vworlds.org was the community hub for developers and users of the Virtual Worlds
+                    platform. It hosted the source code browser, download links, mailing list archives,
+                    documentation, a sample gallery, and bug tracker. The site is long gone &mdash;
+                    all that remains are
+                    <a class="LinkSmall" href="https://web.archive.org/web/20000617130722/http://www.vworlds.org/">Wayback Machine snapshots</a>.
+                    This GitHub Pages site is a reproduction of the original in style and spirit, updated
+                    for the revival project.<br><br>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b><a name="faq3"></a>What is the Virtual Worlds platform?</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    The platform enables users to build persistent online multi-user
+                    applications with a flexible UI. It is based on a distributed
+                    client-server architecture. The persistence and replication of
+                    property changes is handled automatically by the platform to free
+                    the developer from having to deal with lower level details. The
+                    platform is composed primarily of COM objects, which are built
+                    into a few core DLLs, as well as some ActiveX Controls and the
+                    server executable.<br>
+                    <br>
+                    At the UI level, the original design focused on web integration to provide developers the
+                    freedom to integrate other web technologies within an Internet
+                    Explorer based UI. This allows for text, 2D or 3D UI, or a
+                    combination, for your clients.<br><br>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b><a name="faq4"></a>What are the platform requirements?</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <b>Original (2000):</b> Windows 98 2nd Edition or Windows 2000, Internet Explorer 5.<br>
+                    <br>
+                    <b>Revival (2026):</b> Windows 10 or 11 (64-bit &mdash; runs as 32-bit via WoW64),
+                    Visual C++ 2022 Redistributable (x86), Administrator privileges for initial COM
+                    registration. Hardware-accelerated graphics recommended. No external DirectX SDK
+                    needed &mdash; the legacy D3DRM runtime is bundled.<br><br>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b><a name="faq5"></a>What is VWorlds Revival?</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    A preservation effort to modernize the original VWorlds v1.5 source code
+                    to compile and run on Windows 11 with Visual Studio 2022. The original code
+                    was built for Visual C++ 6.0, Windows 98, and APIs that no longer exist in
+                    modern SDKs. Hundreds of modernization fixes were required to get everything
+                    compiling and running again &mdash; see the
+                    <a class="Link" href="changelog.html">Changelog</a> for details.<br><br>
+                    </td>
+                </tr>
+
+                <!-- SOURCE & BUILDING -->
+
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b><a name="faq6"></a>For what version is the source code?</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    The revival is based on the v1.5 source release from February 2000.
+                    This was the final public release, following v1.0 from November 1998. Major
+                    improvements over v1 included server performance, security, additional
+                    multimedia/3D graphics features, and a more stable platform.<br><br>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b><a name="faq7"></a>How do I build from source?</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    You need Visual Studio 2022 with MFC/ATL for v143 build tools and
+                    Windows SDK 10.0. See the <a class="Link" href="building.html">Building from Source</a>
+                    page for complete instructions. Or just download a pre-built release &mdash;
+                    no build tools required.<br><br>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b><a name="faq8"></a>Do I need to install DirectX?</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    No. The legacy Direct3D Retained Mode runtime (d3drm.dll) is bundled with
+                    the release and deployed alongside the binaries. System DirectDraw headers
+                    come from the Windows SDK. No external DirectX SDK download needed.<br><br>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b><a name="faq9"></a>Why x86 only?</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    The original code casts pointers to <code>long</code> throughout.
+                    On 64-bit Windows, <code>long</code> is 32 bits but pointers are 64 bits &mdash;
+                    this would truncate pointers and crash. Fixing this would require extensive changes
+                    across the entire codebase. The platform runs as a 32-bit process on 64-bit
+                    Windows via WoW64, which works perfectly fine.<br><br>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b><a name="faq10"></a>What is Direct3D Retained Mode?</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    D3DRM was a high-level 3D API that Microsoft shipped in the late 1990s. It
+                    provided a scene graph, mesh loading (.x files), hierarchical transforms, and
+                    texture management. Microsoft deprecated it after DirectX 6 &mdash; you know,
+                    around the time they decided everyone should just write their own scene graph
+                    from scratch using Immediate Mode. The runtime DLL still works on modern
+                    Windows when loaded app-locally, which is either a testament to Microsoft's
+                    backwards compatibility or a sign that nobody has thought to remove it.<br><br>
+                    </td>
+                </tr>
+
+                <!-- TECHNICAL -->
+
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b><a name="faq11"></a>What TCP port does VWorlds use?</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    VWorlds uses registered port <b>2525</b>. HTTP tunneling is not supported &mdash;
+                    port 2525 must be open for client-server communication. This was true in 2000
+                    and remains true today. Some things never change.<br><br>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b><a name="faq12"></a>What is the Spuck bone animation system?</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    An unfinished skeletal animation system from the original 1999 code. The COM
+                    infrastructure (CJoint, CCharacter, CPuppet) was there but the callback function
+                    <code>pfUpdateJoint</code> was NULL. It was built for articulated characters &mdash;
+                    skeletal animation in a virtual world, years before it became standard. But the
+                    team ran out of time and left the plumbing unconnected.<br>
+                    <br>
+                    The revival project wired it up and created the Actor exemplar with
+                    <code>InitializeActor</code>, <code>SetJointRotation</code>, and
+                    <code>PlayAnimation</code> methods. Twenty-six years after someone wrote the
+                    joint system and left <code>pfUpdateJoint</code> as a NULL pointer, bones
+                    finally move in VWorlds.<br><br>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b><a name="faq13"></a>What about the original HTML client?</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    The complete original 1999 HTML+VBScript+ActiveX client UI exists at
+                    <code>Local Content\Client\Basic\</code>. It's a frameset with Render, Chat,
+                    and Controls panels, plus 40+ VBScript files. The revival's <code>webclient.exe</code>
+                    hosts it in a WebBrowser control (IE/Trident) and it actually runs &mdash; login,
+                    rendering, Things tab, sound all functional. Turn off hardware acceleration
+                    in Options for rendering to work.<br><br>
+                    </td>
+                </tr>
+
+                <!-- LICENSING -->
+
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b><a name="faq14"></a>What is the license?</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    The <a class="Link" href="license.html">Microsoft Research Source License (MSRSL)</a>.
+                    You may do anything you want with the software for non-commercial research or teaching
+                    purposes, free of charge. Modifications must be shared under the same terms.
+                    Modernization patches are provided under the same license.<br><br>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b><a name="faq15"></a>Will you allow commercial use?</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    The MSRSL does not allow commercial use of any portion of the SDK. This was
+                    the original team's decision and the revival project honors it. If you'd like
+                    to license the platform for commercial use, you'd need to ask Microsoft
+                    Research &mdash; though given that the group disbanded over two decades ago and
+                    the technology is from the Clinton administration, it's probably not their
+                    top priority.<br><br>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b><a name="faq16"></a>How do I report bugs or contribute?</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    File issues or contribute via
+                    <a class="LinkSmall" href="https://github.com/cmoski/vworlds-revival">GitHub</a>.
+                    The original process involved emailing a Code Submission Agreement to
+                    <code>code@vworlds.org</code> and posting to the platform-dev mailing list.
+                    We've modernized the contribution process along with the code.<br><br>
+                    </td>
+                </tr>
+
+                <!-- YEAR 2000 QUESTIONS -->
+
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b><a name="faq17"></a>I'm running WinME or IE5.5 and having graphics problems. What's wrong?</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <i>[From the original FAQ, preserved for historical amusement]</i><br><br>
+                    There was a problem with the rendering control not properly un-hiding after
+                    logon on some machines. The original fix was to replace <code>3dview.htm</code>
+                    with a patched version from <code>vworlds.org/files/3dviewpatch.zip</code>.<br>
+                    <br>
+                    If you are still running Windows ME in 2026, we salute you. You may also want
+                    to check that your Y2K patches are up to date.<br><br>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b><a name="faq18"></a>How can I submit crypto related code?</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <i>[From the original FAQ]</i><br><br>
+                    The original code submission agreement prohibited crypto code because the
+                    license didn't have export restrictions. This was 2000 &mdash; a time when the
+                    US government classified strong encryption as a munition and you needed a
+                    license to export PGP. The world has moved on. Mostly.<br><br>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b><a name="faq19"></a>What's with all the downloads?</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <i>[From the original FAQ]</i><br><br>
+                    The original SDK was split into several separate downloads due to
+                    third-party licensing requirements. The revival project bundles everything
+                    into a single release zip. We have solved the download problem that plagued
+                    the year 2000. You're welcome.<br><br>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<br>
+<hr>
+<table border="0" width="100%">
+    <tr>
+        <td class="Copyright">
+            This page is a reproduction of the original vworlds.org FAQ, updated for the revival project.<br>
+            Originally developed by <a href="https://web.archive.org/web/19990224073729/http://www.research.microsoft.com/vwg/">Microsoft Research</a>, 2000.
+            Modernized 2026.<br>
+            Built with Virtual Worlds technology developed by Microsoft Research and contributors.
+            Original site archived at the <a href="https://web.archive.org/web/20000617130722/http://www.vworlds.org/">Wayback Machine</a> (now offline).
+        </td>
+        <td align="Right">
+            <a href="index.html"><img border="0" src="images/vworldslogo_sm.png" alt="Home Page"></a>
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>

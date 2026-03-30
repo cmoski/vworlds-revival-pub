@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>VWorlds Revival - Virtual Worlds Group</title>
+<meta name="SUMMARY" content="VWorlds Revival - Microsoft Virtual Worlds v1.5 modernized for Windows 11">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="VWstyle.css" type="text/css">
+</head>
+
+<body bgcolor="#f9f8f4">
+
+<table border="0" cellpadding="0" cellspacing="0" width="98%">
+    <tr>
+        <td valign="top" colspan="3">
+            <a href="index.html"><img border="0" src="images/vwglogo.png" alt="Virtual Worlds Logo" style="vertical-align:middle;margin-right:8px;"></a>
+            <span style="font-size:22px; font-weight:bold; color:#003366; vertical-align:middle;">Virtual Worlds</span>
+            <span style="font-size:11px; color:#666666; vertical-align:middle;"> Revival</span>
+        </td>
+        <td valign="top" align="right">
+            <br>
+            <i style="font-size:10px; color:#666666;">A reproduction of <a class="LinkSmall" href="https://web.archive.org/web/20000617130722/http://www.vworlds.org/">vworlds.org</a> (2000, now offline)</i>
+        </td>
+    </tr>
+    <tr><td colspan="4">&nbsp;</td></tr>
+    <tr>
+        <td align="left" valign="middle" width="33%">
+            <a class="Link" href="documentation.html">Read Documentation</a><br>
+        </td>
+        <td align="left" valign="middle" width="33%">
+            <a class="Link" href="https://github.com/cmoski/vworlds-revival/releases">Download Software</a>
+        </td>
+        <td align="left" valign="middle" width="33%">
+            <a class="Link" href="https://github.com/cmoski/vworlds-revival/discussions">Discussions</a><br>
+        </td>
+    </tr>
+    <tr>
+        <td align="left" valign="middle" width="33%">
+            <a class="Link" href="faq.html">Read the FAQ</a><br>
+        </td>
+        <td align="left" valign="middle" width="33%">
+            <a class="Link" href="gallery.html">Visit Screenshot Gallery</a><br>
+        </td>
+        <td align="left" valign="middle" width="33%">
+            <a class="Link" href="https://github.com/cmoski/vworlds-revival">Browse Source Code</a><br>
+        </td>
+    </tr>
+    <tr>
+        <td align="left" valign="middle" width="33%">
+            <a class="Link" href="building.html">Building from Source</a><br>
+        </td>
+        <td align="left" valign="middle" width="33%">
+            <a class="Link" href="architecture.html">Architecture</a><br>
+        </td>
+        <td align="left" valign="middle" width="33%">
+            <a class="Link" href="https://github.com/cmoski/vworlds-revival/issues">Report a Bug</a><br>
+        </td>
+    </tr>
+    <tr>
+        <td align="left" valign="middle" width="33%">
+            <a class="Link" href="changelog.html">View Changelog</a><br>
+        </td>
+        <td align="left" valign="middle" width="33%">
+            <a class="Link" href="license.html">Source License</a><br>
+        </td>
+        <td align="left" valign="middle" width="33%">
+            &nbsp;
+        </td>
+    </tr>
+    <tr><td colspan="4"><br></td></tr>
+</table>
+<hr>
+
+<table border="0" cellpadding="2" cellspacing="0" width="98%">
+    <tr>
+        <td width="70%" valign="Top">
+            <table border="0" cellpadding="0" cellspacing="0">
+                <tr>
+                    <td class="CategoryHeading" valign="Top" colspan="1">
+                    <b>Welcome to the VWorlds Revival!</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top" colspan="1">
+                    <i>This site is a reproduction of the original
+                    <a class="LinkSmall" href="https://web.archive.org/web/20000617130722/http://www.vworlds.org/">vworlds.org</a>
+                    (2000), which is long offline. The style, layout, and spirit are preserved;
+                    the content has been updated for the revival project.</i><br>
+                    <br>
+                    Back in 1999-2000, <a class="LinkSmall" href="https://web.archive.org/web/19990224073729/http://www.research.microsoft.com/vwg/">Microsoft Research</a>
+                    built one of the first collaborative 3D virtual world platforms. It was called
+                    Virtual Worlds &mdash; a multi-user environment where people could meet, build, and
+                    script together in shared 3D spaces. This was years before Second Life, a decade
+                    before VRChat.<br>
+                    <br>
+                    Then the project was shelved. Microsoft Research released the source code under a
+                    research license, and the world moved on to newer APIs and different visions of
+                    virtual reality.<br>
+                    <br>
+                    Twenty-six years later, the source code has been resurrected: compiling on Visual Studio 2022,
+                    running on Windows 11, rendering real 3D worlds, with multi-user networking, the original
+                    scripting system, and even the unfinished bone animation system brought to life.<br>
+                    <br>
+                    This project is a preservation effort. One of the earliest collaborative virtual
+                    environments, brought back to life so people can see what we were building at
+                    the turn of the millennium.<br>
+                    <br>
+                    <a class="Link" href="https://github.com/cmoski/vworlds-revival">[View the Source on GitHub]</a><br>
+                    <a class="Link" href="https://github.com/cmoski/vworlds-revival/releases">[Download a Release]</a><br>
+                    <a class="Link" href="faq.html">[Read the FAQ]</a><br>
+                    <a class="Link" href="changelog.html">[View Changelog]</a><br>
+                    <br>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="CategoryHeading" valign="Top" colspan="1">
+                    <b>What Works</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top" colspan="1">
+                    The modernized platform builds and runs on Windows 10/11 with Visual Studio 2022.
+                    All original COM/ATL/MFC components compile as 32-bit (x86) targets.<br>
+                    <br>
+                    <b>5 renderable 3D worlds</b> &mdash; Gallery, Home, Landscape, Office, DesktopWorld
+                    with original SDK geometry and textured .x models<br>
+                    <b>Multi-user</b> &mdash; multiple clients connect to the same server and see each
+                    other's avatars in real-time<br>
+                    <b>3D rendering</b> &mdash; Direct3D Retained Mode via app-local d3drm.dll, textured
+                    models, animated sprite avatars<br>
+                    <b>Object Explorer</b> &mdash; tree view + live property editing of all world objects<br>
+                    <b>Command Window</b> &mdash; live VBScript console
+                    (<code>World.Global.DefaultRoom.Fog = True</code> changes the 3D view in real-time)<br>
+                    <b>World persistence</b> &mdash; Ctrl+S saves to .vwc checkpoint files<br>
+                    <b>Sound</b> &mdash; DirectSound playback, ambient room audio<br>
+                    <b>Studio editing tools</b> &mdash; translate, rotate, scale objects in 3D<br>
+                    <b>Bone animation</b> &mdash; the Actor exemplar with skeletal animation via .anim files<br>
+                    <b>Chat</b> &mdash; cross-client messaging via Say/Tell events<br>
+                    <b>Original HTML client</b> &mdash; the 1999 HTML+VBScript+ActiveX client runs in a WebBrowser control<br>
+                    <br>
+                    <a class="Link" href="gallery.html">[See Screenshots]</a><br>
+                    <a class="Link" href="building.html">[Build from Source]</a><br>
+                    <br>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="CategoryHeading" valign="Top" colspan="1">
+                    <b>The Spuck Story</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top" colspan="1">
+                    Buried in the VWorlds source code is a bone animation system that was never finished.
+                    The COM infrastructure is there &mdash; <code>CJoint</code>, <code>CCharacter</code>,
+                    <code>CPuppet</code> &mdash; complete with degrees of freedom, joint IDs, and a
+                    callback function called <code>pfUpdateJoint</code>. But <code>pfUpdateJoint</code>
+                    was NULL. Calling it crashed. The bones were there but they never moved.<br>
+                    <br>
+                    The system was built in 1999 for articulated characters &mdash; skeletal animation in a
+                    virtual world, years before it became standard. But the team ran out of time or
+                    moved on, and the plumbing was left unconnected.<br>
+                    <br>
+                    We wired it up. <code>pfUpdateJoint</code> now calls into D3DRM to update frame
+                    transforms. We created an Actor exemplar with <code>InitializeActor</code>,
+                    <code>SetJointRotation</code>, and <code>PlayAnimation</code> methods callable
+                    from VBScript. The animation system reads <code>.anim</code> files with per-frame
+                    rotation and position data for each bone.<br>
+                    <br>
+                    Twenty-six years after someone at Microsoft Research wrote the joint system and
+                    left <code>pfUpdateJoint</code> as a NULL pointer, bones finally move in VWorlds.<br>
+                    <br>
+                    </td>
+                </tr>
+            </table>
+        </td>
+        <td>&nbsp;</td>
+        <td width="30%" valign="Top">
+            <table border="0" cellpadding="0" cellspacing="0">
+                <tr>
+                    <td class="CategoryHeading" valign="Top" colspan="1">
+                    <b>Latest News</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextDarkBack" valign="Top" colspan="1">
+                    3/2026:
+                    <b>Actor bone animation working!</b> Drudge model with 17 bones and 79 animations plays
+                    back via <code>PlayAnimation</code>.
+                    <p>
+                    3/2026:
+                    <b>VWSelfView OCX compiles</b> in uictrl.dll. Gesture buttons work in webclient.
+                    <p>
+                    3/2026:
+                    <b>Original HTML client runs!</b> <code>webclient.exe</code> hosts the 1999
+                    HTML+VBScript+ActiveX client.
+                    <p>
+                    3/2026:
+                    <b>Studio editing tools loaded.</b> Select, Translate3D, Rotate3D, Scale3D, Zoom.
+                    <p>
+                    3/2026:
+                    <b>Cross-client chat working.</b> OnTell/OnUserConnect/OnUserDisconnect events.
+                    <p>
+                    3/2026:
+                    <b>Sound playback working.</b> DirectSound, WAV downloads, ambient room audio.
+                    <p>
+                    3/2026:
+                    <b>5 renderable worlds.</b> Gallery, Home, Landscape, Office, DesktopWorld.
+                    Multi-user verified.
+                    <p>
+                    3/2026:
+                    <b>First render!</b> D3DRM + DirectDraw, ~60fps paint thread.
+                    <p>
+                    3/2026:
+                    <b>World creation milestone.</b> <code>testworld.vwc</code> via headless VBScript.
+                    70+ methods installed.
+                    <p>
+                    2/2000:
+                    <b>Original source released</b> by Microsoft Research under MSRSL.
+                    <p>
+                    <a class="Link" href="changelog.html">[Full Changelog]</a>
+                    </td>
+                </tr>
+            </table>
+
+            <br>
+
+            <table border="0" cellpadding="0" cellspacing="0">
+                <tr>
+                    <td class="CategoryHeading" valign="Top" colspan="1">
+                    <b>Quick Start</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextDarkBack" valign="Top" colspan="1">
+                    1. <a class="LinkSmall" href="https://github.com/cmoski/vworlds-revival/releases">Download latest release</a><br>
+                    2. Extract the zip anywhere<br>
+                    3. Run <code>install.bat</code> as Admin<br>
+                    4. Run <code>launch.bat</code><br>
+                    <br>
+                    No Visual Studio, CMake, or manual registration needed.<br>
+                    <br>
+                    <a class="Link" href="building.html">[Build from source instead]</a>
+                    </td>
+                </tr>
+            </table>
+
+            <br>
+
+            <table border="0" cellpadding="0" cellspacing="0">
+                <tr>
+                    <td class="CategoryHeading" valign="Top" colspan="1">
+                    <b>Requirements</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextDarkBack" valign="Top" colspan="1">
+                    <b>Windows 10/11</b> (x64 &mdash; runs as 32-bit)<br>
+                    <b>VC++ 2022 Redist (x86)</b><br>
+                    <b>Administrator</b> for install<br>
+                    Hardware-accelerated graphics recommended
+                    </td>
+                </tr>
+            </table>
+
+            <br>
+
+            <table border="0" cellpadding="0" cellspacing="0">
+                <tr>
+                    <td class="CategoryHeading" valign="Top" colspan="1">
+                    <b>About This Site</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextDarkBack" valign="Top" colspan="1">
+                    This is a reproduction of the original
+                    <a class="LinkSmall" href="https://web.archive.org/web/20000617130722/http://www.vworlds.org/">vworlds.org</a>
+                    website from 2000 (now long offline), recreated in the same style for
+                    the GitHub Pages of the revival project. The original site was an ASP
+                    site hosted by Microsoft Research.
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<br>
+<hr>
+<table border="0" width="100%">
+    <tr>
+        <td class="Copyright">
+            Originally developed by <a href="https://web.archive.org/web/19990224073729/http://www.research.microsoft.com/vwg/">Microsoft Research</a>, 2000.
+            Modernized 2026.<br>
+            Built with Virtual Worlds technology developed by Microsoft Research and contributors
+            (<a href="https://web.archive.org/web/20000617130722/http://www.vworlds.org/">vworlds.org</a>, now offline).<br>
+            Source code provided under the <a href="license.html">Microsoft Research Source License (MSRSL)</a>.
+        </td>
+        <td align="Right">
+            <a href="index.html"><img border="0" src="images/vworldslogo_sm.png" alt="Home Page"></a>
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>

@@ -1,0 +1,127 @@
+/* VWorlds.org style - faithful recreation of the 2000 original */
+
+body {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    background-color: #f9f8f4;
+    color: #000000;
+    margin: 8px;
+}
+
+a:link { color: #003399; }
+a:visited { color: #003399; }
+a:hover { color: #FF6600; }
+
+a.Link {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    font-weight: bold;
+    color: #003399;
+    text-decoration: none;
+}
+
+a.Link:hover {
+    color: #FF6600;
+    text-decoration: underline;
+}
+
+a.LinkSmall {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    color: #003399;
+    text-decoration: none;
+}
+
+a.LinkSmall:hover {
+    color: #FF6600;
+    text-decoration: underline;
+}
+
+.CategoryHeading {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    color: #003366;
+    background-color: #CCCCCC;
+    padding: 3px 5px;
+}
+
+.NormalTextLightBack {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    color: #000000;
+    padding: 5px;
+}
+
+.NormalTextDarkBack {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    color: #000000;
+    background-color: #EEEEEE;
+    padding: 5px;
+}
+
+.Copyright {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 9px;
+    color: #666666;
+}
+
+.Copyright a {
+    font-size: 9px;
+    color: #666666;
+}
+
+hr {
+    color: #CCCCCC;
+    height: 1px;
+    border: none;
+    background-color: #CCCCCC;
+}
+
+/* Code blocks */
+pre, code {
+    font-family: "Courier New", Courier, monospace;
+    font-size: 11px;
+    background-color: #EEEEEE;
+    padding: 2px 4px;
+}
+
+pre {
+    padding: 8px;
+    border: 1px solid #CCCCCC;
+    overflow-x: auto;
+}
+
+/* Tables */
+table.buildoutput {
+    border-collapse: collapse;
+    font-size: 11px;
+}
+
+table.buildoutput th {
+    background-color: #CCCCCC;
+    font-weight: bold;
+    padding: 3px 8px;
+    text-align: left;
+    border: 1px solid #999999;
+}
+
+table.buildoutput td {
+    padding: 3px 8px;
+    border: 1px solid #CCCCCC;
+    background-color: #FFFFFF;
+}
+
+/* Screenshots */
+.screenshot {
+    border: 1px solid #999999;
+    margin: 5px 0;
+}
+
+.screenshot-caption {
+    font-size: 10px;
+    color: #666666;
+    font-style: italic;
+    margin-top: 2px;
+}

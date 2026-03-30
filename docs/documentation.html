@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Documentation - VWorlds Revival</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="VWstyle.css" type="text/css">
+</head>
+
+<body bgcolor="#f9f8f4">
+
+<table border="0" cellpadding="0" cellspacing="0" width="98%">
+    <tr>
+        <td valign="top" colspan="3">
+            <a href="index.html"><img border="0" src="images/vwglogo.png" alt="Virtual Worlds Logo" style="vertical-align:middle;margin-right:8px;"></a>
+            <span style="font-size:22px; font-weight:bold; color:#003366; vertical-align:middle;">Virtual Worlds</span>
+            <span style="font-size:11px; color:#666666; vertical-align:middle;"> Revival</span>
+        </td>
+        <td valign="top" align="right">
+            <br>
+            <a class="Link" href="index.html">[Home]</a>
+        </td>
+    </tr>
+    <tr><td colspan="4">&nbsp;</td></tr>
+</table>
+<hr>
+
+<table border="0" cellpadding="2" cellspacing="0" width="98%">
+    <tr>
+        <td valign="Top">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b>Documentation</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <br>
+                    The original VWorlds SDK shipped with comprehensive CHM help files covering the
+                    entire API, programming guide, and UI reference. These have been extracted and
+                    are available in the source tree at <code>chm_extract/</code>.<br>
+                    <br>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b>API Reference</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <b>Core Objects:</b> World, Thing, Room, Avatar, Portal, Artifact<br>
+                    <b>Properties:</b> Vector, Sound, Boundary, PickData, AccessoryData, IntersectData<br>
+                    <b>Methods:</b> System module with 70+ methods registered on exemplars<br>
+                    <b>Scripting:</b> All objects accessible via VBScript or JScript through IDispatch<br>
+                    <br>
+                    <b>Key APIs:</b><br>
+                    <code>World.CreateInstance("Thing", "MyThing")</code> &mdash; create objects<br>
+                    <code>Thing.InitializeSpriteGraphics "sprite.spr"</code> &mdash; set sprite appearance<br>
+                    <code>Thing.InitializeGraphics "model.x"</code> &mdash; set 3D model<br>
+                    <code>Thing.InitializeActor "model.x"</code> &mdash; set bone-animated model<br>
+                    <code>Thing.PlayAnimation "anim.anim"</code> &mdash; play skeletal animation<br>
+                    <code>Room.Fog = True</code> &mdash; toggle room fog<br>
+                    <code>User.Say "Hello"</code> &mdash; send chat message<br>
+                    <code>Thing.FindWithin("name")</code> &mdash; find child objects<br>
+                    <code>World.SaveDatabase</code> &mdash; persist world to .vwc file<br>
+                    <br>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b>Programmer's Guide Topics</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <b>Client/Server Architecture</b> &mdash; COM-based client connects to server,
+                    objects replicate via property marshalling<br>
+                    <b>Object Model</b> &mdash; Things have properties and methods, organized in
+                    exemplar hierarchy (Thing &rarr; Artifact/Avatar/Room/Portal)<br>
+                    <b>Property System</b> &mdash; typed properties (String, Long, VARIANT, ObjectProperty)
+                    with change notification and replication<br>
+                    <b>Method System</b> &mdash; methods registered on exemplars, dispatched via
+                    FireRemoteMethod/InvokeMethodExt<br>
+                    <b>Security</b> &mdash; per-property and per-method security (disabled in local builds)<br>
+                    <b>Persistence</b> &mdash; binary .vwc checkpoint files via IVWObjectRepository<br>
+                    <br>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b>Building &amp; Running</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    See the <a class="Link" href="building.html">Building from Source</a> page for
+                    complete build instructions, prerequisites, and build output descriptions.<br>
+                    <br>
+                    <b>Automation scripts:</b><br>
+                    <code>scripts\launch_world.bat [name]</code> &mdash; launch any world<br>
+                    <code>scripts\launch_multiuser.bat [name]</code> &mdash; two-client multi-user test<br>
+                    <code>scripts\launch_editor.bat</code> &mdash; one-click editor with studio tools<br>
+                    <code>scripts\launch_render_test.bat</code> &mdash; build/register/create/server/render<br>
+                    <code>scripts\create_allworlds.vbs</code> &mdash; headless world creation via cscript<br>
+                    <br>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<br>
+<hr>
+<table border="0" width="100%">
+    <tr>
+        <td class="Copyright">
+            Originally developed by <a href="https://web.archive.org/web/19990224073729/http://www.research.microsoft.com/vwg/">Microsoft Research</a>, 2000.
+            Modernized 2026.<br>
+            Built with Virtual Worlds technology developed by Microsoft Research and contributors
+            (<a href="https://web.archive.org/web/20000617130722/http://www.vworlds.org/">vworlds.org</a>, now offline).
+        </td>
+        <td align="Right">
+            <a href="index.html"><img border="0" src="images/vworldslogo_sm.png" alt="Home Page"></a>
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Architecture - VWorlds Revival</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="VWstyle.css" type="text/css">
+</head>
+
+<body bgcolor="#f9f8f4">
+
+<table border="0" cellpadding="0" cellspacing="0" width="98%">
+    <tr>
+        <td valign="top" colspan="3">
+            <a href="index.html"><img border="0" src="images/vwglogo.png" alt="Virtual Worlds Logo" style="vertical-align:middle;margin-right:8px;"></a>
+            <span style="font-size:22px; font-weight:bold; color:#003366; vertical-align:middle;">Virtual Worlds</span>
+            <span style="font-size:11px; color:#666666; vertical-align:middle;"> Revival</span>
+        </td>
+        <td valign="top" align="right">
+            <br>
+            <a class="Link" href="index.html">[Home]</a>
+        </td>
+    </tr>
+    <tr><td colspan="4">&nbsp;</td></tr>
+</table>
+<hr>
+
+<table border="0" cellpadding="2" cellspacing="0" width="98%">
+    <tr>
+        <td valign="Top">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b>Platform Architecture</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <br>
+                    Virtual Worlds is a COM/ATL-based platform. All objects are COM components with
+                    properties and methods that replicate across clients via the server. The scripting
+                    system exposes everything through IDispatch for VBScript/JScript access.<br>
+                    <br>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b>Source Tree</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <br>
+<pre>CMakeLists.txt          Top-level CMake build
+vwcommon/               Shared headers, 47 IDL files, MIDL-generated outputs
+vwsystem/               DLL entry, COM registration
+vwobject/               Core object model (Thing, World, PropertyList, Method)
+vwserver/               Server (persistence, connection management)
+vwclient/               Client proxy/stub
+vwcomm/                 Message routing
+fastcomm/               TCP/IP protocol (Winsock2)
+vwodb/                  Object database (checkpoint files)
+module/system/          System exemplar implementations
+module/foundatn/        Foundation exemplar behaviors
+module/mm/              Multimedia exemplars (Actor bone animation)
+property/               Property types (Vector, Sound, Joint, Character)
+tools/                  Tools (animation, InetFile, HTML, auth)
+vwrender/               3D/2D rendering bridge
+vwgcache/               Geometry cache
+spritemn/               Sprite manager
+vwmm/                   Graphics DLL hub
+vwstudio/               Studio authoring tools
+vwocx/vwrendvw/         Render View OCX
+vwocx/objexplr/         Object Explorer OCX
+vwocx/uictrl/           UI Controls
+renderhost/             MFC render client
+webclient/              WebBrowser client
+sengine/                Script engine app
+serverv2/               Server manager app
+content/                Bundled content (sprites, models, SDK, HTML client)
+third_party/            Legacy D3DRM runtime (headers, libs, DLL)
+scripts/                Build, launch, and test automation</pre>
+                    <br>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b>Component Diagram</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <br>
+<pre>
+  +------------------+     +------------------+
+  |   renderhost.exe |     |   webclient.exe  |
+  | (MFC render app) |     | (WebBrowser host)|
+  +--------+---------+     +--------+---------+
+           |                         |
+           v                         v
+  +------------------+     +------------------+
+  | vwrendvw.dll     |     | HTML+VBScript    |
+  | (Render View OCX)|     | (ActiveX client) |
+  +--------+---------+     +--------+---------+
+           |                         |
+           +------------+------------+
+                        |
+                        v
+  +---------------------------------------------+
+  |              vwsystem.dll                    |
+  |  (Core: Object Model, Client, Server,       |
+  |   Networking, Persistence, Scripting)        |
+  +--------+----------+----------+--------------+
+           |          |          |
+           v          v          v
+  +-----------+ +----------+ +-----------+
+  | vwmm.dll  | |vwfound.dll| |vwprops.dll|
+  | (Graphics,| |(Exemplar | |(Property  |
+  |  Sprites, | | behaviors)| | types)    |
+  |  Sound,   | +----------+ +-----------+
+  |  Actor)   |
+  +-----------+
+       |
+       v
+  +-----------+
+  | d3drm.dll |
+  | (Legacy   |
+  |  D3DRM)   |
+  +-----------+
+</pre>
+                    <br>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b>Object Model</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <br>
+                    The core abstraction is the <b>Thing</b> &mdash; a COM object with typed
+                    properties and methods. Things are organized in an exemplar hierarchy:<br>
+                    <br>
+<pre>
+  Thing (base)
+    +-- Artifact    (static objects: furniture, walls, decorations)
+    +-- Avatar      (user-controlled characters: sprites or 3D models)
+    +-- Room        (containers: define space, fog, lighting)
+    +-- Portal      (doorways between rooms)
+    +-- Actor       (bone-animated characters: skeletal .x models)
+</pre>
+                    <br>
+                    <b>Properties</b> replicate across clients automatically. When a client sets
+                    <code>Room.Fog = True</code>, the change propagates to the server and all
+                    connected clients.<br>
+                    <br>
+                    <b>Methods</b> are registered on exemplars and dispatched via
+                    <code>FireRemoteMethod</code> / <code>InvokeMethodExt</code>. The system module
+                    installs 70+ methods on the base exemplars.<br>
+                    <br>
+                    <b>Persistence</b> uses binary .vwc checkpoint files via
+                    <code>IVWObjectRepository</code>. <code>World.SaveDatabase</code> serializes
+                    the entire world state.<br>
+                    <br>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b>Key Design Decisions</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <br>
+                    <b>x86 only</b> &mdash; code casts pointers to <code>long</code>; 64-bit would
+                    require extensive changes<br>
+                    <b>App-local d3drm.dll</b> &mdash; legacy Direct3D Retained Mode runtime bundled,
+                    deployed alongside binaries<br>
+                    <b>COM/ATL architecture</b> &mdash; all objects are COM components, methods registered
+                    on exemplars, properties replicate across clients<br>
+                    <b>Headless world creation</b> &mdash; <code>cscript.exe</code> with VBScript creates
+                    worlds via <code>CreateObject("VWSYSTEM.Client.1")</code><br>
+                    <br>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b>Modernization Roadmap</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <br>
+                    <table class="buildoutput">
+                        <tr><th>Phase</th><th>Status</th><th>Description</th></tr>
+                        <tr><td>0</td><td>Done</td><td>CMake build system</td></tr>
+                        <tr><td>1</td><td>Done</td><td>Core platform compiling (vwsystem, sengine, serverV2, vwfound)</td></tr>
+                        <tr><td>2</td><td>Done</td><td>D3DRM math shims, DirectDraw stubs, vwprops.dll</td></tr>
+                        <tr><td>3</td><td>Done</td><td>objexplr.dll, uictrl.dll</td></tr>
+                        <tr><td>4</td><td>Done</td><td>jpeglib.lib, d2dutils.lib</td></tr>
+                        <tr><td>5</td><td>Done</td><td>Real D3DRM runtime: vwmm.dll, vwstudio.dll, vwrendvw.dll</td></tr>
+                        <tr><td>6</td><td>Done</td><td>World creation, client-server connection, object manipulation</td></tr>
+                        <tr><td>7</td><td>Done</td><td>Rendering, textures, multi-user, 5 worlds, headless automation</td></tr>
+                        <tr><td>8</td><td>TODO</td><td>Polish (safe CRT, VersionHelpers, Unicode)</td></tr>
+                    </table>
+                    <br>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<br>
+<hr>
+<table border="0" width="100%">
+    <tr>
+        <td class="Copyright">
+            Originally developed by <a href="https://web.archive.org/web/19990224073729/http://www.research.microsoft.com/vwg/">Microsoft Research</a>, 2000.
+            Modernized 2026.<br>
+            Built with Virtual Worlds technology developed by Microsoft Research and contributors
+            (<a href="https://web.archive.org/web/20000617130722/http://www.vworlds.org/">vworlds.org</a>, now offline).
+        </td>
+        <td align="Right">
+            <a href="index.html"><img border="0" src="images/vworldslogo_sm.png" alt="Home Page"></a>
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Building from Source - VWorlds Revival</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="VWstyle.css" type="text/css">
+</head>
+
+<body bgcolor="#f9f8f4">
+
+<table border="0" cellpadding="0" cellspacing="0" width="98%">
+    <tr>
+        <td valign="top" colspan="3">
+            <a href="index.html"><img border="0" src="images/vwglogo.png" alt="Virtual Worlds Logo" style="vertical-align:middle;margin-right:8px;"></a>
+            <span style="font-size:22px; font-weight:bold; color:#003366; vertical-align:middle;">Virtual Worlds</span>
+            <span style="font-size:11px; color:#666666; vertical-align:middle;"> Revival</span>
+        </td>
+        <td valign="top" align="right">
+            <br>
+            <a class="Link" href="index.html">[Home]</a>
+        </td>
+    </tr>
+    <tr><td colspan="4">&nbsp;</td></tr>
+</table>
+<hr>
+
+<table border="0" cellpadding="2" cellspacing="0" width="98%">
+    <tr>
+        <td valign="Top">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b>Prerequisites</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <br>
+                    <b>Visual Studio 2022</b> (Professional, Community, or BuildTools)<br>
+                    <b>MFC/ATL for v143 build tools</b> &mdash; install via VS Installer &gt;
+                    Individual Components<br>
+                    <b>Windows SDK 10.0</b> (any recent version)<br>
+                    <b>No external DirectX SDK needed</b> &mdash; legacy D3DRM headers/libs are
+                    bundled in <code>third_party/d3drm_legacy/x86/</code><br>
+                    <br>
+                    CMake is bundled with VS2022. If MFC is only in an older toolset (e.g., 14.36),
+                    CMake auto-discovers it including spectre-mitigated libs.<br>
+                    <br>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b>Build Commands</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <br>
+<pre># Configure (must be Win32/x86 - code casts pointers to long)
+cmake -B build -G "Visual Studio 17 2022" -A Win32 -DVWORLDS_BUILD_GRAPHICS=ON
+
+# Build all targets
+cmake --build build --config Debug
+
+# Build individual targets
+cmake --build build --target vwsystem --config Debug   # Core platform DLL
+cmake --build build --target vwmm --config Debug       # Graphics/multimedia
+cmake --build build --target renderhost --config Debug  # 3D render client
+cmake --build build --target serverV2 --config Debug    # Server manager</pre>
+                    <br>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b>Build Outputs (Debug)</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <br>
+                    <table class="buildoutput">
+                        <tr>
+                            <th>Target</th>
+                            <th>Output</th>
+                            <th>Description</th>
+                        </tr>
+                        <tr>
+                            <td>vwsystem</td>
+                            <td>vwsystem.dll (~3.9MB)</td>
+                            <td>Core: object model, server, client, networking, persistence, scripting</td>
+                        </tr>
+                        <tr>
+                            <td>vwmm</td>
+                            <td>vwmm.dll (~2.6MB)</td>
+                            <td>Graphics/multimedia: D3DRM rendering, sprites, geometry, sound, actor animation</td>
+                        </tr>
+                        <tr>
+                            <td>vwfound</td>
+                            <td>vwfound.dll (~580KB)</td>
+                            <td>Foundation exemplars (Thing, Avatar, Room, Portal)</td>
+                        </tr>
+                        <tr>
+                            <td>vwprops</td>
+                            <td>vwprops.dll (~457KB)</td>
+                            <td>Property COM server (Vector, Sound, PickData, AccessoryData, IntersectData)</td>
+                        </tr>
+                        <tr>
+                            <td>vwstudio</td>
+                            <td>vwstudio.dll (~1.2MB)</td>
+                            <td>Studio authoring tools (geometry, boundary, web, undo)</td>
+                        </tr>
+                        <tr>
+                            <td>vwrendvw</td>
+                            <td>vwrendvw.dll (~780KB)</td>
+                            <td>Render View OCX (3D viewport control)</td>
+                        </tr>
+                        <tr>
+                            <td>objexplr</td>
+                            <td>objexplr.dll (~700KB)</td>
+                            <td>Object Explorer (MFC OCX control)</td>
+                        </tr>
+                        <tr>
+                            <td>uictrl</td>
+                            <td>uictrl.dll (~779KB)</td>
+                            <td>UI Controls (sound control, self-view)</td>
+                        </tr>
+                        <tr>
+                            <td>renderhost</td>
+                            <td>renderhost.exe</td>
+                            <td>MFC render client with Command Window, chat, object explorer</td>
+                        </tr>
+                        <tr>
+                            <td>webclient</td>
+                            <td>webclient.exe</td>
+                            <td>WebBrowser host for the original 1999 HTML client</td>
+                        </tr>
+                        <tr>
+                            <td>serverV2</td>
+                            <td>serverV2.exe (~411KB)</td>
+                            <td>Server manager (MFC MDI app)</td>
+                        </tr>
+                        <tr>
+                            <td>sengine</td>
+                            <td>sengine.exe (~400KB)</td>
+                            <td>Script engine (MFC MDI app)</td>
+                        </tr>
+                    </table>
+                    <br>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b>Register &amp; Run</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <br>
+                    All COM DLLs require elevated 32-bit regsvr32:<br>
+<pre># Register COM DLLs (elevated command prompt)
+for %d in (vwsystem vwmm vwfound vwprops vwstudio vwrendvw objexplr uictrl) do (
+    C:\Windows\SysWOW64\regsvr32.exe /s build\Debug\%d.dll
+)
+
+# Set registry paths
+scripts\setup_registry.bat
+
+# Launch a world
+scripts\launch_world.bat Gallery</pre>
+                    <br>
+                    <b>Automation scripts:</b><br>
+                    <code>scripts\launch_world.bat [name]</code> &mdash; launch any world (Gallery, Home, Landscape, Office, DesktopWorld)<br>
+                    <code>scripts\launch_multiuser.bat [name]</code> &mdash; two-client multi-user test<br>
+                    <code>scripts\launch_editor.bat</code> &mdash; one-click editor with studio tools<br>
+                    <code>scripts\launch_render_test.bat</code> &mdash; build/register/create/server/render<br>
+                    <br>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="CategoryHeading" valign="Top">
+                    <b>CMake Options</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top">
+                    <br>
+                    <table class="buildoutput">
+                        <tr>
+                            <th>Option</th>
+                            <th>Default</th>
+                            <th>Description</th>
+                        </tr>
+                        <tr>
+                            <td><code>VWORLDS_BUILD_GRAPHICS</code></td>
+                            <td>OFF</td>
+                            <td>Build D3DRM/DirectDraw-dependent components (vwmm, vwstudio, vwrendvw, renderhost, webclient)</td>
+                        </tr>
+                        <tr>
+                            <td><code>VWORLDS_BUILD_APPS</code></td>
+                            <td>ON</td>
+                            <td>Build sengine.exe and serverV2.exe</td>
+                        </tr>
+                        <tr>
+                            <td><code>VWORLDS_BUILD_FOUNDATN</code></td>
+                            <td>ON</td>
+                            <td>Build vwfound.dll</td>
+                        </tr>
+                    </table>
+                    <br>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<br>
+<hr>
+<table border="0" width="100%">
+    <tr>
+        <td class="Copyright">
+            Originally developed by <a href="https://web.archive.org/web/19990224073729/http://www.research.microsoft.com/vwg/">Microsoft Research</a>, 2000.
+            Modernized 2026.<br>
+            Built with Virtual Worlds technology developed by Microsoft Research and contributors
+            (<a href="https://web.archive.org/web/20000617130722/http://www.vworlds.org/">vworlds.org</a>, now offline).
+        </td>
+        <td align="Right">
+            <a href="index.html"><img border="0" src="images/vworldslogo_sm.png" alt="Home Page"></a>
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>
