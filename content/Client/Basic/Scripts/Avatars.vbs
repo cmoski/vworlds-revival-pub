@@ -318,11 +318,7 @@ End Function
 '       avatars image.
 '--------------------------------------
 Sub HandleUIEvent(objFrom, strEventName, vntArgs)
-	On Error Resume Next
 	Dim objImg
-
-	If Not IsObject(vntArgs) Then Exit Sub
-	If vntArgs Is Nothing Then Exit Sub
 
 	Select Case strEventName
 	Case "OnUserConnect"
