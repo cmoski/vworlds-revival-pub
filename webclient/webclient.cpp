@@ -2,7 +2,9 @@
 // Uses CWnd::CreateControl to host the WebBrowser OCX directly (no doc/view)
 
 #define _ATL_ALLOW_DEPRECATED_FUNCTIONS
+#ifndef _AFXDLL
 #define _AFXDLL
+#endif
 
 #include <afxwin.h>
 #include <afxdisp.h>

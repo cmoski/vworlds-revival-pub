@@ -2,7 +2,9 @@
 // Uses MFC CWnd::CreateControl to host the VWRenderView OCX with full OLE support.
 
 #define _ATL_ALLOW_DEPRECATED_FUNCTIONS
+#ifndef _AFXDLL
 #define _AFXDLL
+#endif
 
 #include <afxwin.h>
 #include <afxdisp.h>

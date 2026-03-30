@@ -2,7 +2,9 @@
 // Wires pfUpdateJoint to D3DRM frames from the hierarchical spuck.x model
 
 #define _ATL_ALLOW_DEPRECATED_FUNCTIONS
+#ifndef _AFXDLL
 #define _AFXDLL
+#endif
 #ifndef DIRECT3D_VERSION
 #define DIRECT3D_VERSION 0x0700
 #endif

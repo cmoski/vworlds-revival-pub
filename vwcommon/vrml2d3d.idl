@@ -1,4 +1,4 @@
-// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+// Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved.
 // In installing/viewing this source code, you agree to the terms of the
 // Microsoft Research Source License (MSRSL) included in the root of this source tree
 // and available from http://www.vworlds.org/license.asp.
@@ -55,6 +55,7 @@ import "inetfile.idl";
 		HRESULT KeepCachedTextureNames([out, retval] VARIANT_BOOL *pVal);
 		[propput, id(36), helpstring("if TRUE D3D texture objects will be assigned the file name used to load them.")] 
 		HRESULT KeepCachedTextureNames([in] VARIANT_BOOL newVal);
+	};
 
 #ifdef VRMLTOD3DLIB
 [
