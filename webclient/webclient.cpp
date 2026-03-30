@@ -59,10 +59,38 @@ public:
             // m_pBrowser->put_Silent(VARIANT_TRUE);
 
             // Navigate to the original client HTML
+            // Try registry ContentPath first, fall back to paths relative to exe
             CComVariant vtEmpty;
-            CComBSTR url("file:///F:/VWorlds/src/webclient/html/Client.htm");
+            CString htmlPath;
+            HKEY hKey = NULL;
+            if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\V-Worlds\\Paths", 0, KEY_READ | KEY_WOW64_32KEY, &hKey) == ERROR_SUCCESS) {
+                char buf[MAX_PATH] = {0};
+                DWORD bufSize = sizeof(buf);
+                if (RegQueryValueExA(hKey, "ContentPath", NULL, NULL, (LPBYTE)buf, &bufSize) == ERROR_SUCCESS) {
+                    htmlPath = buf;
+                    if (htmlPath.Right(1) != "\\") htmlPath += "\\";
+                    htmlPath += "Client\\Basic\\Client.htm";
+                }
+                RegCloseKey(hKey);
+            }
+            if (htmlPath.IsEmpty() || GetFileAttributesA(htmlPath) == INVALID_FILE_ATTRIBUTES) {
+                // Fall back to relative paths
+                char exePath[MAX_PATH];
+                GetModuleFileNameA(NULL, exePath, MAX_PATH);
+                CString exeDir(exePath);
+                exeDir = exeDir.Left(exeDir.ReverseFind('\\'));
+                // Try ../content/Client/Basic/ (release layout)
+                htmlPath = exeDir + "\\..\\content\\Client\\Basic\\Client.htm";
+                if (GetFileAttributesA(htmlPath) == INVALID_FILE_ATTRIBUTES) {
+                    // Try webclient/html/ (dev layout)
+                    htmlPath = exeDir + "\\..\\webclient\\html\\Client.htm";
+                }
+            }
+            CString fileUrl = "file:///" + htmlPath;
+            fileUrl.Replace('\\', '/');
+            CComBSTR url(fileUrl);
             m_pBrowser->Navigate(url, &vtEmpty, &vtEmpty, &vtEmpty, &vtEmpty);
-            printf("Navigating to Client.htm\n");
+            printf("Navigating to %s\n", (LPCSTR)fileUrl);
         }
 
         return TRUE;
