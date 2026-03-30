@@ -47,7 +47,8 @@ jobs:
           copy third_party\d3drm_legacy\x86\bin\d3drm.dll dist\bin\
 
           :: Content (sprites, models, SDK, HTML client)
-          xcopy /E /I /Q content dist\content
+          :: Exclude AC/Dungeon content from release (kept in source tree only)
+          xcopy /E /I /Q content dist\content /EXCLUDE:content\_exclude.txt
 
           :: Batch launchers in root
           copy scripts\dist\*.bat dist\
