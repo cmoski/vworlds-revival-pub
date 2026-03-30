@@ -124,7 +124,7 @@ Sub OnTopLoad
 	If top.sobjTop.objClient.VWClient.World.global.IsValidProperty("DirectoryServicePage") Then
 		If Trim(top.sobjTop.objClient.VWClient.World.global.DirectoryServicePage) <> "" Then
 	'Section 3
-			arrWorlds = Split(top.sobjTop.objWebHelper.fetchUrlText("http://vworldsint/ds.asp"), vbCrLf)
+			arrWorlds = Split(top.sobjTop.objWebHelper.fetchUrlText("http://localhost:7002/ds"), vbCrLf)
 			For Each strWorld In arrWorlds
 				If Len(strWorld) <> 0 Then
 					arrWorld = Split(strWorld, vbTab)

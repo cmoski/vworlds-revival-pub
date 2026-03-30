@@ -75,10 +75,13 @@ public:
 	STDMETHOD(GetNextUser)(BSTR *inworldalias, BSTR *emailname, BSTR *computername, BSTR *comment, BSTR *worldname);
 	STDMETHOD(IsEnumerating)(VARIANT_BOOL *pbool) { *pbool = VARIANT_FALSE; return S_OK; }
 
-private:
 	// In-memory world directory (replaces ADSI/LDAP)
 	CMap<CString, LPCSTR, WorldRecord, WorldRecord&> m_worldMap;
 	bool m_bConnected;
+	bool m_bHttpRunning;
+	CWinThread* m_pHttpThread;
+
+	friend UINT __cdecl HttpListenerThread(LPVOID pParam);
 };
 
 #endif //__DSERV_H_

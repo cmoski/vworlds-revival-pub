@@ -7,23 +7,121 @@
 // the data just stays in-process instead of going to an LDAP server.
 
 #include "stdafx.h"
+#include <winsock2.h>
 #include <DirServ.h>
 #include "DServ.h"
+
+#pragma comment(lib, "ws2_32.lib")
 
 /////////////////////////////////////////////////////////////////////////////
 // CDServ
 
-CDServ::CDServ() : m_bConnected(false)
+// HTTP directory listener thread
+static UINT __cdecl HttpListenerThread(LPVOID pParam)
+{
+	CDServ* pDServ = (CDServ*)pParam;
+
+	SOCKET listenSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (listenSock == INVALID_SOCKET) return 1;
+
+	// Allow port reuse
+	int opt = 1;
+	setsockopt(listenSock, SOL_SOCKET, SO_REUSEADDR, (char*)&opt, sizeof(opt));
+
+	sockaddr_in addr = {0};
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(7002);
+	addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+
+	if (bind(listenSock, (sockaddr*)&addr, sizeof(addr)) == SOCKET_ERROR) {
+		OutputDebugStringA("=== DSERV HTTP: bind failed on port 7002 ===\n");
+		closesocket(listenSock);
+		return 1;
+	}
+	listen(listenSock, 5);
+	OutputDebugStringA("=== DSERV HTTP: listening on http://localhost:7002/ds ===\n");
+
+	// Non-blocking so we can check shutdown flag
+	u_long nonblock = 1;
+	ioctlsocket(listenSock, FIONBIO, &nonblock);
+
+	while (pDServ->m_bHttpRunning) {
+		sockaddr_in clientAddr;
+		int clientLen = sizeof(clientAddr);
+		SOCKET clientSock = accept(listenSock, (sockaddr*)&clientAddr, &clientLen);
+
+		if (clientSock == INVALID_SOCKET) {
+			Sleep(100);
+			continue;
+		}
+
+		// Read the HTTP request (we don't really parse it — any GET returns the world list)
+		char reqBuf[1024];
+		recv(clientSock, reqBuf, sizeof(reqBuf) - 1, 0);
+
+		// Build tab-delimited world list (same format as the original ds.asp)
+		// Format per line: URL\tFriendlyName\tUserCount\tInfoURL
+		CString body;
+		POSITION pos = pDServ->m_worldMap.GetStartPosition();
+		while (pos) {
+			CString key;
+			WorldRecord rec;
+			pDServ->m_worldMap.GetNextAssoc(pos, key, rec);
+
+			// Extract friendly name from URL (e.g., "DESKTOP-IL0G24R/Gallery" -> "Gallery")
+			CString friendlyName = rec.url;
+			int slash = friendlyName.ReverseFind('/');
+			if (slash >= 0) friendlyName = friendlyName.Mid(slash + 1);
+
+			CString line;
+			line.Format("%s\t%s\t%s\t%s\r\n",
+				(LPCSTR)rec.url, (LPCSTR)friendlyName,
+				(LPCSTR)rec.userCount, (LPCSTR)rec.infoURL);
+			body += line;
+		}
+
+		// Send HTTP response
+		CString response;
+		response.Format(
+			"HTTP/1.0 200 OK\r\n"
+			"Content-Type: text/plain\r\n"
+			"Content-Length: %d\r\n"
+			"Connection: close\r\n"
+			"\r\n%s",
+			body.GetLength(), (LPCSTR)body);
+
+		send(clientSock, (LPCSTR)response, response.GetLength(), 0);
+		closesocket(clientSock);
+	}
+
+	closesocket(listenSock);
+	OutputDebugStringA("=== DSERV HTTP: listener stopped ===\n");
+	return 0;
+}
+
+CDServ::CDServ() : m_bConnected(false), m_bHttpRunning(false), m_pHttpThread(NULL)
 {
 }
 
 CDServ::~CDServ()
 {
+	// Stop HTTP listener
+	m_bHttpRunning = false;
+	if (m_pHttpThread) {
+		WaitForSingleObject(m_pHttpThread->m_hThread, 2000);
+		m_pHttpThread = NULL;
+	}
 	m_worldMap.RemoveAll();
 }
 
 HRESULT CDServ::FinalConstruct()
 {
+	// Start HTTP directory listener
+	WSADATA wsaData;
+	if (WSAStartup(MAKEWORD(2, 2), &wsaData) == 0) {
+		m_bHttpRunning = true;
+		m_pHttpThread = AfxBeginThread(HttpListenerThread, this, THREAD_PRIORITY_BELOW_NORMAL, 0, 0, NULL);
+	}
 	return S_OK;
 }
 
