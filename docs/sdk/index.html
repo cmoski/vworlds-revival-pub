@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>SDK Documentation - VWorlds Revival</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+/* === Windows 95 CHM Viewer === */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: "MS Sans Serif", "Microsoft Sans Serif", Tahoma, Arial, sans-serif;
+    font-size: 11px;
+    background: #D4D0C8;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Title bar */
+#titlebar {
+    background: linear-gradient(to right, #000080, #1084d0);
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+    padding: 3px 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+#titlebar img { vertical-align: middle; margin-right: 5px; }
+#titlebar a { color: white; text-decoration: none; font-size: 10px; }
+#titlebar a:hover { text-decoration: underline; }
+#titlebar-buttons span {
+    display: inline-block;
+    width: 16px; height: 14px;
+    background: #D4D0C8;
+    border: 1px outset #FFFFFF;
+    text-align: center;
+    line-height: 12px;
+    font-size: 9px;
+    font-weight: bold;
+    margin-left: 2px;
+    cursor: default;
+    font-family: "Marlett", sans-serif;
+}
+
+/* Toolbar */
+#toolbar {
+    background: #D4D0C8;
+    border-top: 1px solid #FFFFFF;
+    border-bottom: 1px solid #808080;
+    padding: 2px 4px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+}
+.toolbar-btn {
+    background: #D4D0C8;
+    border: 1px outset #FFFFFF;
+    padding: 1px 8px;
+    font-size: 11px;
+    font-family: "MS Sans Serif", Tahoma, Arial, sans-serif;
+    cursor: pointer;
+}
+.toolbar-btn:active { border-style: inset; }
+
+/* Main container */
+#main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    border: 2px inset #808080;
+    margin: 0;
+}
+
+/* Left panel - tree */
+#left-panel {
+    width: 280px;
+    min-width: 200px;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+#tab-bar {
+    background: #D4D0C8;
+    padding: 0;
+    display: flex;
+    border-bottom: 1px solid #808080;
+}
+.tab {
+    padding: 3px 12px;
+    font-size: 11px;
+    font-family: "MS Sans Serif", Tahoma, Arial, sans-serif;
+    cursor: pointer;
+    background: #D4D0C8;
+    border: 1px solid #808080;
+    border-bottom: none;
+    margin-right: -1px;
+    position: relative;
+}
+.tab.active {
+    background: white;
+    border-bottom: 1px solid white;
+    z-index: 1;
+    font-weight: bold;
+}
+#tree-container {
+    flex: 1;
+    overflow: auto;
+    padding: 2px;
+    background: white;
+}
+
+/* Resize handle - sunken 3D groove */
+#resize-handle {
+    width: 5px;
+    background: #D4D0C8;
+    cursor: col-resize;
+    flex-shrink: 0;
+    border-left: 1px solid #808080;
+    border-right: 1px solid #FFFFFF;
+}
+
+/* Right panel - content */
+#right-panel {
+    flex: 1;
+    background: white;
+}
+#content-frame {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* Tree styling */
+.tree-node { user-select: none; }
+.tree-item {
+    display: flex;
+    align-items: center;
+    padding: 1px 0;
+    white-space: nowrap;
+    cursor: default;
+    line-height: 16px;
+}
+.tree-item:hover { background: #e8e8e8; }
+.tree-item.selected {
+    background: transparent;
+}
+.tree-item.selected .tree-label {
+    background: #000080;
+    color: #FFFFFF;
+    padding: 0 2px;
+}
+.tree-toggle {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    flex-shrink: 0;
+    cursor: pointer;
+    margin: 0 3px;
+    background: url("icons/plus.png") no-repeat center center;
+    background-size: 9px 9px;
+    font-size: 0;
+    color: transparent;
+}
+.tree-toggle.expanded {
+    background-image: url("icons/minus.png");
+}
+.tree-toggle.empty {
+    background: transparent;
+    width: 15px;
+    cursor: default;
+}
+.tree-icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: 3px;
+    flex-shrink: 0;
+    text-align: center;
+    line-height: 16px;
+}
+/* Real Windows icons extracted from shell32.dll */
+.icon-folder-closed { background: url("icons/folder_closed.png") no-repeat center center; }
+.icon-folder-open   { background: url("icons/folder_open.png") no-repeat center center; }
+.icon-page          { background: url("icons/page.png") no-repeat center center; }
+.icon-book-closed   { background: url("icons/folder_closed.png") no-repeat center center; }
+.icon-book-open     { background: url("icons/folder_open.png") no-repeat center center; }
+
+.tree-label { font-size: 11px; }
+.tree-children {
+    display: none;
+}
+.tree-children.expanded { display: block; }
+
+/* Tree lines */
+.tree-indent {
+    display: inline-block;
+    width: 16px;
+    flex-shrink: 0;
+}
+
+/* Status bar */
+#statusbar {
+    background: #D4D0C8;
+    border-top: 1px solid #FFFFFF;
+    padding: 2px 5px;
+    font-size: 10px;
+    color: #000;
+    flex-shrink: 0;
+    display: flex;
+}
+#statusbar .status-pane {
+    border-top: 1px solid #808080;
+    border-left: 1px solid #808080;
+    border-bottom: 1px solid #FFFFFF;
+    border-right: 1px solid #FFFFFF;
+    padding: 1px 4px;
+    flex: 1;
+}
+
+/* Scrollbar styling (WebKit) - Win9x look */
+#tree-container::-webkit-scrollbar { width: 16px; height: 16px; }
+#tree-container::-webkit-scrollbar-track { background: #D4D0C8; border: 1px inset #808080; }
+#tree-container::-webkit-scrollbar-thumb {
+    background: #D4D0C8;
+    border-top: 1px solid #FFFFFF;
+    border-left: 1px solid #FFFFFF;
+    border-bottom: 1px solid #000000;
+    border-right: 1px solid #000000;
+}
+#tree-container::-webkit-scrollbar-button {
+    background: #D4D0C8;
+    border-top: 1px solid #FFFFFF;
+    border-left: 1px solid #FFFFFF;
+    border-bottom: 1px solid #000000;
+    border-right: 1px solid #000000;
+}
+</style>
+</head>
+<body>
+
+<!-- Title bar -->
+<div id="titlebar">
+    <span>
+        <img src="../images/vwglogo.png" alt="" width="20" height="20">
+        Virtual Worlds SDK Documentation
+    </span>
+    <span>
+        <a href="../index.html">VWorlds Home</a> &nbsp;|&nbsp;
+        <a href="../documentation.html">Docs</a>
+    </span>
+</div>
+
+<!-- Toolbar -->
+<div id="toolbar">
+    <button class="toolbar-btn" onclick="navBack()" title="Back">&#9668; Back</button>
+    <button class="toolbar-btn" onclick="navForward()" title="Forward">Fwd &#9658;</button>
+    <button class="toolbar-btn" onclick="goHome()" title="Home">Home</button>
+    <span style="width:8px"></span>
+    <button class="toolbar-btn" onclick="toggleAllNodes(true)">+ Expand All</button>
+    <button class="toolbar-btn" onclick="toggleAllNodes(false)">- Collapse All</button>
+    <span style="width:8px"></span>
+    <button class="toolbar-btn" onclick="printContent()" title="Print current page">Print</button>
+</div>
+
+<!-- Main area -->
+<div id="main">
+    <!-- Left: TOC tree -->
+    <div id="left-panel">
+        <div id="tab-bar">
+            <div class="tab active">Contents</div>
+        </div>
+        <div id="tree-container"></div>
+    </div>
+
+    <!-- Resize handle -->
+    <div id="resize-handle"></div>
+
+    <!-- Right: content iframe -->
+    <div id="right-panel">
+        <iframe id="content-frame" src="sdkintro.htm" name="content"></iframe>
+    </div>
+</div>
+
+<!-- Status bar -->
+<div id="statusbar">
+    <span class="status-pane" id="status-text">Ready</span>
+</div>
+
+<script>
+// Navigation history
+var navHistory = ['sdkintro.htm'];
+var navPos = 0;
+
+function navBack() {
+    if (navPos > 0) {
+        navPos--;
+        document.getElementById('content-frame').src = navHistory[navPos];
+    }
+}
+function navForward() {
+    if (navPos < navHistory.length - 1) {
+        navPos++;
+        document.getElementById('content-frame').src = navHistory[navPos];
+    }
+}
+function goHome() {
+    navigateTo('sdkintro.htm');
+}
+function printContent() {
+    try {
+        document.getElementById('content-frame').contentWindow.print();
+    } catch(e) {
+        window.print();
+    }
+}
+function navigateTo(url) {
+    navHistory = navHistory.slice(0, navPos + 1);
+    navHistory.push(url);
+    navPos = navHistory.length - 1;
+    document.getElementById('content-frame').src = url;
+}
+
+// Load TOC and build tree
+var tocData = null;
+function loadToc() {
+    // Try fetch first (works on servers), fall back to inline
+    fetch('toc.json')
+        .then(function(r) { return r.json(); })
+        .then(function(data) { initTree(data); })
+        .catch(function() {
+            // Fallback: load via script tag
+            var s = document.createElement('script');
+            s.src = 'toc.js';
+            s.onload = function() { if (window.TOC_DATA) initTree(window.TOC_DATA); };
+            document.head.appendChild(s);
+        });
+}
+function initTree(data) {
+    tocData = data;
+    renderTree(data, document.getElementById('tree-container'), 0, true);
+}
+loadToc();
+
+function renderTree(nodes, container, depth, isTopLevel) {
+    nodes.forEach(function(node) {
+        var div = document.createElement('div');
+        div.className = 'tree-node';
+
+        var item = document.createElement('div');
+        item.className = 'tree-item';
+
+        // Indentation
+        for (var i = 0; i < depth; i++) {
+            var spacer = document.createElement('span');
+            spacer.className = 'tree-indent';
+            item.appendChild(spacer);
+        }
+
+        var hasChildren = node.children && node.children.length > 0;
+
+        // Toggle box (Win95 style: square with +/-)
+        var toggle = document.createElement('span');
+        toggle.className = 'tree-toggle';
+        if (hasChildren) {
+            toggle.textContent = '+';
+        } else {
+            toggle.className = 'tree-toggle empty';
+        }
+        item.appendChild(toggle);
+
+        // Icon
+        var icon = document.createElement('span');
+        icon.className = 'tree-icon';
+        if (isTopLevel && hasChildren) {
+            icon.className += ' icon-book-closed';
+        } else if (hasChildren) {
+            icon.className += ' icon-folder-closed';
+        } else {
+            icon.className += ' icon-page';
+        }
+        item.appendChild(icon);
+
+        // Label
+        var label = document.createElement('span');
+        label.className = 'tree-label';
+        label.textContent = node.name;
+        item.appendChild(label);
+
+        div.appendChild(item);
+
+        // Children
+        var childContainer = null;
+        if (hasChildren) {
+            childContainer = document.createElement('div');
+            childContainer.className = 'tree-children';
+            renderTree(node.children, childContainer, depth + 1, false);
+            div.appendChild(childContainer);
+        }
+
+        // Toggle expand/collapse
+        function toggleNode() {
+            if (!hasChildren) return;
+            var expanded = childContainer.classList.toggle('expanded');
+            if (expanded) {
+                toggle.classList.add('expanded');
+            } else {
+                toggle.classList.remove('expanded');
+            }
+            if (isTopLevel) {
+                icon.className = 'tree-icon ' + (expanded ? 'icon-book-open' : 'icon-book-closed');
+            } else {
+                icon.className = 'tree-icon ' + (expanded ? 'icon-folder-open' : 'icon-folder-closed');
+            }
+        }
+
+        if (hasChildren) {
+            toggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                toggleNode();
+            });
+        }
+
+        item.addEventListener('click', function() {
+            // Select this item
+            document.querySelectorAll('.tree-item.selected').forEach(function(el) {
+                el.classList.remove('selected');
+            });
+            item.classList.add('selected');
+
+            // Navigate if has link
+            if (node.local) {
+                navigateTo(node.local);
+                document.getElementById('status-text').textContent = node.local;
+            }
+
+            // Toggle children
+            if (hasChildren) {
+                toggleNode();
+            }
+        });
+
+        container.appendChild(div);
+    });
+}
+
+function toggleAllNodes(expand) {
+    document.querySelectorAll('.tree-children').forEach(function(c) {
+        if (expand) c.classList.add('expanded');
+        else c.classList.remove('expanded');
+    });
+    document.querySelectorAll('.tree-toggle').forEach(function(t) {
+        if (t.className.indexOf('empty') === -1) {
+            if (expand) t.classList.add('expanded');
+            else t.classList.remove('expanded');
+        }
+    });
+    document.querySelectorAll('.tree-icon').forEach(function(ic) {
+        if (ic.className.indexOf('icon-book') !== -1) {
+            ic.className = 'tree-icon ' + (expand ? 'icon-book-open' : 'icon-book-closed');
+        } else if (ic.className.indexOf('icon-folder') !== -1) {
+            ic.className = 'tree-icon ' + (expand ? 'icon-folder-open' : 'icon-folder-closed');
+        }
+    });
+}
+
+// Resize handle
+(function() {
+    var handle = document.getElementById('resize-handle');
+    var leftPanel = document.getElementById('left-panel');
+    var dragging = false;
+
+    handle.addEventListener('mousedown', function(e) {
+        dragging = true;
+        document.body.style.cursor = 'col-resize';
+        // Prevent iframe from stealing mouse events
+        document.getElementById('content-frame').style.pointerEvents = 'none';
+        e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', function(e) {
+        if (dragging) {
+            var newWidth = e.clientX;
+            if (newWidth > 150 && newWidth < 600) {
+                leftPanel.style.width = newWidth + 'px';
+            }
+        }
+    });
+
+    document.addEventListener('mouseup', function() {
+        if (dragging) {
+            dragging = false;
+            document.body.style.cursor = '';
+            document.getElementById('content-frame').style.pointerEvents = '';
+        }
+    });
+})();
+
+// Update status on iframe load
+document.getElementById('content-frame').addEventListener('load', function() {
+    try {
+        var t = this.contentDocument.title;
+        if (t) document.getElementById('status-text').textContent = t;
+    } catch(e) {}
+});
+</script>
+
+</body>
+</html>
