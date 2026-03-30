@@ -795,7 +795,7 @@ public:
     CExplorerFrame* m_pExplorer;
     CCommandFrame* m_pCmdWin;
     CComPtr<IWorld> m_pWorld;  // for SaveDatabase
-    CString m_server, m_world, m_user, m_avatar;
+    CString m_server, m_world, m_user, m_avatar, m_actorModel;
     bool m_autoconnect, m_connectOnly, m_waitDebugger, m_editMode, m_cmdWin;
 
     CRenderApp() : m_pFrame(NULL), m_pExplorer(NULL), m_pCmdWin(NULL),
@@ -840,6 +840,10 @@ public:
         if ((pos = cmdLine.Find("--avatar ")) >= 0) {
             CString rest = cmdLine.Mid(pos + 9);
             m_avatar = rest.SpanExcluding(" ");
+        }
+        if ((pos = cmdLine.Find("--actor ")) >= 0) {
+            CString rest = cmdLine.Mid(pos + 8);
+            m_actorModel = rest.SpanExcluding(" ");
         }
         if (cmdLine.Find("--edit") >= 0) m_editMode = true;
         if (cmdLine.Find("--cmdwin") >= 0) m_cmdWin = true;
@@ -939,17 +943,42 @@ public:
                         // Note: IsWizard on avatar would grant full access with security enabled.
                         // Property security is currently disabled at compile time for local editing.
 
-                        // Set avatar sprite if --avatar specified
-                        if (SUCCEEDED(hr) && m_avatar.GetLength() > 0 &&
+                        // Set avatar graphics: --actor for 3D bone model, --avatar for sprite
+                        if (SUCCEEDED(hr) && m_actorModel.GetLength() > 0 &&
+                            vUserObj.vt == VT_DISPATCH && vUserObj.pdispVal)
+                        {
+                            // Call InitializeGraphics(geom, x, y, z, dx, dy, dz) for 3D model avatar
+                            OLECHAR* initName = L"InitializeGraphics";
+                            DISPID initDispid;
+                            hr = vUserObj.pdispVal->GetIDsOfNames(IID_NULL, &initName, 1, LOCALE_USER_DEFAULT, &initDispid);
+                            if (SUCCEEDED(hr)) {
+                                CComVariant initArgs[] = {
+                                    CComVariant(1.0f),    // dz
+                                    CComVariant(0.0f),    // dy
+                                    CComVariant(0.0f),    // dx
+                                    CComVariant(0.0f),    // z
+                                    CComVariant(0.0f),    // y (ground level)
+                                    CComVariant(0.0f),    // x
+                                    CComVariant((LPCSTR)m_actorModel) // .x model path
+                                };
+                                DISPPARAMS dpInit = { initArgs, NULL, 7, 0 };
+                                hr = vUserObj.pdispVal->Invoke(initDispid, IID_NULL, LOCALE_USER_DEFAULT,
+                                    DISPATCH_METHOD, &dpInit, NULL, NULL, NULL);
+                                Log("InitializeGraphics('%s') for actor avatar: hr=0x%08X", (LPCSTR)m_actorModel, hr);
+                            }
+
+                            // Call InitializeActor after a delay to let geometry load
+                            // (will be called manually from Command Window for now)
+                            Log("Actor avatar: use 'Set me = World.User' then 'me.InitializeActor' in Command Window");
+                        }
+                        else if (SUCCEEDED(hr) && m_avatar.GetLength() > 0 &&
                             vUserObj.vt == VT_DISPATCH && vUserObj.pdispVal)
                         {
                             // Call InitializeSpriteGraphics(sprite, x, y, z, dx, dy, dz)
-                            // This is a server-side method that properly creates sprite geometry
                             OLECHAR* initName = L"InitializeSpriteGraphics";
                             DISPID initDispid;
                             hr = vUserObj.pdispVal->GetIDsOfNames(IID_NULL, &initName, 1, LOCALE_USER_DEFAULT, &initDispid);
                             if (SUCCEEDED(hr)) {
-                                // Args reversed for DISPPARAMS: dz, dy, dx, z, y, x, sprite
                                 CComVariant initArgs[] = {
                                     CComVariant(1.0f),    // dz (direction)
                                     CComVariant(0.0f),    // dy

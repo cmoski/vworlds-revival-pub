@@ -1,4 +1,4 @@
-// Copyright © 2000 Microsoft Corporation.  All rights reserved.
+// Copyright ï¿½ 2000 Microsoft Corporation.  All rights reserved.
 // In installing/viewing this source code, you agree to the terms of the
 // Microsoft Research Source License (MSRSL) included in the root of this source tree
 // and available from http://www.vworlds.org/license.asp.
@@ -44,8 +44,12 @@ HRESULT CMultimediaExemplarObject::InstallAvatarExtensions(IModule* pModule)
 		{	METHOD_SERVER,	"OnCreate",						NULL,	PSBIT_EVENTHANDLER,				PS_EXEMPLARDEFAULTMETHOD },
 		{	METHOD_SERVER,	"OnConnect",					NULL,	PSBIT_EVENTHANDLER,				PS_EXEMPLARDEFAULTMETHOD },
 		{	METHOD_SERVER,	"AddDefaultKeys",				NULL,	PSBIT_HIDDEN,					PS_EXEMPLARDEFAULTMETHOD },
-		{   METHOD_SERVER,	"Teleport",						NULL,	PSBIT_EXEMPLARDEFAULTMETHOD | PSBIT_HIDDEN,PS_EXEMPLARDEFAULTMETHOD }	
-
+		{   METHOD_SERVER,	"Teleport",						NULL,	PSBIT_EXEMPLARDEFAULTMETHOD | PSBIT_HIDDEN,PS_EXEMPLARDEFAULTMETHOD },
+		// Actor bone animation methods (allows avatars to use .x models with skeletal animation)
+		{   METHOD_CLIENT,	"InitializeActor",				"ActorInitialize",			PSBIT_NONE,	PS_ALLEXECUTEMETHOD },
+		{   METHOD_CLIENT,	"SetJointRotation",				"ActorSetJointRotation",	PSBIT_NONE,	PS_ALLEXECUTEMETHOD },
+		{   METHOD_CLIENT,	"PlayAnimation",				"ActorPlayAnimation",		PSBIT_NONE,	PS_ALLEXECUTEMETHOD },
+		{   METHOD_CLIENT,	"PlayAllAnimations",			"ActorPlayAllAnimations",	PSBIT_NONE,	PS_ALLEXECUTEMETHOD }
 	};
 	int cMethod = sizeof(rgMethod)/sizeof(rgMethod[0]);
     int iMethod;
