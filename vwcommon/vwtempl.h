@@ -11,9 +11,11 @@
 #endif
 
 // ConstructElements/DestructElements were removed from modern MFC.
-// Provide compatibility implementations.
+// Provide compatibility implementations. Suppress C4995 (deprecated name).
 #include <afxtempl.h>
 #include <new>  // for placement new
+#pragma warning(push)
+#pragma warning(disable: 4995)
 
 #ifndef _VWTEMPL_COMPAT_ELEMENTS
 #define _VWTEMPL_COMPAT_ELEMENTS
@@ -1581,6 +1583,8 @@ void CVWMap<KEY, ARG_KEY, VALUE, ARG_VALUE>::AssertValid() const
 #ifndef _AFX_FULLTYPEINFO
 #pragma component(mintypeinfo, off)
 #endif
+
+#pragma warning(pop) // re-enable C4995
 
 #endif //__VWTEMPL_H__
 
