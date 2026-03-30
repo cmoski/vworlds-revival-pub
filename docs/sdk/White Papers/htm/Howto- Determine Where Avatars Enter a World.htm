@@ -84,21 +84,21 @@ or room on first login and when they move through portals.</p>
 <p class=MsoNormal><span style='font-family:Verdana;layout-grid-mode:line'>&nbsp;</span></p>
 
 <p class=MsoNormal><span style='font-family:Verdana;layout-grid-mode:line'>First,
-you must specify either a default room or a default portal in the world.  Otherwise, there won't be a place for an
-avatar to enter.  Specifiying a default
+you must specify either a default room or a default portal in the world.  Otherwise, there won't be a place for an
+avatar to enter.  Specifiying a default
 room is simplest, but specifying a default portal allows you to define not only
 an initial position, but an initial orientation and a radius in which avatars
 will be scattered (so they don't appear to come in on top of each other.)</span></p>
 
 <p class=MsoNormal><span style='font-family:Verdana;layout-grid-mode:line'>(1)</span></p>
 
-<p class=MsoNormal><span style='font-family:Verdana;layout-grid-mode:line'>          World.DefaultRoom = EntryRoom</span></p>
+<p class=MsoNormal><span style='font-family:Verdana;layout-grid-mode:line'>          World.DefaultRoom = EntryRoom</span></p>
 
 <p class=MsoNormal><span style='font-family:Verdana;layout-grid-mode:line'>or</span></p>
 
 <p class=MsoNormal><span style='font-family:Verdana;layout-grid-mode:line'>(2)</span></p>
 
-<p class=MsoNormal><span style='font-family:Verdana;layout-grid-mode:line'>          World.DefaultPortal = EntryPortal</span></p>
+<p class=MsoNormal><span style='font-family:Verdana;layout-grid-mode:line'>          World.DefaultPortal = EntryPortal</span></p>
 
 <p class=MsoNormal><span style='font-family:Verdana;layout-grid-mode:line'>&nbsp;</span></p>
 
@@ -106,12 +106,12 @@ will be scattered (so they don't appear to come in on top of each other.)</span>
 place an avatar entering the DefaultRoom as in (1):</span></p>
 
 <p class=MsoNormal><span style='font-family:Verdana;layout-grid-mode:line'>Set
-the room's DefaultAvatarPosition property. 
+the room's DefaultAvatarPosition property. 
 This property is a vector and is set to (0, 0, 0) by default.</span></p>
 
 <p class=MsoNormal><span style='font-family:Verdana;layout-grid-mode:line'>&nbsp;</span></p>
 
-<p class=MsoNormal><span style='font-family:Verdana;layout-grid-mode:line'>          EntryRoom.DefaultAvatarPosition =
+<p class=MsoNormal><span style='font-family:Verdana;layout-grid-mode:line'>          EntryRoom.DefaultAvatarPosition =
 World.CreateVector(-2.1, 0.0, 3.5)</span></p>
 
 <p class=MsoNormal><span style='font-family:Verdana;layout-grid-mode:line'>&nbsp;</span></p>
@@ -123,20 +123,20 @@ facing), and the entry radius:</span></p>
 
 <p class=MsoNormal><span style='font-family:Verdana;layout-grid-mode:line'>&nbsp;</span></p>
 
-<p class=MsoNormal><span style='font-family:Verdana;layout-grid-mode:line'>          EntryPortal.EntryPoint =
+<p class=MsoNormal><span style='font-family:Verdana;layout-grid-mode:line'>          EntryPortal.EntryPoint =
 World.CreateVector(-2.1, 0.0, 3.5)</span></p>
 
-<p class=MsoNormal><span style='font-family:Verdana;layout-grid-mode:line'>          EntryPortal.EntryOrientation =
+<p class=MsoNormal><span style='font-family:Verdana;layout-grid-mode:line'>          EntryPortal.EntryOrientation =
 World.CreateVector(0.0, 0.0, 1.0)</span></p>
 
-<p class=MsoNormal><span style='font-family:Verdana;layout-grid-mode:line'>          EntryPortal.EntryRadius = 1</span></p>
+<p class=MsoNormal><span style='font-family:Verdana;layout-grid-mode:line'>          EntryPortal.EntryRadius = 1</span></p>
 
 <p class=MsoNormal><span style='font-family:Verdana;layout-grid-mode:line'>&nbsp;</span></p>
 
 <p class=MsoNormal><span style='font-family:Verdana;layout-grid-mode:line'>Note:
 you can also use the vector &quot;Set&quot; method to set these properties:</span></p>
 
-<p class=MsoNormal><span style='font-family:Verdana;layout-grid-mode:line'>          EntryPortal.EntryPoint.Set -2.1, 0.0,
+<p class=MsoNormal><span style='font-family:Verdana;layout-grid-mode:line'>          EntryPortal.EntryPoint.Set -2.1, 0.0,
 3.5</span></p>
 
 </div>

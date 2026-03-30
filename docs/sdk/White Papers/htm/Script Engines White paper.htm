@@ -2,7 +2,7 @@
 
 <head>
 <meta name=Generator content="Microsoft Office HTML Filter 2.0">
-<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta http-equiv=Content-Type content="text/html; charset=utf-8">
 <meta name=Originator content="Microsoft Word 9">
 <title>White Paper Template</title>
 <style>
@@ -443,7 +443,7 @@ ul
 src="./Script%20Engines%20White%20paper_files/image002.gif"></p>
 
 <p class=Product><span style='color:black'>Microsoft</span><span
-style='font-size:10.0pt;font-family:Symbol;color:black;'>Ò</span><span
+style='font-size:10.0pt;font-family:Symbol;color:black;'>Ã’</span><span
 style='color:black'> Virtual Worlds</span></p>
 
 <p class=WPTitle><span style='color:black'>Script Engines, ActiveX Objects, and
@@ -478,7 +478,7 @@ how script executes, and the use of ActiveX objects with script.</p>
 
 <div class=Section2>
 
-<p class=Legalese-Space>© 1999 Microsoft Corporation. All rights reserved.</p>
+<p class=Legalese-Space>Â© 1999 Microsoft Corporation. All rights reserved.</p>
 
 <p class=Legalese>The information contained in this document represents the
 current view of Microsoft Corporation on the issues discussed as of the date of
@@ -496,8 +496,8 @@ of Microsoft Corporation.</span></p>
 <p class=Legalese>Other product or company names mentioned herein may be the
 trademarks of their respective owners.</p>
 
-<p class=Legalese>Microsoft Corporation • One Microsoft Way • Redmond, WA
-98052-6399 • USA</p>
+<p class=Legalese>Microsoft Corporation â€¢ One Microsoft Way â€¢ Redmond, WA
+98052-6399 â€¢ USA</p>
 
 </div>
 
@@ -514,14 +514,14 @@ trademarks of their respective owners.</p>
 Virtual Worlds....................................................................... 2</p>
 
 <p class=MsoToc2>Script Modules and
-Methods                                                                                                  2</p>
+Methods                                                                                                  2</p>
 
-<p class=MsoToc2>Inline Methods                                                                                                                       2</p>
+<p class=MsoToc2>Inline Methods                                                                                                                       2</p>
 
-<p class=MsoToc2>The Command Window                                                                                                         3</p>
+<p class=MsoToc2>The Command Window                                                                                                         3</p>
 
 <p class=MsoToc2>Microsoft Internet
-Explorer and Other Script Engines                                                            3</p>
+Explorer and Other Script Engines                                                            3</p>
 
 <p class=MsoToc1>How Script Code
 Executes....................................................................................... 4</p>
@@ -659,7 +659,7 @@ complexity), refreshing script is a simple browser reload, can tie together
 DHTML UI objects with virtual world code, natural choice for Virtual Worlds UI
 programming</p>
 
-<p class=Body><i>Cons: </i>can’t code object
+<p class=Body><i>Cons: </i>canâ€™t code object
 methods this way, client-only execution, script execution happens in browser
 (access world and global methods only through defined variables, error handling
 is sometimes lacking) </p>
@@ -671,7 +671,7 @@ execution happens within a script engine. The script engine is just an object
 that knows how to interpret script code into something that the computer can
 understand while maintaining state information about the code being executed
 (variables, call stack data, and so on). When you write some script code in a
-DHTML page, and it executes, it’s executing within a script engine that is
+DHTML page, and it executes, itâ€™s executing within a script engine that is
 instantiated by the browser program (for example, Internet Explorer). Any
 variables or other local data that the script uses are available only within
 that instance of the script engine and cannot be accessed locally by scripts
@@ -684,7 +684,7 @@ example, through a script on one site, you could access the Start property of
 an object Fog, and set the value of Fog.Start to a value (lets say 5). Then,
 you can access this same Start property from a completely different script
 engine and retrieve the value 5. This is because the object that contains the
-data exists completely outside the script engine that’s executing the script
+data exists completely outside the script engine thatâ€™s executing the script
 code. Virtual Worlds is all Idispatch based, and, as such, the properties and
 methods of objects that make up the API can be called from a script executing
 within a script engine. Like the Fog.Start example above, the data within the
@@ -703,24 +703,24 @@ object) would require you to do something like the following:</p>
 
 <p class=MsoNormal>&nbsp;</p>
 
-<p class=MsoNormal style='margin-left:.5in'><span style='font-family:"Courier New";color:green'>‘Assume that theClient
+<p class=MsoNormal style='margin-left:.5in'><span style='font-family:"Courier New";color:green'>â€˜Assume that theClient
 refers to a Virtual Worlds client object</span></p>
 
-<p class=MsoNormal style='margin-left:.5in'><span style='font-family:"Courier New";color:green'>‘contained somewhere on the
+<p class=MsoNormal style='margin-left:.5in'><span style='font-family:"Courier New";color:green'>â€˜contained somewhere on the
 HTML page that hosts this script.</span></p>
 
-<p class=MsoNormal style='margin-left:.5in'><span style='font-family:"Courier New";color:green'>‘First, we need to fetch an
+<p class=MsoNormal style='margin-left:.5in'><span style='font-family:"Courier New";color:green'>â€˜First, we need to fetch an
 IDispatch reference to the world</span></p>
 
-<p class=MsoNormal style='margin-left:.5in'><span style='font-family:"Courier New";color:green'>‘object and store it in a
+<p class=MsoNormal style='margin-left:.5in'><span style='font-family:"Courier New";color:green'>â€˜object and store it in a
 local VBScript variable.</span></p>
 
 <p class=MsoNormal style='margin-left:.5in'><span style='font-family:"Courier New";'>Set theWorld = theClient.VWClient.World</span></p>
 
-<p class=MsoNormal style='margin-left:.5in'><span style='font-family:"Courier New";color:green'>‘Now, we can execute a
+<p class=MsoNormal style='margin-left:.5in'><span style='font-family:"Courier New";color:green'>â€˜Now, we can execute a
 method of the world object.</span></p>
 
-<p class=MsoNormal style='margin-left:.5in'><span style='font-family:"Courier New";'>theWorld.Trace “Hello World!”</span></p>
+<p class=MsoNormal style='margin-left:.5in'><span style='font-family:"Courier New";'>theWorld.Trace â€œHello World!â€</span></p>
 
 <p class=MsoNormal><span style='font-family:"Courier New";'>&nbsp;</span></p>
 
@@ -729,17 +729,17 @@ Virtual Worlds scripting engine, the code would look like this:</p>
 
 <p class=MsoNormal>&nbsp;</p>
 
-<p class=MsoNormal style='margin-left:.5in'><span style='font-family:"Courier New";'>Trace “Hello World!”</span></p>
+<p class=MsoNormal style='margin-left:.5in'><span style='font-family:"Courier New";'>Trace â€œHello World!â€</span></p>
 
 <p class=MsoNormal>&nbsp;</p>
 
-<p class=Body>It’s much cleaner because the members of the <b>World</b> object
+<p class=Body>Itâ€™s much cleaner because the members of the <b>World</b> object
 are already moved into the namespace of the Virtual Worlds script engine, so
-invoking the method doesn’t require the extra step of setting up the reference.</p>
+invoking the method doesnâ€™t require the extra step of setting up the reference.</p>
 
 <p class=Body>When a method is executed within Virtual Worlds, it executes
-inside an internal script engine. If it’s a server method, it executes within
-the script engine on the server. If it’s a client method, it executes within
+inside an internal script engine. If itâ€™s a server method, it executes within
+the script engine on the server. If itâ€™s a client method, it executes within
 the script engine on the client. The method invocation itself, however, can be
 initiated from any script engine.</p>
 
@@ -753,7 +753,7 @@ holds the following code:</p>
 <p class=MsoNormal style='margin-left:.5in'>&nbsp;</p>
 
 <p class=MsoNormal style='margin-left:.5in'><span style='font-family:"Courier New";'>Set myFog =
-User.Container.FindWithin(“Fog”)</span></p>
+User.Container.FindWithin(â€œFogâ€)</span></p>
 
 <p class=MsoNormal style='margin-left:.5in'><span style='font-family:"Courier New";'>myFog.Start</span></p>
 
@@ -807,7 +807,7 @@ to talk to ActiveX objects through Automation, all you need to do to access the
 object is create an instance of it and get a reference to that instance. Both
 VBScript and JScript provide internal mechanisms to do this (<i>CreateObject</i> in VBScript and <i>ActiveXObject</i> in JScript). In addition,
 both scripting languages can interact with ActiveX objects hosted by an HTML
-page within Internet Explorer. In each of these cases, it’s important to
+page within Internet Explorer. In each of these cases, itâ€™s important to
 understand where the instance of the ActiveX object is being created when
 writing scripts that are supposed to access it.</p>
 
@@ -821,20 +821,20 @@ server, or all of the above. This is where using ActiveX objects gets a bit
 tricky. If, for example, you write a method of a Virtual Worlds object that
 invokes a method of an ActiveX object, that ActiveX object will need to be
 present and instantiated on each machine that the Virtual Worlds method
-executes on. Let’s say that you write a piece of code to exercise a method of
+executes on. Letâ€™s say that you write a piece of code to exercise a method of
 some ActiveX object on your machine:</p>
 
 <p class=MsoNormal>&nbsp;</p>
 
 <p class=MsoNormal style='margin-left:.5in'><span style='font-family:"Courier New";'>Sub ExerciseObject</span></p>
 
-<p class=MsoNormal><span style='font-family:"Courier New";'>          Set
-theObject = CreateObject(“SomeServer.SomeType”)</span></p>
+<p class=MsoNormal><span style='font-family:"Courier New";'>          Set
+theObject = CreateObject(â€œSomeServer.SomeTypeâ€)</span></p>
 
-<p class=MsoNormal><span style='font-family:"Courier New";'>         
+<p class=MsoNormal><span style='font-family:"Courier New";'>         
 theObject.aProperty = 5</span></p>
 
-<p class=MsoNormal><span style='font-family:"Courier New";'>         
+<p class=MsoNormal><span style='font-family:"Courier New";'>         
 theObject.DoSomething</span></p>
 
 <p class=MsoNormal style='text-indent:.5in'><span style='font-family:"Courier New";'>End Sub</span></p>
@@ -845,12 +845,12 @@ theObject.DoSomething</span></p>
 of the SomeServer.SomeType object on your machine (specifically hosted within
 the scripting engine executing this code), and will then set a property on and
 execute the DoSomething method of that object. This is fine if your machine has
-a SomeServer.SomeType object registered, but if you don’t have that object on
+a SomeServer.SomeType object registered, but if you donâ€™t have that object on
 your machine, this code will create an error. You can imagine, then, that
 attaching this code to a method of a Virtual Worlds object might not be the
 best thing to do. Each time the Virtual Worlds object method is invoked, the
 above script will be executed within the Virtual Worlds script engine on that
-machine (could be the server or another client). If that machine doesn’t have a
+machine (could be the server or another client). If that machine doesnâ€™t have a
 registered SomeServer.SomeType object, the script will cause an error. If it
 does have that object registered, it will create a new SomeServer.SomeType
 object instance each time that it is called, which could cause some confusion
@@ -866,22 +866,22 @@ following points will take you a long way toward that understanding:</p>
 
 <p class=Body>&nbsp;</p>
 
-<p class=Body style='margin-left:.5in;text-indent:-.25in;'><span style='font-family:Symbol'>·<span
+<p class=Body style='margin-left:.5in;text-indent:-.25in;'><span style='font-family:Symbol'>Â·<span
 style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 </span></span>The Virtual Worlds server has a script engine in which
 server methods execute.</p>
 
-<p class=Body style='margin-left:.5in;text-indent:-.25in;'><span style='font-family:Symbol'>·<span
+<p class=Body style='margin-left:.5in;text-indent:-.25in;'><span style='font-family:Symbol'>Â·<span
 style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 </span></span><i>Each</i> Virtual
 Worlds client has a script engine in which client methods execute.</p>
 
-<p class=Body style='margin-left:.5in;text-indent:-.25in;'><span style='font-family:Symbol'>·<span
+<p class=Body style='margin-left:.5in;text-indent:-.25in;'><span style='font-family:Symbol'>Â·<span
 style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 </span></span>The Virtual Worlds client program runs within the
 Internet Explorer browser, which has a separate script engine.</p>
 
-<p class=Body style='margin-left:.5in;text-indent:-.25in;'><span style='font-family:Symbol'>·<span
+<p class=Body style='margin-left:.5in;text-indent:-.25in;'><span style='font-family:Symbol'>Â·<span
 style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 </span></span><i>Any</i> properly
 configured script engine can potentially invoke methods on a Virtual Worlds
@@ -892,12 +892,12 @@ object.</p>
 <p class=Body>For the latest information about Microsoft Virtual Worlds, see
 the following resources:</p>
 
-<p class=Body style='margin-left:.25in;text-indent:-.25in;'><span style='font-family:Symbol'>·<span
+<p class=Body style='margin-left:.25in;text-indent:-.25in;'><span style='font-family:Symbol'>Â·<span
 style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 </span></span><a
 href="http://vworlds.research.microsoft.com/default.asp">http://vworlds.research.microsoft.com/default.asp</a></p>
 
-<p class=Body style='margin-left:.25in;text-indent:-.25in;'><span style='font-family:Symbol'>·<span
+<p class=Body style='margin-left:.25in;text-indent:-.25in;'><span style='font-family:Symbol'>Â·<span
 style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 </span></span><a href="http://www.research.microsoft.com/vwg/">http://www.research.microsoft.com/vwg/</a></p>
 
