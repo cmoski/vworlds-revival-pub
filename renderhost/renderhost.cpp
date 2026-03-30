@@ -1044,8 +1044,11 @@ public:
                             if (SUCCEEDED(hr)) {
                                 CString contentPath = GetVWorldsPath("ContentPath");
                                 CString avatarPath = GetVWorldsPath("AvatarGraphicsPath");
+                                // Normalize to forward slashes for file:// URLs
+                                contentPath.Replace('\\', '/');
+                                avatarPath.Replace('\\', '/');
                                 CString rootURLs;
-                                rootURLs.Format("file://%sClient\\Shared\\;file://%s;file://%s",
+                                rootURLs.Format("file://%sClient/Shared/;file://%s;file://%s",
                                     (LPCSTR)contentPath, (LPCSTR)avatarPath, (LPCSTR)contentPath);
                                 CComVariant vURL((LPCSTR)rootURLs);
                                 DISPID putid2 = DISPID_PROPERTYPUT;
