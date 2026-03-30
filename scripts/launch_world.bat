@@ -43,7 +43,7 @@ start "VWorlds Server (cdb)" %CDB% -g -G -c "sxe -c \".echo ===ASSERT===;kp 5;g\
 timeout /t 3 /nobreak >nul
 
 echo Launching renderer...
-%CDB% -g -G -c "sxe -c \".echo ===ASSERT===;kp 5;g\" asrt;g" "%BUILD%\renderhost.exe" --trace --autoconnect --server localhost --world %WORLD% --user Explorer
+%CDB% -g -G -c "sxe -c \".echo ===ASSERT===;kp 5;g\" asrt;g" "%BUILD%\renderhost.exe" --trace --autoconnect --server localhost --world %WORLD% --user Explorer --avatar alice.spr --cmdwin
 
 taskkill /f /im serverV2.exe 2>nul
 taskkill /f /im cdb.exe 2>nul
