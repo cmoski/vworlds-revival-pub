@@ -127,8 +127,12 @@ STDMETHODIMP CVWClientOCX::OnDisconnect(IWorld* pWorld)
 }
 
 STDMETHODIMP CVWClientOCX::OnUserConnect(IThing* pthing)
-{ 
-	FireOnUserConnect(pthing, VARIANT_TRUE); 
+{
+	TRACE("CVWClientOCX::OnUserConnect: pthing=%p\n", pthing);
+	if (!pthing) {
+		TRACE("CVWClientOCX::OnUserConnect: WARNING pthing is NULL!\n");
+	}
+	FireOnUserConnect(pthing, VARIANT_TRUE);
 
 	return S_OK;
 }
