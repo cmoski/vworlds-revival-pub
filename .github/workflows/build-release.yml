@@ -103,7 +103,7 @@ jobs:
             - Multi-user: multiple clients connect to same server, see each other
             - Object Explorer with live property editing
             - Command Window (live VBScript console)
-            - Actor bone animation (Asheron's Call creature with 79 animations)
+            - Bone animation (the original 1999 Spuck skeletal system, rebuilt as Actor exemplar)
             - Sound playback (DirectSound)
             - World persistence (Ctrl+S save/load)
             - Studio editing tools (translate, rotate, scale, boundaries)

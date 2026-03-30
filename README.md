@@ -35,9 +35,19 @@ No need to install Visual Studio, configure CMake, or register anything manually
 - **World persistence** — Ctrl+S saves to .vwc checkpoint files, worlds reload on restart
 - **Sound** — DirectSound playback, ambient room audio, 3D positional sound
 - **Studio editing tools** — translate, rotate, scale objects, boundary editing
-- **Actor bone animation** — skeletal animation system with per-frame rotation + position data
+- **Bone animation** — the original 1999 "Spuck" skeletal system partially rebuilt as the Actor exemplar
 - **Chat** — cross-client messaging via Say/Tell events
 - **Original HTML client** — the 1999 HTML+VBScript+ActiveX client runs in a WebBrowser control
+
+## The Spuck Story
+
+Buried in the VWorlds source code is a bone animation system that was never finished. The COM infrastructure is there — `CJoint`, `CCharacter`, `CPuppet` — complete with degrees of freedom, joint IDs, and a callback function called `pfUpdateJoint`. But `pfUpdateJoint` was NULL. Calling it crashed. The bones were there but they never moved.
+
+The system was built in 1999 for articulated characters — skeletal animation in a virtual world, years before it became standard. But the team ran out of time or moved on, and the plumbing was left unconnected.
+
+We wired it up. `pfUpdateJoint` now calls into D3DRM to update frame transforms. We created an Actor exemplar — a first-class bone-animated object type, like Artifact or Avatar — with `InitializeActor`, `SetJointRotation`, and `PlayAnimation` methods callable from VBScript. The animation system reads `.anim` files with per-frame rotation and position data for each bone.
+
+Twenty-six years after someone at Microsoft Research wrote the joint system and left `pfUpdateJoint` as a NULL pointer, bones finally move in VWorlds.
 
 ## Screenshots
 
