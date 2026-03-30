@@ -958,7 +958,7 @@ public:
                                     CComVariant(0.0f),    // dy
                                     CComVariant(0.0f),    // dx
                                     CComVariant(0.0f),    // z
-                                    CComVariant(0.0f),    // y (ground level)
+                                    CComVariant(0.0f),    // y
                                     CComVariant(0.0f),    // x
                                     CComVariant((LPCSTR)m_actorModel) // .x model path
                                 };

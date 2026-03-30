@@ -586,12 +586,12 @@ LRESULT CVWRenderViewCtrl::WindowProc(UINT message, WPARAM wParam, LPARAM lParam
 	case WM_ACTIVATEAPP:
 		if (wParam == FALSE)
 		{
-			// App losing focus - stop rendering to avoid surface-lost crashes
-			m_hwndFocus = NULL;
+			// App losing focus - keep rendering in background
+			// (was: m_hwndFocus = NULL which stops rendering)
 		}
 		else
 		{
-			// App regaining focus - re-enable rendering
+			// App regaining focus
 			m_hwndFocus = m_hWnd;
 		}
 		break;
@@ -955,8 +955,8 @@ CVWRenderViewCtrl::RenderDoProcessing()
 		m_fInterpTime = fTime;
 		ReleaseMutex(m_hInterpMutex);
 		//End tick interpolations and animations
-		//only really render if we have focus and window is valid
-		if (m_hwndFocus && ::IsWindow(m_hWnd))
+		//render even without focus so background animations stay visible
+		if (::IsWindow(m_hWnd))
 		{
 			hr = m_pVWRenderRoot->Render();
 			if (SUCCEEDED(hr))
