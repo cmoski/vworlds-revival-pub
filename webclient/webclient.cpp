@@ -13,6 +13,7 @@
 #include <afxctl.h>
 #include <atlbase.h>
 #include <wininet.h>
+#include <mshtml.h>
 #pragma comment(lib, "wininet.lib")
 CComModule _Module;
 #include <atlcom.h>
@@ -127,6 +128,48 @@ public:
         CFrameWnd::OnSize(nType, cx, cy);
         if (m_browserWnd.m_hWnd)
             m_browserWnd.MoveWindow(0, 0, cx, cy);
+    }
+
+    virtual BOOL PreTranslateMessage(MSG* pMsg)
+    {
+        // Intercept Enter key and route to chat DoSay
+        // Workaround: VBScript event handlers don't fire in deeply nested
+        // file:// iframes in hosted WebBrowser control
+        if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_RETURN && m_pBrowser)
+        {
+            // Check if the focused window is the chat text entry frame
+            // Only intercept Enter for the chat textbox, not for dialogs
+            HWND hFocus = ::GetFocus();
+            if (hFocus) {
+                // Get the class name of the focused window
+                char className[64] = {0};
+                ::GetClassNameA(hFocus, className, sizeof(className));
+                // IE's text input is "Internet Explorer_Server" or "Edit"
+                // Only proceed if it looks like an embedded browser input
+                if (strstr(className, "Internet Explorer") != NULL) {
+                    CComPtr<IDispatch> pDocDisp;
+                    m_pBrowser->get_Document(&pDocDisp);
+                    if (pDocDisp) {
+                        CComPtr<IHTMLDocument2> pDoc;
+                        pDocDisp->QueryInterface(IID_IHTMLDocument2, (void**)&pDoc);
+                        if (pDoc) {
+                            CComPtr<IHTMLWindow2> pWin;
+                            pDoc->get_parentWindow(&pWin);
+                            if (pWin) {
+                                // Only call DoSay if TextEntryFrame exists and textbox has content
+                                CComVariant vResult;
+                                pWin->execScript(
+                                    CComBSTR("If Not IsEmpty(TextEntryFrame) Then If Not TextEntryFrame Is Nothing Then If Len(Trim(TextEntryFrame.TextBox.value)) > 0 And TextEntryFrame.TextBox.value <> \"Type here and press Enter to speak\" Then TextEntryFrame.DoSay"),
+                                    CComBSTR("VBScript"), &vResult);
+                                // Don't return TRUE — let Enter propagate normally
+                                // DoSay clears the textbox if it ran
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return CFrameWnd::PreTranslateMessage(pMsg);
     }
 
     DECLARE_MESSAGE_MAP()
