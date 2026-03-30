@@ -352,7 +352,10 @@ STDMETHODIMP CMultimediaExemplarObject::ActorPlayAnimation(BSTR bstrAnimFile)
     if (strFullPath.IsEmpty()) {
         HKEY hKey = NULL;
         CString basePath;
-        if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\V-Worlds\\Paths",
+        // Try HKCU first, fall back to HKLM
+        HKEY actorRoots[] = { HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE };
+        for (int ar = 0; ar < 2 && basePath.IsEmpty(); ar++)
+        if (RegOpenKeyExA(actorRoots[ar], "Software\\Microsoft\\V-Worlds\\Paths",
                           0, KEY_READ | KEY_WOW64_32KEY, &hKey) == ERROR_SUCCESS) {
             char buf[MAX_PATH] = {0};
             DWORD bufSize = sizeof(buf);
@@ -660,7 +663,10 @@ STDMETHODIMP CMultimediaExemplarObject::ActorPlayAllAnimations()
     CString dirPath;
     {
         HKEY hKey = NULL;
-        if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\V-Worlds\\Paths",
+        // Try HKCU first, fall back to HKLM
+        HKEY actorRoots[] = { HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE };
+        for (int ar = 0; ar < 2 && dirPath.IsEmpty(); ar++)
+        if (RegOpenKeyExA(actorRoots[ar], "Software\\Microsoft\\V-Worlds\\Paths",
                           0, KEY_READ | KEY_WOW64_32KEY, &hKey) == ERROR_SUCCESS) {
             char buf[MAX_PATH] = {0};
             DWORD bufSize = sizeof(buf);

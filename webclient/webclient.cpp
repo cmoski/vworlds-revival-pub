@@ -63,7 +63,10 @@ public:
             CComVariant vtEmpty;
             CString htmlPath;
             HKEY hKey = NULL;
-            if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\V-Worlds\\Paths", 0, KEY_READ | KEY_WOW64_32KEY, &hKey) == ERROR_SUCCESS) {
+            // Try HKCU first, fall back to HKLM
+            HKEY wcRoots[] = { HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE };
+            for (int wr = 0; wr < 2 && htmlPath.IsEmpty(); wr++)
+            if (RegOpenKeyExA(wcRoots[wr], "Software\\Microsoft\\V-Worlds\\Paths", 0, KEY_READ | KEY_WOW64_32KEY, &hKey) == ERROR_SUCCESS) {
                 char buf[MAX_PATH] = {0};
                 DWORD bufSize = sizeof(buf);
                 if (RegQueryValueExA(hKey, "ContentPath", NULL, NULL, (LPBYTE)buf, &bufSize) == ERROR_SUCCESS) {

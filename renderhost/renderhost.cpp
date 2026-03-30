@@ -794,18 +794,21 @@ END_MESSAGE_MAP()
 // Read a VWorlds registry path value
 static CString GetVWorldsPath(const char* valueName, const char* fallback = "")
 {
-    HKEY hKey = NULL;
     CString result;
-    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\V-Worlds\\Paths",
-                      0, KEY_READ | KEY_WOW64_32KEY, &hKey) == ERROR_SUCCESS) {
-        char buf[MAX_PATH] = {0};
-        DWORD bufSize = sizeof(buf);
-        if (RegQueryValueExA(hKey, valueName, NULL, NULL, (LPBYTE)buf, &bufSize) == ERROR_SUCCESS)
-            result = buf;
-        RegCloseKey(hKey);
+    // Try HKCU first (no elevation needed), fall back to HKLM
+    HKEY roots[] = { HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE };
+    for (int r = 0; r < 2 && result.IsEmpty(); r++) {
+        HKEY hKey = NULL;
+        if (RegOpenKeyExA(roots[r], "Software\\Microsoft\\V-Worlds\\Paths",
+                          0, KEY_READ | KEY_WOW64_32KEY, &hKey) == ERROR_SUCCESS) {
+            char buf[MAX_PATH] = {0};
+            DWORD bufSize = sizeof(buf);
+            if (RegQueryValueExA(hKey, valueName, NULL, NULL, (LPBYTE)buf, &bufSize) == ERROR_SUCCESS)
+                result = buf;
+            RegCloseKey(hKey);
+        }
     }
     if (result.IsEmpty()) result = fallback;
-    // Ensure trailing backslash
     if (!result.IsEmpty() && result.Right(1) != "\\") result += "\\";
     return result;
 }

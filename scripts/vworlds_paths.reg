@@ -1,9 +1,9 @@
 Windows Registry Editor Version 5.00
 
-[HKEY_LOCAL_MACHINE\Software\Microsoft\V-Worlds\Paths]
+[HKEY_CURRENT_USER\Software\Microsoft\V-Worlds\Paths]
 "WorldPath"="F:\\VWorlds\\Microsoft Virtual Worlds\\Worlds\\"
 "AvatarPath"="F:\\VWorlds\\Microsoft Virtual Worlds\\Avatars\\"
-"ContentPath"="F:\\VWorlds\\Microsoft Virtual Worlds\\Local Content\\"
-"AvatarGraphicsPath"="F:\\VWorlds\\Microsoft Virtual Worlds\\Avatar Graphics\\"
+"ContentPath"="F:\\VWorlds\\src\\content\\"
+"AvatarGraphicsPath"="F:\\VWorlds\\src\\content\\Avatar Graphics\\"
 "HelpPath"="F:\\VWorlds\\Microsoft Virtual Worlds\\docs\\"
-"WorldWizPath"="F:\\VWorlds\\Microsoft Virtual Worlds\\Local Content\\SDK\\Wizards\\World\\"
+"WorldWizPath"="F:\\VWorlds\\src\\content\\SDK\\Wizards\\World\\"

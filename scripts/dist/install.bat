@@ -67,7 +67,7 @@ set "P=%ROOT:\=\\%"
 > "%TEMP%\vworlds_paths.reg" (
     echo Windows Registry Editor Version 5.00
     echo.
-    echo [HKEY_LOCAL_MACHINE\Software\Microsoft\V-Worlds\Paths]
+    echo [HKEY_CURRENT_USER\Software\Microsoft\V-Worlds\Paths]
     echo "WorldPath"="%P%worlds\\"
     echo "ContentPath"="%P%content\\"
     echo "AvatarGraphicsPath"="%P%content\\Avatar Graphics\\"

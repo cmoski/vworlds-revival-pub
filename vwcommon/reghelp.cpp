@@ -59,7 +59,7 @@ const CString	kstrDefaultDSPage = "client\\html\\dservice.htm";
 	Software\Microsoft\V-Worlds\Paths\WorldPath
 	Software\Microsoft\V-Worlds\Paths\WorldWizPath
 
-  HKEY_CURRENT_USER
+  HKEY_LOCAL_MACHINE
 	Software\Microsoft\V-Worlds\Avatars\<avname(x)>\(Default)  // this is the Path
   	Software\Microsoft\V-Worlds\Worlds\<worldguid(x)>\FriendlyName
 	Software\Microsoft\V-Worlds\Worlds\<worldguid(x)>\InfoURL
@@ -89,7 +89,7 @@ HRESULT	FindAvatarInRegistry(BSTR bstrAvatarAlias, BSTR *pbstrPath)
 	*pbstrPath = NULL;
 
 	// Open the AVATAR key
-	if (RegCreateKeyEx(HKEY_CURRENT_USER, gStrAvatarKey, 0, NULL, 
+	if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, gStrAvatarKey, 0, NULL, 
 		REG_OPTION_NON_VOLATILE, KEY_READ, NULL, &keyAvatars, &dwStatus) == ERROR_SUCCESS)
 	{
 		LONG		lResult	= ERROR_SUCCESS;
@@ -154,24 +154,27 @@ HRESULT	FindDefaultPathInReg(CString strWhichPath, BSTR *pbstrPath)
 
 	*pbstrPath = NULL;
 
-	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, gStrPathKey, 0, KEY_READ, &keyPaths)
-		== ERROR_SUCCESS)
+	// Try HKCU first (no elevation needed), fall back to HKLM
+	HKEY roots[] = { HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE };
+	for (int r = 0; r < 2 && FAILED(hr); r++)
 	{
-		LONG lResult = ERROR_SUCCESS;
-		char strPath[256];
-		DWORD lPathLen = 255;
-
-		// fetch the value of that key 
-		lResult = RegQueryValueEx(keyPaths, strWhichPath, NULL, NULL, (LPBYTE)strPath, &lPathLen); 
-		
-		if (lResult == ERROR_SUCCESS)
+		if (RegOpenKeyEx(roots[r], gStrPathKey, 0, KEY_READ, &keyPaths)
+			== ERROR_SUCCESS)
 		{
-			*pbstrPath = CComBSTR(strPath).Copy();
-			hr = S_OK;
-		}
+			LONG lResult = ERROR_SUCCESS;
+			char strPath[256];
+			DWORD lPathLen = 255;
 
-		// clean up
-		RegCloseKey(keyPaths);
+			lResult = RegQueryValueEx(keyPaths, strWhichPath, NULL, NULL, (LPBYTE)strPath, &lPathLen);
+
+			if (lResult == ERROR_SUCCESS)
+			{
+				*pbstrPath = CComBSTR(strPath).Copy();
+				hr = S_OK;
+			}
+
+			RegCloseKey(keyPaths);
+		}
 	}
 
 	return hr;
@@ -624,7 +627,7 @@ HRESULT	AddAvatarToRegistry(BSTR bstrAlias, BSTR bstrPath)
 	DWORD	dwStatus;
 
 	// Open the AVATAR key
-	if (RegCreateKeyEx(HKEY_CURRENT_USER, gStrAvatarKey, 0, NULL, 
+	if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, gStrAvatarKey, 0, NULL, 
 		REG_OPTION_NON_VOLATILE, KEY_READ, NULL, &keyAvatars, &dwStatus) == ERROR_SUCCESS)
 	{
 		LONG	lResult;
@@ -705,7 +708,7 @@ HRESULT FindWorldInRegistry(BSTR bstrGUID, BSTR *pbstrPath, BSTR *pbstrName)
 	DWORD dwStatus;
 
 	// Open the WORLD key
-	if (RegCreateKeyEx(HKEY_CURRENT_USER, gStrWorldsKey, 0, NULL, 
+	if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, gStrWorldsKey, 0, NULL, 
 		REG_OPTION_NON_VOLATILE, KEY_READ, NULL, &keyWorlds, &dwStatus) == ERROR_SUCCESS)
 	{
 		if (RegCreateKeyEx(keyWorlds, strGUID, 0, NULL, 
@@ -767,7 +770,7 @@ HRESULT FindAndPurgeWorldsByPath(BSTR bstrInPath)
 	DWORD dwStatus;
 
 	// 1. Open the WORLD key
-	if (RegCreateKeyEx(HKEY_CURRENT_USER, gStrWorldsKey, 0, NULL, 
+	if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, gStrWorldsKey, 0, NULL, 
 		REG_OPTION_NON_VOLATILE, KEY_READ, NULL, &keyWorlds, &dwStatus) == ERROR_SUCCESS)
 	{
 		DWORD dwCurKey = 0;
@@ -830,7 +833,7 @@ HRESULT RemoveWorldFromRegistry(BSTR bstrGUID)
 	DWORD dwStatus;
 
 	// Open the WORLD key
-	if (RegCreateKeyEx(HKEY_CURRENT_USER, gStrWorldsKey, 0, NULL, 
+	if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, gStrWorldsKey, 0, NULL, 
 		REG_OPTION_NON_VOLATILE, KEY_READ, NULL, &keyWorlds, &dwStatus) == ERROR_SUCCESS)
 	{
 		LONG lResult;
@@ -879,7 +882,7 @@ HRESULT AddWorldToRegistry(BSTR bstrGUID, BSTR bstrPath, BSTR bstrName)
 		return S_OK;
 
 	// Open the WORLD key
-	if (RegCreateKeyEx(HKEY_CURRENT_USER, gStrWorldsKey, 0, NULL, 
+	if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, gStrWorldsKey, 0, NULL, 
 		REG_OPTION_NON_VOLATILE, KEY_READ, NULL, &keyWorlds, &dwStatus) == ERROR_SUCCESS)
 	{
 		if (RegCreateKeyEx(keyWorlds, strGUID, 0, NULL, 
@@ -928,7 +931,7 @@ HRESULT FindWorldByPath(BSTR bstrInPath, BSTR *pbstrGUIDOut)
 	*pbstrGUIDOut = NULL;
 
 	// 1. Open the WORLD key
-	if (RegCreateKeyEx(HKEY_CURRENT_USER, gStrWorldsKey, 0, NULL, 
+	if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, gStrWorldsKey, 0, NULL, 
 		REG_OPTION_NON_VOLATILE, KEY_READ, NULL, &keyWorlds, &dwStatus) == ERROR_SUCCESS)
 	{
 		DWORD dwCurKey = 0;
@@ -1009,7 +1012,7 @@ HRESULT RegisterWorldOnline(BSTR bstrPath, BOOL bIsOnline)
 		strGUID = bstrGUID;
 
 	// Open the WORLD key
-	if (RegCreateKeyEx(HKEY_CURRENT_USER, gStrWorldsKey, 0, NULL, 
+	if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, gStrWorldsKey, 0, NULL, 
 		REG_OPTION_NON_VOLATILE, KEY_READ, NULL, &keyWorlds, &dwStatus) == ERROR_SUCCESS)
 	{
 		if (RegOpenKeyEx(keyWorlds, strGUID, 0, KEY_SET_VALUE, &keyThisWorld) == ERROR_SUCCESS)
@@ -1073,7 +1076,7 @@ HRESULT	IsWorldRegisteredOnline(BSTR bstrPath, BOOL *pbIsOnline)
 		strGUID = bstrGUID;
 
 	// Open the WORLD key
-	if (RegCreateKeyEx(HKEY_CURRENT_USER, gStrWorldsKey, 0, NULL, 
+	if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, gStrWorldsKey, 0, NULL, 
 		REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &keyWorlds, &dwStatus) == ERROR_SUCCESS)
 	{
 		if (RegOpenKeyEx(keyWorlds, strGUID, 0, KEY_ALL_ACCESS, &keyThisWorld) == ERROR_SUCCESS)
@@ -1123,7 +1126,7 @@ HRESULT	RegisterWorldInDS(BSTR bstrPath, BSTR bstrInfoURL, BOOL bIsInDS)
 		strGUID = bstrGUID;
 
 	// Open the WORLD key
-	if (RegCreateKeyEx(HKEY_CURRENT_USER, gStrWorldsKey, 0, NULL, 
+	if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, gStrWorldsKey, 0, NULL, 
 		REG_OPTION_NON_VOLATILE, KEY_READ, NULL, &keyWorlds, &dwStatus) == ERROR_SUCCESS)
 	{
 		if (RegOpenKeyEx(keyWorlds, strGUID, 0, KEY_SET_VALUE, &keyThisWorld) == ERROR_SUCCESS)
@@ -1198,7 +1201,7 @@ HRESULT	IsWorldRegisteredInDS(BSTR bstrPath, BOOL *pbIsInDS)
 		strGUID = bstrGUID;
 
 	// Open the WORLD key
-	if (RegCreateKeyEx(HKEY_CURRENT_USER, gStrWorldsKey, 0, NULL, 
+	if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, gStrWorldsKey, 0, NULL, 
 		REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &keyWorlds, &dwStatus) == ERROR_SUCCESS)
 	{
 		if (RegOpenKeyEx(keyWorlds, strGUID, 0, KEY_ALL_ACCESS, &keyThisWorld) == ERROR_SUCCESS)
@@ -1252,7 +1255,7 @@ HRESULT	GetWorldInfoUrlFromRegistry(BSTR bstrPath, BSTR *pbstrInfoURL)
 		strGUID = bstrGUID;
 
 	// Open the WORLD key
-	if (RegCreateKeyEx(HKEY_CURRENT_USER, gStrWorldsKey, 0, NULL, 
+	if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, gStrWorldsKey, 0, NULL, 
 		REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &keyWorlds, &dwStatus) == ERROR_SUCCESS)
 	{
 		if (RegOpenKeyEx(keyWorlds, strGUID, 0, KEY_ALL_ACCESS, &keyThisWorld) == ERROR_SUCCESS)
