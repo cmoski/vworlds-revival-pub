@@ -37,7 +37,20 @@ No need to install Visual Studio, configure CMake, or register anything manually
 - **Studio editing tools** — translate, rotate, scale objects, boundary editing
 - **Bone animation** — the original 1999 "Spuck" skeletal system partially rebuilt as the Actor exemplar
 - **Chat** — cross-client messaging via Say/Tell events
-- **Original HTML client** — the 1999 HTML+VBScript+ActiveX client runs in a WebBrowser control
+- **Three HTML clients** — Basic (end-user), Authoring (world-building), and MUD (text-only)
+- **Directory service** — local world listing on port 7002, no LDAP dependency
+
+## Three Clients
+
+The original SDK shipped with multiple HTML-based client interfaces, all built on the same COM/ActiveX infrastructure. All three are now operational:
+
+**Basic Client** — The end-user experience. 3D viewport, chat, avatar selection, room navigation, sound. This is what players used in 2000. Launch: `webclient.exe`
+
+**Authoring Client** — The world-builder's toolkit. Everything in Basic plus Object Explorer, property editing, object creation, door/portal tools, geometry editing. Launch: `webclient.exe --client Exemplar`
+
+**MUD Client** — Pure text. No 3D rendering — just room descriptions, object listings, and chat. Type `LOOK` to see a room, `@THINGS` to list objects, `SAY hello` to chat, `GO portal` to move between rooms. This is VWorlds stripped to its MUD roots — the text-based experience that Don Mitchell's [1995 founding paper](https://web.archive.org/web/20000823234222/http://www.research.microsoft.com/vwg/papers/3DVW.htm) drew inspiration from. Launch: `webclient.exe --client MUD`
+
+All three clients connect to the same server simultaneously. A MUD user typing `SAY hello` appears in the Basic client's chat and the Authoring client's chat. Objects created in the Authoring client appear in all views.
 
 ## The Spuck Story
 

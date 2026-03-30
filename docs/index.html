@@ -63,7 +63,7 @@
             <a class="Link" href="license.html">Source License</a><br>
         </td>
         <td align="left" valign="middle" width="33%">
-            &nbsp;
+            <a class="Link" href="papers/3DVW.htm">From MUDs To Virtual Worlds</a><br>
         </td>
     </tr>
     <tr><td colspan="4"><br></td></tr>
@@ -135,10 +135,48 @@
                     <b>Studio editing tools</b> &mdash; translate, rotate, scale objects in 3D<br>
                     <b>Bone animation</b> &mdash; the Actor exemplar with skeletal animation via .anim files<br>
                     <b>Chat</b> &mdash; cross-client messaging via Say/Tell events<br>
-                    <b>Original HTML client</b> &mdash; the 1999 HTML+VBScript+ActiveX client runs in a WebBrowser control<br>
+                    <b>Three HTML clients</b> &mdash; Basic (end-user), Authoring (world-building tools),
+                    and MUD (text-only) &mdash; all running in the original 1999 HTML+VBScript+ActiveX framework<br>
                     <br>
                     <a class="Link" href="gallery.html">[See Screenshots]</a><br>
                     <a class="Link" href="building.html">[Build from Source]</a><br>
+                    <br>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="CategoryHeading" valign="Top" colspan="1">
+                    <b>Three Clients</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="NormalTextLightBack" valign="Top" colspan="1">
+                    The original VWorlds SDK shipped with multiple HTML-based client interfaces,
+                    all built on the same COM/ActiveX infrastructure but serving different purposes.
+                    All three are now operational:<br>
+                    <br>
+                    <b>Basic Client</b> &mdash; The end-user client. 3D rendering viewport, chat window,
+                    avatar selection, room navigation, Things in Room tab, sound playback. This is what
+                    players would have used in 2000 to log into a hosted world. Launched via
+                    <code>webclient.exe</code>.<br>
+                    <br>
+                    <b>Authoring Client</b> &mdash; The world-builder's client. Everything in Basic plus
+                    Object Explorer integration, property editing, object creation dialogs, door/portal
+                    tools, geometry editing, and the full exemplar toolkit. This is how world designers
+                    built content. Launched via <code>webclient.exe --client Exemplar</code>.<br>
+                    <br>
+                    <b>MUD Client</b> &mdash; A pure text interface. No 3D rendering &mdash; just a
+                    command prompt with room descriptions, object listings, and chat. Type
+                    <code>LOOK</code> to see a room, <code>@THINGS</code> to list objects,
+                    <code>SAY hello</code> to chat, <code>GO portal</code> to move between rooms.
+                    This is VWorlds stripped back to its MUD roots &mdash; the text-based virtual
+                    world experience that Don Mitchell's
+                    <a class="LinkSmall" href="papers/3DVW.htm">1995 founding paper</a> drew
+                    inspiration from. Launched via <code>webclient.exe --client MUD</code>.<br>
+                    <br>
+                    All three clients connect to the same server and the same world simultaneously.
+                    A MUD user typing <code>SAY hello</code> appears in the Basic client's chat window
+                    and the Authoring client's chat. Objects created in the Authoring client appear
+                    in all three views.<br>
                     <br>
                     </td>
                 </tr>
