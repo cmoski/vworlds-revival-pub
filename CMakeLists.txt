@@ -444,8 +444,8 @@ set(VWSYSTEM_SOURCES
     tools/vwhtml/vwhelper.cpp
     tools/vwhtml/vwhtmlob.cpp
     tools/vwhtml/wbbrowsr.cpp
-    tools/dirserv/attrib.cpp
-    tools/dirserv/dqueue.cpp
+    # tools/dirserv/attrib.cpp  # ADSI/LDAP backend — replaced by local store in dserv.cpp
+    # tools/dirserv/dqueue.cpp  # ADSI thread queue — no longer needed
     tools/dirserv/dserv.cpp
     tools/authntic/aobj.cpp
     tools/authntic/authobj.cpp
