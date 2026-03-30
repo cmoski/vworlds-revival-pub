@@ -102,11 +102,13 @@ public:
             fileUrl.Replace('\\', '/');
 
             // Set cookies for authoring client (reads sUser, sWorld from cookies)
+            // Must use same URL as the page for document.cookie to see them
             if (!m_cookieWorld.IsEmpty()) {
-                InternetSetCookieA("file:///vworlds", "sUser", (LPCSTR)m_cookieUser);
-                InternetSetCookieA("file:///vworlds", "sWorld", (LPCSTR)m_cookieWorld);
-                InternetSetCookieA("file:///vworlds", "sLogoffURL", "vwStartClient.htm");
-                printf("Set cookies: sUser=%s sWorld=%s\n", (LPCSTR)m_cookieUser, (LPCSTR)m_cookieWorld);
+                CString cookieUrl = fileUrl;
+                InternetSetCookieA((LPCSTR)cookieUrl, "sUser", (LPCSTR)m_cookieUser);
+                InternetSetCookieA((LPCSTR)cookieUrl, "sWorld", (LPCSTR)m_cookieWorld);
+                InternetSetCookieA((LPCSTR)cookieUrl, "sLogoffURL", "vwStartClient.htm");
+                printf("Set cookies on %s: sUser=%s sWorld=%s\n", (LPCSTR)cookieUrl, (LPCSTR)m_cookieUser, (LPCSTR)m_cookieWorld);
             }
 
             CComBSTR url(fileUrl);

@@ -22,7 +22,8 @@ taskkill /f /im serverV2.exe 2>nul
 taskkill /f /im cdb.exe 2>nul
 timeout /t 1 /nobreak >nul
 
-REM Create world if needed
+REM Always recreate world (ensures IsAuthor and other properties are set)
+if exist "%WORLDS%\%WORLD%.vwc" del /q "%WORLDS%\%WORLD%.vwc"
 if not exist "%WORLDS%\%WORLD%.vwc" (
     echo Creating %WORLD%...
     cd /d "%BUILD%"
