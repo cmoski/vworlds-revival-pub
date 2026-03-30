@@ -42,7 +42,8 @@ start "VWorlds Server" "%BUILD%\serverV2.exe"
 timeout /t 3 /nobreak >nul
 
 echo Launching Drudge avatar (you)...
-start "Drudge Avatar" "%BUILD%\renderhost.exe" --trace --autoconnect --server localhost --world %WORLD% --user Drudge --actor "worlds\ACMonsters\02000034.x" --cmdwin
+echo Command: renderhost --trace --autoconnect --server localhost --world %WORLD% --user Drudge --actor worlds\ACMonsters\02000034.x --cmdwin
+start "Drudge Avatar" "%BUILD%\renderhost.exe" --trace --autoconnect --server localhost --world %WORLD% --user Drudge --actor worlds\ACMonsters\02000034.x --cmdwin
 timeout /t 3 /nobreak >nul
 
 echo Launching Observer (to see the Drudge)...

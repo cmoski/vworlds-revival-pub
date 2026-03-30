@@ -843,7 +843,8 @@ public:
         }
         if ((pos = cmdLine.Find("--actor ")) >= 0) {
             CString rest = cmdLine.Mid(pos + 8);
-            m_actorModel = rest.SpanExcluding(" ");
+            m_actorModel = rest.SpanExcluding(" \"");
+            Log("Parsed --actor: '%s'", (LPCSTR)m_actorModel);
         }
         if (cmdLine.Find("--edit") >= 0) m_editMode = true;
         if (cmdLine.Find("--cmdwin") >= 0) m_cmdWin = true;
