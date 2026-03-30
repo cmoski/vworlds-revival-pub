@@ -408,20 +408,25 @@ End Sub
 '       renderview's CenterViewOnObject.
 '--------------------------------------
 Sub HandleUIEvent(objFrom, strEventName, vntArgs)
+	On Error Resume Next
 	Select Case strEventName
 	Case "OnUserConnect"
+		If IsObject(vntArgs) And Not vntArgs Is Nothing Then
 		If vntArgs Is sobjVWClient.World.User Then
 			Set sobjWorld = sobjVWClient.World
 			Set sobjUser = sobjWorld.User
 			EnableButtons True
 			UpdateWorldRoomTextDisplay True
 		End If
+		End If
 	Case "OnUserDisconnect"
+		If IsObject(vntArgs) And Not vntArgs Is Nothing Then
 		If vntArgs Is sobjUser Then
 			Set sobjWorld = Nothing
 			Set sobjUser = Nothing
 			EnableButtons False
 			UpdateWorldRoomTextDisplay False
+		End If
 		End If
 	Case "vwSetCamera"
 		If Not objFrom Is Nothing Then SetCamera objFrom, vntArgs
