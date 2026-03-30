@@ -624,7 +624,7 @@ function parseverb(inString)
 		exit function
 	end if
 	
-	if findandskipverb(inString, "@HELP") then
+	if findandskipverb(inString, "HELP,?,@HELP") then
 		parseverb="HELP"
 		exit function
 	end if
