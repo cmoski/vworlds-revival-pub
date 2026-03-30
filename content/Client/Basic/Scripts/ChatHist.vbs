@@ -639,7 +639,6 @@ End Function
 '       after making appropriate checks.
 '--------------------------------------
 Sub HandleUIEvent(objFrom, strEventName, vntArgs)
-	On Error Resume Next
 	Dim objCell1, objText, arrCells, objUser, strWhisperLeft, strWhisperRight, objImg, objSpan, objCell2
 
 	Select Case strEventName
@@ -654,12 +653,10 @@ Sub HandleUIEvent(objFrom, strEventName, vntArgs)
 				HandleOnTell "", "", objFrom.name & " has connected.", 0, conUIEvent
 			End If
 		Case "OnUserDisconnect"
-			If IsObject(vntArgs) And Not vntArgs Is Nothing Then
 			If vntArgs is sobjVWClient.World.User Then
 				Set sobjWorld = Nothing
 				Set sobjUser = Nothing
 				document.body.innerHTML = ""
-			End If
 			End If
 		Case "OnLeaveWorld"
 			If Not objFrom Is sobjVWClient.World.User Then

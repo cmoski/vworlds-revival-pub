@@ -348,17 +348,14 @@ End Sub
 '       contents on the top most client page.
 '--------------------------------------
 Sub HandleUIEvent(objFrom, strEventName, vntArgs)
-	On Error Resume Next
 	Select Case strEventName
 	Case "OnUserConnect"
-		If IsObject(vntArgs) And Not vntArgs Is Nothing Then
 		If vntArgs is sobjVWClient.World.User Then
 			Set sobjWorld = sobjVWClient.World
 			Set sobjUser = sobjWorld.User
 			EnableButtons True
 			txtChat.select
 			txtChat.focus
-		End If
 		End If
 	Case "OnUserDisconnect"
 		If Not vntArgs Is Nothing Then

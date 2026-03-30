@@ -121,10 +121,27 @@ Sub OnTopLoad
 	End If
 	'Section 2
 	intCount = 0
+	'Try local directory service first, then fall back to original DS property
+	Dim strDSUrl, strDSData
+	strDSUrl = ""
+	On Error Resume Next
 	If top.sobjTop.objClient.VWClient.World.global.IsValidProperty("DirectoryServicePage") Then
-		If Trim(top.sobjTop.objClient.VWClient.World.global.DirectoryServicePage) <> "" Then
+		strDSUrl = Trim(top.sobjTop.objClient.VWClient.World.global.DirectoryServicePage)
+	End If
+	If strDSUrl = "" Then strDSUrl = "http://localhost:7002/ds"
+	On Error GoTo 0
+
+	'Fetch world list via XMLHTTP (works in all IE versions)
+	Dim objHTTP
+	Set objHTTP = CreateObject("MSXML2.XMLHTTP")
+	objHTTP.Open "GET", strDSUrl, False
+	objHTTP.Send
+	If objHTTP.Status = 200 Then strDSData = objHTTP.responseText Else strDSData = ""
+	Set objHTTP = Nothing
+
+	If Len(strDSData) > 0 Then
 	'Section 3
-			arrWorlds = Split(top.sobjTop.objWebHelper.fetchUrlText("http://localhost:7002/ds"), vbCrLf)
+			arrWorlds = Split(strDSData, vbCrLf)
 			For Each strWorld In arrWorlds
 				If Len(strWorld) <> 0 Then
 					arrWorld = Split(strWorld, vbTab)
@@ -142,7 +159,6 @@ Sub OnTopLoad
 					End If
 				End If
 			Next
-		End If
 	End If
 	'Section 4
 	If intCount > 0 Then
