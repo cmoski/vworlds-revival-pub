@@ -156,18 +156,23 @@ End Sub
 '       same object variables when the user disconnects.
 '--------------------------------------
 Sub HandleUIEvent(objFrom, strEventName, vntArgs)
+	On Error Resume Next
 	Select Case strEventName
 	Case "OnUserConnect"
-		If vntArgs is sobjVWClient.World.User Then
-			Set sobjWorld = sobjVWClient.World
-			Set sobjUser = sobjWorld.User
-			EnableButtons True
+		If IsObject(vntArgs) And Not vntArgs Is Nothing Then
+			If vntArgs is sobjVWClient.World.User Then
+				Set sobjWorld = sobjVWClient.World
+				Set sobjUser = sobjWorld.User
+				EnableButtons True
+			End If
 		End If
 	Case "OnUserDisconnect"
-		If vntArgs is sobjVWClient.World.User Then
-			Set sobjWorld = Nothing
-			Set sobjUser = Nothing
-			EnableButtons False
+		If IsObject(vntArgs) And Not vntArgs Is Nothing Then
+			If vntArgs is sobjVWClient.World.User Then
+				Set sobjWorld = Nothing
+				Set sobjUser = Nothing
+				EnableButtons False
+			End If
 		End If
 	Case Else
 	End Select
