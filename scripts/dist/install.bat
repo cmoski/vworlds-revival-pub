@@ -34,8 +34,15 @@ if not exist "%BIN%\vwsystem.dll" (
 REM Check for VC++ Redistributable (x86)
 reg query "HKLM\SOFTWARE\WOW6432Node\Microsoft\VisualStudio\14.0\VC\Runtimes\x86" /v Version >nul 2>&1
 if %errorLevel% neq 0 (
-    echo WARNING: VC++ 2022 Redistributable x86 not detected.
-    echo Download: https://aka.ms/vs/17/release/vc_redist.x86.exe
+    echo VC++ 2022 Redistributable x86 not found. Downloading...
+    powershell -Command "Invoke-WebRequest -Uri 'https://aka.ms/vs/17/release/vc_redist.x86.exe' -OutFile '%TEMP%\vc_redist.x86.exe'"
+    if exist "%TEMP%\vc_redist.x86.exe" (
+        echo Installing VC++ Redistributable...
+        "%TEMP%\vc_redist.x86.exe" /install /quiet /norestart
+        echo   Done.
+    ) else (
+        echo   Download failed. Install manually: https://aka.ms/vs/17/release/vc_redist.x86.exe
+    )
     echo.
 )
 
