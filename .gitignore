@@ -38,6 +38,10 @@ CMakeSettings.json
 *.exe
 *.lib
 
+# Exception: third_party runtime files needed for build
+!third_party/d3drm_legacy/x86/lib/*.lib
+!third_party/d3drm_legacy/x86/bin/*.dll
+
 # Temporary files
 *.tmp
 *.log
